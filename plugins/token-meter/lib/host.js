@@ -1,6 +1,6 @@
-import { existsSync, unlinkSync, renameSync, readFileSync, writeFileSync, readdirSync, statSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
+import { readdirSync, statSync } from 'fs';
 
 // src/host/index.ts
 
@@ -2854,9 +2854,6 @@ registerAlias("deepseek-web", "deepseek");
 
 // src/host/config.ts
 var NS = settingsNamespace("dshp-token-meter");
-var PREV_QUOTA_KEY = "dshp-inx-token-quota";
-var PREV_STATS_KEY = "dshp-inx-token-stats";
-var LEGACY_SETTINGS_KEYS = [PREV_QUOTA_KEY, PREV_STATS_KEY];
 var DEFAULT_CONFIG = {
   version: 1,
   activeVendor: "",
@@ -2883,24 +2880,6 @@ var ConfigSchema = Schema.object({
   showToday: Schema.boolean().default(false),
   defaultRange: Schema.union([Schema.const("7"), Schema.const("30"), Schema.const("90"), Schema.const("all")]).default("30")
 });
-function dshHome() {
-  try {
-    const env = process.env["DSH_HOME"];
-    if (typeof env === "string" && env.length > 0) return env;
-  } catch {
-  }
-  try {
-    return join(homedir(), ".dsh");
-  } catch {
-    return "/tmp/.dsh";
-  }
-}
-function legacyQuotaConfigPath() {
-  return join(dshHome(), "storages", "token-quota.json");
-}
-function settingsYamlPath() {
-  return join(dshHome(), "settings.yaml");
-}
 function isRecord5(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
@@ -2947,90 +2926,6 @@ function sanitizePatchConfig(raw) {
   if (Object.hasOwn(raw, "defaultRange") && isDefaultRange(raw["defaultRange"]))
     out.defaultRange = raw["defaultRange"];
   return out;
-}
-function sanitizePersisted(raw) {
-  if (!isRecord5(raw)) return null;
-  const out = { ...DEFAULT_CONFIG, vendors: [] };
-  if (typeof raw["activeVendor"] === "string") out.activeVendor = raw["activeVendor"];
-  if (raw["refreshSec"] !== void 0 && raw["refreshSec"] !== null && raw["refreshSec"] !== "")
-    out.refreshSec = normSec(raw["refreshSec"]);
-  if (Object.hasOwn(raw, "enabled")) out.enabled = raw["enabled"] === true;
-  if (Array.isArray(raw["vendors"]))
-    out.vendors = raw["vendors"].map(sanitizeVendor).filter((v) => v !== null);
-  if (Object.hasOwn(raw, "showToday")) out.showToday = raw["showToday"] === true;
-  if (isDefaultRange(raw["defaultRange"])) out.defaultRange = raw["defaultRange"];
-  return out;
-}
-function loadPersistedQuota() {
-  try {
-    const p = legacyQuotaConfigPath();
-    if (!existsSync(p)) return null;
-    const text = readFileSync(p, "utf8");
-    const cfg = sanitizePersisted(JSON.parse(text));
-    if (cfg) return { config: cfg, source: p };
-  } catch {
-  }
-  return null;
-}
-function topLevelIndex(lines, key) {
-  const re = new RegExp(`^${key}:\\s*(#.*)?$`);
-  for (let i = 0; i < lines.length; i++) {
-    if (re.test(lines[i])) return i;
-  }
-  return -1;
-}
-function blockBody(lines, start) {
-  const out = [];
-  for (let i = start + 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (line.trim() === "" || /^\s/.test(line) || line.trimStart().startsWith("#")) {
-      if (/^[A-Za-z0-9_-]+:\s*(#.*)?$/.test(line)) break;
-      out.push(line);
-    } else break;
-  }
-  while (out.length > 0 && out[out.length - 1].trim() === "") out.pop();
-  return out;
-}
-function migrateYamlNamespaces() {
-  try {
-    const p = settingsYamlPath();
-    if (!existsSync(p)) return;
-    const text = readFileSync(p, "utf8");
-    const lines = text.split("\n");
-    const newIdx = topLevelIndex(lines, NS);
-    const hits = LEGACY_SETTINGS_KEYS.map((key) => ({ key, idx: topLevelIndex(lines, key) })).filter(
-      (h) => h.idx >= 0
-    );
-    if (hits.length === 0) return;
-    if (newIdx >= 0) {
-      try {
-        console.info(
-          `[dshp-token-meter] settings.yaml \u540C\u65F6\u5B58\u5728 ${hits.map((h) => h.key).join(" \u4E0E ")} \u4E0E dshp-token-meter\uFF0C\u4EE5\u65B0 key \u4E3A\u51C6\uFF0C\u8BF7\u624B\u52A8\u5220\u9664\u65E7\u6BB5\u843D`
-        );
-      } catch {
-      }
-      return;
-    }
-    const body = [];
-    for (const h of hits) body.push(...blockBody(lines, h.idx));
-    if (body.length === 0) return;
-    const addition = ["", "dshp-token-meter:", ...body].join("\n");
-    const next = text.endsWith("\n") ? text + addition.slice(1) + "\n" : text + addition + "\n";
-    writeFileSync(p, next, "utf8");
-    try {
-      console.info(
-        `[dshp-token-meter] \u5DF2\u5C06 settings.yaml \u9876\u5C42 ${hits.map((h) => h.key).join(" + ")} \u5408\u5E76\u4E3A dshp-token-meter\uFF08\u65E7\u6BB5\u843D\u4FDD\u7559\uFF0C\u8BF7\u786E\u8BA4\u540E\u624B\u52A8\u5220\u9664\uFF09`
-      );
-    } catch {
-    }
-  } catch (e) {
-    try {
-      console.warn(
-        "[dshp-token-meter] settings.yaml \u547D\u540D\u7A7A\u95F4\u5408\u5E76\u5931\u8D25\uFF1A" + String(e?.message ?? e)
-      );
-    } catch {
-    }
-  }
 }
 
 // src/host/quota.ts
@@ -3891,8 +3786,8 @@ function clampSkip(inheritedEventCount, events) {
   const len = Array.isArray(events) ? events.length : 0;
   return n > len ? len : n;
 }
-function createEngine(sessionQuery, dshHome2, storageDomain) {
-  const sessionsDir = join(dshHome2, "sessions");
+function createEngine(sessionQuery, dshHome, storageDomain) {
+  const sessionsDir = join(dshHome, "sessions");
   const aggMemo = /* @__PURE__ */ new Map();
   const fpMemo = /* @__PURE__ */ new Map();
   const dirty = /* @__PURE__ */ new Set();
@@ -4190,10 +4085,6 @@ function registerStatsRoutes(ctx, engine) {
 var name = "@dshp/token-meter";
 var inject = ["webServer"];
 function apply(ctx, rawConfig) {
-  try {
-    migrateYamlNamespaces();
-  } catch {
-  }
   const entry = {
     ...DEFAULT_CONFIG,
     vendors: []
@@ -4210,198 +4101,12 @@ function apply(ctx, rawConfig) {
     if (Object.hasOwn(patch, "defaultRange") && patch.defaultRange !== void 0)
       entry.defaultRange = patch.defaultRange;
   }
-  const persistedForMigration = loadPersistedQuota();
   let current = () => entry;
-  let hasMigrated = false;
-  function tryMigrate() {
-    if (hasMigrated) return;
-    hasMigrated = true;
-    if (!persistedForMigration) return;
-    let settings = null;
-    try {
-      settings = ctx.get("settings");
-    } catch {
-      settings = null;
-    }
-    if (!settings) return;
-    try {
-      const list = settings.describe();
-      const desc = list.find((d) => d.ns === NS);
-      if (desc && desc.user !== void 0) {
-        try {
-          console.info(
-            "[dshp-token-meter] settings.yaml \u5DF2\u5B58\u5728 dshp-token-meter \u7528\u6237\u914D\u7F6E\uFF0C\u8DF3\u8FC7\u65E7\u6587\u4EF6\u81EA\u52A8\u8FC1\u79FB\uFF08\u65E7\u6587\u4EF6\u4FDD\u7559\uFF0C\u53EF\u624B\u52A8\u5220\u9664 " + persistedForMigration.source + "\uFF09"
-          );
-        } catch {
-        }
-        return;
-      }
-    } catch {
-    }
-    const needPatch = {};
-    let need = false;
-    for (const k of ["activeVendor", "refreshSec", "enabled", "vendors"]) {
-      const pv = persistedForMigration.config[k];
-      const ev = entry[k];
-      if (JSON.stringify(pv) !== JSON.stringify(ev)) {
-        needPatch[k] = pv;
-        need = true;
-      }
-    }
-    if (!need) {
-      try {
-        const p = legacyQuotaConfigPath();
-        if (existsSync(p)) {
-          try {
-            unlinkSync(p);
-            console.info("[dshp-token-meter] \u65E7\u5B58\u50A8\u6587\u4EF6\u4E0E\u9ED8\u8BA4\u503C\u4E00\u81F4\uFF0C\u5DF2\u81EA\u52A8\u6E05\u7406 " + p);
-          } catch {
-          }
-        }
-      } catch {
-      }
-      return;
-    }
-    Promise.resolve(settings.update(NS, JSON.parse(JSON.stringify(needPatch)))).then(() => {
-      try {
-        console.info(
-          "[dshp-token-meter] \u5DF2\u81EA\u52A8\u5C06\u65E7\u7248 " + persistedForMigration.source + " \u8FC1\u79FB\u81F3 settings.yaml (dshp-token-meter)"
-        );
-      } catch {
-      }
-      try {
-        const p = persistedForMigration.source;
-        const bak = p + ".bak";
-        if (existsSync(p)) {
-          try {
-            renameSync(p, bak);
-            console.info("[dshp-token-meter] \u65E7\u6587\u4EF6\u5DF2\u5907\u4EFD\u4E3A " + bak);
-          } catch {
-            try {
-              unlinkSync(p);
-              console.info("[dshp-token-meter] \u65E7\u6587\u4EF6\u5DF2\u6E05\u7406 " + p);
-            } catch {
-            }
-          }
-        }
-      } catch {
-      }
-    }).catch((e) => {
-      try {
-        console.warn("[dshp-token-meter] \u65E7\u6587\u4EF6\u8FC1\u79FB\u5931\u8D25\uFF1A" + String(e?.message ?? e));
-      } catch {
-      }
-      hasMigrated = false;
-    });
-  }
-  let hasRenamedAuth = false;
-  function tryRenameAuth() {
-    if (hasRenamedAuth) return;
-    let settings = null;
-    try {
-      settings = ctx.get("settings");
-    } catch {
-      settings = null;
-    }
-    if (!settings) return;
-    let cfg = null;
-    try {
-      cfg = getConfig();
-    } catch {
-      return;
-    }
-    if (!cfg || !Array.isArray(cfg.vendors)) {
-      hasRenamedAuth = true;
-      return;
-    }
-    let changed = false;
-    const next = cfg.vendors.map((v) => {
-      if (v && v.type === "opencode-go" && v.params && typeof v.params["auth"] === "string" && v.params["auth"] !== "" && (v.params["cookie"] === void 0 || v.params["cookie"] === "")) {
-        changed = true;
-        const np = {
-          ...v.params,
-          cookie: v.params["auth"]
-        };
-        delete np["auth"];
-        return { ...v, params: np };
-      }
-      return v;
-    });
-    if (!changed) {
-      hasRenamedAuth = true;
-      return;
-    }
-    hasRenamedAuth = true;
-    Promise.resolve(updateConfig({ vendors: next })).then(() => {
-      try {
-        console.info(
-          "[dshp-token-meter] \u5DF2\u5C06 opencode-go \u4F9B\u5E94\u5546\u7684\u65E7 params.auth \u8FC1\u79FB\u4E3A params.cookie\uFF08\u503C\u4E0D\u53D8\uFF09"
-        );
-      } catch {
-      }
-    }).catch((e) => {
-      try {
-        console.warn("[dshp-token-meter] auth\u2192cookie \u8FC1\u79FB\u5931\u8D25\uFF1A" + String(e?.message ?? e));
-      } catch {
-      }
-      hasRenamedAuth = false;
-    });
-  }
-  let hasMigratedTypes = false;
-  function tryMigrateTypes() {
-    if (hasMigratedTypes) return;
-    let settings = null;
-    try {
-      settings = ctx.get("settings");
-    } catch {
-      settings = null;
-    }
-    if (!settings) return;
-    let cfg = null;
-    try {
-      cfg = getConfig();
-    } catch {
-      return;
-    }
-    let raw = null;
-    try {
-      raw = current();
-    } catch {
-    }
-    if (!raw || !Array.isArray(raw.vendors)) {
-      hasMigratedTypes = true;
-      return;
-    }
-    const legacyTypes = /* @__PURE__ */ new Set(["opencode-go", "opencode-zen"]);
-    if (!raw.vendors.some((v) => v && legacyTypes.has(String(v.type)))) {
-      hasMigratedTypes = true;
-      return;
-    }
-    hasMigratedTypes = true;
-    const next = (Array.isArray(cfg.vendors) ? cfg.vendors : []).map((v) => ({ ...v }));
-    Promise.resolve(updateConfig({ vendors: next })).then(() => {
-      try {
-        console.info(
-          "[dshp-token-meter] \u5DF2\u5C06\u65E7 type\uFF08opencode-go/opencode-zen\uFF09\u8FC1\u79FB\u4E3A opencode\uFF08\u5176\u4F59\u4E0D\u53D8\uFF09"
-        );
-      } catch {
-      }
-    }).catch((e) => {
-      try {
-        console.warn("[dshp-token-meter] type \u8FC1\u79FB\u5931\u8D25\uFF1A" + String(e?.message ?? e));
-      } catch {
-      }
-      hasMigratedTypes = false;
-    });
-  }
   try {
     ctx.inject(["settings"], (sctx) => {
       sctx.settings.installSection(ctx, NS, ConfigSchema, entry, {
         setSource: (src) => {
           current = src;
-          tryMigrate();
-          tryRenameAuth();
-          tryMigrateTypes();
         },
         onChange: () => {
         }
@@ -4460,19 +4165,19 @@ function apply(ctx, rawConfig) {
   } catch {
     storageDomain = null;
   }
-  let dshHome2 = "";
+  let dshHome = "";
   try {
-    dshHome2 = process.env["DSH_HOME"] || "";
+    dshHome = process.env["DSH_HOME"] || "";
   } catch {
   }
-  if (!dshHome2) {
+  if (!dshHome) {
     try {
-      dshHome2 = join(homedir(), ".dsh");
+      dshHome = join(homedir(), ".dsh");
     } catch {
-      dshHome2 = "/tmp/.dsh";
+      dshHome = "/tmp/.dsh";
     }
   }
-  const engine = sessionQuery && typeof sessionQuery.listSessions === "function" && typeof sessionQuery.readSession === "function" ? createEngine(sessionQuery, dshHome2, storageDomain) : null;
+  const engine = sessionQuery && typeof sessionQuery.listSessions === "function" && typeof sessionQuery.readSession === "function" ? createEngine(sessionQuery, dshHome, storageDomain) : null;
   if (engine) {
     try {
       ctx.effect(

@@ -1,9 +1,3 @@
-import { homedir } from 'os';
-import { join } from 'path';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-
-// src/host/config.ts
-
 // ../../node_modules/.pnpm/@deepseek-ai+cosmokit@1.8.3/node_modules/@deepseek-ai/cosmokit/lib/index.js
 function isNullable(value) {
   return value === null || value === void 0;
@@ -1444,8 +1438,6 @@ async function fetchRandomPages(opts) {
 
 // src/host/config.ts
 var NS = settingsNamespace("dshp-mcwiki-search");
-var PREV_SETTINGS_KEY = "dshp-inx-mcwiki-search";
-var LEGACY_SETTINGS_KEYS = [PREV_SETTINGS_KEY];
 var DEFAULT_CONFIG = {
   timeoutMs: DEFAULT_TIMEOUT_MS,
   maxChars: 0,
@@ -1458,21 +1450,6 @@ var ConfigSchema = Schema.object({
   introMaxChars: Schema.number().step(1).min(0).default(0),
   searchMaxResults: Schema.number().step(1).min(1).default(8)
 });
-function dshHome() {
-  try {
-    const env = process.env["DSH_HOME"];
-    if (typeof env === "string" && env.length > 0) return env;
-  } catch {
-  }
-  try {
-    return join(homedir(), ".dsh");
-  } catch {
-    return "/tmp/.dsh";
-  }
-}
-function settingsYamlPath() {
-  return join(dshHome(), "settings.yaml");
-}
 function isRecord2(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
@@ -1500,47 +1477,6 @@ function sanitizePatchConfig(raw) {
     if (n !== void 0 && n >= 1) out.searchMaxResults = n;
   }
   return out;
-}
-function migrateYamlNamespaceKey() {
-  try {
-    const p = settingsYamlPath();
-    if (!existsSync(p)) return;
-    const text = readFileSync(p, "utf8");
-    const lines = text.split("\n");
-    const at = (key) => {
-      const re = new RegExp(`^${key}:\\s*(#.*)?$`);
-      for (let i = 0; i < lines.length; i++) {
-        if (re.test(lines[i])) return i;
-      }
-      return -1;
-    };
-    const newIdx = at(NS);
-    const hit = LEGACY_SETTINGS_KEYS.map((key) => ({ key, idx: at(key) })).find((h) => h.idx >= 0);
-    if (!hit) return;
-    if (newIdx >= 0) {
-      try {
-        console.info(
-          `[dshp-mcwiki-search] settings.yaml \u540C\u65F6\u5B58\u5728 ${hit.key} \u4E0E dshp-mcwiki-search\uFF0C\u4EE5\u65B0 key \u4E3A\u51C6\uFF0C\u8BF7\u624B\u52A8\u5220\u9664\u65E7 ${hit.key} \u6BB5\u843D`
-        );
-      } catch {
-      }
-      return;
-    }
-    const m = lines[hit.idx].match(/(#.*)$/);
-    lines[hit.idx] = "dshp-mcwiki-search:" + (m?.[1] ? " " + m[1] : "");
-    writeFileSync(p, lines.join("\n"), "utf8");
-    try {
-      console.info(`[dshp-mcwiki-search] \u5DF2\u5C06 settings.yaml \u9876\u5C42 ${hit.key} \u91CD\u547D\u540D\u4E3A dshp-mcwiki-search`);
-    } catch {
-    }
-  } catch (e) {
-    try {
-      console.warn(
-        "[dshp-mcwiki-search] settings.yaml \u547D\u540D\u7A7A\u95F4\u91CD\u547D\u540D\u5931\u8D25\uFF1A" + String(e?.message ?? e)
-      );
-    } catch {
-    }
-  }
 }
 
 // src/host/routes.ts
@@ -2049,10 +1985,6 @@ function registerTools(ctx, getConfig) {
 var name = "@dshp/mcwiki-search";
 var inject = ["tools", "webServer"];
 function apply(ctx, rawConfig) {
-  try {
-    migrateYamlNamespaceKey();
-  } catch {
-  }
   const entry = { ...DEFAULT_CONFIG };
   const patch = sanitizePatchConfig(rawConfig);
   if (patch) {

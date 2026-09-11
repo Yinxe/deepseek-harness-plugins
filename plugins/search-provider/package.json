@@ -1,6 +1,6 @@
 {
   "name": "@dshp/search-provider",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "DeepSeek Harness (DSH) AI search provider hub: take over web_search with pluggable providers (Tavily first), with per-provider key management, search behavior, usage quota and connectivity test in one settings page.",
   "license": "MIT",
   "author": "Yinxe",

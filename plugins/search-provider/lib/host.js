@@ -1,9 +1,3 @@
-import { existsSync, readFileSync } from 'fs';
-import { homedir } from 'os';
-import { join } from 'path';
-
-// src/host/config.ts
-
 // ../../node_modules/.pnpm/@deepseek-ai+cosmokit@1.8.3/node_modules/@deepseek-ai/cosmokit/lib/index.js
 function isNullable(value) {
   return value === null || value === void 0;
@@ -839,9 +833,6 @@ var NS = settingsNamespace("dshp-search-provider");
 var ROUTE_BASE = `/ext/${NS}`;
 var MAX_RESULTS = 10;
 var DEFAULT_MAX_RESULTS = 5;
-var LEGACY_PROVIDER_SETTINGS = [
-  { ns: "dshp-inx-tavily-search", provider: "tavily" }
-];
 function isRecord(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
@@ -928,77 +919,6 @@ function snapshotConfig(config, modules) {
 function readBlock(config, providerId) {
   const raw = config[providerId];
   return isRecord(raw) ? raw : {};
-}
-function dshHome() {
-  try {
-    const env = process.env["DSH_HOME"];
-    if (typeof env === "string" && env.length > 0) return env;
-  } catch {
-  }
-  try {
-    return join(homedir(), ".dsh");
-  } catch {
-    return "/tmp/.dsh";
-  }
-}
-function settingsYamlPath() {
-  return join(dshHome(), "settings.yaml");
-}
-function readYamlSection(text, key) {
-  const lines = text.split("\n");
-  const head = new RegExp(`^${key}:\\s*(#.*)?$`);
-  let start = -1;
-  for (let i = 0; i < lines.length; i += 1) {
-    if (head.test(lines[i])) {
-      start = i;
-      break;
-    }
-  }
-  if (start < 0) return null;
-  const out = {};
-  for (let i = start + 1; i < lines.length; i += 1) {
-    const line = lines[i];
-    if (line.trim().length === 0 || line.trimStart().startsWith("#")) continue;
-    if (!/^\s/.test(line)) break;
-    const m = line.match(/^\s+([A-Za-z0-9_-]+):\s*(.*)$/);
-    if (m === null) continue;
-    const k = m[1];
-    const raw = m[2].replace(/\s+#.*$/, "").trim();
-    if (raw.length === 0 || raw === "null" || raw === "~") continue;
-    out[k] = raw.replace(/^['"]|['"]$/g, "");
-  }
-  return out;
-}
-function hasSectionInYaml(text, key) {
-  return new RegExp(`^${key}:`, "m").test(text);
-}
-function planLegacyAdoption(modules) {
-  try {
-    const path = settingsYamlPath();
-    if (!existsSync(path)) return null;
-    const text = readFileSync(path, "utf8");
-    if (hasSectionInYaml(text, NS)) return null;
-    const patch = {};
-    for (const legacy of LEGACY_PROVIDER_SETTINGS) {
-      const module = modules.find((m) => m.id === legacy.provider);
-      if (module === void 0) continue;
-      const section = readYamlSection(text, legacy.ns);
-      if (section === null) continue;
-      try {
-        const block = module.sanitizePatch(section);
-        const n = clampInt(section["maxResults"], 1, MAX_RESULTS);
-        const hasBlock = block !== null && Object.keys(block).length > 0;
-        if (!hasBlock && n === void 0) continue;
-        if (hasBlock && block !== null) patch[module.id] = block;
-        if (n !== void 0) patch["maxResults"] = n;
-        patch["provider"] = module.id;
-      } catch {
-      }
-    }
-    return Object.keys(patch).length > 0 ? patch : null;
-  } catch {
-    return null;
-  }
 }
 
 // src/host/providers/base.ts
@@ -1608,24 +1528,6 @@ function apply(ctx, rawConfig) {
       );
     } catch {
     }
-  }
-  const legacyPatch = planLegacyAdoption(modules);
-  if (legacyPatch !== null) {
-    void updateConfig(legacyPatch).then(() => {
-      try {
-        console.info(
-          "[dshp-search-provider] \u5DF2\u91C7\u7528\u65E7\u63D2\u4EF6 dshp-inx-tavily-search \u7684\u914D\u7F6E\uFF0C\u65E7\u6BB5\u843D\u4FDD\u7559\u672A\u5220\uFF08\u53EF\u624B\u52A8\u6E05\u7406\uFF09"
-        );
-      } catch {
-      }
-    }).catch((error) => {
-      try {
-        console.warn(
-          `[dshp-search-provider] \u65E7\u63D2\u4EF6\u914D\u7F6E\u91C7\u7528\u5931\u8D25\uFF1A${String(error?.message ?? error)}`
-        );
-      } catch {
-      }
-    });
   }
   for (const m of modules) {
     if (typeof m.registerRoutes === "function") {

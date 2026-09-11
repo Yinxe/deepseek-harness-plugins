@@ -90,7 +90,7 @@ export type AnyLlm = any;
 - 全仓 ESM：`package.json` 必须 `"type": "module"`；**相对导入一律带 `.js` 后缀**（`from './config.js'`），哪怕源文件是 `.ts`。这是 NodeNext 的硬要求，漏后缀 build 能过、运行时挂。
 - `verbatimModuleSyntax`：类型导入必须 `import type { X } from ...`，值和类型混写会被打回。
 - `isolatedModules`：不许 `export =` / 常量枚举，`const enum` 禁用。
-- host 按职责拆文件：`index.ts` 只做装配（apply + 注册），`types.ts` 类型，`config.ts` 默认值+schema+迁移，`http.ts` 路由小工具，`cache.ts` 状态，业务逻辑独立文件。**单个文件超过 ~600 行就拆**（标杆 `index.ts` 627 行是上限，不是目标）。
+- host 按职责拆文件：`index.ts` 只做装配（apply + 注册），`types.ts` 类型，`config.ts` 默认值+schema+消毒，`http.ts` 路由小工具，`cache.ts` 状态，业务逻辑独立文件。**单个文件超过 ~600 行就拆**（标杆 `index.ts` 627 行是上限，不是目标）。
 - client 按层拆：`types.ts`（协议）/ `api.ts`（fetch 封装）/ `styles.ts`（CSS 字符串）/ `components.ts`（Badge/Row/Select/Switch）/ `<X>Section.ts`（业务）/ `index.ts`（loader 注册）。通用小构件进 `components.ts`，别在 Section 里重复造。
 
 ### 2.4 代码风格（Prettier 即法律）
@@ -165,7 +165,7 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
 
 ### 6.2 apply 结构（顺序固定）
 
-照抄 `host/index.ts` 的分段顺序：① 迁移旧状态（try/catch 包裹）→ ② 合并 `rawConfig` patch → ③ 读持久化做延迟迁移 → ④ `ctx.inject(['settings'], ... installSection ...)` → ⑤ 内部 helpers（getConfig/snapshot/ensureDefaults）→ ⑥ 缓存/监听 → ⑦ 门禁/补丁 → ⑧ systemPrompt → ⑨ tools.register → ⑩ webServer.register。每段一个 `// ── 中文标题 ──` 分隔注释。
+照抄 `host/index.ts` 的分段顺序：① 合并 `rawConfig` patch（settings 的 base 层）→ ② `ctx.inject(['settings'], ... installSection ...)` → ③ 内部 helpers（getConfig/snapshot/ensureDefaults）→ ④ 缓存/监听 → ⑤ 门禁/补丁 → ⑥ systemPrompt → ⑦ tools.register → ⑧ webServer.register。每段一个 `// ── 中文标题 ──` 分隔注释。**不设「迁移旧状态」段**：插件只认自己的 NS，不读历史 key、不读旧文件（§7.3）。
 
 ### 6.3 服务访问：get 优先，ctx.xxx 只在 inject 后
 
@@ -198,7 +198,7 @@ ctx.effect(() => slotsOrServerRegister(...), 'dshp-<name>: state route');
 
 ### 6.6 日志与错误信息
 
-- 日志前缀统一 `[dshp-<name>]`，`console.info` 记迁移/接管成功，`console.warn` 记降级/重试，`console.error` 记注册失败。启动路径上不超过 3 行日志，别刷屏。
+- 日志前缀统一 `[dshp-<name>]`，`console.info` 记接管/就绪成功，`console.warn` 记降级/重试，`console.error` 记注册失败。启动路径上不超过 3 行日志，别刷屏。
 - 抛给模型/用户的 Error 必须中文、可操作、指路（设置页路径 / setting.yml 写法 / 重试动作）。英文技术细节可附在冒号后，但首句必须是人话。
 
 ---
@@ -209,7 +209,7 @@ ctx.effect(() => slotsOrServerRegister(...), 'dshp-<name>: state route');
 
 - 配置键名 = NS = `dshp-<name>`（kebab-case，`^[a-z][a-z0-9-]*$`，`http.ts` 的 `settingsNamespace()` 做运行时校验）。
 - NS 四处同名：settings 命名空间 / 路由前缀 `/ext/dshp-<name>/*` / `cordis.patch.yml` id / settings.section id。这是定位插件状态的唯一钥匙，改名即 breaking。
-- **读写一律以新键名为准**：`installSection(ctx, NS, ...)` 注册、`settings.update(NS, patch)` 写入、`describe()` 里只认 `d.ns === NS`、`getConfig()` 只读 `setSource` 存下的 getter。除 `NS` 定义处与 `LEGACY_SETTINGS_KEYS` 外，**禁止硬编码任何键名字符串**；稳态禁止读写自有文件存配置（`storages/*.json` 只允许一次性迁移读，见 §7.3）。
+- **只认 NS、只有一个键名**：`installSection(ctx, NS, ...)` 注册、`settings.update(NS, patch)` 写入、`describe()` 里只认 `d.ns === NS`、`getConfig()` 只读 `setSource` 存下的 getter。除 `NS` 定义处外**禁止硬编码任何键名字符串**；历史旧键（`dshp-inx-*`、改名前的旧 NS）**不得出现在代码里**，也不许为它写兼容读写。稳态禁止读写自有文件存配置（`storages/*.json` 也不再读，见 §7.3）。
 
 ### 7.2 Schema（schemastery）
 
@@ -228,11 +228,15 @@ export const ConfigSchema: any = z.object({
 - `setSource` 回调里保存最新 getter（`current = src`），业务永远经 `getConfig()` 读，不直接持有对象（热重载靠它）。
 - **固定不变的东西不进 settings**：外部端点、版本号、魔法数字一律写死为具名常量（如 mcwiki-search 的 `API_BASE = 'https://zh.minecraft.wiki/api.php'`，注释写“不可配置，换站改这里重 build”）。settings 只放用户真的会改的东西——每多一个配置项，就是多一份文档、多一个设置页控件、多一处校验。
 
-### 7.3 迁移（一次性，只删不写）
+### 7.3 不做迁移（改名/重构由用户手动完成）
 
-- 新版**不再写任何自有文件**：旧 `storages/*.json` 只读一次 → `settings.update(NS, patch)` → 成功后改名 `.bak`（失败则 `hasMigrated=false` 下次重试）。与默认值一致的旧文件直接 `unlink`。
-- settings.yaml 顶层 key 重命名走文本级行替换（保留注释与缩进），新 key 已存在时以新为准、只提示不覆盖（照抄 `migrateYamlNamespaceKey`）。
-- 历史 key 记 `LEGACY_SETTINGS_KEYS` 数组（新→旧排序），注释写清每个 key 的版本来源。
+**插件永不迁移历史配置**：不扫 settings.yaml，不读 `storages/*.json`，不认旧 key，不写回用户文件。
+
+- 配置来源只有三处：schema 默认值 → composition `base`（patch）→ settings.yaml 的 **NS 分节**。缺字段就回默认值，多字段原样保留（schema 之外的键不动、不删）。
+- 改名（NS / 包名 / 路由）是 **breaking**：老用户要么手动把旧分节改名/重配，要么接受回默认值。迁移步骤只写在 README 的更新日志里，**不写进代码**。
+- 禁止出现：`LEGACY_SETTINGS_KEYS` / `migrateYamlNamespaceKey(s)` / `loadPersisted` / `planLegacyAdoption` / `sanitizePersisted` 这类为旧版服务的东西，以及任何 `readFileSync(settings.yaml)`、`existsSync(storages/…)`、`settings.update` 回写历史值的路径。
+- 旧插件目录、旧 key、旧 `storages/*.json` 都由用户自行删除；插件启动不因它们存在或不存在改变行为。
+- 只读的**值级兼容**仍可保留（例：provider `type` 别名 `registerAlias`、legacy 渲染兜底），但必须写在读路径上、**不落库、不改写用户文件**（§10.3）。
 
 ---
 
@@ -386,7 +390,7 @@ const day = cn.getUTCDay(),
 - 输入：路由 body 限 1MB；一切字符串入库前截断；`maxImages` 类数字夹范围；非法 hint/补丁宁可忽略/报错，不可拼进 prompt 或文件名。
 - 密钥：**不许在代码/注释里放任何密钥、token、内网地址**；插件配置只存路由选择（provider/model），不存口令。
 - 最小暴露：缓存只存 leaf owned copy；tool 输出只给 `{ description, model, fallback_used }`；日志不打图片内容、prompt 全文、用户原文（最多打长度/计数）。
-- 卸载干净：`ctx.effect` 清理一切（样式、路由、patch、section）；不在 DSH 目录外写文件；迁移备份只留一个 `.bak`。
+- 卸载干净：`ctx.effect` 清理一切（样式、路由、patch、section）；**不在 DSH 目录外写任何文件**（设置只进 settings.yaml 的 NS，见 §7.3）。
 
 ---
 
@@ -456,4 +460,4 @@ pnpm test           # pnpm -r test（至少 node --check 双 bundle）
 9. 不跑门禁就 push；`pnpm-lock.yaml` 没提交。
 10. 在代码里放密钥；新增自有配置文件（配置只进 settings.yaml NS）。
 11. 子包自带 LICENSE / `files` 含 LICENSE（LICENSE 只在仓库根保留一份，全仓 MIT 共用）。
-12. 稳态读写用旧配置键名、硬编码键名字符串、写自有文件存配置（读写一律 `NS` 常量 + settings.yaml 新键，见 §7.1）。
+12. 稳态读写用旧配置键名、硬编码键名字符串、写自有文件存配置；或为历史旧键写兼容/迁移代码（读写一律 `NS` 常量，且只认 NS，见 §7.1 / §7.3）。

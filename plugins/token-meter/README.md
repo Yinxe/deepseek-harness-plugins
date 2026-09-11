@@ -1,6 +1,6 @@
 # @dshp/token-meter
 
-DeepSeek Harness（DSH）**Token 计量**插件：**额度 + 用量二合一**——一边看“外面还剩多少”（多供应商滚动额度/按量余额：opencode、DeepSeek、Command Code、手动账本，右侧栏富卡片 + 设置页供应商运维），一边看“里面用了多少”（本机会话日志聚合：累计/峰值/连续天数、日/周趋势、24 小时分布、GitHub 风格热力图、模型分布、今日消耗）。配置通过官方 settings API 持久化到 `$DSH_HOME/settings.yaml`（`dshp-token-meter` 命名空间），支持注释保留与热重载。旧双插件的 `storages/token-quota.json` 与 settings key（`dshp-inx-token-quota` / `dshp-inx-token-stats`）首次启动自动合并迁移。
+DeepSeek Harness（DSH）**Token 计量**插件：**额度 + 用量二合一**——一边看“外面还剩多少”（多供应商滚动额度/按量余额：opencode、DeepSeek、Command Code、手动账本，右侧栏富卡片 + 设置页供应商运维），一边看“里面用了多少”（本机会话日志聚合：累计/峰值/连续天数、日/周趋势、24 小时分布、GitHub 风格热力图、模型分布、今日消耗）。配置通过官方 settings API 持久化到 `$DSH_HOME/settings.yaml`（`dshp-token-meter` 命名空间），支持注释保留与热重载。配置**只认** `dshp-token-meter` 一个键：旧双插件的 `storages/token-quota.json` 与 settings key（`dshp-inx-token-quota` / `dshp-inx-token-stats`）不再读取、不再迁移（手工迁移步骤见“常见问题”）。
 
 > 设计原则：**零依赖、零残留、可逆副作用**。密钥只存引用（`$NAME`）或脱敏展示；统计无网络上报、无独立持久化（会话日志即持久层，指纹缓存丢了可重扫）；卸载即干净。
 
@@ -17,7 +17,8 @@ pnpm install
 # 2. 本地安装到 profile（路径按你执行命令时的 cwd 解析）
 dsh plugin --profile web add ./plugins/token-meter
 
-# 3. 卸载旧双插件（避免双份侧边栏/设置节重复）
+# 3. 卸载旧双插件（避免双份侧边栏/设置节重复；旧 settings 段需手工并到 dshp-token-meter，
+#    本插件不做任何自动迁移）
 dsh plugin --profile web remove "@dshp-inx/token-quota"
 dsh plugin --profile web remove "@dshp-inx/token-stats"
 
@@ -56,6 +57,8 @@ dsh web
 
 > ⚠️ **不要直接编辑 `node_modules/@dshp/token-meter/`**：pnpm store 硬链接，改坏 store。只改 monorepo 里的 `plugins/token-meter/src`。
 
+> **v0.2.0 破坏性变更**：不再读取旧命名空间（`dshp-inx-token-quota` / `dshp-inx-token-stats`）与旧 `storages/token-quota.json`，也不再把供应商参数 `auth` 改写成 `cookie`。老配置需手工并到 `dshp-token-meter`（步骤见「常见问题」）；旧 `auth` 字段在读取时仍按旧值识别，无需改。
+
 ## 界面预览
 
 > 截图在 `images/` 目录（3 张：额度卡片 / 用量统计 / 宽屏面板），对应右侧栏双 Tab 与宽屏布局。
@@ -84,7 +87,7 @@ dsh web
 
 | 部分                                          | 内容                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Host（`src/host/` → `lib/host.js`）**       | 额度：provider 注册表委托拉取（`opencode` / `deepseek` 自动选路 / `commandcode` / `manual`，别名 `opencode-go`/`opencode-zen`/`deepseek-api`/`deepseek-web` 读路径自动归一），每个 provider 同时产出**自己的数据与 UI 视图**（`ProviderView` 声明式区块，见「provider 分层渲染」），密钥 `$NAME`/`{env:}`/`{cred:}` 解析（凭据服务优先、环境变量兜底），明文脱敏（只写不读、留空保留）、`secret-to-cred` 一键转存、内存快照（`st.snaps`，失败保旧）。统计：`sessionQuery` 全量扫描 + 文件指纹缓存（`storageDomain` 域 `token_stats`，域名保持不变）+ 后台分批泵（每批 8 会话、`setImmediate` 让出、单会话 20s 超时、失败 3 次跳过）+ `session/event` 失效。通过官方 `ctx.settings` + `schemastery` 持久化到 `settings.yaml`（`dshp-token-meter`），旧文件/旧 key 自动合并迁移。                                                                                                                                                                                                                                                                       |
+| **Host（`src/host/` → `lib/host.js`）**       | 额度：provider 注册表委托拉取（`opencode` / `deepseek` 自动选路 / `commandcode` / `manual`，别名 `opencode-go`/`opencode-zen`/`deepseek-api`/`deepseek-web` 读路径自动归一），每个 provider 同时产出**自己的数据与 UI 视图**（`ProviderView` 声明式区块，见「provider 分层渲染」），密钥 `$NAME`/`{env:}`/`{cred:}` 解析（凭据服务优先、环境变量兜底），明文脱敏（只写不读、留空保留）、`secret-to-cred` 一键转存、内存快照（`st.snaps`，失败保旧）。统计：`sessionQuery` 全量扫描 + 文件指纹缓存（`storageDomain` 域 `token_stats`，域名保持不变）+ 后台分批泵（每批 8 会话、`setImmediate` 让出、单会话 20s 超时、失败 3 次跳过）+ `session/event` 失效。通过官方 `ctx.settings` + `schemastery` 持久化到 `settings.yaml`（`dshp-token-meter`）；**配置只认该 NS，不读旧文件/旧 key**。                                                                                                                                                                                                                                                             |
 | **Client（`src/client/` → `lib/client.js`）** | 「设置 → Token 计量」精简页：偏好（自动刷新/默认范围）+ 供应商添加与管理（当前选择/拉取/启用-禁用/编辑/存凭据/删除），图表全部搬到右侧栏。失效的侧边栏显示开关已移除（右栏常驻展示）。右侧栏双 tab（官方 `sidebarRightTabs` 注册，首次自动打开）：「额度」为全部供应商展开富卡片，「用量」为完整统计（指标卡、趋势线、热力图、模型环形图 + 小组件工具条）。左栏入口已移除，不再占用侧边栏空间。**供应商级余额查询开关**：每个供应商可单独「禁用」——禁用后卡片显示灰点 +「已禁用」badge，退出 Host 主动定时拉取，但手动「拉取」、已有快照展示与「设为当前」均不受影响（设置页与右栏卡片都可一键切换）。小组件化：每个供应商卡与每张图表（指标卡/趋势/热力/模型分布/今日卡）都是独立组件，标题栏 `⠿` 抓手拖拽或 `⧉` 一键弹出为全局浮窗。浮窗**只有定位、没有任何外框**——组件自身的卡片即浮窗外观，浮出前后视觉完全一致；浮出后**原位自动消失**，浮窗内的 `回归` 按钮（或原位工具条开关）收回后原位恢复。坐标 `localStorage` 持久化，浮窗内任意非交互区域按住可拖动。UI 全部使用 DSH 官方设计 token（`dsw-alias-*`），与官方设置页风格一致。无额外依赖。 |
 | **同源路由**                                  | `GET /ext/dshp-token-meter/state`（配置脱敏 + 快照 + provider 元数据）、`POST /ext/dshp-token-meter/config`（通用偏好补丁）、`POST /ext/dshp-token-meter/refresh`、`POST /ext/dshp-token-meter/set-active`、`POST /ext/dshp-token-meter/set-refresh`、`POST /ext/dshp-token-meter/set-enabled`、`POST /ext/dshp-token-meter/set-vendor-enabled`（单供应商余额查询开关，`{ id, enabled }`）、`POST /ext/dshp-token-meter/add-vendor`、`POST /ext/dshp-token-meter/update-vendor`、`POST /ext/dshp-token-meter/delete-vendor`、`POST /ext/dshp-token-meter/secret-to-cred`、`GET /ext/dshp-token-meter/stats`（聚合快照，别名 `/data`），均带同源校验（`Origin` 与 `Host` 一致或缺失才放行）+ `no-store`。                                                                                                                                                                                                                                                                                                                                              |
 | **工具**                                      | 无模型工具（本插件为运维/展示型，不注册 `tools`）。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
@@ -268,7 +271,7 @@ Client  src/client/providers/ui/<type>.ts → 自己的完整 UI（自由排版�
 src/host/              Host 半（Node，tsup → lib/host.js 单文件 ESM）
   types.ts             共享类型（Vendor/快照/统计/配置/路由协议）
   http.ts              同源小工具（settingsNamespace/json/sameOrigin/readBody）
-  config.ts            默认值/schema/双命名空间合并迁移/旧文件迁移
+  config.ts            默认值/schema/消毒（不做迁移）
   secrets.ts           密钥引用解析（$NAME/{env:}/{cred:}/明文）
   errors.ts            失败分类（auth/session/plan/…）+ 处置指引 + ProviderError
   providers/           供应商适配器（每家一文件，注册即扩展）
@@ -288,7 +291,7 @@ src/host/              Host 半（Node，tsup → lib/host.js 单文件 ESM）
     async.ts           超时
     engine.ts          缓存引擎（指纹持久缓存 + 后台渐进扫描，零依赖垫片版）
     routes.ts          GET /stats（别名 /data）
-  index.ts             apply 装配（迁移→settings→引擎→路由）
+  index.ts             apply 装配（patch→settings→引擎→路由）
 src/client/            Client 半（浏览器，tsup → lib/client.js 单文件 IIFE）
   types.ts             协议类型
   api.ts               路由封装
@@ -329,7 +332,7 @@ cordis.patch.yml       bundle 声明（id: dshp-token-meter）
 - **统计一直“扫描中”**：会话多时后台分批扫描需时间（每批 8 个），`partial` 为渐进状态，轮询自动补全；单个会话 20s 超时防钉死，失败 3 次计入 `errors` 跳过。
 - **某个供应商不想让它定时拉取**：设置页该供应商点「禁用」（或右栏额度卡点「禁用」，亦可直接在该 vendor 下写 `enabled: false`）。禁用后它不再被 Host 主动定时拉取，卡片仍显示上次快照并标注「已禁用」；需要时照常点「拉取」手动查一次，再点「启用」即恢复。
 - **统计数字对不上**：口径为终值覆盖（chunk 采样不重复计）+ fork 种子去重（含子代理）； reasoning 已含在 output，不重复加。
-- **旧配置没过来**：首次启动会自动把 `dshp-inx-token-quota` + `dshp-inx-token-stats` 合并为 `dshp-token-meter`（旧段落保留，确认后手动删除）；`storages/token-quota.json` 会迁移并备份 `.bak`；新 key 已存在时以新为准。
+- **旧配置没过来**：本插件**不自动迁移**。请手工把 `dshp-inx-token-quota` / `dshp-inx-token-stats` 两个分节的内容并到 `dshp-token-meter`（旧的 `storages/token-quota.json` 也不会被读取，可自行删除）。
 
 ## 卸载
 

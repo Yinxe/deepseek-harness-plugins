@@ -978,7 +978,7 @@
           slots.inject(
             "settings.section",
             () => slots.register(
-              { name: "settings.section", id: "dshp-search-provider", order: 27, label: "AI \u641C\u7D22" },
+              { name: "settings.section", id: "dshp-search-provider", order: 28, label: "AI \u641C\u7D22" },
               Section
             )
           );

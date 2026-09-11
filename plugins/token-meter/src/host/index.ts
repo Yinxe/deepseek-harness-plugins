@@ -22,23 +22,14 @@
  *    lib/{index,config,secrets,providers/*}.js → src/host/{index,quota,config,secrets,providers/*}.ts
  *  - stats：~/.dsh/plugins/dsh-token-stats（@dshp-inx/token-stats v1.1.3）
  *    lib/{index,engine,fold,fsindex,async,http}.js → src/host/{index,stats/*}.ts
- * 本目录为等价 TS 重写合并：逻辑逐行对齐，仅路由前缀与 NS 由双命名空间收敛为
- * `dshp-token-meter`，行为不变（迁移见 config.ts + 下方 tryMigrate 系列）。
+ * 本目录为等价 TS 重写合并：逻辑逐行对齐，路由前缀与 NS 收敛为单一
+ * `dshp-token-meter`；历史命名空间与旧文件不再读写、不再迁移。
  *
  * @module @dshp/token-meter
  */
-import { existsSync, renameSync, unlinkSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import {
-  ConfigSchema,
-  DEFAULT_CONFIG,
-  NS,
-  loadPersistedQuota,
-  legacyQuotaConfigPath,
-  migrateYamlNamespaces,
-  sanitizePatchConfig,
-} from './config.js';
+import { ConfigSchema, DEFAULT_CONFIG, NS, sanitizePatchConfig } from './config.js';
 import { createSecretResolver } from './secrets.js';
 import { canonicalType } from './providers/index.js';
 import { registerQuotaRoutes, refreshOne } from './quota.js';
@@ -52,12 +43,6 @@ export const inject: string[] = ['webServer'];
 export { NS, ConfigSchema };
 
 export function apply(ctx: AnyCtx, rawConfig: unknown): void {
-  try {
-    migrateYamlNamespaces();
-  } catch {
-    /* ignore */
-  }
-
   const entry: PluginConfig = {
     ...DEFAULT_CONFIG,
     vendors: [],
@@ -75,236 +60,13 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
       entry.defaultRange = patch.defaultRange;
   }
 
-  const persistedForMigration = loadPersistedQuota();
-
   let current: () => PluginConfig = () => entry;
-  let hasMigrated = false;
-
-  function tryMigrate(): void {
-    if (hasMigrated) return;
-    hasMigrated = true;
-    if (!persistedForMigration) return;
-    let settings: AnyCtx = null;
-    try {
-      settings = ctx.get('settings') as AnyCtx;
-    } catch {
-      settings = null;
-    }
-    if (!settings) return;
-    try {
-      const list = settings.describe() as Array<{ ns?: string; user?: unknown }>;
-      const desc = list.find((d) => d.ns === NS);
-      if (desc && desc.user !== undefined) {
-        try {
-          console.info(
-            '[dshp-token-meter] settings.yaml 已存在 dshp-token-meter 用户配置，跳过旧文件自动迁移（旧文件保留，可手动删除 ' +
-              persistedForMigration.source +
-              '）',
-          );
-        } catch {
-          /* ignore */
-        }
-        return;
-      }
-    } catch {
-      /* ignore */
-    }
-    const needPatch: Record<string, unknown> = {};
-    let need = false;
-    for (const k of ['activeVendor', 'refreshSec', 'enabled', 'vendors'] as Array<keyof PluginConfig>) {
-      const pv: unknown = persistedForMigration.config[k];
-      const ev: unknown = entry[k];
-      if (JSON.stringify(pv) !== JSON.stringify(ev)) {
-        needPatch[k] = pv;
-        need = true;
-      }
-    }
-    if (!need) {
-      try {
-        const p = legacyQuotaConfigPath();
-        if (existsSync(p)) {
-          try {
-            unlinkSync(p);
-            console.info('[dshp-token-meter] 旧存储文件与默认值一致，已自动清理 ' + p);
-          } catch {
-            /* ignore */
-          }
-        }
-      } catch {
-        /* ignore */
-      }
-      return;
-    }
-    Promise.resolve(settings.update(NS, JSON.parse(JSON.stringify(needPatch)) as Record<string, unknown>))
-      .then(() => {
-        try {
-          console.info(
-            '[dshp-token-meter] 已自动将旧版 ' +
-              persistedForMigration.source +
-              ' 迁移至 settings.yaml (dshp-token-meter)',
-          );
-        } catch {
-          /* ignore */
-        }
-        try {
-          const p = persistedForMigration.source;
-          const bak = p + '.bak';
-          if (existsSync(p)) {
-            try {
-              renameSync(p, bak);
-              console.info('[dshp-token-meter] 旧文件已备份为 ' + bak);
-            } catch {
-              try {
-                unlinkSync(p);
-                console.info('[dshp-token-meter] 旧文件已清理 ' + p);
-              } catch {
-                /* ignore */
-              }
-            }
-          }
-        } catch {
-          /* ignore */
-        }
-      })
-      .catch((e: unknown) => {
-        try {
-          console.warn('[dshp-token-meter] 旧文件迁移失败：' + String((e as Error)?.message ?? e));
-        } catch {
-          /* ignore */
-        }
-        hasMigrated = false;
-      });
-  }
-
-  // 旧 params.auth → cookie 一次性改名（opencode 系）：值不变，仅换键
-  let hasRenamedAuth = false;
-  function tryRenameAuth(): void {
-    if (hasRenamedAuth) return;
-    let settings: AnyCtx = null;
-    try {
-      settings = ctx.get('settings') as AnyCtx;
-    } catch {
-      settings = null;
-    }
-    if (!settings) return;
-    let cfg: PluginConfig | null = null;
-    try {
-      cfg = getConfig();
-    } catch {
-      return;
-    }
-    if (!cfg || !Array.isArray(cfg.vendors)) {
-      hasRenamedAuth = true;
-      return;
-    }
-    let changed = false;
-    const next = cfg.vendors.map((v) => {
-      if (
-        v &&
-        v.type === 'opencode-go' &&
-        v.params &&
-        typeof (v.params as Record<string, unknown>)['auth'] === 'string' &&
-        ((v.params as Record<string, unknown>)['auth'] as string) !== '' &&
-        ((v.params as Record<string, unknown>)['cookie'] === undefined ||
-          (v.params as Record<string, unknown>)['cookie'] === '')
-      ) {
-        changed = true;
-        const np: Record<string, unknown> = {
-          ...(v.params as Record<string, unknown>),
-          cookie: (v.params as Record<string, unknown>)['auth'],
-        };
-        delete np['auth'];
-        return { ...v, params: np };
-      }
-      return v;
-    });
-    if (!changed) {
-      hasRenamedAuth = true;
-      return;
-    }
-    hasRenamedAuth = true;
-    Promise.resolve(updateConfig({ vendors: next }))
-      .then(() => {
-        try {
-          console.info(
-            '[dshp-token-meter] 已将 opencode-go 供应商的旧 params.auth 迁移为 params.cookie（值不变）',
-          );
-        } catch {
-          /* ignore */
-        }
-      })
-      .catch((e: unknown) => {
-        try {
-          console.warn('[dshp-token-meter] auth→cookie 迁移失败：' + String((e as Error)?.message ?? e));
-        } catch {
-          /* ignore */
-        }
-        hasRenamedAuth = false;
-      });
-  }
-
-  // 旧 type → opencode 一次性改名（go/zen 合并后）
-  let hasMigratedTypes = false;
-  function tryMigrateTypes(): void {
-    if (hasMigratedTypes) return;
-    let settings: AnyCtx = null;
-    try {
-      settings = ctx.get('settings') as AnyCtx;
-    } catch {
-      settings = null;
-    }
-    if (!settings) return;
-    let cfg: PluginConfig | null = null;
-    try {
-      cfg = getConfig();
-    } catch {
-      return;
-    }
-    let raw: PluginConfig | null = null;
-    try {
-      raw = current() as PluginConfig;
-    } catch {
-      /* ignore */
-    }
-    if (!raw || !Array.isArray(raw.vendors)) {
-      hasMigratedTypes = true;
-      return;
-    }
-    const legacyTypes = new Set(['opencode-go', 'opencode-zen']);
-    if (!raw.vendors.some((v) => v && legacyTypes.has(String(v.type)))) {
-      hasMigratedTypes = true;
-      return;
-    }
-    hasMigratedTypes = true;
-    const next = (Array.isArray(cfg.vendors) ? cfg.vendors : []).map((v) => ({ ...v }));
-    Promise.resolve(updateConfig({ vendors: next }))
-      .then(() => {
-        try {
-          console.info(
-            '[dshp-token-meter] 已将旧 type（opencode-go/opencode-zen）迁移为 opencode（其余不变）',
-          );
-        } catch {
-          /* ignore */
-        }
-      })
-      .catch((e: unknown) => {
-        try {
-          console.warn('[dshp-token-meter] type 迁移失败：' + String((e as Error)?.message ?? e));
-        } catch {
-          /* ignore */
-        }
-        hasMigratedTypes = false;
-      });
-  }
 
   try {
     ctx.inject(['settings'], (sctx: AnyCtx) => {
       sctx.settings.installSection(ctx, NS, ConfigSchema, entry, {
         setSource: (src: () => PluginConfig) => {
           current = src;
-          tryMigrate();
-          tryRenameAuth();
-          tryMigrateTypes();
         },
         onChange: () => {},
       });

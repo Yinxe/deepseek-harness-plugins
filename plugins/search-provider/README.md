@@ -4,7 +4,7 @@ DeepSeek Harness（DSH）AI 搜索提供方中枢：用可插拔的第三方搜�
 
 > 设计原则：**即插即用、零残留、可扩展**。插件只注册搜索提供方 + 一个设置页；提供方按模块契约注册（`src/host/providers/`），新增一家供应商不改设置页主代码；API Key 每次搜索实时从凭证库解析，不滞留在提供方实例上；卸载后除凭证库里你自己存的 Key 外无任何残留。
 
-> 本插件为 monorepo（[deepseek-harness-plugins](https://github.com/Yinxe/deepseek-harness-plugins)）成员，等同改写自独立仓库 [dsh-tavily-search](https://github.com/Yinxe/dsh-tavily-search)（`@dshp-inx/tavily-search`），并提供从旧插件迁移的路径（见下文）。
+> 本插件为 monorepo（[deepseek-harness-plugins](https://github.com/Yinxe/deepseek-harness-plugins)）成员，等同改写自独立仓库 [dsh-tavily-search](https://github.com/Yinxe/dsh-tavily-search)（`@dshp-inx/tavily-search`），并提供从旧插件手工迁移的路径（见下文）。
 
 ## 安装（唯一方式：克隆 monorepo + 本地安装）
 
@@ -63,6 +63,8 @@ dsh web
 
 > `lib/` 已提交在 git 里，clone 下来就能用；改了 src 才需要在本地重打 bundle。
 
+> **v0.2.0 破坏性变更**：不再从旧插件分节 `dshp-inx-tavily-search` 采用 `searchDepth` / `maxResults`。需要沿用旧值时请手工抄到 `dshp-search-provider`（见「从 dsh-tavily-search 迁移」）。
+
 **一键 AI 安装**：把下面这段直接发给你的 DSH AI（复制即用，无需修改）：
 
 ```text
@@ -76,18 +78,28 @@ dsh web
 4. 打开 设置 → AI 搜索：粘贴 Tavily API Key（tvly-…）→ 保存密钥 → 运行连接测试
 ```
 
-## 从 dsh-tavily-search 迁移
+## 从 dsh-tavily-search 迁移（手工，插件不自动采用配置）
 
-旧插件（`@dshp-inx/tavily-search`）与本插件**互斥**：两者都注册 `tavily` 提供方，id 冲突会触发 `WEB_DUPLICATE_PROVIDER`（新插件会打印中文告警提示）。迁移三步：
+旧插件（`@dshp-inx/tavily-search`）与本插件**互斥**：两者都注册 `tavily` 提供方，id 冲突会触发 `WEB_DUPLICATE_PROVIDER`（本插件会打印中文告警提示）。两步：
 
 1. 安装本插件（见上）并重启确认生效；
-2. 移除旧插件：`dsh plugin --profile web remove "@dshp-inx/tavily-search"`，删除 `~/.dsh/plugins/dsh-tavily-search` 目录；
-3. 配置自动迁移：首次启动若 `settings.yaml` 尚无 `dshp-search-provider` 分节，插件会从旧分节 `dshp-inx-tavily-search` 一次性采用 `searchDepth`（和 `maxResults`，如有）写入新分节；旧段落保留不删，可手动清理：
-   ```yaml
-   # 迁移完成后可手动删除这一整段
-   dshp-inx-tavily-search:
-     searchDepth: basic
-   ```
+2. 移除旧插件：`dsh plugin --profile web remove "@dshp-inx/tavily-search"`，删除 `~/.dsh/plugins/dsh-tavily-search` 目录。
+
+配置**不自动迁移**：本插件只读自己的 `dshp-search-provider` 分节。如需沿用旧插件设置，请手工把值抄到新分节（旧分节 `dshp-inx-tavily-search` 之后可自行删除）：
+
+```yaml
+# 旧（不再被任何插件读取）
+dshp-inx-tavily-search:
+  searchDepth: basic
+  maxResults: 5
+
+# 新（本插件唯一读取的分节；字段缺省即用默认值）
+dshp-search-provider:
+  provider: tavily
+  maxResults: 5
+  tavily:
+    searchDepth: basic
+```
 
 密钥无需迁移：新旧插件使用同一个凭证引用 `TAVILY_API_KEY`，凭证库里的 Key 直接继续生效；profile patch 里 `web.searchProvider: tavily` 一行也不动（provider id 保持 `tavily`）。
 
@@ -95,7 +107,7 @@ dsh web
 
 | 部分                        | 内容                                                                                                                                                                                                                                                                                                                                                                                             |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Host（lib/host.js）**     | 按模块清单注册 WebSearchProvider 到 `ctx.web`（当前：`tavily`）；API Key 每次操作实时解析（`TAVILY_API_KEY`）；同源 JSON 路由（`/ext/dshp-search-provider/state`、`/config`、`/test` + 供应商专属 `/tavily/usage`，带同源校验）供设置页读写状态/搜索行为/测试连通性/用量配额；旧插件配置一次性自动采用                                                                                           |
+| **Host（lib/host.js）**     | 按模块清单注册 WebSearchProvider 到 `ctx.web`（当前：`tavily`）；API Key 每次操作实时解析（`TAVILY_API_KEY`）；同源 JSON 路由（`/ext/dshp-search-provider/state`、`/config`、`/test` + 供应商专属 `/tavily/usage`，带同源校验）供设置页读写状态/搜索行为/测试连通性/用量配额；**配置只认 `dshp-search-provider`，不读旧插件分节**                                                                |
 | **Client（lib/client.js）** | 「设置 → AI 搜索」配置页：供应商状态徽章（当前生效/已配置）、密钥写入/显示/清除（走 api 网关 `credentials` 域，引用名由状态接口下发）、搜索行为配置（默认结果数 + 供应商字段如深度，持久化到 `settings.yaml` 的 `dshp-search-provider` 命名空间）、用量与配额卡片（Key/账号分项统计+进度条+刷新/强制刷新）、连接测试（输入查询 → 返回结果列表）。UI 全部使用 DSH 官方设计 token（`dsw-alias-*`） |
 | **模型工具**                | 无：接管的是 DSH 内置 `web_search` 工具（`dsh-tool-web` → `ctx.web` seam），不注册新工具                                                                                                                                                                                                                                                                                                         |
 

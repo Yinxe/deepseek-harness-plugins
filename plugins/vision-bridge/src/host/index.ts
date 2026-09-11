@@ -5,7 +5,7 @@
  *
  * 职责：
  *  - 桥接纯文本模型与多模态视觉模型：占位符出现时 vision_describe 把本轮图片 + 提问转交视觉模型，主/备自动重试
- *  - settings.yaml（dshp-vision-bridge）持久化 + 旧文件/旧 key 自动迁移
+ *  - settings.yaml（dshp-vision-bridge）持久化；配置只认该命名空间，不做历史 key/旧文件迁移
  *  - 同源 JSON 路由供 Client：GET state / POST config / GET check
  *
  * 原实现：~/.dsh/plugins/vision-bridge/lib/index.js（JS，816 行）
@@ -13,16 +13,8 @@
  *
  * @module @dshp/vision-bridge
  */
-import { existsSync, unlinkSync, renameSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import {
-  ConfigSchema,
-  DEFAULT_CONFIG,
-  NS,
-  loadPersisted,
-  migrateYamlNamespaceKey,
-  sanitizePatchConfig,
-} from './config.js';
+import { ConfigSchema, DEFAULT_CONFIG, NS, sanitizePatchConfig } from './config.js';
 import { createImageCache, sessionIdOf, walkBlocks } from './cache.js';
 import { json, readBody, sameOrigin } from './http.js';
 import { buildQuestion, describeWithFallback, listVisionModels } from './vision.js';
@@ -33,12 +25,6 @@ export const inject: string[] = ['tools', 'webServer', 'llm'];
 export { NS, ConfigSchema };
 
 export function apply(ctx: AnyCtx, rawConfig: unknown): void {
-  try {
-    migrateYamlNamespaceKey();
-  } catch {
-    /* ignore */
-  }
-
   const entry: PluginConfig = { ...DEFAULT_CONFIG };
   const patch = sanitizePatchConfig(rawConfig);
   if (patch) {
@@ -51,112 +37,12 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
       entry.promptTemplate = patch.promptTemplate;
   }
 
-  const persistedForMigration = loadPersisted();
-
   let current: () => PluginConfig = () => entry;
-  let hasMigrated = false;
-
-  function tryMigrate(): void {
-    if (hasMigrated) return;
-    hasMigrated = true;
-    if (!persistedForMigration) return;
-    let settings: AnyCtx = null;
-    try {
-      settings = ctx.get('settings') as AnyCtx;
-    } catch {
-      settings = null;
-    }
-    if (!settings) return;
-    try {
-      const list = settings.describe() as Array<{ ns?: string; user?: unknown }>;
-      const desc = list.find((d) => d.ns === NS);
-      if (desc && desc.user !== undefined) {
-        try {
-          console.info(
-            '[dshp-vision-bridge] settings.yaml 已存在 dshp-vision-bridge 用户配置，跳过旧文件自动迁移（旧文件保留，可手动删除 ' +
-              persistedForMigration.source +
-              '）',
-          );
-        } catch {
-          /* ignore */
-        }
-        return;
-      }
-    } catch {
-      /* ignore */
-    }
-    const needPatch: Record<string, unknown> = {};
-    let need = false;
-    for (const k of Object.keys(persistedForMigration.config) as Array<keyof PluginConfig>) {
-      const pv: unknown = persistedForMigration.config[k];
-      const ev: unknown = entry[k];
-      if (JSON.stringify(pv) !== JSON.stringify(ev)) {
-        needPatch[k] = pv;
-        need = true;
-      }
-    }
-    if (!need) {
-      try {
-        const p = persistedForMigration.source;
-        if (existsSync(p)) {
-          try {
-            unlinkSync(p);
-            console.info('[dshp-vision-bridge] 旧存储文件与默认值一致，已自动清理 ' + p);
-          } catch {
-            /* ignore */
-          }
-        }
-      } catch {
-        /* ignore */
-      }
-      return;
-    }
-    Promise.resolve(settings.update(NS, needPatch))
-      .then(() => {
-        try {
-          console.info(
-            '[dshp-vision-bridge] 已自动将旧版 ' +
-              persistedForMigration.source +
-              ' 迁移至 settings.yaml (dshp-vision-bridge)',
-          );
-        } catch {
-          /* ignore */
-        }
-        try {
-          const p = persistedForMigration.source;
-          const bak = p + '.bak';
-          if (existsSync(p)) {
-            try {
-              renameSync(p, bak);
-              console.info('[dshp-vision-bridge] 旧文件已备份为 ' + bak);
-            } catch {
-              try {
-                unlinkSync(p);
-                console.info('[dshp-vision-bridge] 旧文件已清理 ' + p);
-              } catch {
-                /* ignore */
-              }
-            }
-          }
-        } catch {
-          /* ignore */
-        }
-      })
-      .catch((e: unknown) => {
-        try {
-          console.warn('[dshp-vision-bridge] 旧文件迁移失败：' + String((e as Error)?.message ?? e));
-        } catch {
-          /* ignore */
-        }
-        hasMigrated = false;
-      });
-  }
 
   ctx.inject(['settings'], (sctx: AnyCtx) => {
     sctx.settings.installSection(ctx, NS, ConfigSchema, entry, {
       setSource: (src: () => PluginConfig) => {
         current = src;
-        tryMigrate();
       },
       onChange: () => {},
     });

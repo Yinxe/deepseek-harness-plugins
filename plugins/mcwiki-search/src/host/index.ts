@@ -15,8 +15,7 @@
  *
  * 持久化（标准 settings 存储，对齐 vision-bridge 与官方插件）：
  *  settings.yaml 顶层 `dshp-mcwiki-search` 命名空间，工具与路由每次调用都读
- *  当前生效配置，外部编辑热重载无需重启。历史 key `dshp-inx-mcwiki-search`
- *  首次启动自动重命名。
+ *  当前生效配置，外部编辑热重载无需重启。配置只认该命名空间，不做历史 key 迁移。
  *
  * 原实现：~/.dsh/plugins/dsh-mcwiki-search（JS，@dshp-inx/mcwiki-search v1.0.1）
  * 本目录为等价 TS 重写：lib/{index,api,convert}.js → src/host/{index,tools,routes,api,convert,config,http,types}.ts，
@@ -24,7 +23,7 @@
  *
  * @module @dshp/mcwiki-search
  */
-import { ConfigSchema, DEFAULT_CONFIG, NS, migrateYamlNamespaceKey, sanitizePatchConfig } from './config.js';
+import { ConfigSchema, DEFAULT_CONFIG, NS, sanitizePatchConfig } from './config.js';
 import { registerRoutes } from './routes.js';
 import { registerTools } from './tools.js';
 import type { AnyCtx, PluginConfig } from './types.js';
@@ -34,12 +33,6 @@ export const inject: string[] = ['tools', 'webServer'];
 export { NS, ConfigSchema };
 
 export function apply(ctx: AnyCtx, rawConfig: unknown): void {
-  try {
-    migrateYamlNamespaceKey();
-  } catch {
-    /* ignore */
-  }
-
   // composition entry：默认值 ← patch 覆盖（settings 的 base 层）
   const entry: PluginConfig = { ...DEFAULT_CONFIG };
   const patch = sanitizePatchConfig(rawConfig);

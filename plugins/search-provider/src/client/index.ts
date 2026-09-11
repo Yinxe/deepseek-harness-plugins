@@ -50,7 +50,7 @@ function register(): void {
         const Section = createSearchSection(React, P, bridge);
         slots.inject('settings.section', () =>
           slots.register(
-            { name: 'settings.section', id: 'dshp-search-provider', order: 27, label: 'AI 搜索' },
+            { name: 'settings.section', id: 'dshp-search-provider', order: 28, label: 'AI 搜索' },
             Section,
           ),
         );

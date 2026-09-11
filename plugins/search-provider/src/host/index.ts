@@ -15,8 +15,7 @@
  *  - schema 默认值 → composition base（patch 覆盖）→ 用户文档层，FileSettingsProvider
  *    以 leaf-level diff 保留注释与格式，外部编辑热重载；
  *  - 密钥仍走 credentials 服务，不进 settings.yaml；
- *  - 旧插件 `dshp-inx-tavily-search` 的 maxResults / searchDepth 在新 NS 缺省时一次性采用
- *    （旧键只读不删，见 config.ts planLegacyAdoption）。
+ *  - 配置只认 `dshp-search-provider`：不读旧插件命名空间、不做采用/迁移。
  *
  * 原实现：~/.dsh/plugins/dsh-tavily-search（JS，@dshp-inx/tavily-search v2.0.3）
  * 本目录为等价 TS 重写 + 多供应商抽象：lib/index.js → src/host/{index,routes,config,http,types}.ts
@@ -25,14 +24,7 @@
  *
  * @module @dshp/search-provider
  */
-import {
-  NS,
-  buildConfigSchema,
-  buildDefaultConfig,
-  planLegacyAdoption,
-  readBlock,
-  sanitizeEntryConfig,
-} from './config.js';
+import { NS, buildConfigSchema, buildDefaultConfig, readBlock, sanitizeEntryConfig } from './config.js';
 import { createProviderModules } from './providers/index.js';
 import { createWebSearchProvider } from './providers/base.js';
 import { registerRoutes } from './routes.js';
@@ -197,30 +189,6 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
     } catch {
       /* ignore */
     }
-  }
-
-  // ── 旧插件配置一次性采用（新 NS 缺省 + 旧 NS 存在时；只读不删旧键）──
-  const legacyPatch = planLegacyAdoption(modules);
-  if (legacyPatch !== null) {
-    void updateConfig(legacyPatch)
-      .then(() => {
-        try {
-          console.info(
-            '[dshp-search-provider] 已采用旧插件 dshp-inx-tavily-search 的配置，旧段落保留未删（可手动清理）',
-          );
-        } catch {
-          /* ignore */
-        }
-      })
-      .catch((error: unknown) => {
-        try {
-          console.warn(
-            `[dshp-search-provider] 旧插件配置采用失败：${String((error as Error)?.message ?? error)}`,
-          );
-        } catch {
-          /* ignore */
-        }
-      });
   }
 
   // ── 供应商专属路由（静态注册：所有模块的 /usage 之类路由与本插件生命周期一致）──

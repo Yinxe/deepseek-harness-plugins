@@ -12,6 +12,7 @@ DeepSeek Harness（DSH）插件 Monorepo（pnpm workspaces + TypeScript ESM）�
 | **[@dshp/vision-bridge](plugins/vision-bridge/README.md)**     | 视觉桥接：让纯文本模型也能“看图”（`vision_describe` 工具 + 主/备模型自动降级）                                                    | [README](plugins/vision-bridge/README.md)   |
 | **[@dshp/mcwiki-search](plugins/mcwiki-search/README.md)**     | Minecraft Wiki 查询工具（搜索 / 引言 / 全文，含模板清理的 AI 可读转换）                                                           | [README](plugins/mcwiki-search/README.md)   |
 | **[@dshp/search-provider](plugins/search-provider/README.md)** | `web_search` 供应商中枢：Tavily 等可插拔接入，动态选型                                                                            | [README](plugins/search-provider/README.md) |
+| **[@dshp/web-style](plugins/web-style/README.md)**             | Web 外观定制：23 套主题画廊一键切换并持久化 + 壁纸取色（Material You）+ 全局圆角                                                  | [README](plugins/web-style/README.md)       |
 
 ## 截图预览
 
@@ -46,6 +47,7 @@ dsh plugin --profile web add ./plugins/token-meter
 dsh plugin --profile web add ./plugins/vision-bridge
 dsh plugin --profile web add ./plugins/mcwiki-search
 dsh plugin --profile web add ./plugins/search-provider
+dsh plugin --profile web add ./plugins/web-style
 
 dsh web   # 重启生效
 ```
@@ -80,7 +82,12 @@ dsh web   # 重启生效
 │   │   ├── src/client/         #   Client TS：types/styles/api/components/VisionSection/index
 │   │   └── lib/                #   单文件构建产物（已提交）
 │   ├── mcwiki-search/          # @dshp/mcwiki-search（Minecraft Wiki 查询）
-│   └── search-provider/        # @dshp/search-provider（web_search 供应商中枢）
+│   ├── search-provider/        # @dshp/search-provider（web_search 供应商中枢）
+│   └── web-style/              # @dshp/web-style（23 套主题画廊 + 壁纸取色 + 全局圆角）
+│       ├── src/host/           #   Host TS：types/http/config + themes/（token 单源，21 个主题模块）
+│       ├── src/client/         #   Client TS：GallerySection/apply-theme/md3/official/radius/themes/api/state
+│       ├── scripts/            #   check-themes.mjs（目录 ↔ 画廊 meta ↔ 产物一致性）
+│       └── lib/                #   单文件构建产物（已提交）
 ├── AGENT.md                    # 插件开发规范（新插件必读）
 ├── tsconfig.base.json          # 共享 TS 配置（NodeNext + strict）
 ├── tsconfig.json               # solution 引用
@@ -90,6 +97,19 @@ dsh web   # 重启生效
 ```
 
 每个插件内部一律是同一套布局：`src/host/`（Node 半）+ `src/client/`（浏览器半）+ `lib/`（已提交的单文件产物）+ `cordis.patch.yml`。
+
+### 设置键名约定（全仓统一，改名即 breaking）
+
+每个插件只有一个配置键，四处同名，等于 `dshp-<目录名>`：
+
+| 位置                                                           | 值（以 token-meter 为例） |
+| -------------------------------------------------------------- | ------------------------- |
+| settings.yaml 命名空间（`installSection` / `settings.update`） | `dshp-token-meter`        |
+| 同源路由前缀                                                   | `/ext/dshp-token-meter/*` |
+| `cordis.patch.yml` 的 `id`                                     | `dshp-token-meter`        |
+| 设置页 `settings.section` 的 `id`                              | `dshp-token-meter`        |
+
+**插件只读自己的键，不做任何历史键兼容与迁移**：不读 `dshp-inx-*` 等旧命名空间、不读 `storages/*.json`、不改写 `settings.yaml`（规范见 [AGENT.md](AGENT.md) §7.1 / §7.3）。升级时若键名有变，请按各插件 README 的更新日志**手工**把旧分节改名或重配；配置键改名属 breaking 变更。
 
 ## 环境
 

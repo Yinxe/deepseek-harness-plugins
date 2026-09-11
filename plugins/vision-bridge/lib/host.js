@@ -1,9 +1,3 @@
-import { existsSync, unlinkSync, renameSync, readFileSync, writeFileSync } from 'fs';
-import { homedir } from 'os';
-import { join } from 'path';
-
-// src/host/index.ts
-
 // ../../node_modules/.pnpm/@deepseek-ai+cosmokit@1.8.3/node_modules/@deepseek-ai/cosmokit/lib/index.js
 function isNullable(value) {
   return value === null || value === void 0;
@@ -833,9 +827,6 @@ function readBody(req, limit = 1024 * 1024) {
 
 // src/host/config.ts
 var NS = settingsNamespace("dshp-vision-bridge");
-var OLD_SETTINGS_KEY = "vision-bridge";
-var PREV_SETTINGS_KEY = "dshp-inx-vision-bridge";
-var LEGACY_SETTINGS_KEYS = [PREV_SETTINGS_KEY, OLD_SETTINGS_KEY];
 var DEFAULT_CONFIG = {
   enabled: true,
   primary: null,
@@ -856,24 +847,6 @@ var ConfigSchema = Schema.object({
   maxImages: Schema.number().step(1).min(1).max(8).default(4),
   promptTemplate: Schema.string().default("")
 });
-function dshHome() {
-  try {
-    const env = process.env["DSH_HOME"];
-    if (typeof env === "string" && env.length > 0) return env;
-  } catch {
-  }
-  try {
-    return join(homedir(), ".dsh");
-  } catch {
-    return "/tmp/.dsh";
-  }
-}
-function legacyConfigPaths() {
-  return [join(dshHome(), "storages", "dshp-inx-vision-bridge.json")];
-}
-function settingsYamlPath() {
-  return join(dshHome(), "settings.yaml");
-}
 function isRecord(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
@@ -888,43 +861,6 @@ function asRoute(v) {
   const model = v["model"].slice(0, 200);
   if (!provider || !model) return null;
   return { provider, model };
-}
-function sanitizePersisted(raw) {
-  if (!isRecord(raw)) return null;
-  const out = { ...DEFAULT_CONFIG };
-  if (typeof raw["enabled"] === "boolean") out.enabled = raw["enabled"];
-  if (raw["primary"] === null || isRecord(raw["primary"])) {
-    const r = asRoute(raw["primary"]);
-    if (raw["primary"] === null) out.primary = null;
-    else if (r) out.primary = r;
-  }
-  if (raw["fallback"] === null || isRecord(raw["fallback"])) {
-    if (raw["fallback"] === null) out.fallback = null;
-    else {
-      const r = asRoute(raw["fallback"]);
-      if (r) out.fallback = r;
-    }
-  }
-  if (isDetail(raw["detail"])) out.detail = raw["detail"];
-  if (typeof raw["maxImages"] === "number" && Number.isFinite(raw["maxImages"])) {
-    const n = Math.floor(raw["maxImages"]);
-    if (n >= 1 && n <= 8) out.maxImages = n;
-  }
-  if (typeof raw["promptTemplate"] === "string") out.promptTemplate = raw["promptTemplate"].slice(0, 2e3);
-  return out;
-}
-function loadPersisted() {
-  for (const p of legacyConfigPaths()) {
-    try {
-      if (!existsSync(p)) continue;
-      const text = readFileSync(p, "utf8");
-      const cfg = sanitizePersisted(JSON.parse(text));
-      if (cfg) return { config: cfg, source: p };
-    } catch {
-      continue;
-    }
-  }
-  return null;
 }
 function sanitizePatchConfig(raw) {
   if (!isRecord(raw)) return null;
@@ -955,47 +891,6 @@ function sanitizePatchConfig(raw) {
     out.promptTemplate = raw["promptTemplate"].slice(0, 2e3);
   }
   return out;
-}
-function migrateYamlNamespaceKey() {
-  try {
-    const p = settingsYamlPath();
-    if (!existsSync(p)) return;
-    const text = readFileSync(p, "utf8");
-    const lines = text.split("\n");
-    const at = (key) => {
-      const re = new RegExp(`^${key}:\\s*(#.*)?$`);
-      for (let i = 0; i < lines.length; i++) {
-        if (re.test(lines[i])) return i;
-      }
-      return -1;
-    };
-    const newIdx = at(NS);
-    const hit = LEGACY_SETTINGS_KEYS.map((key) => ({ key, idx: at(key) })).find((h) => h.idx >= 0);
-    if (!hit) return;
-    if (newIdx >= 0) {
-      try {
-        console.info(
-          `[dshp-vision-bridge] settings.yaml \u540C\u65F6\u5B58\u5728 ${hit.key} \u4E0E dshp-vision-bridge\uFF0C\u4EE5\u65B0 key \u4E3A\u51C6\uFF0C\u8BF7\u624B\u52A8\u5220\u9664\u65E7 ${hit.key} \u6BB5\u843D`
-        );
-      } catch {
-      }
-      return;
-    }
-    const m = lines[hit.idx].match(/(#.*)$/);
-    lines[hit.idx] = "dshp-vision-bridge:" + (m?.[1] ? " " + m[1] : "");
-    writeFileSync(p, lines.join("\n"), "utf8");
-    try {
-      console.info(`[dshp-vision-bridge] \u5DF2\u5C06 settings.yaml \u9876\u5C42 ${hit.key} \u91CD\u547D\u540D\u4E3A dshp-vision-bridge`);
-    } catch {
-    }
-  } catch (e) {
-    try {
-      console.warn(
-        "[dshp-vision-bridge] settings.yaml \u547D\u540D\u7A7A\u95F4\u91CD\u547D\u540D\u5931\u8D25\uFF1A" + String(e?.message ?? e)
-      );
-    } catch {
-    }
-  }
 }
 
 // src/host/cache.ts
@@ -1262,10 +1157,6 @@ function buildQuestion(base, detail, promptTemplate) {
 var name = "@dshp/vision-bridge";
 var inject = ["tools", "webServer", "llm"];
 function apply(ctx, rawConfig) {
-  try {
-    migrateYamlNamespaceKey();
-  } catch {
-  }
   const entry = { ...DEFAULT_CONFIG };
   const patch = sanitizePatchConfig(rawConfig);
   if (patch) {
@@ -1277,95 +1168,11 @@ function apply(ctx, rawConfig) {
     if (Object.hasOwn(patch, "promptTemplate") && patch.promptTemplate !== void 0)
       entry.promptTemplate = patch.promptTemplate;
   }
-  const persistedForMigration = loadPersisted();
   let current = () => entry;
-  let hasMigrated = false;
-  function tryMigrate() {
-    if (hasMigrated) return;
-    hasMigrated = true;
-    if (!persistedForMigration) return;
-    let settings = null;
-    try {
-      settings = ctx.get("settings");
-    } catch {
-      settings = null;
-    }
-    if (!settings) return;
-    try {
-      const list = settings.describe();
-      const desc = list.find((d) => d.ns === NS);
-      if (desc && desc.user !== void 0) {
-        try {
-          console.info(
-            "[dshp-vision-bridge] settings.yaml \u5DF2\u5B58\u5728 dshp-vision-bridge \u7528\u6237\u914D\u7F6E\uFF0C\u8DF3\u8FC7\u65E7\u6587\u4EF6\u81EA\u52A8\u8FC1\u79FB\uFF08\u65E7\u6587\u4EF6\u4FDD\u7559\uFF0C\u53EF\u624B\u52A8\u5220\u9664 " + persistedForMigration.source + "\uFF09"
-          );
-        } catch {
-        }
-        return;
-      }
-    } catch {
-    }
-    const needPatch = {};
-    let need = false;
-    for (const k of Object.keys(persistedForMigration.config)) {
-      const pv = persistedForMigration.config[k];
-      const ev = entry[k];
-      if (JSON.stringify(pv) !== JSON.stringify(ev)) {
-        needPatch[k] = pv;
-        need = true;
-      }
-    }
-    if (!need) {
-      try {
-        const p = persistedForMigration.source;
-        if (existsSync(p)) {
-          try {
-            unlinkSync(p);
-            console.info("[dshp-vision-bridge] \u65E7\u5B58\u50A8\u6587\u4EF6\u4E0E\u9ED8\u8BA4\u503C\u4E00\u81F4\uFF0C\u5DF2\u81EA\u52A8\u6E05\u7406 " + p);
-          } catch {
-          }
-        }
-      } catch {
-      }
-      return;
-    }
-    Promise.resolve(settings.update(NS, needPatch)).then(() => {
-      try {
-        console.info(
-          "[dshp-vision-bridge] \u5DF2\u81EA\u52A8\u5C06\u65E7\u7248 " + persistedForMigration.source + " \u8FC1\u79FB\u81F3 settings.yaml (dshp-vision-bridge)"
-        );
-      } catch {
-      }
-      try {
-        const p = persistedForMigration.source;
-        const bak = p + ".bak";
-        if (existsSync(p)) {
-          try {
-            renameSync(p, bak);
-            console.info("[dshp-vision-bridge] \u65E7\u6587\u4EF6\u5DF2\u5907\u4EFD\u4E3A " + bak);
-          } catch {
-            try {
-              unlinkSync(p);
-              console.info("[dshp-vision-bridge] \u65E7\u6587\u4EF6\u5DF2\u6E05\u7406 " + p);
-            } catch {
-            }
-          }
-        }
-      } catch {
-      }
-    }).catch((e) => {
-      try {
-        console.warn("[dshp-vision-bridge] \u65E7\u6587\u4EF6\u8FC1\u79FB\u5931\u8D25\uFF1A" + String(e?.message ?? e));
-      } catch {
-      }
-      hasMigrated = false;
-    });
-  }
   ctx.inject(["settings"], (sctx) => {
     sctx.settings.installSection(ctx, NS, ConfigSchema, entry, {
       setSource: (src) => {
         current = src;
-        tryMigrate();
       },
       onChange: () => {
       }

@@ -1,6 +1,6 @@
 {
   "name": "@dshp/token-meter",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "DeepSeek Harness (DSH) TokenMeter: unified quota + usage statistics — multi-vendor rolling/payg quota with sidebar card and provider ops, plus session-log token aggregation with trends, heatmap and per-model breakdown.",
   "license": "MIT",
   "author": "Yinxe",
