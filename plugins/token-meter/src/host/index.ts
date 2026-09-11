@@ -40,7 +40,7 @@ import {
 } from './config.js';
 import { createSecretResolver } from './secrets.js';
 import { canonicalType } from './providers/index.js';
-import { registerQuotaRoutes } from './quota.js';
+import { registerQuotaRoutes, refreshOne } from './quota.js';
 import type { QuotaState } from './quota.js';
 import { createEngine } from './stats/engine.js';
 import { registerStatsRoutes } from './stats/routes.js';
@@ -441,6 +441,74 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
       /* ignore */
     }
   }
+
+  // ── Host 侧额度自动拉取 ────────────────────────────────────────────────
+  // 单一数据源：由 Host 每 refreshSec 拉取全部供应商并写入内存快照（st.snaps），
+  // 客户端只 GET /state 同步快照 —— 多个客户端/多个标签页不会重复请求上游。
+  // 手动刷新（POST /refresh）会更新 st.lastPullMs，定时器据此顺延，避免刚刷完又自动拉。
+  try {
+    const clampSec = (raw: unknown): number => {
+      const n = Number(raw);
+      if (!isFinite(n) || n <= 0) return 0; // 0/非法 = 关闭
+      return Math.min(3600, Math.max(10, n));
+    };
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const schedule = (ms: number): void => {
+      if (stopped) return;
+      timer = setTimeout(() => {
+        void tick();
+      }, Math.max(1000, ms));
+    };
+    const tick = async (): Promise<void> => {
+      if (stopped) return;
+      let sec = 60;
+      try {
+        const cfg = getConfig();
+        sec = clampSec(cfg.refreshSec);
+        if (sec > 0) {
+          // 距上次拉取不足 60% 间隔时顺延（手动刷新刚发生过）
+          const since = st.lastPullMs ? Date.now() - st.lastPullMs : Infinity;
+          const budget = sec * 1000;
+          if (since < budget * 0.6) {
+            schedule(budget - since);
+            return;
+          }
+          const list = Array.isArray(cfg.vendors) ? cfg.vendors : [];
+          for (const v of list) {
+            if (stopped) return;
+            try {
+              await refreshOne(st, resolveSecret, v);
+            } catch {
+              /* 单个供应商失败不影响其它 */
+            }
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+      schedule((sec > 0 ? sec : 60) * 1000);
+    };
+    schedule(4000); // 启动后稍等再拉，避开启动风暴
+    try {
+      ctx.effect(
+        () => () => {
+          stopped = true;
+          if (timer) clearTimeout(timer);
+        },
+        'dshp-token-meter: quota auto refresh',
+      );
+    } catch {
+      /* ignore */
+    }
+  } catch (e) {
+    try {
+      console.warn('[dshp-token-meter] quota auto refresh 启动失败：' + String((e as Error)?.message ?? e));
+    } catch {
+      /* ignore */
+    }
+  }
+
   try {
     registerStatsRoutes(ctx, engine);
   } catch (e) {

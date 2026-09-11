@@ -150,9 +150,17 @@
 .tm-qrow{display:flex;align-items:center;gap:6px;margin-top:6px}
 .tm-qlabel{flex:none;width:36px;font-size:11px;color:var(--dsw-alias-label-secondary)}
 .tm-qbar{flex:1;min-width:0;height:6px;border-radius:99px;background:var(--dsw-alias-bg-layer-2);overflow:hidden}
+/* \u5360\u7528\u56DB\u6863\uFF1Aok \u84DD / warn \u9EC4(\u226570%) / bad \u7EA2"\u5FEB\u5B8C\u4E86"(\u226590%) / over \u7EA2+\u8109\u51B2(\u2265100%) */
 .tm-qfill{display:block;height:100%;border-radius:99px;background:var(--dsw-alias-brand-primary);transition:width .8s ease}
-.tm-qfill.warn{background:var(--dsw-alias-state-warn-primary)}.tm-qfill.bad{background:var(--dsw-alias-state-error-primary)}
+.tm-qfill.warn{background:var(--dsw-alias-state-warn-primary)}
+.tm-qfill.bad{background:var(--dsw-alias-state-error-primary)}
+.tm-qfill.over{background:var(--dsw-alias-state-error-primary);animation:tm-qpulse 1.6s ease-in-out infinite}
 .tm-qpct{flex:none;font-size:11px;color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums}
+.tm-qpct.warn{color:var(--dsw-alias-state-warn-label)}
+.tm-qpct.bad,.tm-qpct.over{color:var(--dsw-alias-state-error-primary);font-weight:600}
+.tm-qsum-warn{color:var(--dsw-alias-state-warn-label)}
+.tm-qsum-bad,.tm-qsum-over{color:var(--dsw-alias-state-error-primary)}
+@keyframes tm-qpulse{0%,100%{opacity:1}50%{opacity:.55}}
 .tm-qleft{flex:none;font-size:10px;color:var(--dsw-alias-label-secondary)}
 .tm-qbal{display:flex;align-items:baseline;justify-content:space-between;margin-top:6px}
 .tm-qbal b{font-size:15px;color:var(--dsw-alias-label-primary)}
@@ -263,6 +271,9 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 /* \u5C0F\u7EC4\u4EF6\u5DE5\u5177\u6761\uFF1A\u6807\u7B7E + \u5F00\u5173\u6309\u94AE */
 .tm-widgetBtn{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--dsw-alias-border-l1);border-radius:var(--tm-r-chip);padding:1px 4px 1px 8px;font-size:12px;color:var(--dsw-alias-label-secondary)}
 .tm-widgetBtn-label{line-height:20px;white-space:nowrap}
+/* \u53F3\u680F tab chip\uFF1A\u56FE\u6807 + \u6587\u672C\uFF08\u56FE\u6807\u989C\u8272\u8DDF\u968F chip \u6587\u5B57\u8272\uFF09 */
+.tm-tabChip{display:inline-flex;align-items:center;gap:5px;min-width:0}
+.tm-tabChip>svg{flex:none;display:block}
 /* \u56FE\u8868\u6807\u9898\u9996\u6BB5\uFF1A\u7A84\u680F\u7701\u7565\u53F7\uFF0C\u4E0D\u6362\u884C\u6324\u9AD8 */
 .tm-chart-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto}
 /* \u6A21\u578B\u884C\uFF1A\u540D\u79F0+\u6570\u503C\u5141\u8BB8\u6362\u884C\uFF1B\u660E\u7EC6\u884C\u7A84\u680F\u53EF\u6362\u884C\u4E0D\u622A\u65AD */
@@ -379,6 +390,46 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 }
 `;
 
+  // src/client/icons.ts
+  function createIcons(React) {
+    const h = React.createElement;
+    function svgProps(props) {
+      const size = props && props.size ? props.size : 16;
+      return {
+        width: size,
+        height: size,
+        viewBox: "0 0 24 24",
+        fill: "none",
+        stroke: "currentColor",
+        strokeWidth: 1.8,
+        strokeLinecap: "round",
+        strokeLinejoin: "round",
+        className: props && props.className || void 0,
+        "aria-hidden": "true",
+        focusable: "false"
+      };
+    }
+    function QuotaIcon(props) {
+      return h(
+        "svg",
+        svgProps(props),
+        h("rect", { key: "body", x: 2.5, y: 7, width: 16, height: 10, rx: 2.6 }),
+        h("path", { key: "cap", d: "M21.2 10.4v3.2" }),
+        h("rect", { key: "level", x: 5, y: 9.4, width: 6.4, height: 5.2, rx: 1.3, fill: "currentColor", stroke: "none" })
+      );
+    }
+    function UsageIcon(props) {
+      return h(
+        "svg",
+        svgProps(props),
+        h("path", { key: "a", d: "M4.6 20v-6.4", strokeWidth: 2.6 }),
+        h("path", { key: "b", d: "M12 20V5.4", strokeWidth: 2.6 }),
+        h("path", { key: "c", d: "M19.4 20v-9.6", strokeWidth: 2.6 })
+      );
+    }
+    return { QuotaIcon, UsageIcon };
+  }
+
   // src/client/api.ts
   var BASE = "/ext/dshp-token-meter";
   async function post(path, body) {
@@ -433,8 +484,18 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     if (hh < 24) return hh + " \u5C0F\u65F6\u524D";
     return Math.floor(hh / 24) + " \u5929\u524D";
   }
+  var QUOTA_LEVEL = { warn: 70, bad: 90, over: 100 };
   function levelOf(pct) {
-    return pct >= 100 ? "bad" : pct >= 80 ? "warn" : "ok";
+    if (pct >= QUOTA_LEVEL.over) return "over";
+    if (pct >= QUOTA_LEVEL.bad) return "bad";
+    if (pct >= QUOTA_LEVEL.warn) return "warn";
+    return "ok";
+  }
+  function levelTip(lvl) {
+    if (lvl === "over") return "\u989D\u5EA6\u5DF2\u7528\u5C3D\uFF08\u6216\u8D85\u51FA\uFF09\uFF0C\u53EF\u80FD\u88AB\u9650\u6D41/\u62D2\u7EDD";
+    if (lvl === "bad") return "\u989D\u5EA6\u5FEB\u7528\u5B8C\u4E86\uFF0C\u6CE8\u610F\u540E\u7EED\u8C03\u7528";
+    if (lvl === "warn") return "\u989D\u5EA6\u5360\u7528\u504F\u9AD8";
+    return "\u989D\u5EA6\u5145\u8DB3";
   }
   var TYPE_LABEL_FALLBACK = {
     opencode: "OC",
@@ -567,6 +628,27 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const r = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(args || {}), cache: "no-store" });
       return r.json();
     }
+    let syncRefs = 0;
+    let syncTimer = null;
+    let syncMsCur = 0;
+    function startSyncLoop(ms) {
+      syncRefs++;
+      if (syncTimer === null || syncMsCur !== ms) {
+        if (syncTimer !== null) window.clearInterval(syncTimer);
+        syncMsCur = ms;
+        syncTimer = window.setInterval(() => {
+          if (document.visibilityState === "visible") void syncState();
+        }, ms);
+      }
+    }
+    function stopSyncLoop() {
+      syncRefs--;
+      if (syncRefs <= 0 && syncTimer !== null) {
+        window.clearInterval(syncTimer);
+        syncTimer = null;
+        syncMsCur = 0;
+      }
+    }
     async function ensureLoad() {
       if (loaded) return;
       loaded = true;
@@ -575,9 +657,6 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         const r = await call("quota.load");
         if (r && r.ok) {
           store.set({ loading: false, cfg: r.config, snaps: r.snaps || {}, namespace: r.namespace || "", docPath: r.docPath || "", providers: r.providers || null, error: r.error || "" });
-          const av = r.config && r.config.activeVendor || "";
-          const en = !r.config || r.config.enabled !== false;
-          if (en && av && !(r.snaps && r.snaps[av] && r.snaps[av].ok)) void refreshVendor(av);
         } else store.set({ loading: false, error: r && r.error || "\u52A0\u8F7D\u5931\u8D25" });
       } catch {
         store.set({ loading: false, error: "\u8FDE\u63A5 Host \u5931\u8D25" });
@@ -587,6 +666,22 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       loaded = false;
       store.set({ menuOpen: false, errOpen: false, menuAt: null, lastErr: null });
       await ensureLoad();
+    }
+    async function syncState() {
+      if (store.get().loading) return;
+      try {
+        const r = await call("quota.load");
+        if (!(r && r.ok)) return;
+        const cur = store.get();
+        store.set({
+          cfg: r.config || cur.cfg,
+          snaps: r.snaps || cur.snaps,
+          namespace: r.namespace || cur.namespace,
+          docPath: r.docPath || cur.docPath,
+          providers: r.providers || cur.providers
+        });
+      } catch {
+      }
     }
     async function refreshVendor(id) {
       store.set({ loading: true });
@@ -722,16 +817,17 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     function QRow(props) {
       const w = props.w;
       const lvl = levelOf(w.pct);
+      const cls = lvl === "ok" ? "" : " " + lvl;
       return h(
         "div",
         { className: "tm-qrow" },
         h("span", { className: "tm-qlabel" }, w.label),
         h(
           "div",
-          { className: "tm-qbar" },
-          h("span", { className: "tm-qfill" + (lvl === "ok" ? "" : " " + lvl), style: { width: Math.min(100, w.pct) + "%" } })
+          { className: "tm-qbar", title: levelTip(lvl) + "\uFF08" + Math.round(w.pct) + "%\uFF09" },
+          h("span", { className: "tm-qfill" + cls, style: { width: Math.min(100, w.pct) + "%" } })
         ),
-        h("span", { className: "tm-qpct" }, Math.round(w.pct) + "%"),
+        h("span", { className: "tm-qpct" + cls }, Math.round(w.pct) + "%"),
         props.left ? h("span", { className: "tm-qleft" }, props.left) : null
       );
     }
@@ -742,11 +838,15 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       if (!wins.length) return h("div", { className: "tm-qmeta" }, h("span", null, "\u6682\u65E0\u6EDA\u52A8\u7A97\u53E3"));
       const worst = wins.reduce((m, w) => w.pct > m.pct ? w : m, wins[0]);
       const minRem = wins.reduce((m, w) => Math.min(m, remainOf(w, snap, now)), Infinity);
+      const worstLvl = levelOf(worst.pct);
       return h(
         "div",
         { className: "tm-body" },
         wins.map((w) => h(QRow, { key: w.key, w, left: fmtLeft(remainOf(w, snap, now)) })),
-        h("div", { className: "tm-payg-sub" }, "\u6700\u9AD8\u5360\u7528 " + worst.label + " " + Math.round(worst.pct) + "% \xB7 \u6700\u65E9\u91CD\u7F6E" + fmtLeft(minRem))
+        h("div", {
+          className: "tm-payg-sub" + (worstLvl === "ok" ? "" : " tm-qsum-" + worstLvl),
+          title: levelTip(worstLvl)
+        }, "\u6700\u9AD8\u5360\u7528 " + worst.label + " " + Math.round(worst.pct) + "% \xB7 \u6700\u65E9\u91CD\u7F6E" + fmtLeft(minRem))
       );
     }
     function PaygBody(props) {
@@ -1829,14 +1929,12 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const rawSec = s.cfg ? s.cfg.refreshSec : void 0;
       const numSec = rawSec === void 0 || rawSec === null || rawSec === "" ? 60 : Number(rawSec);
       const effSec2 = numSec === 0 ? 0 : isFinite(numSec) ? Math.min(3600, Math.max(10, numSec || 60)) : 60;
+      const syncMs = effSec2 > 0 ? Math.max(10, Math.min(30, effSec2)) * 1e3 : 0;
       React.useEffect(() => {
-        if (!(effSec2 > 0)) return void 0;
-        const id = window.setInterval(() => {
-          if (store.get().loading) return;
-          void refreshVendor(props.vendorId);
-        }, effSec2 * 1e3);
-        return () => window.clearInterval(id);
-      }, [effSec2, props.vendorId]);
+        if (!(syncMs > 0)) return void 0;
+        startSyncLoop(syncMs);
+        return () => stopSyncLoop();
+      }, [syncMs]);
       const v = (s.cfg && s.cfg.vendors || []).filter((x) => x.id === props.vendorId)[0];
       if (!s.cfg) return h("div", { className: "tm-card" }, h("div", { className: "tm-hint" }, s.loading ? "\u989D\u5EA6\u52A0\u8F7D\u4E2D\u2026" : s.error || "\u989D\u5EA6\u52A0\u8F7D\u5931\u8D25"));
       if (!v) return h("div", { className: "tm-card" }, h("div", { className: "tm-hint" }, "\u4F9B\u5E94\u5546\u5DF2\u5220\u9664\uFF0C\u5173\u95ED\u672C\u6D6E\u7A97\u5373\u53EF\u3002"));
@@ -1986,6 +2084,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         ensureLoad,
         reload,
         refreshVendor,
+        syncState,
         setActive,
         setEnabled,
         setRefresh,
@@ -4502,6 +4601,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         const QuotaRightPane = parts.QuotaRightPane;
         const StatsRightPane = parts.StatsRightPane;
         const WidgetFloatLayer = parts.WidgetFloatLayer;
+        const { QuotaIcon, UsageIcon } = createIcons(React);
         function useTmStyles() {
           React.useEffect(() => {
             const tag = tmEnsureStyles();
@@ -4576,7 +4676,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
                   {
                     order: 20,
                     title: () => "Token \u989D\u5EA6",
-                    description: () => "\u5168\u90E8\u4F9B\u5E94\u5546\u989D\u5EA6\u4E00\u89C8"
+                    description: () => "\u5168\u90E8\u4F9B\u5E94\u5546\u989D\u5EA6\u4E00\u89C8",
+                    icon: QuotaIcon
                   }
                 ]
               }),
@@ -4591,7 +4692,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
                   {
                     order: 21,
                     title: () => "Token \u7528\u91CF",
-                    description: () => "\u7528\u91CF\u8D8B\u52BF\u4E0E\u6A21\u578B\u5206\u5E03"
+                    description: () => "\u7528\u91CF\u8D8B\u52BF\u4E0E\u6A21\u578B\u5206\u5E03",
+                    icon: UsageIcon
                   }
                 ]
               }),
@@ -4606,7 +4708,12 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
               );
             };
             const QuotaPaneTitle = function QuotaPaneTitle2() {
-              return React.createElement("span", null, "Token \u989D\u5EA6");
+              return React.createElement(
+                "span",
+                { className: "tm-tabChip" },
+                React.createElement(QuotaIcon, { size: 14 }),
+                React.createElement("span", null, "Token \u989D\u5EA6")
+              );
             };
             const StatsPane = function StatsPane2(p) {
               useTmStyles();
@@ -4617,7 +4724,12 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
               );
             };
             const StatsPaneTitle = function StatsPaneTitle2() {
-              return React.createElement("span", null, "Token \u7528\u91CF");
+              return React.createElement(
+                "span",
+                { className: "tm-tabChip" },
+                React.createElement(UsageIcon, { size: 14 }),
+                React.createElement("span", null, "Token \u7528\u91CF")
+              );
             };
             slots.inject(
               "sidebar.right.pane.tab",

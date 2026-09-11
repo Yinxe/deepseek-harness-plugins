@@ -37,8 +37,24 @@ function timeAgo(iso: string): string {
   if (hh < 24) return hh + ' 小时前';
   return Math.floor(hh / 24) + ' 天前';
 }
+/** 滚动窗口占用等级（阈值集中在此，便于调整）：
+ *  ok  < 70%          正常（品牌蓝）
+ *  warn 70–90%        注意（黄）
+ *  bad  90–100%       快完了（红）—— 新增档位
+ *  over ≥ 100%        已用尽/超限（红 + 脉冲） */
+const QUOTA_LEVEL = { warn: 70, bad: 90, over: 100 };
 function levelOf(pct: number): string {
-  return pct >= 100 ? 'bad' : pct >= 80 ? 'warn' : 'ok';
+  if (pct >= QUOTA_LEVEL.over) return 'over';
+  if (pct >= QUOTA_LEVEL.bad) return 'bad';
+  if (pct >= QUOTA_LEVEL.warn) return 'warn';
+  return 'ok';
+}
+/** 等级 → 提示语（进度条 title） */
+function levelTip(lvl: string): string {
+  if (lvl === 'over') return '额度已用尽（或超出），可能被限流/拒绝';
+  if (lvl === 'bad') return '额度快用完了，注意后续调用';
+  if (lvl === 'warn') return '额度占用偏高';
+  return '额度充足';
 }
 
 const TYPE_LABEL_FALLBACK: Record<string, string> = {
@@ -169,6 +185,30 @@ export function createQuotaSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     return r.json();
   }
 
+  /** 同步节拍（单例）：同一客户端所有额度卡/浮窗共享一个轮询定时器，
+   *  避免 N 张卡各自 interval。Host 侧才是真正的上游拉取方。 */
+  let syncRefs = 0;
+  let syncTimer: number | null = null;
+  let syncMsCur = 0;
+  function startSyncLoop(ms: number): void {
+    syncRefs++;
+    if (syncTimer === null || syncMsCur !== ms) {
+      if (syncTimer !== null) window.clearInterval(syncTimer);
+      syncMsCur = ms;
+      syncTimer = window.setInterval(() => {
+        if (document.visibilityState === 'visible') void syncState();
+      }, ms);
+    }
+  }
+  function stopSyncLoop(): void {
+    syncRefs--;
+    if (syncRefs <= 0 && syncTimer !== null) {
+      window.clearInterval(syncTimer);
+      syncTimer = null;
+      syncMsCur = 0;
+    }
+  }
+
   async function ensureLoad(): Promise<void> {
     if (loaded) return;
     loaded = true;
@@ -176,10 +216,8 @@ export function createQuotaSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     try {
       const r = await call('quota.load');
       if (r && r.ok) {
+        // 只同步快照与配置；不在此自动触发上游拉取（Host 定时器负责，避免多客户端重复 fetch）
         store.set({ loading: false, cfg: r.config, snaps: r.snaps || {}, namespace: r.namespace || '', docPath: r.docPath || '', providers: r.providers || null, error: r.error || '' });
-        const av = (r.config && r.config.activeVendor) || '';
-        const en = !r.config || r.config.enabled !== false;
-        if (en && av && !(r.snaps && r.snaps[av] && (r.snaps[av] as VendorSnapshot).ok)) void refreshVendor(av);
       } else store.set({ loading: false, error: (r && r.error) || '加载失败' });
     } catch { store.set({ loading: false, error: '连接 Host 失败' }); }
   }
@@ -187,6 +225,26 @@ export function createQuotaSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     loaded = false;
     store.set({ menuOpen: false, errOpen: false, menuAt: null, lastErr: null });
     await ensureLoad();
+  }
+  /** 同步 Host 快照（只读 GET /state，不触发上游拉取）。
+   * Host 已按 refreshSec 在服务端定时拉取，客户端多开也只读同一份内存快照。
+   * 同步 cfg（多客户端配置一致）与 snaps（额度数据），但不动本地菜单/错误展开状态。 */
+  async function syncState(): Promise<void> {
+    if (store.get().loading) return; // 本地正在手动操作（切换/拉取）时让位
+    try {
+      const r = await call('quota.load');
+      if (!(r && r.ok)) return;
+      const cur = store.get();
+      store.set({
+        cfg: r.config || cur.cfg,
+        snaps: r.snaps || cur.snaps,
+        namespace: r.namespace || cur.namespace,
+        docPath: r.docPath || cur.docPath,
+        providers: r.providers || cur.providers,
+      });
+    } catch {
+      /* 同步失败静默（下次轮询重试） */
+    }
   }
   async function refreshVendor(id?: string): Promise<void> {
     store.set({ loading: true });
@@ -314,11 +372,12 @@ export function createQuotaSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
   function QRow(props: { w: { key: string; label: string; pct: number }; left?: string }): any {
     const w = props.w;
     const lvl = levelOf(w.pct);
+    const cls = lvl === 'ok' ? '' : ' ' + lvl;
     return h('div', { className: 'tm-qrow' },
       h('span', { className: 'tm-qlabel' }, w.label),
-      h('div', { className: 'tm-qbar' },
-        h('span', { className: 'tm-qfill' + (lvl === 'ok' ? '' : ' ' + lvl), style: { width: Math.min(100, w.pct) + '%' } })),
-      h('span', { className: 'tm-qpct' }, Math.round(w.pct) + '%'),
+      h('div', { className: 'tm-qbar', title: levelTip(lvl) + '（' + Math.round(w.pct) + '%）' },
+        h('span', { className: 'tm-qfill' + cls, style: { width: Math.min(100, w.pct) + '%' } })),
+      h('span', { className: 'tm-qpct' + cls }, Math.round(w.pct) + '%'),
       props.left ? h('span', { className: 'tm-qleft' }, props.left) : null);
   }
 
@@ -329,9 +388,13 @@ export function createQuotaSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     if (!wins.length) return h('div', { className: 'tm-qmeta' }, h('span', null, '暂无滚动窗口'));
     const worst = wins.reduce((m, w) => (w.pct > m.pct ? w : m), wins[0] as (typeof wins)[number]);
     const minRem = wins.reduce((m, w) => Math.min(m, remainOf(w, snap, now)), Infinity);
+    const worstLvl = levelOf((worst as { pct: number }).pct);
     return h('div', { className: 'tm-body' },
       wins.map((w) => h(QRow, { key: w.key, w, left: fmtLeft(remainOf(w, snap, now)) })),
-      h('div', { className: 'tm-payg-sub' }, '最高占用 ' + (worst as { label: string; pct: number }).label + ' ' + Math.round((worst as { pct: number }).pct) + '% · 最早重置' + fmtLeft(minRem)));
+      h('div', {
+        className: 'tm-payg-sub' + (worstLvl === 'ok' ? '' : ' tm-qsum-' + worstLvl),
+        title: levelTip(worstLvl),
+      }, '最高占用 ' + (worst as { label: string; pct: number }).label + ' ' + Math.round((worst as { pct: number }).pct) + '% · 最早重置' + fmtLeft(minRem)));
   }
 
   function PaygBody(props: { snap: VendorSnapshot }): any {
@@ -1087,19 +1150,18 @@ export function createQuotaSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     const s = useStore();
     const now = useNow(1000);
     React.useEffect(() => { void ensureLoad(); }, []);
-    // 自动刷新（小组件/右栏卡片统一）：按 refreshSec 定时刷新本供应商自己的数据。
-    // 浮窗状态、右栏状态都生效；0=关闭；并发请求由 store.loading 互斥。
+    // 数据同步（小组件/右栏卡片统一）：Host 每 refreshSec 在服务端拉取上游并写快照，
+    // 客户端只做轻量 GET /state 同步 —— 多客户端/多标签页不会重复 fetch 上游。
+    // 客户端轮询取 min(refreshSec, 30s) 以便及时看到 Host 的新快照；refreshSec=0 时不轮询（仅手动刷新）。
     const rawSec = s.cfg ? s.cfg.refreshSec : undefined;
     const numSec = rawSec === undefined || rawSec === null || rawSec === '' ? 60 : Number(rawSec);
     const effSec2 = numSec === 0 ? 0 : (isFinite(numSec) ? Math.min(3600, Math.max(10, numSec || 60)) : 60);
+    const syncMs = effSec2 > 0 ? Math.max(10, Math.min(30, effSec2)) * 1000 : 0;
     React.useEffect(() => {
-      if (!(effSec2 > 0)) return undefined;
-      const id = window.setInterval(() => {
-        if (store.get().loading) return;
-        void refreshVendor(props.vendorId);
-      }, effSec2 * 1000);
-      return () => window.clearInterval(id);
-    }, [effSec2, props.vendorId]);
+      if (!(syncMs > 0)) return undefined;
+      startSyncLoop(syncMs);
+      return () => stopSyncLoop();
+    }, [syncMs]);
     const v = ((s.cfg && s.cfg.vendors) || []).filter((x: Vendor) => x.id === props.vendorId)[0];
     if (!s.cfg) return h('div', { className: 'tm-card' }, h('div', { className: 'tm-hint' }, s.loading ? '额度加载中…' : s.error || '额度加载失败'));
     if (!v) return h('div', { className: 'tm-card' }, h('div', { className: 'tm-hint' }, '供应商已删除，关闭本浮窗即可。'));
@@ -1231,7 +1293,7 @@ export function createQuotaSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     QuotaVendorWidget,
     PeakIndicator,
     quotaStore: {
-      useStore, useNow, ensureLoad, reload, refreshVendor,
+      useStore, useNow, ensureLoad, reload, refreshVendor, syncState,
       setActive, setEnabled, setRefresh, setFloatOpen, openMenu, savePrefs,
       activeOf, typeLabel, remainOf, call,
     },

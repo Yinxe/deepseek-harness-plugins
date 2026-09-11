@@ -16,6 +16,7 @@
  * 首次自动打开）。左栏 sidebar.footer.action 已移除，全部搬到右栏。
  */
 import { CSS } from './styles.js';
+import { createIcons } from './icons.js';
 import { createTokenMeterSection } from './TokenMeterSection.js';
 import type { DshRequire } from './types.js';
 
@@ -71,6 +72,7 @@ function register(): void {
       const QuotaRightPane = parts.QuotaRightPane;
       const StatsRightPane = parts.StatsRightPane;
       const WidgetFloatLayer = parts.WidgetFloatLayer;
+      const { QuotaIcon, UsageIcon } = createIcons(React);
 
       function useTmStyles(): void {
         React.useEffect(() => {
@@ -156,6 +158,7 @@ function register(): void {
                       order: 20,
                       title: () => 'Token 额度',
                       description: () => '全部供应商额度一览',
+                      icon: QuotaIcon,
                     },
                   ],
                 }),
@@ -172,6 +175,7 @@ function register(): void {
                       order: 21,
                       title: () => 'Token 用量',
                       description: () => '用量趋势与模型分布',
+                      icon: UsageIcon,
                     },
                   ],
                 }),
@@ -186,7 +190,12 @@ function register(): void {
               );
             };
             const QuotaPaneTitle = function QuotaPaneTitle(): any {
-              return React.createElement('span', null, 'Token 额度');
+              return React.createElement(
+                'span',
+                { className: 'tm-tabChip' },
+                React.createElement(QuotaIcon, { size: 14 }),
+                React.createElement('span', null, 'Token 额度'),
+              );
             };
             const StatsPane = function StatsPane(p: any): any {
               useTmStyles();
@@ -197,7 +206,12 @@ function register(): void {
               );
             };
             const StatsPaneTitle = function StatsPaneTitle(): any {
-              return React.createElement('span', null, 'Token 用量');
+              return React.createElement(
+                'span',
+                { className: 'tm-tabChip' },
+                React.createElement(UsageIcon, { size: 14 }),
+                React.createElement('span', null, 'Token 用量'),
+              );
             };
             slots.inject('sidebar.right.pane.tab', () =>
               slots.register({ name: 'sidebar.right.pane.tab', key: QUOTA_TAB }, QuotaPane),

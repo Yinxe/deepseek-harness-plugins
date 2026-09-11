@@ -36,6 +36,8 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 
 export interface QuotaState {
   snaps: Record<string, VendorSnapshot>;
+  /** 最后一次上游拉取完成时间（毫秒）：Host 定时器据此顺延，避免刚手动刷过又重复拉 */
+  lastPullMs?: number;
 }
 
 export interface QuotaDeps {
@@ -115,6 +117,7 @@ export async function refreshOne(
     snap.error = (e as Error)?.message || '拉取失败';
   }
   st.snaps[v.id] = snap;
+  st.lastPullMs = Date.now();
   return snap;
 }
 

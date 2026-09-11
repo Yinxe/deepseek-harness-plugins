@@ -2323,6 +2323,7 @@ async function refreshOne(st, resolveSecret, v) {
     snap.error = e?.message || "\u62C9\u53D6\u5931\u8D25";
   }
   st.snaps[v.id] = snap;
+  st.lastPullMs = Date.now();
   return snap;
 }
 function checkVendor(v) {
@@ -3597,6 +3598,63 @@ function apply(ctx, rawConfig) {
   } catch (e) {
     try {
       console.error("[dshp-token-meter] register quota routes failed: " + String(e?.message ?? e));
+    } catch {
+    }
+  }
+  try {
+    const clampSec = (raw) => {
+      const n = Number(raw);
+      if (!isFinite(n) || n <= 0) return 0;
+      return Math.min(3600, Math.max(10, n));
+    };
+    let stopped = false;
+    let timer = null;
+    const schedule = (ms) => {
+      if (stopped) return;
+      timer = setTimeout(() => {
+        void tick();
+      }, Math.max(1e3, ms));
+    };
+    const tick = async () => {
+      if (stopped) return;
+      let sec = 60;
+      try {
+        const cfg = getConfig();
+        sec = clampSec(cfg.refreshSec);
+        if (sec > 0) {
+          const since = st.lastPullMs ? Date.now() - st.lastPullMs : Infinity;
+          const budget = sec * 1e3;
+          if (since < budget * 0.6) {
+            schedule(budget - since);
+            return;
+          }
+          const list = Array.isArray(cfg.vendors) ? cfg.vendors : [];
+          for (const v of list) {
+            if (stopped) return;
+            try {
+              await refreshOne(st, resolveSecret, v);
+            } catch {
+            }
+          }
+        }
+      } catch {
+      }
+      schedule((sec > 0 ? sec : 60) * 1e3);
+    };
+    schedule(4e3);
+    try {
+      ctx.effect(
+        () => () => {
+          stopped = true;
+          if (timer) clearTimeout(timer);
+        },
+        "dshp-token-meter: quota auto refresh"
+      );
+    } catch {
+    }
+  } catch (e) {
+    try {
+      console.warn("[dshp-token-meter] quota auto refresh \u542F\u52A8\u5931\u8D25\uFF1A" + String(e?.message ?? e));
     } catch {
     }
   }

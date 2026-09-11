@@ -7,13 +7,24 @@ DeepSeek Harness（DSH）插件 Monorepo（pnpm workspaces + TypeScript ESM）�
 ```
 .
 ├── plugins/
-│   └── dsh-vision-bridge/      # @dshp/vision-bridge（TS 重写，已移植）
-│       ├── src/host/           # Host TS：types/http/config/cache/vision/index
-│       ├── src/client/         # Client TS：types/styles/api/components/VisionSection/index
+│   ├── dsh-vision-bridge/      # @dshp/vision-bridge（图像识别桥：vision_describe 工具 + 设置页）
+│   │   ├── src/host/           # Host TS：types/http/config/cache/vision/index
+│   │   ├── src/client/         # Client TS：types/styles/api/components/VisionSection/index
+│   │   ├── lib/                # 单文件构建产物（已提交，DSH git 安装必需）
+│   │   │   ├── host.js         # 后端 bundle（ESM，schemastery 内联）
+│   │   │   └── client.js       # 前端 bundle（含 __ModuleLoader__.load）
+│   │   ├── cordis.patch.yml
+│   │   └── package.json        # main ./lib/host.js，./client → ./lib/client.js
+│   ├── mcwiki-search/          # @dshp/mcwiki-search（Minecraft Wiki 查询工具：搜索/引言/全文）
+│   ├── search-provider/        # @dshp/search-provider（web_search 供应商中枢，Tavily 等，动态选型）
+│   └── token-meter/            # @dshp/token-meter（Token 额度 + 用量统计，右栏双面板 + 小组件）
+│       ├── src/host/           # Host TS：providers/{opencode,deepseek,deepseek-api,deepseek-web,manual} + stats/
+│       ├── src/client/         # Client TS：QuotaSection/StatsSection/TokenMeterSection/widgets + icons
+│       ├── images/             # 界面截图（插件 README「界面预览」用）
 │       ├── lib/                # 单文件构建产物（已提交，DSH git 安装必需）
 │       │   ├── host.js         # 后端 bundle（ESM，schemastery 内联）
 │       │   └── client.js       # 前端 bundle（含 __ModuleLoader__.load）
-│       ├── cordis.patch.yml
+│       ├── cordis.patch.yml    # bundle 声明（id: dshp-token-meter）
 │       └── package.json        # main ./lib/host.js，./client → ./lib/client.js
 ├── tsconfig.base.json          # 共享 TS 配置（NodeNext + strict）
 ├── tsconfig.json               # solution 引用
@@ -42,6 +53,8 @@ pnpm test          # pnpm -r test
 # 单个插件
 pnpm --filter @dshp/vision-bridge build
 pnpm --filter @dshp/vision-bridge typecheck
+pnpm --filter @dshp/token-meter build
+pnpm --filter @dshp/token-meter typecheck
 ```
 
 ## 加新插件

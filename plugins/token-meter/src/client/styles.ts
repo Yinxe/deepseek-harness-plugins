@@ -147,9 +147,17 @@ export const CSS: string = `
 .tm-qrow{display:flex;align-items:center;gap:6px;margin-top:6px}
 .tm-qlabel{flex:none;width:36px;font-size:11px;color:var(--dsw-alias-label-secondary)}
 .tm-qbar{flex:1;min-width:0;height:6px;border-radius:99px;background:var(--dsw-alias-bg-layer-2);overflow:hidden}
+/* 占用四档：ok 蓝 / warn 黄(≥70%) / bad 红"快完了"(≥90%) / over 红+脉冲(≥100%) */
 .tm-qfill{display:block;height:100%;border-radius:99px;background:var(--dsw-alias-brand-primary);transition:width .8s ease}
-.tm-qfill.warn{background:var(--dsw-alias-state-warn-primary)}.tm-qfill.bad{background:var(--dsw-alias-state-error-primary)}
+.tm-qfill.warn{background:var(--dsw-alias-state-warn-primary)}
+.tm-qfill.bad{background:var(--dsw-alias-state-error-primary)}
+.tm-qfill.over{background:var(--dsw-alias-state-error-primary);animation:tm-qpulse 1.6s ease-in-out infinite}
 .tm-qpct{flex:none;font-size:11px;color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums}
+.tm-qpct.warn{color:var(--dsw-alias-state-warn-label)}
+.tm-qpct.bad,.tm-qpct.over{color:var(--dsw-alias-state-error-primary);font-weight:600}
+.tm-qsum-warn{color:var(--dsw-alias-state-warn-label)}
+.tm-qsum-bad,.tm-qsum-over{color:var(--dsw-alias-state-error-primary)}
+@keyframes tm-qpulse{0%,100%{opacity:1}50%{opacity:.55}}
 .tm-qleft{flex:none;font-size:10px;color:var(--dsw-alias-label-secondary)}
 .tm-qbal{display:flex;align-items:baseline;justify-content:space-between;margin-top:6px}
 .tm-qbal b{font-size:15px;color:var(--dsw-alias-label-primary)}
@@ -260,6 +268,9 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 /* 小组件工具条：标签 + 开关按钮 */
 .tm-widgetBtn{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--dsw-alias-border-l1);border-radius:var(--tm-r-chip);padding:1px 4px 1px 8px;font-size:12px;color:var(--dsw-alias-label-secondary)}
 .tm-widgetBtn-label{line-height:20px;white-space:nowrap}
+/* 右栏 tab chip：图标 + 文本（图标颜色跟随 chip 文字色） */
+.tm-tabChip{display:inline-flex;align-items:center;gap:5px;min-width:0}
+.tm-tabChip>svg{flex:none;display:block}
 /* 图表标题首段：窄栏省略号，不换行挤高 */
 .tm-chart-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto}
 /* 模型行：名称+数值允许换行；明细行窄栏可换行不截断 */
