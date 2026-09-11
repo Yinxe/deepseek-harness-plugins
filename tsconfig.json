@@ -4,5 +4,9 @@
     "noEmit": true
   },
   "files": [],
-  "references": [{ "path": "./plugins/vision-bridge" }, { "path": "./plugins/mcwiki-search" }]
+  "references": [
+    { "path": "./plugins/vision-bridge" },
+    { "path": "./plugins/mcwiki-search" },
+    { "path": "./plugins/token-meter" }
+  ]
 }

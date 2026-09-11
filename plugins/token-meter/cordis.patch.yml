@@ -1,0 +1,7 @@
+# @dshp/token-meter bundle patch: unified TokenMeter for DeepSeek Harness.
+# Host half: multi-vendor quota snapshots + session-log stats engine + /ext/dshp-token-meter/* routes.
+# Client half: Settings page section (quota + stats tabs) + sidebar cards + overlays.
+
+- insert:
+    - id: dshp-token-meter
+      name: '@dshp/token-meter'
