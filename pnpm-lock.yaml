@@ -235,6 +235,18 @@ importers:
         specifier: ^8.5.1
         version: 8.5.1(tsx@4.23.13)(typescript@7.0.2)
 
+  plugins/search-provider:
+    devDependencies:
+      '@deepseek-ai/schemastery':
+        specifier: ^3.18.2
+        version: 3.18.2
+      '@types/react':
+        specifier: ^19.3.0
+        version: 19.3.0
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(tsx@4.23.13)(typescript@7.0.2)
+
   plugins/token-meter:
     devDependencies:
       '@deepseek-ai/schemastery':
