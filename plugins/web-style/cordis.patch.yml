@@ -1,0 +1,7 @@
+# @dshp/web-style bundle patch: web style suite for DeepSeek Harness.
+# Host half: settings persistence + /ext/dshp-web-style/* routes (state / themes / theme / config).
+# Client half: Settings page section "外观定制" (theme gallery + Material You wallpaper + radius).
+
+- insert:
+    - id: dshp-web-style
+      name: '@dshp/web-style'

@@ -8,6 +8,7 @@
     { "path": "./plugins/vision-bridge" },
     { "path": "./plugins/mcwiki-search" },
     { "path": "./plugins/token-meter" },
-    { "path": "./plugins/search-provider" }
+    { "path": "./plugins/search-provider" },
+    { "path": "./plugins/web-style" }
   ]
 }
