@@ -95,14 +95,31 @@
 .tm-legend{display:flex;align-items:center;gap:4px;margin-top:8px;flex-wrap:wrap}
 .tm-cacheRow{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:11px;color:var(--dsw-alias-label-secondary);flex-wrap:wrap;line-height:16px}
 .tm-cacheSep{color:var(--dsw-alias-label-tertiary)}
-/* \u2500\u2500 \u5CF0\u8C37\u663E\u793A\u5668\uFF08\u989D\u5EA6\u9762\u677F\u7F6E\u9876\uFF09\uFF1A\u5DE5\u4F5C\u65F6\u95F4=\u5CF0\uFF0C\u5176\u4F59=\u8C37 \u2500\u2500 */
-.tm-peak{display:flex;flex-direction:column;gap:6px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);border-radius:var(--tm-r-card);padding:10px 12px;margin:0 0 8px}
-.tm-peakHead{display:flex;align-items:center;gap:6px;min-width:0}
+/* \u2500\u2500 \u5CF0\u8C37\u5B9A\u4EF7\u63D0\u793A\uFF08\u989D\u5EA6\u9762\u677F\u7F6E\u9876\uFF09\uFF1A\u5317\u4EAC\u65F6\u95F4\u5DE5\u4F5C\u65E5\u4E24\u4E2A\u5CF0\u6BB5\uFF0C\u5176\u4F59\u4E3A\u8C37 \u2500\u2500 */
+.tm-peak{position:relative;display:flex;flex-direction:column;gap:6px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);border-radius:var(--tm-r-card);padding:10px 12px;margin:0 0 8px;cursor:default}
+.tm-peak:focus{outline:none}
+.tm-peak:focus-visible{box-shadow:0 0 0 2px color-mix(in srgb,var(--dsw-alias-state-business-primary) 55%,transparent)}
+.tm-peakHead{display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap;row-gap:4px}
 .tm-peakDot{width:8px;height:8px;border-radius:50%;flex:none}
 .tm-peakDot.peak{background:var(--dsw-alias-state-warn-primary);box-shadow:0 0 6px var(--dsw-alias-state-warn-primary)}
 .tm-peakDot.valley{background:var(--dsw-alias-state-success-primary)}
-.tm-peakTitle{font-size:12px;font-weight:600;color:var(--dsw-alias-label-primary);white-space:nowrap}
-.tm-peakTime{flex:1;min-width:0;text-align:right;font-size:11px;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* \u6807\u9898\u538B\u5230 4 \u5B57\uFF0C\u72B6\u6001\u72EC\u7ACB\u6210 chip\uFF1B\u65F6\u95F4 flex:none + nowrap \u2014\u2014 \u4E09\u5904\u90FD\u4E0D\u518D\u8D70\u7701\u7565\u53F7\u88C1\u5207 */
+.tm-peakTitle{font-size:12px;font-weight:600;color:var(--dsw-alias-label-primary);white-space:nowrap;flex:none}
+.tm-peakChip{flex:none;font-size:10.5px;line-height:16px;font-weight:600;padding:0 7px;border-radius:99px;white-space:nowrap}
+.tm-peakChip.peak{color:var(--dsw-alias-state-warn-label);background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 16%,transparent)}
+.tm-peakChip.valley{color:var(--dsw-alias-state-success-primary);background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 14%,transparent)}
+.tm-peakTime{flex:none;margin-left:auto;text-align:right;font-size:11px;line-height:16px;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* \u60AC\u6D6E\u660E\u7EC6\uFF1Aportal \u5230 body\uFF0Cposition:fixed \u7531 tm-tipfixed \u63D0\u4F9B\uFF0C\u6B64\u5904\u53EA\u7BA1\u5916\u89C2\u4E0E\u52A8\u753B */
+.tm-tipfixed.tm-peakPop{width:252px;max-width:calc(100vw - 16px);padding:9px 11px;font-size:11px;animation:tm-peakPopIn .18s cubic-bezier(.22,.8,.3,1);box-shadow:0 14px 34px -10px rgba(0,0,0,.42);border-color:color-mix(in srgb,var(--dsw-alias-state-business-primary) 30%,var(--dsw-alias-border-l2))}
+.tm-peakPopHead{display:flex;align-items:center;gap:6px;font-weight:600;font-size:11.5px;margin-bottom:6px}
+.tm-peakPopDot{width:7px;height:7px;border-radius:50%;flex:none}
+.tm-peakPopDot.peak{background:var(--dsw-alias-state-warn-primary);box-shadow:0 0 5px var(--dsw-alias-state-warn-primary)}
+.tm-peakPopDot.valley{background:var(--dsw-alias-state-success-primary)}
+.tm-peakPopClock{margin-left:auto;font-family:var(--ds-font-family-code);font-variant-numeric:tabular-nums;font-weight:600;color:var(--dsw-alias-label-primary);animation:tm-peakTick .45s ease}
+.tm-peakPop .tm-tip-v{font-weight:500}
+.tm-peakPopFoot{margin-top:6px;padding-top:6px;border-top:1px dashed var(--dsw-alias-border-l1);font-size:10px;line-height:14px;color:var(--dsw-alias-label-tertiary)}
+@keyframes tm-peakPopIn{from{opacity:0;transform:translateY(-6px) scale(.97)}}
+@keyframes tm-peakTick{from{opacity:.25;transform:translateY(-4px)}}
 .tm-peakBand{display:flex;gap:1.5px;height:10px}
 .tm-peakCell{flex:1 1 0;min-width:0;border-radius:2px;background:var(--dsw-alias-interactive-bg-hover)}
 .tm-peakCell.on{background:var(--dsw-alias-state-warn-primary);opacity:.85}
@@ -3168,12 +3185,45 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         }) : h("div", { className: "tm-hint", style: { marginTop: 6 } }, "\u5C1A\u672A\u62C9\u53D6\uFF0C\u70B9\u51FB\u62C9\u53D6\u83B7\u53D6\u6700\u65B0\u989D\u5EA6\u3002")
       );
     }
-    const PEAK_RULE = { weekdays: [1, 2, 3, 4, 5], startHour: 9, endHour: 18 };
+    const CN_OFFSET_MS = 8 * 36e5;
+    const PEAK_SEGMENTS = [
+      [9, 12],
+      // ← UTC 01:00–04:00
+      [14, 18]
+      // ← UTC 06:00–10:00
+    ];
+    const PEAK_WEEKDAYS = [1, 2, 3, 4, 5];
+    const CN_WEEK_LABEL = ["\u5468\u65E5", "\u5468\u4E00", "\u5468\u4E8C", "\u5468\u4E09", "\u5468\u56DB", "\u5468\u4E94", "\u5468\u516D"];
+    function pad2(n) {
+      return String(n).padStart(2, "0");
+    }
+    function cnAt(ms) {
+      const d = new Date(ms + CN_OFFSET_MS);
+      return { day: d.getUTCDay(), hour: d.getUTCHours(), min: d.getUTCMinutes() };
+    }
+    function cnHm(ms) {
+      const c = cnAt(ms);
+      return pad2(c.hour) + ":" + pad2(c.min);
+    }
+    function cnDayKey(ms) {
+      return Math.floor((ms + CN_OFFSET_MS) / 864e5);
+    }
+    function cnWhen(targetMs, nowMs) {
+      const diff = cnDayKey(targetMs) - cnDayKey(nowMs);
+      const d = new Date(targetMs + CN_OFFSET_MS);
+      const hm = pad2(d.getUTCHours()) + ":" + pad2(d.getUTCMinutes());
+      if (diff <= 0) return "\u4ECA\u5929 " + hm;
+      if (diff === 1) return "\u660E\u5929 " + hm;
+      if (diff === 2) return "\u540E\u5929 " + hm;
+      return CN_WEEK_LABEL[d.getUTCDay()] + " " + hm;
+    }
+    function isPeakMs(ms) {
+      const c = cnAt(ms);
+      if (!PEAK_WEEKDAYS.includes(c.day)) return false;
+      return PEAK_SEGMENTS.some(([s, e]) => c.hour >= s && c.hour < e);
+    }
     function isPeakHour(t) {
-      const w = t.getDay();
-      if (!PEAK_RULE.weekdays.includes(w)) return false;
-      const hr = t.getHours();
-      return hr >= PEAK_RULE.startHour && hr < PEAK_RULE.endHour;
+      return isPeakMs(t.getTime());
     }
     function moodClass(off, peak) {
       if (off) return " tm-off";
@@ -3181,9 +3231,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     }
     function nextPeakSwitch(nowMs, peak) {
       const step = 6e4;
-      for (let i = 1; i < 7 * 24 * 60; i++) {
-        const t = new Date(nowMs + i * step);
-        if (isPeakHour(t) !== peak) return { ms: i * step, toPeak: !peak };
+      for (let i = 1; i < 8 * 24 * 60; i++) {
+        if (isPeakMs(nowMs + i * step) !== peak) return { ms: i * step, toPeak: !peak };
       }
       return { ms: 7 * 24 * 36e5, toPeak: peak };
     }
@@ -3195,48 +3244,142 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       if (hh > 0) return hh + " \u5C0F\u65F6 " + mm + " \u5206";
       return mm + " \u5206";
     }
+    function fmtDurShort(ms) {
+      const m = Math.max(1, Math.round(ms / 6e4));
+      const hh = Math.floor(m / 60);
+      if (hh >= 24) return Math.floor(hh / 24) + "d" + hh % 24 + "h";
+      if (hh > 0) return hh + "h" + pad2(m % 60) + "m";
+      return m + "m";
+    }
+    function PeakPopover(props) {
+      const now = props.now;
+      const ns = nextPeakSwitch(now, props.peak);
+      const segTxt = PEAK_SEGMENTS.map(([s, e]) => pad2(s) + ":00\u2013" + pad2(e) + ":00").join("\u3001");
+      return h(
+        "div",
+        {
+          className: "tm-tipfixed tm-peakPop",
+          style: { left: props.at.left + "px", top: props.at.top, bottom: props.at.bottom }
+        },
+        h(
+          "div",
+          { className: "tm-peakPopHead" },
+          h("span", { className: "tm-peakPopDot " + (props.peak ? "peak" : "valley") }),
+          h("span", null, "\u5CF0\u8C37\u5B9A\u4EF7 \xB7 \u5317\u4EAC\u65F6\u95F4"),
+          h("span", { key: cnHm(now), className: "tm-peakPopClock" }, cnHm(now))
+        ),
+        h(
+          "div",
+          { className: "tm-tiprow" },
+          h("span", { className: "tm-tip-k" }, "\u5F53\u524D"),
+          h(
+            "span",
+            { className: "tm-tip-v" },
+            (props.peak ? "\u5CF0\u65F6\u6BB5" : "\u8C37\u65F6\u6BB5") + (props.isWeekend ? "\uFF08\u5468\u672B\uFF09" : "")
+          )
+        ),
+        h(
+          "div",
+          { className: "tm-tiprow" },
+          h("span", { className: "tm-tip-k" }, "\u5CF0\u6BB5"),
+          h("span", { className: "tm-tip-v" }, segTxt)
+        ),
+        h(
+          "div",
+          { className: "tm-tiprow" },
+          h("span", { className: "tm-tip-k" }, "\u5CF0\u65E5"),
+          h("span", { className: "tm-tip-v" }, "\u5468\u4E00\u81F3\u5468\u4E94")
+        ),
+        h(
+          "div",
+          { className: "tm-tiprow" },
+          h("span", { className: "tm-tip-k" }, ns.toPeak ? "\u8F6C\u5165\u5CF0" : "\u8F6C\u5165\u8C37"),
+          h("span", { className: "tm-tip-v" }, cnWhen(now + ns.ms, now))
+        ),
+        h(
+          "div",
+          { className: "tm-tiprow" },
+          h("span", { className: "tm-tip-k" }, "\u5012\u8BA1\u65F6"),
+          h("span", { className: "tm-tip-v" }, fmtDur(ns.ms))
+        ),
+        h("div", { className: "tm-peakPopFoot" }, "\u6298\u7B97\u81EA 01-04 & 06-10 UTC, Mon-Fri \xB7 \u6BCF\u65E5 7h \u5CF0 / 17h \u8C37")
+      );
+    }
     function PeakIndicator(props) {
       const now = useNow(6e4);
-      const d = new Date(now);
-      const peak = isPeakHour(d);
-      const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+      const [popAt, setPopAt] = useState(null);
+      const c = cnAt(now);
+      const peak = isPeakMs(now);
+      const isWeekend = c.day === 0 || c.day === 6;
       const ns = nextPeakSwitch(now, peak);
+      const segTxt = PEAK_SEGMENTS.map(([s, e]) => pad2(s) + ":00\u2013" + pad2(e) + ":00").join("\u3001");
       const cells = [];
       for (let hr = 0; hr < 24; hr++) {
-        const on = !isWeekend && hr >= PEAK_RULE.startHour && hr < PEAK_RULE.endHour;
+        const on = !isWeekend && PEAK_SEGMENTS.some(([s, e]) => hr >= s && hr < e);
         cells.push(
           h("span", {
             key: hr,
-            className: "tm-peakCell" + (on ? " on" : " von") + (hr === d.getHours() ? " now" : ""),
-            title: String(hr).padStart(2, "0") + ":00" + (on ? " \u5CF0" : " \u8C37")
+            className: "tm-peakCell" + (on ? " on" : " von") + (hr === c.hour ? " now" : ""),
+            title: pad2(hr) + ":00\u2013" + pad2((hr + 1) % 24) + ":00 " + (on ? "\u5CF0" : "\u8C37") + "\uFF08\u5317\u4EAC\u65F6\u95F4\uFF09"
           })
         );
       }
-      const bandLabel = isWeekend ? "\u5468\u672B\u5168\u5929\u4E3A\u8C37" : PEAK_RULE.startHour + ":00\u2013" + PEAK_RULE.endHour + ":00 \u4E3A\u5CF0";
-      const curTxt = peak ? "\u5CF0\u65F6\u6BB5" : "\u8C37\u65F6\u6BB5";
-      const nextTxt = ns.toPeak ? "\u7EA6 " + fmtDur(ns.ms) + " \u540E\u8FDB\u5165\u5CF0" : "\u7EA6 " + fmtDur(ns.ms) + " \u540E\u8FDB\u5165\u8C37";
+      const curTxt = peak ? "\u5CF0" : "\u8C37";
+      const nextTxt = (ns.toPeak ? "\u8DDD\u5CF0 " : "\u8DDD\u8C37 ") + fmtDurShort(ns.ms);
+      const openPop = (el) => {
+        try {
+          if (!el || typeof el.getBoundingClientRect !== "function") return;
+          const r = el.getBoundingClientRect();
+          const W = 252;
+          const H = 168;
+          const vw = window.innerWidth || 1024;
+          const vh = window.innerHeight || 768;
+          const left = Math.max(8, Math.min(r.left, vw - W - 8));
+          const below = r.bottom + 8;
+          if (below + H <= vh - 8) setPopAt({ left, top: below + "px", bottom: void 0 });
+          else setPopAt({ left, top: void 0, bottom: Math.max(8, vh - r.top + 8) + "px" });
+        } catch {
+        }
+      };
       return h(
         "div",
-        { className: "tm-peak " + (peak ? "peak" : "valley") },
+        {
+          className: "tm-peak " + (peak ? "peak" : "valley"),
+          tabIndex: 0,
+          "aria-label": "\u5CF0\u8C37\u5B9A\u4EF7\uFF1A\u5F53\u524D" + (peak ? "\u5CF0\u65F6\u6BB5" : "\u8C37\u65F6\u6BB5") + "\uFF0C" + nextTxt,
+          onMouseEnter: (e) => openPop(e.currentTarget),
+          onMouseLeave: () => setPopAt(null),
+          onFocus: (e) => openPop(e.currentTarget),
+          onBlur: () => setPopAt(null)
+        },
         h(
           "div",
-          { className: "tm-peakHead" },
+          { className: "tm-peakHead", key: "hd" },
           h("span", { className: "tm-peakDot " + (peak ? "peak" : "valley") }),
-          h("span", { className: "tm-peakTitle" }, "\u5CF0\u8C37\u63D0\u9192 \xB7 " + curTxt),
-          h("span", { className: "tm-peakTime" }, nextTxt),
+          h("span", { className: "tm-peakTitle" }, "\u5CF0\u8C37\u5B9A\u4EF7"),
+          h("span", { className: "tm-peakChip " + (peak ? "peak" : "valley") }, curTxt),
+          h(
+            "span",
+            {
+              className: "tm-peakTime",
+              title: "\u5317\u4EAC\u65F6\u95F4 " + cnHm(now) + " \xB7 " + nextTxt + "\uFF08" + cnWhen(now + ns.ms, now) + "\uFF09"
+            },
+            nextTxt
+          ),
           props.widgets && props.widgetId ? h(props.widgets.WidgetToggle, { id: props.widgetId }) : null
         ),
-        h("div", { className: "tm-peakBand" }, cells),
+        h("div", { className: "tm-peakBand", key: "band" }, cells),
         h(
           "div",
-          { className: "tm-peakHint" },
-          "\u90E8\u5206\u4F9B\u5E94\u5546\u91C7\u7528\u5CF0\u8C37\u5B9A\u4EF7\uFF1A" + bandLabel + "\uFF0C",
+          { className: "tm-peakHint", key: "hint" },
+          isWeekend ? "\u5CF0\u8C37\u5B9A\u4EF7\uFF08\u5317\u4EAC\u65F6\u95F4\uFF09\uFF1A\u5468\u672B\u5168\u5929\u4E3A\u8C37\uFF0C" : "\u5CF0\u8C37\u5B9A\u4EF7\uFF08\u5317\u4EAC\u65F6\u95F4\uFF09\uFF1A\u5468\u4E00\u81F3\u5468\u4E94 " + segTxt + " \u4E3A\u5CF0\uFF0C",
           h(
             "b",
             null,
             peak ? "\u5F53\u524D\u4E3A\u5CF0\uFF0C\u7528\u91CF\u6D88\u8017\u52A0\u901F\u3001\u989D\u5EA6\u8D70\u5F97\u66F4\u5FEB\uFF0C\u5EFA\u8BAE\u9519\u5CF0\u8DD1\u91CF\u6216\u7559\u610F\u4F59\u989D\u3002" : "\u5F53\u524D\u4E3A\u8C37\uFF0C\u8D39\u7387\u76F8\u5BF9\u4F4E\uFF0C\u9002\u5408\u6279\u91CF\u4E0E\u957F\u4EFB\u52A1\u8DD1\u91CF\u3002"
           )
-        )
+        ),
+        popAt === null ? null : tmPortal(h(PeakPopover, { now, peak, isWeekend, at: popAt }))
       );
     }
     function QuotaRightPane() {

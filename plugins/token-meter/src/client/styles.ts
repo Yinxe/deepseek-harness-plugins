@@ -92,14 +92,31 @@ export const CSS: string = `
 .tm-legend{display:flex;align-items:center;gap:4px;margin-top:8px;flex-wrap:wrap}
 .tm-cacheRow{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:11px;color:var(--dsw-alias-label-secondary);flex-wrap:wrap;line-height:16px}
 .tm-cacheSep{color:var(--dsw-alias-label-tertiary)}
-/* ── 峰谷显示器（额度面板置顶）：工作时间=峰，其余=谷 ── */
-.tm-peak{display:flex;flex-direction:column;gap:6px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);border-radius:var(--tm-r-card);padding:10px 12px;margin:0 0 8px}
-.tm-peakHead{display:flex;align-items:center;gap:6px;min-width:0}
+/* ── 峰谷定价提示（额度面板置顶）：北京时间工作日两个峰段，其余为谷 ── */
+.tm-peak{position:relative;display:flex;flex-direction:column;gap:6px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);border-radius:var(--tm-r-card);padding:10px 12px;margin:0 0 8px;cursor:default}
+.tm-peak:focus{outline:none}
+.tm-peak:focus-visible{box-shadow:0 0 0 2px color-mix(in srgb,var(--dsw-alias-state-business-primary) 55%,transparent)}
+.tm-peakHead{display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap;row-gap:4px}
 .tm-peakDot{width:8px;height:8px;border-radius:50%;flex:none}
 .tm-peakDot.peak{background:var(--dsw-alias-state-warn-primary);box-shadow:0 0 6px var(--dsw-alias-state-warn-primary)}
 .tm-peakDot.valley{background:var(--dsw-alias-state-success-primary)}
-.tm-peakTitle{font-size:12px;font-weight:600;color:var(--dsw-alias-label-primary);white-space:nowrap}
-.tm-peakTime{flex:1;min-width:0;text-align:right;font-size:11px;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 标题压到 4 字，状态独立成 chip；时间 flex:none + nowrap —— 三处都不再走省略号裁切 */
+.tm-peakTitle{font-size:12px;font-weight:600;color:var(--dsw-alias-label-primary);white-space:nowrap;flex:none}
+.tm-peakChip{flex:none;font-size:10.5px;line-height:16px;font-weight:600;padding:0 7px;border-radius:99px;white-space:nowrap}
+.tm-peakChip.peak{color:var(--dsw-alias-state-warn-label);background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 16%,transparent)}
+.tm-peakChip.valley{color:var(--dsw-alias-state-success-primary);background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 14%,transparent)}
+.tm-peakTime{flex:none;margin-left:auto;text-align:right;font-size:11px;line-height:16px;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* 悬浮明细：portal 到 body，position:fixed 由 tm-tipfixed 提供，此处只管外观与动画 */
+.tm-tipfixed.tm-peakPop{width:252px;max-width:calc(100vw - 16px);padding:9px 11px;font-size:11px;animation:tm-peakPopIn .18s cubic-bezier(.22,.8,.3,1);box-shadow:0 14px 34px -10px rgba(0,0,0,.42);border-color:color-mix(in srgb,var(--dsw-alias-state-business-primary) 30%,var(--dsw-alias-border-l2))}
+.tm-peakPopHead{display:flex;align-items:center;gap:6px;font-weight:600;font-size:11.5px;margin-bottom:6px}
+.tm-peakPopDot{width:7px;height:7px;border-radius:50%;flex:none}
+.tm-peakPopDot.peak{background:var(--dsw-alias-state-warn-primary);box-shadow:0 0 5px var(--dsw-alias-state-warn-primary)}
+.tm-peakPopDot.valley{background:var(--dsw-alias-state-success-primary)}
+.tm-peakPopClock{margin-left:auto;font-family:var(--ds-font-family-code);font-variant-numeric:tabular-nums;font-weight:600;color:var(--dsw-alias-label-primary);animation:tm-peakTick .45s ease}
+.tm-peakPop .tm-tip-v{font-weight:500}
+.tm-peakPopFoot{margin-top:6px;padding-top:6px;border-top:1px dashed var(--dsw-alias-border-l1);font-size:10px;line-height:14px;color:var(--dsw-alias-label-tertiary)}
+@keyframes tm-peakPopIn{from{opacity:0;transform:translateY(-6px) scale(.97)}}
+@keyframes tm-peakTick{from{opacity:.25;transform:translateY(-4px)}}
 .tm-peakBand{display:flex;gap:1.5px;height:10px}
 .tm-peakCell{flex:1 1 0;min-width:0;border-radius:2px;background:var(--dsw-alias-interactive-bg-hover)}
 .tm-peakCell.on{background:var(--dsw-alias-state-warn-primary);opacity:.85}

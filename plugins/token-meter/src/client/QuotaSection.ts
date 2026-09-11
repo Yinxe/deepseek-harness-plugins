@@ -2029,14 +2029,58 @@ export function createQuotaSection(
 
   /**
    * 峰谷显示器：部分供应商按峰谷定价，峰值时段用量/计费加速。
-   * 规则（可按需调整）：工作日 9:00–18:00 为「峰」，其余时段与周末为「谷」。
+   *
+   * 规则来源（供应商定价提示原文）：
+   *   "Off-peak shown (17h/day) · peak $0.30 / $1.20 01-04 & 06-10 UTC, Mon-Fri"
+   * 即：UTC 周一至周五 01:00–04:00 与 06:00–10:00 为「峰」，每日 7h 峰 / 17h 谷，
+   * 周末全天为「谷」。
+   *
+   * ⚠ 一律按【北京时间 · UTC+8】判定与展示：浏览器本地时区可能是任何值，
+   *   `getHours()` 直接读会让判定随机器漂移，故用固定 +8h 偏移后取 UTC 字段，
+   *   等价于固定的 Asia/Shanghai（中国无夏令时，偏移恒定）。
+   *   折合北京时间：周一至周五 09:00–12:00（←UTC 01–04）、14:00–18:00（←UTC 06–10）。
    */
-  const PEAK_RULE = { weekdays: [1, 2, 3, 4, 5], startHour: 9, endHour: 18 };
+  const CN_OFFSET_MS = 8 * 3600000;
+  const PEAK_SEGMENTS: Array<[number, number]> = [
+    [9, 12], // ← UTC 01:00–04:00
+    [14, 18], // ← UTC 06:00–10:00
+  ];
+  const PEAK_WEEKDAYS = [1, 2, 3, 4, 5]; // 周一至周五
+  const CN_WEEK_LABEL = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  function pad2(n: number): string {
+    return String(n).padStart(2, '0');
+  }
+  /** 北京时间日历字段（固定 +8h 偏移 + getUTC*，与浏览器时区无关） */
+  function cnAt(ms: number): { day: number; hour: number; min: number } {
+    const d = new Date(ms + CN_OFFSET_MS);
+    return { day: d.getUTCDay(), hour: d.getUTCHours(), min: d.getUTCMinutes() };
+  }
+  /** 北京时间 HH:MM */
+  function cnHm(ms: number): string {
+    const c = cnAt(ms);
+    return pad2(c.hour) + ':' + pad2(c.min);
+  }
+  /** 北京时间自然日序号（用于「今天/明天」判断） */
+  function cnDayKey(ms: number): number {
+    return Math.floor((ms + CN_OFFSET_MS) / 86400000);
+  }
+  /** 把某个北京时间点说成人话：今天 18:00 / 明天 09:00 / 周一 09:00 */
+  function cnWhen(targetMs: number, nowMs: number): string {
+    const diff = cnDayKey(targetMs) - cnDayKey(nowMs);
+    const d = new Date(targetMs + CN_OFFSET_MS);
+    const hm = pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes());
+    if (diff <= 0) return '今天 ' + hm;
+    if (diff === 1) return '明天 ' + hm;
+    if (diff === 2) return '后天 ' + hm;
+    return CN_WEEK_LABEL[d.getUTCDay()] + ' ' + hm;
+  }
+  function isPeakMs(ms: number): boolean {
+    const c = cnAt(ms);
+    if (!PEAK_WEEKDAYS.includes(c.day)) return false;
+    return PEAK_SEGMENTS.some(([s, e]) => c.hour >= s && c.hour < e);
+  }
   function isPeakHour(t: Date): boolean {
-    const w = t.getDay(); // 0=周日
-    if (!PEAK_RULE.weekdays.includes(w)) return false;
-    const hr = t.getHours();
-    return hr >= PEAK_RULE.startHour && hr < PEAK_RULE.endHour;
+    return isPeakMs(t.getTime());
   }
   /**
    * 卡片氛围类：禁用优先（红），其次按峰/谷 —— 峰=暖色+呼吸（消耗加速），
@@ -2048,9 +2092,8 @@ export function createQuotaSection(
   }
   function nextPeakSwitch(nowMs: number, peak: boolean): { ms: number; toPeak: boolean } {
     const step = 60000;
-    for (let i = 1; i < 7 * 24 * 60; i++) {
-      const t = new Date(nowMs + i * step);
-      if (isPeakHour(t) !== peak) return { ms: i * step, toPeak: !peak };
+    for (let i = 1; i < 8 * 24 * 60; i++) {
+      if (isPeakMs(nowMs + i * step) !== peak) return { ms: i * step, toPeak: !peak };
     }
     return { ms: 7 * 24 * 3600000, toPeak: peak };
   }
@@ -2062,44 +2105,145 @@ export function createQuotaSection(
     if (hh > 0) return hh + ' 小时 ' + mm + ' 分';
     return mm + ' 分';
   }
+  /** 行内倒计时的紧凑写法：4h12m / 12m / 2d15h（头部一行放得下，不吃省略号） */
+  function fmtDurShort(ms: number): string {
+    const m = Math.max(1, Math.round(ms / 60000));
+    const hh = Math.floor(m / 60);
+    if (hh >= 24) return Math.floor(hh / 24) + 'd' + (hh % 24) + 'h';
+    if (hh > 0) return hh + 'h' + pad2(m % 60) + 'm';
+    return m + 'm';
+  }
+
+  /** 峰谷悬浮明细卡（鼠标悬停/键盘聚焦时浮出，动画展开） */
+  function PeakPopover(props: { now: number; peak: boolean; isWeekend: boolean; at: any }): any {
+    const now = props.now;
+    const ns = nextPeakSwitch(now, props.peak);
+    const segTxt = PEAK_SEGMENTS.map(([s, e]) => pad2(s) + ':00–' + pad2(e) + ':00').join('、');
+    return h(
+      'div',
+      {
+        className: 'tm-tipfixed tm-peakPop',
+        style: { left: props.at.left + 'px', top: props.at.top, bottom: props.at.bottom },
+      },
+      h(
+        'div',
+        { className: 'tm-peakPopHead' },
+        h('span', { className: 'tm-peakPopDot ' + (props.peak ? 'peak' : 'valley') }),
+        h('span', null, '峰谷定价 · 北京时间'),
+        h('span', { key: cnHm(now), className: 'tm-peakPopClock' }, cnHm(now)),
+      ),
+      h(
+        'div',
+        { className: 'tm-tiprow' },
+        h('span', { className: 'tm-tip-k' }, '当前'),
+        h(
+          'span',
+          { className: 'tm-tip-v' },
+          (props.peak ? '峰时段' : '谷时段') + (props.isWeekend ? '（周末）' : ''),
+        ),
+      ),
+      h(
+        'div',
+        { className: 'tm-tiprow' },
+        h('span', { className: 'tm-tip-k' }, '峰段'),
+        h('span', { className: 'tm-tip-v' }, segTxt),
+      ),
+      h(
+        'div',
+        { className: 'tm-tiprow' },
+        h('span', { className: 'tm-tip-k' }, '峰日'),
+        h('span', { className: 'tm-tip-v' }, '周一至周五'),
+      ),
+      h(
+        'div',
+        { className: 'tm-tiprow' },
+        h('span', { className: 'tm-tip-k' }, ns.toPeak ? '转入峰' : '转入谷'),
+        h('span', { className: 'tm-tip-v' }, cnWhen(now + ns.ms, now)),
+      ),
+      h(
+        'div',
+        { className: 'tm-tiprow' },
+        h('span', { className: 'tm-tip-k' }, '倒计时'),
+        h('span', { className: 'tm-tip-v' }, fmtDur(ns.ms)),
+      ),
+      h('div', { className: 'tm-peakPopFoot' }, '折算自 01-04 & 06-10 UTC, Mon-Fri · 每日 7h 峰 / 17h 谷'),
+    );
+  }
+
   function PeakIndicator(props: { widgets?: any; widgetId?: string }): any {
     const now = useNow(60000); // 每分钟刷新状态与倒计时
-    const d = new Date(now);
-    const peak = isPeakHour(d);
-    const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+    const [popAt, setPopAt] = useState<any>(null);
+    // ⚠ Hooks 规则：useState/useNow 之后不得提前 return（本组件无早退分支）。
+    const c = cnAt(now);
+    const peak = isPeakMs(now);
+    const isWeekend = c.day === 0 || c.day === 6;
     const ns = nextPeakSwitch(now, peak);
+    const segTxt = PEAK_SEGMENTS.map(([s, e]) => pad2(s) + ':00–' + pad2(e) + ':00').join('、');
     const cells: any[] = [];
     for (let hr = 0; hr < 24; hr++) {
-      const on = !isWeekend && hr >= PEAK_RULE.startHour && hr < PEAK_RULE.endHour;
+      const on = !isWeekend && PEAK_SEGMENTS.some(([s, e]) => hr >= s && hr < e);
       cells.push(
         h('span', {
           key: hr,
-          className: 'tm-peakCell' + (on ? ' on' : ' von') + (hr === d.getHours() ? ' now' : ''),
-          title: String(hr).padStart(2, '0') + ':00' + (on ? ' 峰' : ' 谷'),
+          className: 'tm-peakCell' + (on ? ' on' : ' von') + (hr === c.hour ? ' now' : ''),
+          title: pad2(hr) + ':00–' + pad2((hr + 1) % 24) + ':00 ' + (on ? '峰' : '谷') + '（北京时间）',
         }),
       );
     }
-    const bandLabel = isWeekend
-      ? '周末全天为谷'
-      : PEAK_RULE.startHour + ':00–' + PEAK_RULE.endHour + ':00 为峰';
-    const curTxt = peak ? '峰时段' : '谷时段';
-    const nextTxt = ns.toPeak ? '约 ' + fmtDur(ns.ms) + ' 后进入峰' : '约 ' + fmtDur(ns.ms) + ' 后进入谷';
+    const curTxt = peak ? '峰' : '谷';
+    const nextTxt = (ns.toPeak ? '距峰 ' : '距谷 ') + fmtDurShort(ns.ms);
+    // 悬浮明细卡挂在 body 上（tmPortal）后按视口坐标定位：既不被右侧栏/浮窗的 overflow 裁掉，
+    // 也不受浮窗 backdrop-filter 形成的包含块影响；放不下时自动翻到卡片上方。
+    const openPop = (el: any): void => {
+      try {
+        if (!el || typeof el.getBoundingClientRect !== 'function') return;
+        const r = el.getBoundingClientRect();
+        const W = 252;
+        const H = 168;
+        const vw = window.innerWidth || 1024;
+        const vh = window.innerHeight || 768;
+        const left = Math.max(8, Math.min(r.left, vw - W - 8));
+        const below = r.bottom + 8;
+        if (below + H <= vh - 8) setPopAt({ left, top: below + 'px', bottom: undefined });
+        else setPopAt({ left, top: undefined, bottom: Math.max(8, vh - r.top + 8) + 'px' });
+      } catch {
+        /* 定位失败就不浮出，不影响主面板 */
+      }
+    };
     return h(
       'div',
-      { className: 'tm-peak ' + (peak ? 'peak' : 'valley') },
+      {
+        className: 'tm-peak ' + (peak ? 'peak' : 'valley'),
+        tabIndex: 0,
+        'aria-label': '峰谷定价：当前' + (peak ? '峰时段' : '谷时段') + '，' + nextTxt,
+        onMouseEnter: (e: any) => openPop(e.currentTarget),
+        onMouseLeave: () => setPopAt(null),
+        onFocus: (e: any) => openPop(e.currentTarget),
+        onBlur: () => setPopAt(null),
+      },
       h(
         'div',
-        { className: 'tm-peakHead' },
+        { className: 'tm-peakHead', key: 'hd' },
         h('span', { className: 'tm-peakDot ' + (peak ? 'peak' : 'valley') }),
-        h('span', { className: 'tm-peakTitle' }, '峰谷提醒 · ' + curTxt),
-        h('span', { className: 'tm-peakTime' }, nextTxt),
+        h('span', { className: 'tm-peakTitle' }, '峰谷定价'),
+        h('span', { className: 'tm-peakChip ' + (peak ? 'peak' : 'valley') }, curTxt),
+        h(
+          'span',
+          {
+            className: 'tm-peakTime',
+            title: '北京时间 ' + cnHm(now) + ' · ' + nextTxt + '（' + cnWhen(now + ns.ms, now) + '）',
+          },
+          nextTxt,
+        ),
         props.widgets && props.widgetId ? h(props.widgets.WidgetToggle, { id: props.widgetId }) : null,
       ),
-      h('div', { className: 'tm-peakBand' }, cells),
+      h('div', { className: 'tm-peakBand', key: 'band' }, cells),
       h(
         'div',
-        { className: 'tm-peakHint' },
-        '部分供应商采用峰谷定价：' + bandLabel + '，',
+        { className: 'tm-peakHint', key: 'hint' },
+        isWeekend
+          ? '峰谷定价（北京时间）：周末全天为谷，'
+          : '峰谷定价（北京时间）：周一至周五 ' + segTxt + ' 为峰，',
         h(
           'b',
           null,
@@ -2108,6 +2252,9 @@ export function createQuotaSection(
             : '当前为谷，费率相对低，适合批量与长任务跑量。',
         ),
       ),
+      popAt === null
+        ? null
+        : tmPortal(h(PeakPopover, { now: now, peak: peak, isWeekend: isWeekend, at: popAt as any })),
     );
   }
 
