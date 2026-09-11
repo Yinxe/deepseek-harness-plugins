@@ -45,6 +45,8 @@ const VendorSchema: any = z.object({
   name: z.string().required(),
   type: z.string().default('manual'),
   params: z.dict(z.any()).default({}),
+  // 余额查询开关：false = 不参与 Host 定时拉取（手动拉取不受影响），缺省 = 启用
+  enabled: z.boolean().default(true),
 });
 
 export const ConfigSchema: any = z.object({
@@ -120,7 +122,10 @@ export function sanitizeVendor(raw: unknown): Vendor | null {
     const pv = params[k] as unknown;
     if (typeof pv === 'string') params[k] = normalizeSecretRef(pv) as never;
   }
-  return { id, name: nm, type, params };
+  const out: Vendor = { id, name: nm, type, params };
+  // 只在显式禁用时落字段：旧配置零迁移，YAML 里不会冒出冗余的 enabled: true
+  if (raw['enabled'] === false) out.enabled = false;
+  return out;
 }
 
 /** cordis.patch.yml / settings base 层的部分覆盖（只取合法字段） */

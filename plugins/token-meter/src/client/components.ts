@@ -5,7 +5,7 @@
 import type { AnyPrimitives, AnyReact } from './types.js';
 
 export interface BadgeProps {
-  kind: 'ok' | 'warn' | 'muted' | 'info';
+  kind: 'ok' | 'warn' | 'muted' | 'info' | 'bad';
   text: string;
 }
 

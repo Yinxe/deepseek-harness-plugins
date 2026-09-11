@@ -1,15 +1,17 @@
 /**
- * @dshp/token-meter —— deepseek-api 适配器（官方 apiKey 接口，纯通道）
+ * @dshp/token-meter —— deepseek 官方余额接口（纯通道实现，非独立 provider）
  *
  * 原实现：dsh-token-quota/lib/providers/deepseek-api.js（逐行对齐，仅加 TS 类型）
  *
  * 接口：`GET https://api.deepseek.com/user/balance`
  *   `Authorization: Bearer <apiKey>` → `{ balance_infos, is_available }`。
  * 币种归一：params.currency 优先 → CNY → 首条。
+ *
+ * 本文件只提供 `fetchOfficialBalance` 纯逻辑，由 deepseek.ts（唯一 provider）
+ * 按凭据形态决定是否调用；旧类型 `deepseek-api` 已收敛为 deepseek 的别名。
  */
 import { numStr } from './base.js';
-import { normalizeSecretRef } from '../secrets.js';
-import type { ProviderAdapter, Vendor, ProviderDeps } from '../types.js';
+import { ProviderError } from '../errors.js';
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -49,20 +51,34 @@ export async function fetchOfficialBalance(
   const res = await fetchImpl(url, { headers: { Authorization: 'Bearer ' + secret }, cache: 'no-store' });
   const code = res.status;
   const body = await res.text();
-  if (code === 401) throw new Error('DeepSeek 密钥无效(401),请检查 apiKey');
-  if (code === 402) throw new Error('DeepSeek 余额不足(402),请前往平台充值');
-  if (code === 429) throw new Error('DeepSeek 限流(429),稍后重试');
-  if (code !== 200) throw new Error('DeepSeek 接口 HTTP ' + code + ':' + body.slice(0, 100));
+  if (code === 401)
+    throw new ProviderError('auth', 'DeepSeek 密钥无效(401)：' + body.slice(0, 100), {
+      status: code,
+      hint: '官方余额接口拒绝了这个 apiKey（应 sk- 开头）。请确认它来自 open platform 且未被删除。',
+      action: '设置 → Token 计量 → 该供应商 →「编辑」apiKey',
+    });
+  if (code === 402)
+    throw new ProviderError('balance', 'DeepSeek 余额不足(402)：' + body.slice(0, 100), { status: code });
+  if (code === 429)
+    throw new ProviderError('rate', 'DeepSeek 限流(429)：' + body.slice(0, 100), { status: code });
+  if (code >= 500)
+    throw new ProviderError('server', 'DeepSeek 服务端错误(' + code + ')：' + body.slice(0, 100), {
+      status: code,
+    });
+  if (code !== 200)
+    throw new ProviderError('unknown', 'DeepSeek 接口 HTTP ' + code + '：' + body.slice(0, 100), {
+      status: code,
+    });
   let j: unknown = null;
   try {
     j = JSON.parse(body) as unknown;
   } catch {
-    throw new Error('余额接口返回非 JSON(' + body.length + 'B):' + body.slice(0, 80));
+    throw new ProviderError('parse', '余额接口返回非 JSON(' + body.length + 'B)：' + body.slice(0, 80));
   }
   const jr = (j ?? {}) as Record<string, unknown>;
   if (jr && jr['error']) {
     const em = isRecord(jr['error']) ? String(jr['error']['message'] ?? '') : '';
-    throw new Error('余额接口报错:' + (em || body.slice(0, 80)));
+    throw new ProviderError('unknown', '余额接口报错：' + (em || body.slice(0, 80)));
   }
   let infos = jr && Array.isArray(jr['balance_infos']) ? (jr['balance_infos'] as unknown[]) : null;
   const isAvail = jr && jr['is_available'] !== undefined ? !!jr['is_available'] : null;
@@ -76,10 +92,11 @@ export async function fetchOfficialBalance(
       },
     ];
   }
-  if (!infos) throw new Error('余额接口字段缺失(无 balance_infos):' + String(body).slice(0, 100));
+  if (!infos)
+    throw new ProviderError('parse', '余额接口字段缺失（无 balance_infos）：' + String(body).slice(0, 100));
   const prefer = (params && (params['currency'] as string)) || '';
   const primary = pickBalanceInfo(infos, prefer);
-  if (!primary) throw new Error('余额为空');
+  if (!primary) throw new ProviderError('parse', '余额为空（balance_infos 里没有可用条目）');
   const normInfos = infos.map((x) => {
     const xr = (x ?? {}) as Record<string, unknown>;
     return {
@@ -144,66 +161,3 @@ export async function fetchOfficialBalance(
     extra,
   };
 }
-
-const deepseekApi: ProviderAdapter = {
-  type: 'deepseek-api',
-  label: 'DS-API',
-  title: 'deepseek-api（官方密钥）',
-  secretField: 'apiKey',
-  hint: '官方余额接口：长期有效的 apiKey（sk- 开头），余额 + 总额度块，无历史趋势。',
-  fields: [
-    {
-      key: 'apiKey',
-      label: 'apiKey *',
-      kind: 'secret',
-      mono: true,
-      required: true,
-      placeholder: '填 $NAME 引用（推荐）或粘贴明文',
-      hint: '密钥获取：DeepSeek 开放平台 → API keys（platform.deepseek.com/api_keys）创建，sk- 开头，长期有效。建议先存入系统凭据再填 $NAME。',
-    },
-    {
-      key: 'lowWarn',
-      label: '低余额预警线',
-      kind: 'number',
-      placeholder: '如：20',
-      hint: '余额低于此值时侧边栏黄色提醒（与所选币种同单位）。',
-    },
-    {
-      key: 'currency',
-      label: '优先币种',
-      kind: 'text',
-      mono: true,
-      placeholder: '默认 CNY，可填 USD',
-      hint: '多币种账户时优先展示的币种；不填则自动归一（CNY 优先）。',
-    },
-  ],
-
-  sanitizeParams(raw: unknown): Record<string, unknown> {
-    const src =
-      raw !== null && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
-    const out: Record<string, unknown> = {};
-    for (const k of Object.keys(src)) {
-      const v = src[k];
-      if (v !== undefined) out[k] = typeof v === 'string' ? normalizeSecretRef(v) : v;
-    }
-    if (typeof out['apiKey'] === 'string') out['apiKey'] = normalizeSecretRef(out['apiKey']) as never;
-    return out;
-  },
-
-  validateParams(): string {
-    return '';
-  },
-
-  async fetch(vendor: Vendor, deps: ProviderDeps) {
-    const params = (vendor && vendor.params) || {};
-    const r = await deps.resolveSecret(
-      typeof params['apiKey'] === 'string' ? (params['apiKey'] as string) : '',
-    );
-    if (!r.value)
-      throw new Error('apiKey 未配置:请在设置页填写或检查 $NAME 引用（开放平台 → API keys 创建）');
-    const data = await fetchOfficialBalance(params, r.value, (deps && deps.fetchImpl) || fetch);
-    return { ...data, secretKind: r.kind, via: '官方接口' };
-  },
-};
-
-export default deepseekApi;

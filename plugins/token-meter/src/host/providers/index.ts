@@ -9,13 +9,17 @@
  *  2. 在本文件底部 `registerProvider(<新适配器>)` 加一行（内置清单区）；
  *  3. 重启 `dsh web`（Host 半）—— Client 表单/徽章/校验会自动跟随
  *     `state.providers` 元数据，无需改 client。
+ *
+ * 分层渲染：适配器可用 `view.ts` 的构造器产出「自己的数据 + UI 排版」
+ * （ProviderResult.view）。客户端按声明式区块通用渲染，供应商专属渲染器
+ * （client/providers/<type>.ts）可选叠加 —— 详见 client/providers/index.ts。
+ * 没给 view 的适配器由 Host 用 `defaultView()` 从 legacy 字段兜底推导。
  */
 import { checkAdapterShape } from './base.js';
 import { secretKindOfRaw } from '../secrets.js';
 import opencode from './opencode.js';
 import deepseek from './deepseek.js';
-import deepseekApi from './deepseek-api.js';
-import deepseekWeb from './deepseek-web.js';
+import commandcode from './commandcode.js';
 import manual from './manual.js';
 import type { ProviderAdapter, ProviderMeta, Vendor } from '../types.js';
 
@@ -237,6 +241,10 @@ export function describeProviders(): ProviderMeta[] {
       if (f.hint !== undefined) out.hint = f.hint || '';
       return out;
     }),
+    defaultParams:
+      p.defaultParams && typeof p.defaultParams === 'object'
+        ? (JSON.parse(JSON.stringify(p.defaultParams)) as Record<string, unknown>)
+        : {},
   }));
 }
 
@@ -245,9 +253,12 @@ export type { Vendor };
 // ── 内置清单：新增一行即扩展一个供应商 ──────────────────────────
 registerProvider(opencode);
 registerProvider(deepseek);
-registerProvider(deepseekApi);
-registerProvider(deepseekWeb);
+registerProvider(commandcode);
 registerProvider(manual);
-// 旧 type 别名（opencode-go / opencode-zen 已合并为 opencode，配置自动迁移）
+// 旧 type 别名（配置读路径自动归一，别名永不落库；无需迁移数据）
+//  - opencode-go / opencode-zen → opencode（Go+Zen 合并）
+//  - deepseek-api / deepseek-web → deepseek（三类型合并为「自动选路」单入口）
 registerAlias('opencode-go', 'opencode');
 registerAlias('opencode-zen', 'opencode');
+registerAlias('deepseek-api', 'deepseek');
+registerAlias('deepseek-web', 'deepseek');

@@ -6,6 +6,7 @@
  *  - POST /ext/dshp-token-meter/set-active
  *  - POST /ext/dshp-token-meter/set-refresh
  *  - POST /ext/dshp-token-meter/set-enabled
+ *  - POST /ext/dshp-token-meter/set-vendor-enabled
  *  - POST /ext/dshp-token-meter/add-vendor
  *  - POST /ext/dshp-token-meter/update-vendor
  *  - POST /ext/dshp-token-meter/delete-vendor
@@ -58,6 +59,19 @@ export async function setEnabled(
   enabled: boolean,
 ): Promise<{ ok: boolean; enabled?: boolean; error?: string }> {
   return (await post('/set-enabled', { enabled })) as { ok: boolean; enabled?: boolean; error?: string };
+}
+
+/** 单个供应商的余额查询开关：false = 退出 Host 主动定时拉取（手动拉取不受影响） */
+export async function setVendorEnabled(
+  id: string,
+  enabled: boolean,
+): Promise<{ ok: boolean; id?: string; enabled?: boolean; error?: string }> {
+  return (await post('/set-vendor-enabled', { id, enabled })) as {
+    ok: boolean;
+    id?: string;
+    enabled?: boolean;
+    error?: string;
+  };
 }
 
 export async function addVendor(vendor: Vendor): Promise<{ ok: boolean; error?: string }> {

@@ -11,12 +11,18 @@
  *    lib/fold.js + lib/engine.js + lib/index.js 的聚合快照结构
  * 本文件为 TS 重写新增：把两边散落的隐式结构显式化，行为不变。
  */
+import type { ErrorInfo } from './errors.js';
 
 export interface Vendor {
   id: string;
   name: string;
   type: string;
   params: Record<string, unknown>;
+  /**
+   * 余额查询开关：`false` = 不参与 Host 定时拉取（手动「拉取」不受影响）；
+   * 缺省/`true` = 启用。只在禁用时写盘，旧配置零迁移。
+   */
+  enabled?: boolean;
 }
 
 export interface VendorSnapshot {
@@ -28,11 +34,18 @@ export interface VendorSnapshot {
   billingKind?: 'rolling' | 'payg';
   windows?: QuotaWindow[];
   billing?: QuotaBilling;
+  /** 供应商自描述视图（客户端分层渲染的第 2 层；无则走 legacy 兜底） */
+  view?: ProviderView | null;
   secretKind?: string;
   extra?: ProviderExtra | null;
   via?: string;
+  /** 失败原始文案（保留：旧客户端与日志用） */
   error?: string;
+  /** 失败结构化信息（标题/解释/去哪改/排查步骤/严重度），客户端据此渲染友好提示 */
+  errorInfo?: ErrorInfo;
 }
+
+export type { ErrorInfo, ErrorKind, ErrorTone } from './errors.js';
 
 export interface QuotaWindow {
   key: string;
@@ -41,6 +54,11 @@ export interface QuotaWindow {
   used: number;
   limit: number;
   resetInSec: number;
+  /**
+   * 上游给的窗口状态原值（如 opencode 的 `ok` / `rate-limited`）。
+   * 非 `ok` 表示该窗口已被限流/停用 —— 即使 pct 没到 100 也要让用户看见。
+   */
+  status?: string;
 }
 
 export interface QuotaBilling {
@@ -77,11 +95,54 @@ export interface ProviderDeps {
   fetchImpl: typeof fetch;
 }
 
+/**
+ * provider 视图区块 —— 声明式 UI 的最小单元。
+ *
+ * 每个供应商用「有序区块」自描述自己的数据与排版（`ProviderView.sections`），
+ * 客户端按 `kind` 分发渲染，完全不需要认识具体供应商。
+ * 未知 kind / 缺失字段一律跳过 → 老客户端遇到新 provider 也不会崩（前向兼容）。
+ */
+export interface ProviderSection {
+  kind: 'windows' | 'balance' | 'metrics' | 'progress' | 'split' | 'note' | 'chart';
+  /** 稳定标识（React key / 去重用），可选 */
+  key?: string;
+  /** 区块小标题（客户端统一以小号次要色渲染） */
+  title?: string;
+  /** kind='windows'：滚动窗口组（带重置倒计时） */
+  windows?: QuotaWindow[];
+  /** kind='balance'：余额主数字块（复用 payg 语义） */
+  billing?: QuotaBilling;
+  /** kind='metrics'：键值指标行 */
+  items?: Array<{ label: string; value: string }>;
+  /** kind='progress'：单条进度（已用/总量） */
+  progress?: { label?: string; used: number; total: number; left?: string };
+  /** kind='split'：分段占比条 */
+  split?: { segments: Array<{ label: string; value: number; color?: string }> };
+  /** kind='note'：提示条 */
+  note?: { text: string; tone?: 'info' | 'warn' | 'bad' };
+  /** kind='chart'：趋势折线 */
+  chart?: { title?: string; labels: string[]; values: number[] };
+}
+
+/**
+ * provider 自定义视图：该供应商自己的「数据 + UI」。
+ *
+ * 分层渲染约定（见 client/providers/）：
+ *  1. 供应商专属渲染器（client/providers/<type>.ts）优先；
+ *  2. 无专属渲染器 → 按本视图的 sections 通用渲染；
+ *  3. 无 view（旧快照/极简适配器）→ 回退 billingKind + extra 的旧路径。
+ */
+export interface ProviderView {
+  sections: ProviderSection[];
+}
+
 export interface ProviderResult {
   billingKind: 'rolling' | 'payg';
   windows?: QuotaWindow[];
   billing?: QuotaBilling;
   extra?: ProviderExtra | null;
+  /** 供应商自描述视图（可选；缺省时由 Host 从 legacy 字段推导 defaultView） */
+  view?: ProviderView | null;
   secretKind?: string;
   via?: string;
 }
@@ -112,6 +173,12 @@ export interface ProviderAdapter {
   secretFields?: string[];
   fields: ProviderField[];
   hint?: string;
+  /**
+   * 新增供应商时 params 的初始值（provider 自己声明表单默认值，
+   * 客户端在「切换类型」时套用；缺省为空对象）。
+   * 例：commandcode → `{ apiKey: '$COMMAND_CODE_API_KEY' }`。
+   */
+  defaultParams?: Record<string, unknown>;
   sanitizeParams?: (raw: unknown) => Record<string, unknown>;
   validateParams?: (params: Record<string, unknown>) => string;
   readSecret?: (params: Record<string, unknown>) => unknown;
@@ -126,6 +193,8 @@ export interface ProviderMeta {
   secretField: string;
   hint: string;
   fields: ProviderField[];
+  /** 新增供应商时的 params 初始值（provider 自声明） */
+  defaultParams: Record<string, unknown>;
 }
 
 // ── stats 聚合 ─────────────────────────────────────────────────────────────

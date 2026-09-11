@@ -9,6 +9,8 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { json, readBody, sameOrigin } from './http.js';
 import { NS } from './config.js';
 import { DOLLAR_REF_RE, ENV_REF_RE, CRED_REF_RE } from './secrets.js';
+import { defaultView } from './providers/view.js';
+import { toErrorInfo } from './errors.js';
 import {
   canonicalType,
   describeProviders,
@@ -24,6 +26,8 @@ import {
 import type {
   AnyCtx,
   PluginConfig,
+  ProviderSection,
+  ProviderView,
   SanitizedQuotaConfig,
   SanitizedVendor,
   Vendor,
@@ -32,6 +36,90 @@ import type {
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === 'object' && !Array.isArray(v);
+}
+
+/**
+ * 视图消毒：区块数/条目数/字符串长度全部夹紧后 JSON 化。
+ * provider 视图是会下发到浏览器的结构，按「不信任任何外部输入」同等对待。
+ */
+export function sanitizeView(raw: unknown): ProviderView | null {
+  let parsed: unknown = raw;
+  try {
+    parsed = JSON.parse(JSON.stringify(raw)) as unknown;
+  } catch {
+    return null;
+  }
+  if (!isRecord(parsed) || !Array.isArray(parsed['sections'])) return null;
+  const KINDS = new Set(['windows', 'balance', 'metrics', 'progress', 'split', 'note', 'chart']);
+  const sections: ProviderSection[] = [];
+  for (const item of parsed['sections'] as unknown[]) {
+    if (sections.length >= 12) break;
+    if (!isRecord(item)) continue;
+    const kind = item['kind'];
+    if (typeof kind !== 'string' || !KINDS.has(kind)) continue;
+    const s: ProviderSection = { kind: kind as ProviderSection['kind'] };
+    if (typeof item['key'] === 'string') s.key = item['key'].slice(0, 40);
+    if (typeof item['title'] === 'string') s.title = item['title'].slice(0, 40);
+    if (Array.isArray(item['windows']))
+      s.windows = item['windows'].slice(0, 8) as NonNullable<ProviderSection['windows']>;
+    if (isRecord(item['billing'])) s.billing = item['billing'] as NonNullable<ProviderSection['billing']>;
+    if (Array.isArray(item['items'])) {
+      s.items = (item['items'] as unknown[])
+        .filter(isRecord)
+        .slice(0, 12)
+        .map((it) => ({
+          label: String(it['label'] ?? '').slice(0, 40),
+          value: String(it['value'] ?? '').slice(0, 60),
+        }));
+    }
+    if (isRecord(item['progress'])) {
+      const p = item['progress'];
+      const used = Number(p['used']);
+      const total = Number(p['total']);
+      if (Number.isFinite(used) && Number.isFinite(total)) {
+        const out: NonNullable<ProviderSection['progress']> = { used, total };
+        if (typeof p['label'] === 'string') out.label = p['label'].slice(0, 40);
+        if (typeof p['left'] === 'string') out.left = p['left'].slice(0, 60);
+        s.progress = out;
+      }
+    }
+    if (isRecord(item['split']) && Array.isArray(item['split']['segments'])) {
+      s.split = {
+        segments: (item['split']['segments'] as unknown[])
+          .filter(isRecord)
+          .slice(0, 8)
+          .map((sg) => {
+            const seg: { label: string; value: number; color?: string } = {
+              label: String(sg['label'] ?? '').slice(0, 40),
+              value: Number(sg['value']) || 0,
+            };
+            if (typeof sg['color'] === 'string') seg.color = sg['color'].slice(0, 24);
+            return seg;
+          }),
+      };
+    }
+    if (isRecord(item['note']) && typeof item['note']['text'] === 'string') {
+      const tone = item['note']['tone'];
+      const note: { text: string; tone?: 'info' | 'warn' | 'bad' } = {
+        text: (item['note']['text'] as string).slice(0, 300),
+      };
+      if (tone === 'info' || tone === 'warn' || tone === 'bad') note.tone = tone;
+      s.note = note;
+    }
+    if (isRecord(item['chart']) && Array.isArray(item['chart']['values'])) {
+      const chart: { title?: string; labels: string[]; values: number[] } = {
+        labels: (Array.isArray(item['chart']['labels']) ? (item['chart']['labels'] as unknown[]) : [])
+          .slice(-60)
+          .map((l) => String(l).slice(0, 16)),
+        values: (item['chart']['values'] as unknown[]).slice(-60).map((v) => Number(v) || 0),
+      };
+      if (typeof item['chart']['title'] === 'string')
+        chart.title = (item['chart']['title'] as string).slice(0, 40);
+      s.chart = chart;
+    }
+    sections.push(s);
+  }
+  return sections.length ? { sections } : null;
 }
 
 export interface QuotaState {
@@ -73,6 +161,8 @@ export function sanitizeCfg(cfg: PluginConfig): SanitizedQuotaConfig {
           type: String(vv.type),
           params,
           secretKind: kind,
+          // 余额查询开关：缺省 = 启用（只有显式 false 才是禁用）
+          enabled: vv.enabled !== false,
         };
         return out;
       }),
@@ -111,10 +201,35 @@ export async function refreshOne(
         /* ignore */
       }
     }
+    // 分层渲染第 2 层：provider 自描述视图；适配器没给就由 legacy 字段兜底推导
+    try {
+      snap.view =
+        sanitizeView(data.view) ||
+        sanitizeView(
+          defaultView({
+            ...(data.billingKind ? { billingKind: data.billingKind } : {}),
+            ...(data.windows ? { windows: data.windows } : {}),
+            ...(data.billing ? { billing: data.billing } : {}),
+            extra: data.extra ?? null,
+          }),
+        );
+    } catch {
+      snap.view = null;
+    }
     if (typeof data.via === 'string' && data.via) snap.via = data.via.slice(0, 24);
   } catch (e) {
     snap.ok = false;
     snap.error = (e as Error)?.message || '拉取失败';
+    // 结构化失败信息：客户端据此给出「结论 + 怎么办 + 排查步骤」，无需理解供应商细节
+    try {
+      snap.errorInfo = toErrorInfo(e, {
+        vendorName: v.name,
+        type: v.type,
+        secretKind: secretKindOf({ type: v.type, params: (v.params || {}) as Record<string, unknown> }),
+      });
+    } catch {
+      /* 分类失败不影响原始错误 */
+    }
   }
   st.snaps[v.id] = snap;
   st.lastPullMs = Date.now();
@@ -328,6 +443,53 @@ export function registerQuotaRoutes(ctx: AnyCtx, deps: QuotaDeps): void {
     'dshp-token-meter: set-enabled route',
   );
 
+  // POST set-vendor-enabled
+  // 单个供应商的余额查询开关：false = 退出 Host 主动定时拉取（手动 POST /refresh 不受影响）。
+  // 启用时顺手立即拉一次，省得干等下一个定时周期。
+  ctx.effect(
+    () =>
+      ctx.webServer.register({
+        kind: 'exact',
+        path: `${BASE}/set-vendor-enabled`,
+        handler: async (req: IncomingMessage, res: ServerResponse) => {
+          if (!sameOrigin(req)) return json(res, 403, { ok: false, error: 'forbidden' });
+          let body: unknown = {};
+          try {
+            body = JSON.parse((await readBody(req)) || '{}') as unknown;
+          } catch {
+            return json(res, 200, { ok: false, error: '请求体不是合法 JSON' });
+          }
+          try {
+            const cfg = getConfig();
+            const b = (body ?? {}) as Record<string, unknown>;
+            const id = b['id'] !== undefined && b['id'] !== null ? String(b['id']) : '';
+            if (!id) return json(res, 200, { ok: false, error: 'id 必填' });
+            if (typeof b['enabled'] !== 'boolean')
+              return json(res, 200, { ok: false, error: 'enabled 必填（布尔值）' });
+            const i = cfg.vendors.findIndex((v) => v.id === id);
+            if (i === -1) return json(res, 200, { ok: false, error: '未知供应商:' + id });
+            const on = b['enabled'] === true;
+            const next = cfg.vendors.slice();
+            const nv: Vendor = { ...(cfg.vendors[i] as Vendor) };
+            if (on)
+              delete nv.enabled; // 启用 = 不落字段（与缺省语义一致，配置保持干净）
+            else nv.enabled = false;
+            next[i] = nv;
+            await updateConfig({ vendors: next });
+            if (on) {
+              void refreshOne(st, resolveSecret, nv).catch(() => {
+                /* 立即拉取失败不影响开关结果 */
+              });
+            }
+            return json(res, 200, { ok: true, id, enabled: on });
+          } catch (e) {
+            return json(res, 200, { ok: false, error: (e as Error)?.message || '保存失败' });
+          }
+        },
+      }),
+    'dshp-token-meter: set-vendor-enabled route',
+  );
+
   // POST add-vendor
   ctx.effect(
     () =>
@@ -388,12 +550,15 @@ export function registerQuotaRoutes(ctx: AnyCtx, deps: QuotaDeps): void {
             if (i === -1) return json(res, 200, { ok: false, error: '未知供应商' });
             const next = cfg.vendors.slice();
             const stored = cfg.vendors[i] as Vendor;
-            next[i] = mergeVendorSecret(stored, {
+            const merged = mergeVendorSecret(stored, {
               id: vv.id,
               name: vv.name,
               type: canonicalType(String(vv.type)),
               params: (vv.params ?? {}) as Record<string, unknown>,
             });
+            // 编辑表单不携带 enabled：保留存储值，避免保存后把禁用状态悄悄改回启用
+            if (stored.enabled === false) merged.enabled = false;
+            next[i] = merged;
             await updateConfig({ vendors: next });
             return json(res, 200, { ok: true });
           } catch (e) {

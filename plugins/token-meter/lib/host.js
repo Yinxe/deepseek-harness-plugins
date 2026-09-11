@@ -930,6 +930,214 @@ function createSecretResolver(ctx) {
   };
 }
 
+// src/host/errors.ts
+var ProviderError = class extends Error {
+  kind;
+  hint;
+  action;
+  docs;
+  steps;
+  status;
+  /** 未显式指定时留 undefined，交给分类默认值（避免覆盖 auth/session 的不可重试语义） */
+  retriable;
+  constructor(kind, message, opts) {
+    super(message, opts && "cause" in opts ? { cause: opts.cause } : void 0);
+    this.name = "ProviderError";
+    this.kind = kind;
+    const o = opts || {};
+    if (o.hint) this.hint = o.hint;
+    if (o.action) this.action = o.action;
+    if (o.docs) this.docs = o.docs;
+    if (Array.isArray(o.steps) && o.steps.length) this.steps = o.steps;
+    if (typeof o.status === "number") this.status = o.status;
+    if (typeof o.retriable === "boolean") this.retriable = o.retriable;
+  }
+};
+var GUIDANCE = {
+  auth: {
+    title: "\u5BC6\u94A5\u65E0\u6548\u6216\u5DF2\u5931\u6548",
+    hint: "\u5E73\u53F0\u62D2\u7EDD\u4E86\u8FD9\u628A\u5BC6\u94A5\uFF1A\u53EF\u80FD\u5DF2\u88AB\u5220\u9664\u3001\u8F6E\u6362\uFF0C\u6216\u590D\u5236\u65F6\u7F3A\u4E86\u5B57\u7B26\u3002\u6362\u6210\u6709\u6548\u7684\u5BC6\u94A5\u5373\u53EF\u6062\u590D\u3002",
+    action: "\u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
+    tone: "bad",
+    retriable: false
+  },
+  session: {
+    title: "\u767B\u5F55\u72B6\u6001\u5DF2\u8FC7\u671F",
+    hint: "\u7F51\u9875\u4F1A\u8BDD\u7968\u636E\uFF08Cookie / Bearer\uFF09\u5DF2\u5931\u6548\uFF0C\u5E73\u53F0\u8BA4\u4E3A\u4F60\u6CA1\u767B\u5F55\u3002\u91CD\u65B0\u6293\u53D6\u6700\u65B0\u503C\u8986\u76D6\u5373\u53EF\u3002",
+    action: "\u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
+    tone: "bad",
+    retriable: false
+  },
+  plan: {
+    title: "\u8BA2\u9605\u5DF2\u5230\u671F\u6216\u8BA1\u5212\u4E0D\u652F\u6301",
+    hint: "\u8BE5\u8D26\u53F7\u5F53\u524D\u8BA1\u5212\u65E0\u6CD5\u4F7F\u7528\u6B64\u63A5\u53E3\uFF0C\u6216\u8BA2\u9605\u5DF2\u7ED3\u675F\u3001\u6263\u6B3E\u5931\u8D25\u3002\u7EED\u8BA2/\u5347\u7EA7\u540E\u518D\u5237\u65B0\u5373\u53EF\u3002",
+    action: "\u524D\u5F80\u5E73\u53F0\u786E\u8BA4\u8BA2\u9605\u4E0E\u652F\u4ED8\u72B6\u6001",
+    tone: "bad",
+    retriable: false
+  },
+  balance: {
+    title: "\u4F59\u989D\u4E0D\u8DB3",
+    hint: "\u8D26\u6237\u4F59\u989D\u4E0D\u8DB3\u4EE5\u7EE7\u7EED\u8C03\u7528\uFF0C\u5E73\u53F0\u5DF2\u62D2\u7EDD\u63D0\u4F9B\u670D\u52A1\u3002",
+    action: "\u524D\u5F80\u5E73\u53F0\u5145\u503C",
+    tone: "bad",
+    retriable: false
+  },
+  rate: {
+    title: "\u8BF7\u6C42\u8FC7\u4E8E\u9891\u7E41\uFF08\u88AB\u9650\u6D41\uFF09",
+    hint: "\u77ED\u65F6\u95F4\u5185\u8BF7\u6C42\u8FC7\u591A\uFF0C\u5E73\u53F0\u4E34\u65F6\u9650\u5236\u3002\u7A0D\u540E\u91CD\u8BD5\u5373\u53EF\uFF0C\u65E0\u9700\u6539\u914D\u7F6E\u3002",
+    action: "\u7A0D\u7B49 1\u20135 \u5206\u949F\u540E\u70B9\u300C\u5237\u65B0\u300D",
+    tone: "warn",
+    retriable: true
+  },
+  network: {
+    title: "\u7F51\u7EDC\u4E0D\u53EF\u8FBE",
+    hint: "\u8BF7\u6C42\u6CA1\u80FD\u5230\u8FBE\u5E73\u53F0\uFF08DNS \u89E3\u6790\u5931\u8D25\u3001\u4EE3\u7406\u4E0D\u901A\u6216\u8D85\u65F6\uFF09\u3002\u672C\u5730\u7F51\u7EDC\u95EE\u9898\u89E3\u51B3\u540E\u5373\u6062\u590D\u3002",
+    action: "\u68C0\u67E5\u7F51\u7EDC / \u4EE3\u7406\u8BBE\u7F6E",
+    tone: "warn",
+    retriable: true
+  },
+  parse: {
+    title: "\u63A5\u53E3\u8FD4\u56DE\u7ED3\u6784\u5F02\u5E38",
+    hint: "\u8BF7\u6C42\u6210\u529F\u4F46\u8FD4\u56DE\u5185\u5BB9\u4E0E\u9884\u671F\u4E0D\u7B26\uFF0C\u901A\u5E38\u662F\u5E73\u53F0\u63A5\u53E3\u6539\u7248\u3002\u9700\u8981\u63D2\u4EF6\u8DDF\u8FDB\u9002\u914D\u3002",
+    action: "\u628A\u4E0B\u65B9\u300C\u539F\u59CB\u4FE1\u606F\u300D\u53CD\u9988\u7ED9\u63D2\u4EF6\u7EF4\u62A4\u8005",
+    tone: "warn",
+    retriable: false
+  },
+  config: {
+    title: "\u4F9B\u5E94\u5546\u914D\u7F6E\u4E0D\u5B8C\u6574",
+    hint: "\u8FD8\u7F3A\u5C11\u5FC5\u8981\u7684\u51ED\u636E\u6216\u53C2\u6570\uFF0C\u63D2\u4EF6\u65E0\u6CD5\u53D1\u8D77\u8BF7\u6C42\u3002",
+    action: "\u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
+    tone: "warn",
+    retriable: false
+  },
+  server: {
+    title: "\u4E0A\u6E38\u670D\u52A1\u5F02\u5E38",
+    hint: "\u5E73\u53F0\u8FD4\u56DE\u4E86\u670D\u52A1\u7AEF\u9519\u8BEF\uFF085xx\uFF09\uFF0C\u901A\u5E38\u662F\u5BF9\u65B9\u4E34\u65F6\u6545\u969C\uFF0C\u4E0E\u4F60\u7684\u914D\u7F6E\u65E0\u5173\u3002",
+    action: "\u7A0D\u540E\u70B9\u300C\u5237\u65B0\u300D\u91CD\u8BD5",
+    tone: "warn",
+    retriable: true
+  },
+  unknown: {
+    title: "\u62C9\u53D6\u5931\u8D25",
+    hint: "\u672C\u6B21\u62C9\u53D6\u6CA1\u6709\u6210\u529F\uFF0C\u5177\u4F53\u539F\u56E0\u89C1\u4E0B\u65B9\u300C\u539F\u59CB\u4FE1\u606F\u300D\u3002",
+    action: "\u70B9\u300C\u5237\u65B0\u300D\u91CD\u8BD5",
+    tone: "warn",
+    retriable: true
+  }
+};
+var STEPS = {
+  auth: [
+    "\u6253\u5F00\u8BBE\u7F6E\u9875 \u2192 Token \u8BA1\u91CF \u2192 \u627E\u5230\u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
+    "\u5230\u5E73\u53F0\u91CD\u65B0\u751F\u6210\u5BC6\u94A5\u5E76\u7C98\u8D34\u8FDB\u6765\uFF08\u63A8\u8350\u70B9\u300C\u5B58\u51ED\u636E\u300D\u8F6C\u6210 $NAME \u5F15\u7528\uFF09",
+    "\u82E5\u5B57\u6BB5\u91CC\u586B\u7684\u662F $NAME\uFF1A\u5148\u66F4\u65B0\u5BF9\u5E94\u7684\u51ED\u636E\u6216\u73AF\u5883\u53D8\u91CF\uFF0C\u6539\u5B8C\u91CD\u542F dsh web",
+    "\u4FDD\u5B58\u540E\u70B9\u300C\u5237\u65B0\u300D\u9A8C\u8BC1"
+  ],
+  session: [
+    "\u6D4F\u89C8\u5668\u91CD\u65B0\u767B\u5F55\u5BF9\u5E94\u5E73\u53F0\uFF08\u786E\u8BA4\u767B\u5F55\u6001\u786E\u5B9E\u6709\u6548\uFF09",
+    "\u5F00\u53D1\u8005\u5DE5\u5177 \u2192 Network \u2192 \u627E\u5230\u5BF9\u5E94\u8BF7\u6C42\uFF0C\u590D\u5236\u6700\u65B0\u7684 Cookie / Bearer \u7968\u636E",
+    "\u56DE\u5230\u8BBE\u7F6E\u9875\u8BE5\u4F9B\u5E94\u5546\uFF0C\u7C98\u8D34\u65B0\u503C\u5E76\u4FDD\u5B58",
+    "\u70B9\u300C\u5237\u65B0\u300D\u9A8C\u8BC1\uFF1B\u7968\u636E\u8FC7\u671F\u5C5E\u6B63\u5E38\u73B0\u8C61\uFF0C\u5931\u6548\u540E\u91CD\u590D\u672C\u6D41\u7A0B"
+  ],
+  plan: [
+    "\u767B\u5F55\u5E73\u53F0\u67E5\u770B\u8BA2\u9605\u662F\u5426\u5DF2\u5230\u671F\u3001\u88AB\u53D6\u6D88\u6216\u6263\u6B3E\u5931\u8D25",
+    "\u7EED\u8BA2\u6216\u5347\u7EA7\u5230\u5305\u542B\u8BE5\u63A5\u53E3\u7684\u8BA1\u5212",
+    "\u82E5\u521A\u7EED\u8BA2\uFF1A\u7B49 1\u20132 \u5206\u949F\u540E\u70B9\u300C\u5237\u65B0\u300D\uFF08\u72B6\u6001\u540C\u6B65\u6709\u5EF6\u8FDF\uFF09",
+    "\u786E\u8BA4\u5F53\u524D\u8BA1\u5212\u786E\u5B9E\u63D0\u4F9B\u989D\u5EA6\u67E5\u8BE2\u80FD\u529B\uFF08\u90E8\u5206\u4F4E\u4EF7\u6863\u4F4D\u4E0D\u542B API \u8BBF\u95EE\uFF09"
+  ],
+  balance: [
+    "\u524D\u5F80\u5E73\u53F0\u5145\u503C",
+    "\u5145\u503C\u540E\u70B9\u300C\u5237\u65B0\u300D\uFF08\u5230\u8D26\u901A\u5E38\u51E0\u5206\u949F\u5185\u540C\u6B65\uFF09",
+    "\u4E5F\u53EF\u8C03\u4F4E\u300C\u4F4E\u4F59\u989D\u9884\u8B66\u7EBF\u300D\u4EE5\u4FBF\u66F4\u65E9\u6536\u5230\u63D0\u9192"
+  ],
+  rate: [
+    "\u7B49\u5F85 1\u20135 \u5206\u949F",
+    "\u70B9\u300C\u5237\u65B0\u300D\u91CD\u8BD5",
+    "\u82E5\u9891\u7E41\u89E6\u53D1\uFF1A\u628A\u300C\u81EA\u52A8\u5237\u65B0\u300D\u95F4\u9694\u8C03\u5927\uFF0C\u6216\u5BF9\u8BE5\u4F9B\u5E94\u5546\u70B9\u300C\u7981\u7528\u300D\u9000\u51FA\u5B9A\u65F6\u62C9\u53D6"
+  ],
+  network: [
+    "\u786E\u8BA4\u672C\u673A\u80FD\u8BBF\u95EE\u8BE5\u5E73\u53F0\uFF08\u6D4F\u89C8\u5668\u76F4\u63A5\u6253\u5F00\u5E73\u53F0\u9996\u9875\u8BD5\u8BD5\uFF09",
+    "\u68C0\u67E5\u4EE3\u7406/VPN/\u9632\u706B\u5899\u8BBE\u7F6E\uFF1B\u9700\u8981\u4EE3\u7406\u65F6\u914D\u7F6E\u597D\u73AF\u5883\u53D8\u91CF\u540E\u91CD\u542F dsh web",
+    "\u786E\u8BA4 DNS \u6B63\u5E38\uFF08\u80FD\u89E3\u6790\u5E73\u53F0\u57DF\u540D\uFF09",
+    "\u6392\u9664\u540E\u70B9\u300C\u5237\u65B0\u300D\u91CD\u8BD5"
+  ],
+  parse: [
+    "\u5148\u70B9\u4E00\u6B21\u300C\u5237\u65B0\u300D\uFF0C\u6392\u9664\u5076\u53D1\u7684\u7F51\u5173\u9519\u8BEF\u9875",
+    "\u82E5\u6301\u7EED\u5931\u8D25\uFF1A\u5E73\u53F0\u63A5\u53E3\u5927\u6982\u7387\u5DF2\u6539\u7248\uFF0C\u9700\u8981\u63D2\u4EF6\u9002\u914D",
+    "\u628A\u4E0B\u65B9\u300C\u539F\u59CB\u4FE1\u606F\u300D\u8FDE\u540C\u63D2\u4EF6\u7248\u672C\u4E00\u8D77\u53CD\u9988\u7ED9\u7EF4\u62A4\u8005",
+    "\u786E\u8BA4\u63D2\u4EF6\u4E0E DSH \u90FD\u5DF2\u66F4\u65B0\u5230\u6700\u65B0\u7248\u672C"
+  ],
+  config: [
+    "\u6253\u5F00\u8BBE\u7F6E\u9875 \u2192 Token \u8BA1\u91CF \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
+    "\u8865\u9F50\u6807 * \u7684\u5FC5\u586B\u5B57\u6BB5",
+    "\u82E5\u7528 $NAME \u5F15\u7528\uFF1A\u786E\u8BA4\u51ED\u636E\u6216\u73AF\u5883\u53D8\u91CF\u91CC\u786E\u5B9E\u6709\u8FD9\u4E2A\u952E\uFF08$ \u5F15\u7528\u8BFB\u4E0D\u5230\u4F1A\u76F4\u63A5\u62A5\u9519\uFF09",
+    "\u4FDD\u5B58\u540E\u70B9\u300C\u5237\u65B0\u300D\u9A8C\u8BC1"
+  ],
+  server: ["\u7A0D\u7B49\u51E0\u5206\u949F", "\u70B9\u300C\u5237\u65B0\u300D\u91CD\u8BD5", "\u82E5\u957F\u65F6\u95F4 5xx\uFF1A\u591A\u4E3A\u5E73\u53F0\u6545\u969C\uFF0C\u53EF\u5230\u5E73\u53F0\u72B6\u6001\u9875\u786E\u8BA4"],
+  unknown: ["\u70B9\u300C\u5237\u65B0\u300D\u91CD\u8BD5\u4E00\u6B21", "\u82E5\u6301\u7EED\u5931\u8D25\uFF0C\u628A\u4E0B\u65B9\u300C\u539F\u59CB\u4FE1\u606F\u300D\u53CD\u9988\u7ED9\u63D2\u4EF6\u7EF4\u62A4\u8005"]
+};
+function classifyMessage(raw) {
+  const m = String(raw);
+  if (!m) return "unknown";
+  if (/未配置|凭据未配置|必填|参数非法|workspaceId 非法|ID 非法|引用语法错误/.test(m)) return "config";
+  if (/会话失效|会话已过期|登录失效|登录态|被风控|logged out|refresh and login|票据.*(过期|失效)|未登录/i.test(
+    m
+  ) || // 网页接口在 HTTP 200 + 错误信封里报的会话问题（实测 40003 "Authorization Failed (invalid token)"）
+  /invalid\s*token|authorization\s*failed|token.{0,12}(expired|invalid|失效|过期)/i.test(m))
+    return "session";
+  if (/密钥无效|密钥已失效|密钥引用.*为空|凭据无效|Invalid 'Authorization'|invalid.{0,12}api.?key/i.test(m))
+    return "auth";
+  if (/upgrade_required|订阅.*(到期|结束|失败|取消)|计划.*(不含|不支持|已到期)|plan.{0,12}(expired|ended|cancel)/i.test(
+    m
+  ))
+    return "plan";
+  if (/余额不足|insufficient|402/.test(m)) return "balance";
+  if (/限流|429|rate.?limit|too many request/i.test(m)) return "rate";
+  if (/fetch failed|ENOTFOUND|ECONNREFUSED|ECONNRESET|ETIMEDOUT|EAI_AGAIN|getaddrinfo|socket hang up|network|超时|timeout|proxy/i.test(
+    m
+  ))
+    return "network";
+  if (/非 JSON|结构异常|字段缺失|解析失败|改版|非数字|未命中|顶层非对象/.test(m)) return "parse";
+  if (/\bHTTP 5\d\d\b|\b5\d\d\b.*(Bad Gateway|Service Unavailable|Internal)/.test(m)) return "server";
+  if (/\b401\b|\b403\b/.test(m)) return "auth";
+  return "unknown";
+}
+function statusOf(e, kind) {
+  if (e instanceof ProviderError && typeof e.status === "number") return e.status;
+  const m = String(e?.message ?? "");
+  const hit = m.match(/\b(4\d\d|5\d\d)\b/);
+  if (hit) return Number(hit[1]);
+  if (kind === "auth") return 401;
+  return void 0;
+}
+function toErrorInfo(e, ctx) {
+  const message = (e instanceof Error ? e.message : typeof e === "string" ? e : "") || "\u62C9\u53D6\u5931\u8D25\uFF08\u672A\u63D0\u4F9B\u9519\u8BEF\u4FE1\u606F\uFF09";
+  const explicit = e instanceof ProviderError ? e : null;
+  const kind = explicit ? explicit.kind : classifyMessage(message);
+  const g = GUIDANCE[kind];
+  const steps = explicit && explicit.steps || STEPS[kind];
+  const status = statusOf(e, kind);
+  const info = {
+    kind,
+    title: g.title,
+    hint: explicit?.hint || g.hint,
+    action: explicit?.action || g.action,
+    steps: steps.slice(0, 6),
+    detail: message,
+    // 显式声明优先；未声明则用分类默认（auth/session/plan/balance = 先改配置再重试）
+    retriable: explicit?.retriable ?? g.retriable,
+    tone: g.tone
+  };
+  if (status !== void 0) info.status = status;
+  const docs = explicit?.docs;
+  if (docs) info.docs = docs;
+  if (ctx && ctx.secretKind && (kind === "auth" || kind === "session")) {
+    const isRef = ctx.secretKind === "ref";
+    const prefix = kind === "auth" ? isRef ? "\u5B57\u6BB5\u586B\u7684\u662F $NAME \u5F15\u7528\uFF1A\u8BF7\u5148\u786E\u8BA4\u51ED\u636E/\u73AF\u5883\u53D8\u91CF\u91CC\u8BE5\u952E\u5B58\u5728\u4E14\u662F\u6700\u65B0\u503C\uFF08\u6539\u5B8C\u9700\u91CD\u542F dsh web\uFF09\u3002" : "\u5B57\u6BB5\u586B\u7684\u662F\u660E\u6587\uFF1A\u8BF7\u5230\u5E73\u53F0\u91CD\u65B0\u751F\u6210\u540E\u7C98\u8D34\u65B0\u503C\u3002" : isRef ? "\u5B57\u6BB5\u586B\u7684\u662F $NAME \u5F15\u7528\uFF1A\u66F4\u65B0\u51ED\u636E/\u73AF\u5883\u53D8\u91CF\u540E\u9700\u91CD\u542F dsh web \u624D\u751F\u6548\uFF0C\u968F\u540E\u70B9\u300C\u5DF2\u5904\u7406\uFF0C\u9A8C\u8BC1\u300D\u3002" : "\u5F53\u524D\u4E3A\u624B\u52A8\u7C98\u8D34\u7684\u660E\u6587\u51ED\u636E\uFF1A\u8FC7\u671F\u5C5E\u6B63\u5E38\u73B0\u8C61\uFF0C\u91CD\u65B0\u767B\u5F55\u6293\u53D6\u540E\u518D\u7C98\u8D34\u5373\u53EF\u3002";
+    info.hint = prefix + info.hint;
+  }
+  return info;
+}
+
 // src/host/providers/opencode.ts
 var LEGACY_AUTH_FIELD = "auth";
 function effectiveCookie(params) {
@@ -1028,40 +1236,101 @@ function latestLitePurchase(billingHtml) {
   }
   return latest;
 }
-function parseGoQuota(html) {
-  const re = /\{status:"ok",resetInSec:(\d+),usagePercent:([\d.]+),usage:(\d+),limit:(\d+)\}/g;
-  const wins = [];
-  let m = null;
-  while ((m = re.exec(html)) !== null) {
-    wins.push({
-      resetInSec: Number(m[1]),
-      pct: Number(m[2]),
-      used: Number(m[3]),
-      limit: Number(m[4])
-    });
-  }
-  if (wins.length < 3) return null;
-  const meta = [
-    ["5h", "5\u5C0F\u65F6"],
-    ["weekly", "\u6BCF\u5468"],
-    ["monthly", "\u6BCF\u6708"]
-  ];
-  let plan = null;
-  const pm = /subscriptionPlan:([A-Za-z0-9_]+|null)/.exec(html);
-  if (pm && pm[1] !== "null") plan = pm[1];
+var GO_WINDOW_DEFS = [
+  ["rollingUsage", "5h", "5 \u5C0F\u65F6"],
+  ["weeklyUsage", "weekly", "\u6BCF\u5468"],
+  ["monthlyUsage", "monthly", "\u6BCF\u6708"]
+];
+function parseGoWindow(html, srcKey) {
+  const m = new RegExp(srcKey + ":(?:\\$?[A-Za-z_$][\\w$]*\\[\\d+\\]=\\s*)?\\{([^}]*)\\}").exec(html);
+  if (!m) return null;
+  const body = m[1];
+  if (!/usagePercent:/.test(body)) return null;
+  const num = (k) => {
+    const mm = new RegExp(k + ':\\s*"?(-?[\\d.]+)"?').exec(body);
+    return mm ? Number(mm[1]) : 0;
+  };
+  const st = /status:\s*"([^"]*)"/.exec(body);
   return {
-    windows: wins.slice(0, 3).map((w, i) => {
-      const mt = meta[i];
-      return { key: mt[0], label: mt[1], pct: w.pct, used: w.used, limit: w.limit, resetInSec: w.resetInSec };
-    }),
-    plan
+    status: st ? st[1] : "ok",
+    resetInSec: num("resetInSec"),
+    pct: num("usagePercent"),
+    used: num("usage"),
+    limit: num("limit")
   };
 }
+function scanGoWindowsGeneric(html) {
+  const re = /\{([^{}]*status:\s*"[^"]*"[^{}]*)\}/g;
+  const out = [];
+  let m = null;
+  while ((m = re.exec(html)) !== null) {
+    const body = m[1];
+    if (!/resetInSec:/.test(body) || !/usagePercent:/.test(body)) continue;
+    const num = (k) => {
+      const mm = new RegExp(k + ':\\s*"?(-?[\\d.]+)"?').exec(body);
+      return mm ? Number(mm[1]) : 0;
+    };
+    const st = /status:\s*"([^"]*)"/.exec(body);
+    out.push({
+      status: st ? st[1] : "ok",
+      resetInSec: num("resetInSec"),
+      pct: num("usagePercent"),
+      used: num("usage"),
+      limit: num("limit")
+    });
+  }
+  return out;
+}
+function rawToWindow(w, key, label) {
+  const win = {
+    key,
+    label,
+    pct: w.pct,
+    used: w.used,
+    limit: w.limit,
+    resetInSec: w.resetInSec
+  };
+  if (w.status) win.status = w.status;
+  return win;
+}
+function goPlan(html) {
+  const pm = /subscriptionPlan:([A-Za-z0-9_]+|null)/.exec(html);
+  return pm && pm[1] !== "null" ? pm[1] : null;
+}
+function parseGoQuotaFull(html) {
+  const h = html || "";
+  let windows = [];
+  for (const [srcKey, key, label] of GO_WINDOW_DEFS) {
+    const w = parseGoWindow(h, srcKey);
+    if (w) windows.push(rawToWindow(w, key, label));
+  }
+  if (!windows.length) {
+    windows = scanGoWindowsGeneric(h).slice(0, 3).map((w, i) => {
+      const def = GO_WINDOW_DEFS[i];
+      return rawToWindow(w, def[1], def[2]);
+    });
+  }
+  const plan = goPlan(h);
+  const active = windows.filter((w) => w.limit > 0);
+  if (active.length) return { kind: "ok", windows: active, plan };
+  if (windows.length) return { kind: "inactive", windows, plan };
+  if (/(?:rolling|weekly|monthly)Usage:\s*(?:\$?[\w$]+\[\d+\]=\s*)?\{/.test(h)) return { kind: "broken" };
+  return { kind: "none" };
+}
 function parseOpencodePages(goHtml, billingHtml, opts) {
-  const q = parseGoQuota(goHtml || "");
+  const gq = parseGoQuotaFull(goHtml || "");
   const sub = parseSubscription(goHtml || "", billingHtml || "");
   const balance = billingAmount(inlineVal(billingHtml || "", "balance"));
   const optsEff = opts || {};
+  if (gq.kind === "broken") {
+    throw new ProviderError(
+      "parse",
+      "opencode /go \u9875\u542B\u989D\u5EA6\u7A97\u53E3\u4F46\u5B57\u6BB5\u65E0\u6CD5\u8BC6\u522B\uFF08\u9875\u9762\u53EF\u80FD\u5DF2\u6539\u7248\uFF09\uFF0C\u8BF7\u628A\u8BE5\u9875\u5B57\u6BB5\u6837\u4F8B\u53CD\u9988\u7ED9\u7EF4\u62A4\u8005",
+      { hint: "\u68C0\u6D4B\u5230\u8BA2\u9605\u7A97\u53E3\u6570\u636E\uFF0C\u4F46\u5B57\u6BB5\u683C\u5F0F\u53D8\u4E86\uFF0C\u63D2\u4EF6\u6682\u65F6\u8BFB\u4E0D\u51FA\u6765\u3002", retriable: false }
+    );
+  }
+  const q = gq.kind === "ok" ? gq : null;
+  const subInactive = gq.kind === "inactive";
   if (q) {
     const billing = { balance, plan: sub && sub.plan || q.plan || "Opencode" };
     const extra2 = {};
@@ -1072,7 +1341,7 @@ function parseOpencodePages(goHtml, billingHtml, opts) {
         {
           kind: "note",
           tone: "info",
-          text: "\u8BA2\u9605 " + sub.plan + (sub.note ? " \xB7 " + sub.note : "") + (renewIn !== null ? " \xB7 \u7EA6 " + fmtLeftCn(renewIn) + "\u91CD\u7F6E/\u5230\u671F" : "")
+          text: "\u8BA2\u9605 " + sub.plan + (sub.note ? " \xB7 " + sub.note : "") + (renewIn !== null ? " \xB7 \u6BCF\u6708\u7A97\u53E3\u7EA6 " + fmtLeftCn(renewIn) + "\u540E\u91CD\u7F6E" : "")
         }
       ];
     }
@@ -1088,6 +1357,20 @@ function parseOpencodePages(goHtml, billingHtml, opts) {
   }
   if (balance !== null && balance !== void 0) {
     const currency = optsEff.currency || "USD";
+    const notes = [];
+    if (subInactive) {
+      notes.push({
+        kind: "note",
+        tone: "warn",
+        text: "\u672A\u68C0\u6D4B\u5230\u751F\u6548\u4E2D\u7684\u989D\u5EA6\u7A97\u53E3\uFF08\u8BA2\u9605\u53EF\u80FD\u5DF2\u7ED3\u675F\u6216\u672A\u751F\u6548\uFF09" + (sub && sub.plan ? "\uFF08\u9875\u9762\u6807\u8BC6\uFF1A" + sub.plan + "\uFF09" : "") + "\uFF0C\u5F53\u524D\u6309\u4F59\u989D\u8BA1\u8D39\uFF1A\u8BF7\u5230\u5E73\u53F0\u786E\u8BA4\u8BA2\u9605\u72B6\u6001\u3002"
+      });
+    } else if (sub) {
+      notes.push({
+        kind: "note",
+        tone: "info",
+        text: "\u8BA2\u9605 " + sub.plan + (sub.note ? " \xB7 " + sub.note : "")
+      });
+    }
     return {
       billingKind: "payg",
       billing: {
@@ -1098,13 +1381,9 @@ function parseOpencodePages(goHtml, billingHtml, opts) {
         isAvailable: balance > 0 ? true : null,
         infos: [],
         lowWarn: optsEff.lowWarn !== void 0 && optsEff.lowWarn !== "" && optsEff.lowWarn !== null ? Number(optsEff.lowWarn) : null,
-        plan: "Opencode Zen"
+        plan: subInactive ? "Opencode \u8BA2\u9605\u672A\u751F\u6548" : "Opencode Zen"
       },
-      extra: sub ? {
-        blocks: [
-          { kind: "note", tone: "info", text: "\u8BA2\u9605 " + sub.plan + (sub.note ? " \xB7 " + sub.note : "") }
-        ]
-      } : null
+      extra: notes.length ? { blocks: notes } : null
     };
   }
   return null;
@@ -1162,11 +1441,17 @@ var opencode = {
     const params = vendor && vendor.params || {};
     const wid = params["workspaceId"] || "";
     if (!WORKSPACE_RE.test(String(wid)))
-      throw new Error("workspaceId \u975E\u6CD5\uFF084~64 \u4F4D\u5B57\u6BCD/\u6570\u5B57/\u4E0B\u5212\u7EBF\uFF0C\u5982 wrk_xxx\uFF0C\u89C1\u5B57\u6BB5\u8BF4\u660E\uFF09");
+      throw new ProviderError(
+        "config",
+        "workspaceId \u975E\u6CD5\uFF084~64 \u4F4D\u5B57\u6BCD/\u6570\u5B57/\u4E0B\u5212\u7EBF\uFF0C\u5982 wrk_xxx\uFF0C\u89C1\u5B57\u6BB5\u8BF4\u660E\uFF09",
+        { hint: "workspaceId \u6CA1\u586B\u6216\u683C\u5F0F\u4E0D\u5BF9\uFF0C\u63D2\u4EF6\u65E0\u6CD5\u62FC\u51FA\u989D\u5EA6\u9875\u5730\u5740\u3002", retriable: false }
+      );
     const r = await deps.resolveSecret(effectiveCookie(params));
     if (!r.value)
-      throw new Error(
-        "cookie \u672A\u914D\u7F6E:\u5F53\u524D\u4E3A" + r.kind + ",\u8BF7\u5728\u8BBE\u7F6E\u9875\u586B\u5199 Cookie \u6216\u68C0\u67E5 $NAME \u5F15\u7528\uFF08\u83B7\u53D6\u65B9\u5F0F\u89C1\u5B57\u6BB5\u8BF4\u660E\uFF09"
+      throw new ProviderError(
+        "config",
+        "cookie \u672A\u914D\u7F6E\uFF1A\u5F53\u524D\u4E3A" + r.kind + "\uFF0C\u8BF7\u5728\u8BBE\u7F6E\u9875\u586B\u5199 Cookie \u6216\u68C0\u67E5 $NAME \u5F15\u7528\uFF08\u83B7\u53D6\u65B9\u5F0F\u89C1\u5B57\u6BB5\u8BF4\u660E\uFF09",
+        { hint: "\u7F3A\u5C11\u767B\u5F55\u6001 Cookie\uFF0C\u63D2\u4EF6\u65E0\u6CD5\u8BFB\u53D6\u989D\u5EA6\u9875\u3002", retriable: false }
       );
     const fetchImpl = deps && deps.fetchImpl || fetch;
     const base = "https://opencode.ai/workspace/" + wid;
@@ -1179,9 +1464,15 @@ var opencode = {
     let billingHtml = "";
     if (goRes) goHtml = await goRes.text().catch(() => "");
     if (billingRes) billingHtml = await billingRes.text().catch(() => "");
-    if (goHtml.indexOf("usagePercent") === -1 && billingHtml.indexOf("balance") === -1) {
-      throw new Error(
-        "\u767B\u5F55\u5931\u6548\u6216\u88AB\u98CE\u63A7\uFF08/go " + goHtml.length + "B \xB7 /billing " + billingHtml.length + "B \u5747\u65E0\u6570\u636E\uFF09\uFF0C\u8BF7\u66F4\u65B0 cookie"
+    const goHasQuota = /(rolling|weekly|monthly)Usage:/.test(goHtml) || goHtml.indexOf("usagePercent") !== -1;
+    if (!goHasQuota && billingHtml.indexOf("balance") === -1) {
+      throw new ProviderError(
+        "session",
+        "\u767B\u5F55\u5931\u6548\u6216\u88AB\u98CE\u63A7\uFF08/go " + goHtml.length + "B \xB7 /billing " + billingHtml.length + "B \u5747\u65E0\u6570\u636E\uFF09",
+        {
+          hint: "\u4E24\u9875\u90FD\u6CA1\u8FD4\u56DE\u989D\u5EA6\u6570\u636E\uFF1ACookie \u5DF2\u8FC7\u671F\uFF0C\u6216\u8BF7\u6C42\u88AB\u5E73\u53F0\u98CE\u63A7\u62E6\u622A\u3002\u91CD\u65B0\u767B\u5F55\u5E76\u66F4\u65B0 Cookie \u5373\u53EF\u3002",
+          action: "opencode.ai \u91CD\u65B0\u767B\u5F55 \u2192 \u590D\u5236\u65B0 Cookie \u2192 \u8BBE\u7F6E\u9875\u300C\u7F16\u8F91\u300D"
+        }
       );
     }
     let data;
@@ -1191,9 +1482,15 @@ var opencode = {
         currency: params["currency"]
       });
     } catch (e) {
-      throw new Error(e?.message || "\u9875\u9762\u89E3\u6790\u5931\u8D25", { cause: e });
+      if (e instanceof ProviderError) throw e;
+      throw new ProviderError("parse", e?.message || "\u9875\u9762\u89E3\u6790\u5931\u8D25", { cause: e });
     }
-    if (!data) throw new Error("\u9875\u9762\u7ED3\u6784\u53D8\u5316\uFF0C\u89E3\u6790\u5931\u8D25\uFF08\u65E0\u7A97\u53E3\u4E14\u65E0\u4F59\u989D\u5B57\u6BB5\uFF09\uFF0C\u8BF7\u628A\u4E24\u9875\u9876\u5C42\u952E\u540D\u53D1\u7ED9\u7EF4\u62A4\u8005");
+    if (!data)
+      throw new ProviderError(
+        "parse",
+        "\u9875\u9762\u7ED3\u6784\u53D8\u5316\uFF0C\u89E3\u6790\u5931\u8D25\uFF08\u65E0\u7A97\u53E3\u4E14\u65E0\u4F59\u989D\u5B57\u6BB5\uFF09\uFF0C\u8BF7\u628A\u4E24\u9875\u9876\u5C42\u952E\u540D\u53D1\u7ED9\u7EF4\u62A4\u8005",
+        { hint: "opencode \u9875\u9762\u7ED3\u6784\u53EF\u80FD\u5DF2\u6539\u7248\uFF0C\u9700\u8981\u63D2\u4EF6\u8DDF\u8FDB\u9002\u914D\u3002" }
+      );
     return { ...data, secretKind: r.kind, via: "\u5B98\u65B9\u6E20\u9053" };
   }
 };
@@ -1223,20 +1520,34 @@ async function fetchOfficialBalance(params, secret, fetchImpl) {
   const res = await fetchImpl(url, { headers: { Authorization: "Bearer " + secret }, cache: "no-store" });
   const code = res.status;
   const body = await res.text();
-  if (code === 401) throw new Error("DeepSeek \u5BC6\u94A5\u65E0\u6548(401),\u8BF7\u68C0\u67E5 apiKey");
-  if (code === 402) throw new Error("DeepSeek \u4F59\u989D\u4E0D\u8DB3(402),\u8BF7\u524D\u5F80\u5E73\u53F0\u5145\u503C");
-  if (code === 429) throw new Error("DeepSeek \u9650\u6D41(429),\u7A0D\u540E\u91CD\u8BD5");
-  if (code !== 200) throw new Error("DeepSeek \u63A5\u53E3 HTTP " + code + ":" + body.slice(0, 100));
+  if (code === 401)
+    throw new ProviderError("auth", "DeepSeek \u5BC6\u94A5\u65E0\u6548(401)\uFF1A" + body.slice(0, 100), {
+      status: code,
+      hint: "\u5B98\u65B9\u4F59\u989D\u63A5\u53E3\u62D2\u7EDD\u4E86\u8FD9\u4E2A apiKey\uFF08\u5E94 sk- \u5F00\u5934\uFF09\u3002\u8BF7\u786E\u8BA4\u5B83\u6765\u81EA open platform \u4E14\u672A\u88AB\u5220\u9664\u3002",
+      action: "\u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300DapiKey"
+    });
+  if (code === 402)
+    throw new ProviderError("balance", "DeepSeek \u4F59\u989D\u4E0D\u8DB3(402)\uFF1A" + body.slice(0, 100), { status: code });
+  if (code === 429)
+    throw new ProviderError("rate", "DeepSeek \u9650\u6D41(429)\uFF1A" + body.slice(0, 100), { status: code });
+  if (code >= 500)
+    throw new ProviderError("server", "DeepSeek \u670D\u52A1\u7AEF\u9519\u8BEF(" + code + ")\uFF1A" + body.slice(0, 100), {
+      status: code
+    });
+  if (code !== 200)
+    throw new ProviderError("unknown", "DeepSeek \u63A5\u53E3 HTTP " + code + "\uFF1A" + body.slice(0, 100), {
+      status: code
+    });
   let j = null;
   try {
     j = JSON.parse(body);
   } catch {
-    throw new Error("\u4F59\u989D\u63A5\u53E3\u8FD4\u56DE\u975E JSON(" + body.length + "B):" + body.slice(0, 80));
+    throw new ProviderError("parse", "\u4F59\u989D\u63A5\u53E3\u8FD4\u56DE\u975E JSON(" + body.length + "B)\uFF1A" + body.slice(0, 80));
   }
   const jr = j ?? {};
   if (jr && jr["error"]) {
     const em = isRecord(jr["error"]) ? String(jr["error"]["message"] ?? "") : "";
-    throw new Error("\u4F59\u989D\u63A5\u53E3\u62A5\u9519:" + (em || body.slice(0, 80)));
+    throw new ProviderError("unknown", "\u4F59\u989D\u63A5\u53E3\u62A5\u9519\uFF1A" + (em || body.slice(0, 80)));
   }
   let infos = jr && Array.isArray(jr["balance_infos"]) ? jr["balance_infos"] : null;
   const isAvail = jr && jr["is_available"] !== void 0 ? !!jr["is_available"] : null;
@@ -1250,10 +1561,11 @@ async function fetchOfficialBalance(params, secret, fetchImpl) {
       }
     ];
   }
-  if (!infos) throw new Error("\u4F59\u989D\u63A5\u53E3\u5B57\u6BB5\u7F3A\u5931(\u65E0 balance_infos):" + String(body).slice(0, 100));
+  if (!infos)
+    throw new ProviderError("parse", "\u4F59\u989D\u63A5\u53E3\u5B57\u6BB5\u7F3A\u5931\uFF08\u65E0 balance_infos\uFF09\uFF1A" + String(body).slice(0, 100));
   const prefer = params && params["currency"] || "";
   const primary = pickBalanceInfo(infos, prefer);
-  if (!primary) throw new Error("\u4F59\u989D\u4E3A\u7A7A");
+  if (!primary) throw new ProviderError("parse", "\u4F59\u989D\u4E3A\u7A7A\uFF08balance_infos \u91CC\u6CA1\u6709\u53EF\u7528\u6761\u76EE\uFF09");
   const normInfos = infos.map((x) => {
     const xr = x ?? {};
     return {
@@ -1299,63 +1611,6 @@ async function fetchOfficialBalance(params, secret, fetchImpl) {
     extra: extra2
   };
 }
-var deepseekApi = {
-  type: "deepseek-api",
-  label: "DS-API",
-  title: "deepseek-api\uFF08\u5B98\u65B9\u5BC6\u94A5\uFF09",
-  secretField: "apiKey",
-  hint: "\u5B98\u65B9\u4F59\u989D\u63A5\u53E3\uFF1A\u957F\u671F\u6709\u6548\u7684 apiKey\uFF08sk- \u5F00\u5934\uFF09\uFF0C\u4F59\u989D + \u603B\u989D\u5EA6\u5757\uFF0C\u65E0\u5386\u53F2\u8D8B\u52BF\u3002",
-  fields: [
-    {
-      key: "apiKey",
-      label: "apiKey *",
-      kind: "secret",
-      mono: true,
-      required: true,
-      placeholder: "\u586B $NAME \u5F15\u7528\uFF08\u63A8\u8350\uFF09\u6216\u7C98\u8D34\u660E\u6587",
-      hint: "\u5BC6\u94A5\u83B7\u53D6\uFF1ADeepSeek \u5F00\u653E\u5E73\u53F0 \u2192 API keys\uFF08platform.deepseek.com/api_keys\uFF09\u521B\u5EFA\uFF0Csk- \u5F00\u5934\uFF0C\u957F\u671F\u6709\u6548\u3002\u5EFA\u8BAE\u5148\u5B58\u5165\u7CFB\u7EDF\u51ED\u636E\u518D\u586B $NAME\u3002"
-    },
-    {
-      key: "lowWarn",
-      label: "\u4F4E\u4F59\u989D\u9884\u8B66\u7EBF",
-      kind: "number",
-      placeholder: "\u5982\uFF1A20",
-      hint: "\u4F59\u989D\u4F4E\u4E8E\u6B64\u503C\u65F6\u4FA7\u8FB9\u680F\u9EC4\u8272\u63D0\u9192\uFF08\u4E0E\u6240\u9009\u5E01\u79CD\u540C\u5355\u4F4D\uFF09\u3002"
-    },
-    {
-      key: "currency",
-      label: "\u4F18\u5148\u5E01\u79CD",
-      kind: "text",
-      mono: true,
-      placeholder: "\u9ED8\u8BA4 CNY\uFF0C\u53EF\u586B USD",
-      hint: "\u591A\u5E01\u79CD\u8D26\u6237\u65F6\u4F18\u5148\u5C55\u793A\u7684\u5E01\u79CD\uFF1B\u4E0D\u586B\u5219\u81EA\u52A8\u5F52\u4E00\uFF08CNY \u4F18\u5148\uFF09\u3002"
-    }
-  ],
-  sanitizeParams(raw) {
-    const src = raw !== null && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
-    const out = {};
-    for (const k of Object.keys(src)) {
-      const v = src[k];
-      if (v !== void 0) out[k] = typeof v === "string" ? normalizeSecretRef(v) : v;
-    }
-    if (typeof out["apiKey"] === "string") out["apiKey"] = normalizeSecretRef(out["apiKey"]);
-    return out;
-  },
-  validateParams() {
-    return "";
-  },
-  async fetch(vendor, deps) {
-    const params = vendor && vendor.params || {};
-    const r = await deps.resolveSecret(
-      typeof params["apiKey"] === "string" ? params["apiKey"] : ""
-    );
-    if (!r.value)
-      throw new Error("apiKey \u672A\u914D\u7F6E:\u8BF7\u5728\u8BBE\u7F6E\u9875\u586B\u5199\u6216\u68C0\u67E5 $NAME \u5F15\u7528\uFF08\u5F00\u653E\u5E73\u53F0 \u2192 API keys \u521B\u5EFA\uFF09");
-    const data = await fetchOfficialBalance(params, r.value, deps && deps.fetchImpl || fetch);
-    return { ...data, secretKind: r.kind, via: "\u5B98\u65B9\u63A5\u53E3" };
-  }
-};
-var deepseek_api_default = deepseekApi;
 
 // src/host/providers/deepseek-web.ts
 var SUMMARY_URL = "https://platform.deepseek.com/api/v0/users/get_user_summary";
@@ -1391,6 +1646,9 @@ var VALUE_KEYS = [
 function isObj2(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
+function isRecord2(v) {
+  return isObj2(v);
+}
 function toNum(v) {
   if (v === void 0 || v === null || v === "") return null;
   const n = Number(String(v).replace(/,/g, ""));
@@ -1422,6 +1680,21 @@ function envelopeError(node) {
   if (!Number.isFinite(n) || n === 0) return null;
   const msg = node["msg"] ?? node["message"] ?? node["biz_msg"] ?? node["err_msg"] ?? "";
   return "\u6C47\u603B\u63A5\u53E3\u62A5\u9519(" + String(raw) + ")" + (msg ? ":" + String(msg).slice(0, 120) : "") + "\uFF08\u5982\u521A\u767B\u5F55\u8FC7\u4ECD\u62A5\u9519\uFF0C\u8BF7\u91CD\u65B0\u7C98\u8D34 cookie \u4E0E token\uFF09";
+}
+function envelopeThrow(msg) {
+  if (/40003/.test(msg)) {
+    if (/api.?key/i.test(msg)) {
+      throw new ProviderError("auth", msg, {
+        hint: "\u5B98\u65B9 sk- \u5BC6\u94A5\u4E0D\u80FD\u7528\u4E8E\u7F51\u9875\u8D26\u5355\u63A5\u53E3\uFF08\u4E24\u5957\u51ED\u636E\u4F53\u7CFB\u4E0D\u901A\u7528\uFF09\u3002\u8BF7\u628A\u5B83\u6539\u586B\u5230 apiKey \u680F\uFF0C\u6216\u76F4\u63A5\u7528 deepseek \u7C7B\u578B\u8BA9\u5B83\u81EA\u52A8\u9009\u8DEF\u3002",
+        action: "\u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D"
+      });
+    }
+    throw new ProviderError("session", msg, {
+      hint: "\u7F51\u9875\u8D26\u5355\u63A5\u53E3\u62D2\u7EDD\u4E86\u8FD9\u4E2A\u4F1A\u8BDD\u7968\u636E\uFF1A\u591A\u534A\u5DF2\u8FC7\u671F\uFF08\u5E73\u53F0\u8FD4\u56DE\u7684\u662F\u300CAuthorization Failed (invalid token)\u300D\uFF09\u3002\u91CD\u65B0\u767B\u5F55\u5E76\u7C98\u8D34\u6700\u65B0\u7968\u636E\u5373\u53EF\uFF1B\u82E5\u4F60\u586B\u7684\u5176\u5B9E\u662F sk- \u5B98\u65B9\u5BC6\u94A5\uFF0C\u8BF7\u6539\u586B\u5230 apiKey \u680F\u3002",
+      action: "platform.deepseek.com \u91CD\u65B0\u767B\u5F55 \u2192 \u590D\u5236\u65B0 token \u2192 \u8BBE\u7F6E\u9875\u300C\u7F16\u8F91\u300D"
+    });
+  }
+  throw new ProviderError("unknown", msg);
 }
 function pickNum(obj, keys) {
   if (!isObj2(obj)) return { value: null, key: null };
@@ -1525,20 +1798,20 @@ function firstWallet(scope, keys) {
 }
 function parseUserSummary(body, opts) {
   const errTop = envelopeError(body);
-  if (errTop) throw new Error(errTop);
+  if (errTop) envelopeThrow(errTop);
   const root = unwrapEnvelope(body);
   if (!isObj2(root) && !Array.isArray(root)) {
-    throw new Error("\u6C47\u603B\u63A5\u53E3\u8FD4\u56DE\u7ED3\u6784\u5F02\u5E38(\u9876\u5C42\u975E\u5BF9\u8C61)\uFF0C\u8BF7\u628A\u9876\u5C42\u7C7B\u578B\u53D1\u7ED9\u7EF4\u62A4\u8005");
+    throw new ProviderError("parse", "\u6C47\u603B\u63A5\u53E3\u8FD4\u56DE\u7ED3\u6784\u5F02\u5E38\uFF08\u9876\u5C42\u975E\u5BF9\u8C61\uFF09\uFF0C\u8BF7\u628A\u9876\u5C42\u7C7B\u578B\u53D1\u7ED9\u7EF4\u62A4\u8005");
   }
   const scope = isObj2(root) ? root : {};
   const errIn = envelopeError(scope);
-  if (errIn) throw new Error(errIn);
+  if (errIn) envelopeThrow(errIn);
   const lowWarn = opts && opts.lowWarn !== void 0 && opts.lowWarn !== "" && opts.lowWarn !== null ? Number(opts.lowWarn) : null;
   const normal = firstWallet(scope, ["normal_wallets"]);
   const cost = firstWallet(scope, ["total_costs"]);
   if (normal) {
     const balance = toNum(normal["balance"]);
-    if (balance === null) throw new Error("\u94B1\u5305 balance \u975E\u6570\u5B57\uFF0C\u8BF7\u628A\u8BE5\u5B57\u6BB5\u6837\u4F8B\u53D1\u7ED9\u7EF4\u62A4\u8005");
+    if (balance === null) throw new ProviderError("parse", "\u94B1\u5305 balance \u975E\u6570\u5B57\uFF0C\u8BF7\u628A\u8BE5\u5B57\u6BB5\u6837\u4F8B\u53D1\u7ED9\u7EF4\u62A4\u8005");
     const currency2 = typeof normal["currency"] === "string" && normal["currency"] || "CNY";
     const costs = cost ? toNum(cost["amount"]) : null;
     const billing2 = {
@@ -1570,8 +1843,9 @@ function parseUserSummary(body, opts) {
   }
   if (bal.value === null) {
     const keys = isObj2(root) ? Object.keys(root).slice(0, 12).join(",") : "array";
-    throw new Error(
-      "\u6C47\u603B\u63A5\u53E3\u672A\u547D\u4E2D\u4F59\u989D\u5B57\u6BB5(\u9876\u5C42\u952E:" + keys + ")\uFF1A\u63A5\u53E3\u53EF\u80FD\u6539\u7248\uFF0C\u628A\u8131\u654F\u540E\u7684\u9876\u5C42\u952E\u540D\u53D1\u7ED9\u7EF4\u62A4\u8005\u5373\u53EF\u8FED\u4EE3"
+    throw new ProviderError(
+      "parse",
+      "\u6C47\u603B\u63A5\u53E3\u672A\u547D\u4E2D\u4F59\u989D\u5B57\u6BB5\uFF08\u9876\u5C42\u952E\uFF1A" + keys + "\uFF09\uFF1A\u63A5\u53E3\u53EF\u80FD\u6539\u7248\uFF0C\u628A\u8131\u654F\u540E\u7684\u9876\u5C42\u952E\u540D\u53D1\u7ED9\u7EF4\u62A4\u8005\u5373\u53EF\u8FED\u4EE3"
     );
   }
   const granted = pickNum(scope, GRANTED_KEYS).value;
@@ -1619,91 +1893,196 @@ async function fetchWebSummary(params, cookie, token, fetchImpl) {
   const code = res.status;
   const text = await res.text();
   if (code === 401 || code === 403)
-    throw new Error("DeepSeek \u7F51\u9875\u4F1A\u8BDD\u5931\u6548(" + code + ")\uFF1A\u91CD\u65B0\u767B\u5F55\u540E\u66F4\u65B0 cookie \u4E0E token");
-  if (code === 429) throw new Error("DeepSeek \u9650\u6D41(429),\u7A0D\u540E\u91CD\u8BD5");
-  if (code !== 200) throw new Error("DeepSeek \u6C47\u603B\u63A5\u53E3 HTTP " + code + ":" + text.slice(0, 100));
+    throw new ProviderError("session", "DeepSeek \u7F51\u9875\u4F1A\u8BDD\u5931\u6548(" + code + ")\uFF1A" + text.slice(0, 120), {
+      status: code,
+      hint: "\u7F51\u9875\u767B\u5F55\u6001\uFF08Bearer \u4F1A\u8BDD\u7968\u636E\uFF09\u5DF2\u8FC7\u671F\u6216\u88AB\u5E73\u53F0\u5224\u5B9A\u4E3A\u672A\u767B\u5F55\u3002\u91CD\u65B0\u6293\u53D6\u6700\u65B0\u7968\u636E\u8986\u76D6\u5373\u53EF\u3002",
+      action: "platform.deepseek.com \u91CD\u65B0\u767B\u5F55 \u2192 \u590D\u5236\u65B0 token \u2192 \u8BBE\u7F6E\u9875\u300C\u7F16\u8F91\u300D"
+    });
+  if (code === 429)
+    throw new ProviderError("rate", "DeepSeek \u9650\u6D41(429)\uFF1A" + text.slice(0, 100), { status: code });
+  if (code >= 500)
+    throw new ProviderError("server", "DeepSeek \u670D\u52A1\u7AEF\u9519\u8BEF(" + code + ")\uFF1A" + text.slice(0, 100), {
+      status: code
+    });
+  if (code !== 200)
+    throw new ProviderError("unknown", "DeepSeek \u6C47\u603B\u63A5\u53E3 HTTP " + code + "\uFF1A" + text.slice(0, 100), {
+      status: code
+    });
   let j = null;
   try {
     j = JSON.parse(text);
   } catch {
-    throw new Error("\u6C47\u603B\u63A5\u53E3\u8FD4\u56DE\u975E JSON(" + text.length + "B):" + text.slice(0, 80));
+    throw new ProviderError("parse", "\u6C47\u603B\u63A5\u53E3\u8FD4\u56DE\u975E JSON(" + text.length + "B)\uFF1A" + text.slice(0, 80));
   }
   const jr = j ?? {};
   if (jr && jr["error"]) {
     const em = isRecord2(jr["error"]) ? String(jr["error"]["message"] ?? "") : "";
-    throw new Error("\u6C47\u603B\u63A5\u53E3\u62A5\u9519:" + (em || text.slice(0, 80)));
+    throw new ProviderError("unknown", "\u6C47\u603B\u63A5\u53E3\u62A5\u9519\uFF1A" + (em || text.slice(0, 80)));
   }
   let parsed;
   try {
     parsed = parseUserSummary(j, { lowWarn: params["lowWarn"] });
   } catch (e) {
-    throw new Error(e?.message || "\u6C47\u603B\u89E3\u6790\u5931\u8D25", { cause: e });
+    if (e instanceof ProviderError) throw e;
+    throw new ProviderError("parse", e?.message || "\u6C47\u603B\u89E3\u6790\u5931\u8D25", { cause: e });
   }
   if (params["currency"]) parsed.billing["currency"] = String(params["currency"]);
   return { billingKind: "payg", billing: parsed.billing, extra: parsed.extra };
 }
-var deepseekWeb = {
-  type: "deepseek-web",
-  label: "DS\u7F51",
-  title: "deepseek-web\uFF08\u7F51\u9875\u8D26\u5355\uFF09",
-  secretField: "token",
-  secretFields: ["token", "cookie"],
-  hint: "\u7F51\u9875\u8D26\u5355\u6293\u5305\u63A5\u53E3\uFF1A\u4F59\u989D + \u5386\u53F2\u4F7F\u7528\u8D8B\u52BF\u3002\u53EA\u8981 token\uFF08\u5DF2\u9A8C\u8BC1\u5355 Bearer \u53EF\u7528\uFF09\u3002\u4F1A\u8BDD\u8FC7\u671F\u540E\u9700\u91CD\u7C98\u3002",
-  fields: [
-    {
-      key: "token",
-      label: "token *",
-      kind: "secret",
-      mono: true,
-      required: true,
-      placeholder: "\u7C98\u8D34 Bearer \u4F1A\u8BDD\u7968\u636E",
-      hint: "\u4F1A\u8BDD\u7968\u636E\uFF1Aplatform.deepseek.com \u767B\u5F55\u540E\uFF0C\u5F00\u53D1\u8005\u5DE5\u5177 \u2192 Network \u627E\u5230 get_user_summary \u8BF7\u6C42 \u2192 authorization \u5934\u91CC Bearer \u540E\u9762\u7684\u90A3\u4E32\uFF08ciYi \u5F00\u5934\uFF09\u3002\u4F1A\u8BDD\u8FC7\u671F\u540E\u9700\u91CD\u65B0\u7C98\u8D34\u3002\u5EFA\u8BAE\u5148\u5B58\u5165\u7CFB\u7EDF\u51ED\u636E\u518D\u586B $NAME\u3002"
-    },
-    {
-      key: "lowWarn",
-      label: "\u4F4E\u4F59\u989D\u9884\u8B66\u7EBF",
-      kind: "number",
-      placeholder: "\u5982\uFF1A20",
-      hint: "\u4F59\u989D\u4F4E\u4E8E\u6B64\u503C\u65F6\u4FA7\u8FB9\u680F\u9EC4\u8272\u63D0\u9192\uFF08\u4E0E\u8D26\u5355\u5E01\u79CD\u540C\u5355\u4F4D\uFF09\u3002"
-    }
-  ],
-  sanitizeParams(raw) {
-    const src = raw !== null && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
-    const out = {};
-    for (const k of Object.keys(src)) {
-      const v = src[k];
-      if (v !== void 0) out[k] = typeof v === "string" ? normalizeSecretRef(v) : v;
-    }
-    if (typeof out["cookie"] === "string") out["cookie"] = normalizeSecretRef(out["cookie"]);
-    if (typeof out["token"] === "string") out["token"] = normalizeSecretRef(out["token"]);
-    return out;
-  },
-  maskParams(params) {
-    const out = { ...params };
-    for (const k of ["token", "cookie"]) {
-      if (typeof out[k] === "string" && out[k] !== "" && secretKindOfRaw(out[k]) === "plain") out[k] = "";
-    }
-    return out;
-  },
-  validateParams() {
-    return "";
-  },
-  async fetch(vendor, deps) {
-    const params = vendor && vendor.params || {};
-    const strOf = (v) => typeof v === "string" ? v : "";
-    const rc = await deps.resolveSecret(strOf(params["cookie"]));
-    const rt = await deps.resolveSecret(strOf(params["token"]));
-    if (!rt.value) {
-      throw new Error("token \u672A\u914D\u7F6E:\u8BF7\u7C98\u8D34 Bearer \u4F1A\u8BDD\u7968\u636E\uFF08\u83B7\u53D6\u65B9\u5F0F\u89C1\u5B57\u6BB5\u8BF4\u660E\uFF09");
-    }
-    const data = await fetchWebSummary(params, rc.value, rt.value, deps && deps.fetchImpl || fetch);
-    return { ...data, secretKind: rt.value ? rt.kind : rc.kind, via: "\u7F51\u9875\u63A5\u53E3" };
-  }
-};
-function isRecord2(v) {
+
+// src/host/providers/view.ts
+function isRecord3(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
-var deepseek_web_default = deepseekWeb;
+function finite(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+function windowsSection(windows, title) {
+  if (!Array.isArray(windows) || !windows.length) return null;
+  const s = { kind: "windows", key: "windows", windows };
+  if (title) s.title = title;
+  return s;
+}
+function balanceSection(billing, title) {
+  if (!isRecord3(billing) || Object.keys(billing).length === 0) return null;
+  const s = { kind: "balance", key: "balance", billing };
+  if (title) s.title = title;
+  return s;
+}
+function metricsSection(items, title) {
+  const clean = (Array.isArray(items) ? items : []).filter(
+    (it) => it && typeof it.label === "string" && it.label !== "" && it.value !== void 0 && it.value !== null
+  );
+  if (!clean.length) return null;
+  const s = {
+    kind: "metrics",
+    key: "metrics",
+    items: clean.map((it) => ({ label: it.label, value: String(it.value) }))
+  };
+  if (title) s.title = title;
+  return s;
+}
+function progressSection(progress, title) {
+  const used = finite(progress && progress.used);
+  const total = finite(progress && progress.total);
+  if (used === null || total === null || total <= 0) return null;
+  const p = { used, total };
+  if (progress.label) p.label = progress.label;
+  if (progress.left) p.left = progress.left;
+  const s = { kind: "progress", key: "progress", progress: p };
+  return s;
+}
+function splitSection(split, title) {
+  const segs = (Array.isArray(split && split.segments) ? split.segments : []).filter(
+    (sg) => sg && finite(sg.value) !== null && Number(sg.value) > 0
+  );
+  if (!segs.length) return null;
+  const s = {
+    kind: "split",
+    key: "split",
+    split: {
+      segments: segs.map((sg) => {
+        const out = {
+          label: String(sg.label || ""),
+          value: Number(sg.value)
+        };
+        if (sg.color) out.color = sg.color;
+        return out;
+      })
+    }
+  };
+  return s;
+}
+function noteSection(text, tone) {
+  const t = typeof text === "string" ? text.trim() : "";
+  if (!t) return null;
+  const note = { text: t.slice(0, 300) };
+  if (tone) note.tone = tone;
+  return { kind: "note", key: "note", note };
+}
+function chartSection(chart) {
+  const values = (Array.isArray(chart && chart.values) ? chart.values : []).map((v) => finite(v)).filter((v) => v !== null);
+  if (values.length < 2) return null;
+  const labels = Array.isArray(chart && chart.labels) ? chart.labels.map((l) => String(l)) : [];
+  const c = { labels, values };
+  if (chart.title) c.title = chart.title;
+  return { kind: "chart", key: "chart", chart: c };
+}
+function makeView(sections) {
+  const list = (Array.isArray(sections) ? sections : []).filter(
+    (s) => !!s && typeof s.kind === "string"
+  );
+  return list.length ? { sections: list } : null;
+}
+function defaultView(data) {
+  const sections = [];
+  if (data && data.billingKind === "payg")
+    sections.push(balanceSection(data.billing || {}));
+  else sections.push(windowsSection(data && data.windows || []));
+  const extra2 = data && data.extra || null;
+  if (extra2) {
+    sections.push(metricsSection(Array.isArray(extra2.stats) ? extra2.stats : []));
+    const blocks = Array.isArray(extra2.blocks) ? extra2.blocks : [];
+    for (let i = 0; i < blocks.length && i < 8; i++) {
+      const b = blocks[i];
+      if (!b || typeof b !== "object") continue;
+      if (b.kind === "kv" && b.label)
+        sections.push(metricsSection([{ label: String(b.label), value: String(b.value ?? "") }]));
+      else if (b.kind === "progress" && finite(b.used) !== null && Number(b.total) > 0) {
+        const it = {
+          used: Number(b.used),
+          total: Number(b.total)
+        };
+        if (b.label) it.label = String(b.label);
+        if (b.left !== void 0 && b.left !== null && b.left !== "") it.left = String(b.left);
+        sections.push(progressSection(it));
+      } else if (b.kind === "split" && Array.isArray(b.segments))
+        sections.push(splitSection({ segments: b.segments }));
+      else if (b.kind === "note" && b.text) sections.push(noteSection(String(b.text), b.tone));
+    }
+    if (extra2.chart && Array.isArray(extra2.chart.values) && extra2.chart.values.length > 1)
+      sections.push(chartSection(extra2.chart));
+  }
+  return makeView(sections);
+}
+function viewToExtra(view) {
+  const sections = view && Array.isArray(view.sections) ? view.sections : [];
+  if (!sections.length) return null;
+  const stats = [];
+  const blocks = [];
+  let chart;
+  for (const s of sections) {
+    if (!s || typeof s !== "object") continue;
+    if (s.kind === "metrics" && Array.isArray(s.items)) {
+      for (const it of s.items) stats.push({ label: it.label, value: it.value });
+    } else if (s.kind === "progress" && s.progress) {
+      const b = {
+        kind: "progress",
+        used: s.progress.used,
+        total: s.progress.total
+      };
+      if (s.progress.label) b.label = s.progress.label;
+      if (s.progress.left) b.left = s.progress.left;
+      blocks.push(b);
+    } else if (s.kind === "split" && s.split) {
+      const b = { kind: "split", segments: s.split.segments };
+      if (s.title) b.label = s.title;
+      blocks.push(b);
+    } else if (s.kind === "note" && s.note) {
+      const b = { kind: "note", text: s.note.text };
+      if (s.note.tone) b.tone = s.note.tone;
+      blocks.push(b);
+    } else if (s.kind === "chart" && s.chart) {
+      chart = { title: s.chart.title || "", labels: s.chart.labels, values: s.chart.values };
+    }
+  }
+  const extra2 = {};
+  if (stats.length) extra2.stats = stats.slice(0, 12);
+  if (blocks.length) extra2.blocks = blocks.slice(0, 8);
+  if (chart) extra2.chart = chart;
+  return extra2.stats || extra2.blocks || extra2.chart ? extra2 : null;
+}
 
 // src/host/providers/deepseek.ts
 function stripBearer(v) {
@@ -1714,15 +2093,45 @@ function stripBearer(v) {
 function looksOfficial(v) {
   return /^sk-[A-Za-z0-9_-]{8,}$/.test(stripBearer(v));
 }
+function secretKindText(kind) {
+  const k = String(kind || "");
+  if (k === "plain") return "\u660E\u6587";
+  if (k === "ref") return "$\u5F15\u7528";
+  if (k === "env" || k === "cred") return "\u65E7\u5F15\u7528(" + k + ")";
+  if (k === "empty") return "\u672A\u586B";
+  return k || "\u672A\u77E5";
+}
 var isWebAuthErr = (msg) => /会话失效\(40[13]\)/.test(msg || "");
 var isApiAuthErr = (msg) => /密钥无效\(401\)/.test(msg || "");
+function buildDeepseekView(which, billing, extra2, secretKind) {
+  const base = defaultView({
+    billingKind: "payg",
+    billing,
+    extra: extra2 ?? null
+  });
+  const sections = (base ? base.sections : []).map(
+    (s) => s.kind === "balance" ? { ...s, title: "\u8D26\u6237\u4F59\u989D" } : s
+  );
+  if (!sections.length)
+    sections.push(balanceSection(billing, "\u8D26\u6237\u4F59\u989D"));
+  sections.push(
+    metricsSection(
+      [
+        { label: "\u6570\u636E\u63A5\u53E3", value: which === "api" ? "\u5B98\u65B9\u4F59\u989D\u63A5\u53E3" : "\u7F51\u9875\u8D26\u5355\u63A5\u53E3" },
+        { label: "\u51ED\u636E\u7C7B\u578B", value: secretKindText(secretKind) }
+      ],
+      "\u6570\u636E\u6765\u6E90"
+    )
+  );
+  return makeView(sections);
+}
 var deepseek = {
   type: "deepseek",
   label: "DS",
-  title: "deepseek\uFF08\u5B98\u65B9\xB7\u81EA\u52A8\uFF09",
+  title: "deepseek\uFF08\u5B98\u65B9\xB7\u81EA\u52A8\u9009\u8DEF\uFF09",
   secretField: "token",
   secretFields: ["token", "apiKey", "cookie"],
-  hint: "\u81EA\u52A8\u9009\u8DEF\uFF1Ask- \u5F00\u5934\u8D70\u5B98\u65B9\u4F59\u989D\u63A5\u53E3\uFF0C\u5176\u4F59\u8D70\u7F51\u9875\u8D26\u5355\uFF08\u542B\u5386\u53F2\u8D8B\u52BF\uFF09\uFF1B\u540C\u65F6\u914D\u7F6E\u4F18\u5148\u7528 token \u8D70\u7F51\u9875\uFF0C\u4E00\u8DEF\u5931\u6548\u81EA\u52A8\u6362\u8DEF\u3002\u5206\u5F00\u914D\u8BF7\u7528 deepseek-api / deepseek-web\u3002",
+  hint: "\u4E00\u4E2A\u5165\u53E3\u641E\u5B9A\u4E24\u79CD\u51ED\u636E\uFF1Ask- \u5F00\u5934\u7684 apiKey \u8D70\u5B98\u65B9\u4F59\u989D\u63A5\u53E3\uFF0C\u4F1A\u8BDD\u7968\u636E\uFF08\u7F51\u9875 token\uFF09\u8D70\u7F51\u9875\u8D26\u5355\uFF08\u542B\u5386\u53F2\u8D8B\u52BF\uFF09\u3002\u540C\u65F6\u914D\u7F6E\u65F6\u4F18\u5148\u7528 token \u8D70\u7F51\u9875\uFF0C\u4E00\u8DEF\u5931\u6548\u81EA\u52A8\u6362\u8DEF\u3002\u65E7 deepseek-api / deepseek-web \u5DF2\u5408\u5E76\u5230\u672C\u7C7B\u578B\uFF0C\u914D\u7F6E\u81EA\u52A8\u6CBF\u7528\u3002",
   fields: [
     {
       key: "apiKey",
@@ -1786,14 +2195,16 @@ var deepseek = {
     const rKey = await deps.resolveSecret(strOf(params["apiKey"]));
     const fetchImpl = deps && deps.fetchImpl || fetch;
     const bearers = [];
-    if (rToken.value) bearers.push({ ...rToken, via: "web" });
+    if (rToken.value) bearers.push({ ...rToken, via: looksOfficial(rToken.value) ? "api" : "web" });
     if (rKey.value) bearers.push({ ...rKey, via: looksOfficial(rKey.value) ? "api" : "web" });
-    for (const b of bearers) {
-      if (b.via === "web" && looksOfficial(b.value)) b.via = "api";
-    }
     if (!bearers.length && !rCookie.value) {
-      throw new Error(
-        "\u51ED\u636E\u672A\u914D\u7F6E:apiKey \u4E0E token \u81F3\u5C11\u586B\u4E00\u4E2A\uFF08sk- \u5F00\u5934\u8D70\u5B98\u65B9\uFF0C\u5176\u4F59\u8D70\u7F51\u9875\uFF0C\u83B7\u53D6\u65B9\u5F0F\u89C1\u5B57\u6BB5\u8BF4\u660E\uFF09"
+      throw new ProviderError(
+        "config",
+        "\u51ED\u636E\u672A\u914D\u7F6E\uFF1AapiKey \u4E0E token \u81F3\u5C11\u586B\u4E00\u4E2A\uFF08sk- \u5F00\u5934\u8D70\u5B98\u65B9\uFF0C\u5176\u4F59\u8D70\u7F51\u9875\uFF0C\u83B7\u53D6\u65B9\u5F0F\u89C1\u5B57\u6BB5\u8BF4\u660E\uFF09",
+        {
+          hint: "\u4E24\u79CD\u51ED\u636E\u90FD\u6CA1\u586B\uFF1A\u5B98\u65B9\u4F59\u989D\u7528 sk- \u5F00\u5934\u7684 apiKey\uFF0C\u7F51\u9875\u8D26\u5355\u7528\u767B\u5F55\u4F1A\u8BDD token\u3002\u586B\u4EFB\u4E00\u5373\u53EF\u3002",
+          retriable: false
+        }
       );
     }
     const order = [];
@@ -1807,7 +2218,13 @@ var deepseek = {
         if (!wb && !rCookie.value) continue;
         try {
           const data = await fetchWebSummary(params, rCookie.value, wb ? wb.value : "", fetchImpl);
-          return { ...data, secretKind: wb ? wb.kind : rCookie.kind, via: "\u7F51\u9875\u63A5\u53E3" };
+          const kind = wb ? wb.kind : rCookie.kind;
+          return {
+            ...data,
+            view: buildDeepseekView("web", data.billing, data.extra, kind),
+            secretKind: kind,
+            via: "\u7F51\u9875\u63A5\u53E3"
+          };
         } catch (e) {
           lastErr = e;
           if (!isWebAuthErr(e?.message || "")) throw e;
@@ -1817,17 +2234,362 @@ var deepseek = {
         if (!kb) continue;
         try {
           const data = await fetchOfficialBalance(params, kb.value, fetchImpl);
-          return { ...data, secretKind: kb.kind, via: "\u5B98\u65B9\u63A5\u53E3" };
+          return {
+            ...data,
+            view: buildDeepseekView("api", data.billing, data.extra, kb.kind),
+            secretKind: kb.kind,
+            via: "\u5B98\u65B9\u63A5\u53E3"
+          };
         } catch (e) {
           lastErr = e;
           if (!isApiAuthErr(e?.message || "")) throw e;
         }
       }
     }
-    throw lastErr || new Error("\u62C9\u53D6\u5931\u8D25");
+    const lastMsg = lastErr?.message || "\u62C9\u53D6\u5931\u8D25";
+    if (lastErr instanceof ProviderError && lastErr.kind === "auth" && order.length > 1) {
+      throw new ProviderError("auth", "\u4E24\u6761\u6570\u636E\u8DEF\u7EBF\u90FD\u9274\u6743\u5931\u8D25\uFF08\u5B98\u65B9\u63A5\u53E3\u4E0E\u7F51\u9875\u63A5\u53E3\uFF09\uFF1A" + lastMsg, {
+        hint: "\u5B98\u65B9 apiKey \u4E0E\u7F51\u9875\u4F1A\u8BDD\u7968\u636E\u662F\u4E24\u5957\u72EC\u7ACB\u51ED\u636E\u3001\u4E92\u4E0D\u901A\u7528\u3002\u8BF7\u786E\u8BA4\uFF1Ask- \u5F00\u5934\u7684\u586B apiKey \u680F\uFF0C\u767B\u5F55\u4F1A\u8BDD token\uFF08ciYi \u5F00\u5934\uFF09\u586B token \u680F\uFF0C\u4E24\u8005\u90FD\u8FC7\u671F\u65F6\u90FD\u8981\u66F4\u65B0\u3002",
+        action: "\u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D"
+      });
+    }
+    throw lastErr || new ProviderError("unknown", "DeepSeek \u62C9\u53D6\u5931\u8D25");
   }
 };
 var deepseek_default = deepseek;
+
+// src/host/providers/commandcode.ts
+var API_BASE = "https://api.commandcode.ai/alpha";
+var KEY_RE = /^user_[A-Za-z0-9_-]{8,}$/;
+var DEFAULT_ENV_KEY = "COMMAND_CODE_API_KEY";
+function isRecord4(v) {
+  return v !== null && typeof v === "object" && !Array.isArray(v);
+}
+function fmtInt2(n) {
+  const v = Math.round(Number(n) || 0);
+  if (v >= 1e8) return (v / 1e8).toFixed(1).replace(/\.0$/, "") + "\u4EBF";
+  if (v >= 1e4) return (v / 1e4).toFixed(1).replace(/\.0$/, "") + "\u4E07";
+  return String(v);
+}
+function fmtMoney(n) {
+  return (Math.round(Number(n) * 100) / 100).toFixed(2);
+}
+function planLabel(planId) {
+  const id = typeof planId === "string" ? planId.trim() : "";
+  if (!id) return "";
+  const m = /^(?:individual|team)-(.+)$/.exec(id);
+  const raw = m ? m[1] : id;
+  const known = {
+    go: "Go",
+    goat: "GOAT",
+    pro: "Pro",
+    max: "Max",
+    provider: "Provider"
+  };
+  const hit = known[raw];
+  if (hit) return hit;
+  return raw.replace(/[-_]/g, " ").toUpperCase();
+}
+async function getJson(path, key, fetchImpl) {
+  const res = await fetchImpl(API_BASE + path, {
+    headers: { Authorization: "Bearer " + key, accept: "application/json" },
+    cache: "no-store"
+  });
+  const code = res.status;
+  const text = await res.text();
+  if (code === 401 || code === 403)
+    throw new ProviderError("auth", "CommandCode API Key \u65E0\u6548(" + code + ")\uFF1A" + text.slice(0, 120), {
+      status: code,
+      hint: "\u5E73\u53F0\u62D2\u7EDD\u4E86\u8FD9\u628A API Key\uFF1A\u53EF\u80FD\u5DF2\u5220\u9664\u3001\u8F6E\u6362\uFF0C\u6216\u590D\u5236\u65F6\u7F3A\u4E86\u5B57\u7B26\u3002\u5230\u5DE5\u4F5C\u5BA4\u91CD\u65B0\u521B\u5EFA\u4E00\u628A\u5373\u53EF\u3002",
+      action: "commandcode.ai \u2192 \u5DE5\u4F5C\u5BA4\uFF08Studio\uFF09\u2192 API keys",
+      docs: "https://commandcode.ai/docs/reference/errors/unauthorized"
+    });
+  if (code === 429)
+    throw new ProviderError("rate", "CommandCode \u9650\u6D41(429)\uFF1A" + text.slice(0, 100), { status: code });
+  if (code === 404)
+    throw new ProviderError("parse", "CommandCode \u63A5\u53E3\u4E0D\u5B58\u5728(404)\uFF1A\u8DEF\u5F84\u53EF\u80FD\u5DF2\u53D8\u66F4\uFF08" + path + "\uFF09", {
+      status: code,
+      hint: "\u989D\u5EA6\u63A5\u53E3\u8DEF\u5F84\u53D8\u4E86\uFF0C\u901A\u5E38\u610F\u5473\u7740\u5E73\u53F0\u6539\u7248\uFF0C\u9700\u8981\u63D2\u4EF6\u66F4\u65B0\u3002"
+    });
+  if (code >= 500)
+    throw new ProviderError("server", "CommandCode \u670D\u52A1\u7AEF\u9519\u8BEF(" + code + ")\uFF1A" + text.slice(0, 100), {
+      status: code
+    });
+  if (code !== 200)
+    throw new ProviderError("unknown", "CommandCode \u63A5\u53E3 HTTP " + code + "\uFF1A" + text.slice(0, 120), {
+      status: code
+    });
+  let j = null;
+  try {
+    j = JSON.parse(text);
+  } catch {
+    throw new ProviderError("parse", "CommandCode \u8FD4\u56DE\u975E JSON(" + text.length + "B)\uFF1A" + text.slice(0, 80));
+  }
+  if (!isRecord4(j)) throw new ProviderError("parse", "CommandCode \u8FD4\u56DE\u7ED3\u6784\u5F02\u5E38\uFF08\u9876\u5C42\u975E\u5BF9\u8C61\uFF09");
+  const err = j["error"];
+  if (isRecord4(err)) {
+    const emsg = String(err["message"] ?? err["code"] ?? text.slice(0, 80));
+    const ecode = String(err["code"] ?? "");
+    const ecapital = ecode.toUpperCase();
+    const kind = /UPGRADE|PLAN|SUBSCRIPTION/.test(ecapital) ? "plan" : /UNAUTHORIZED|FORBIDDEN|TOKEN/.test(ecapital) ? "auth" : /RATE|LIMIT|QUOTA/.test(ecapital) ? "rate" : "unknown";
+    throw new ProviderError(kind, "CommandCode \u63A5\u53E3\u62A5\u9519\uFF1A" + emsg, {
+      ...typeof err["status"] === "number" ? { status: err["status"] } : {},
+      ...kind === "auth" ? { docs: "https://commandcode.ai/docs/reference/errors/unauthorized" } : {}
+    });
+  }
+  return j;
+}
+function toWindow(key, label, node, nowMs) {
+  if (!isRecord4(node)) return null;
+  const cap = numStr(node["cap"]);
+  const used = numStr(node["used"]);
+  if (!(cap > 0)) return null;
+  const since = numStr(node["resetAt"]) - nowMs;
+  return {
+    key,
+    label,
+    pct: Math.min(100, Math.max(0, used / cap * 100)),
+    used,
+    limit: cap,
+    resetInSec: Math.max(0, Math.round(since / 1e3))
+  };
+}
+function toMonthlyWindow(credits, usage, subData, nowMs) {
+  const consumed = numStr(usage ? usage["totalCredits"] : 0) + 0;
+  const balance = numStr(credits["monthlyCredits"]) + numStr(credits["purchasedCredits"]) + numStr(credits["freeCredits"]);
+  const total = consumed + balance;
+  if (!(total > 0)) return null;
+  const endRaw = subData ? subData["currentPeriodEnd"] : null;
+  let resetInSec = 0;
+  if (typeof endRaw === "string" && endRaw) {
+    const endMs = Date.parse(endRaw);
+    if (Number.isFinite(endMs)) resetInSec = Math.max(0, Math.round((endMs - nowMs) / 1e3));
+  }
+  return {
+    key: "monthly",
+    label: "\u6BCF\u6708",
+    pct: Math.min(100, Math.max(0, consumed / total * 100)),
+    used: Math.round(consumed * 1e4) / 1e4,
+    limit: Math.round(total * 100) / 100,
+    resetInSec
+  };
+}
+function parseCommandCode(creditsBody, usageBody, subBody, whoBody, nowMs) {
+  const creditsRoot = isRecord4(creditsBody) ? creditsBody : {};
+  const credits = isRecord4(creditsRoot["credits"]) ? creditsRoot["credits"] : {};
+  const windowLimits = isRecord4(creditsRoot["windowLimits"]) ? creditsRoot["windowLimits"] : {};
+  const windows = [];
+  const five = toWindow("5h", "5 \u5C0F\u65F6", windowLimits["fiveHour"], nowMs);
+  if (five) windows.push(five);
+  const week = toWindow("weekly", "\u6BCF\u5468", windowLimits["weekly"], nowMs);
+  if (week) windows.push(week);
+  const usage = isRecord4(usageBody) ? usageBody : null;
+  const subData = isRecord4(subBody) && isRecord4(subBody["data"]) ? subBody["data"] : null;
+  const monthly = toMonthlyWindow(credits, usage, subData, nowMs);
+  if (monthly) windows.push(monthly);
+  const user = isRecord4(whoBody) && isRecord4(whoBody["user"]) ? whoBody["user"] : null;
+  return { windows, credits, windowLimits, usage, subscription: subData, user };
+}
+function subscriptionAlert(status, periodEnd, nowMs) {
+  const st = String(status ?? "").trim().toLowerCase();
+  const end = typeof periodEnd === "string" ? periodEnd.slice(0, 10) : "";
+  const BAD = {
+    past_due: "\u8BA2\u9605\u6263\u6B3E\u5931\u8D25\uFF08past_due\uFF09\uFF0C\u989D\u5EA6\u53EF\u80FD\u968F\u65F6\u505C\u6B62",
+    unpaid: "\u8BA2\u9605\u672A\u652F\u4ED8\uFF08unpaid\uFF09\uFF0C\u5F53\u524D\u65E0\u6CD5\u7EE7\u7EED\u4F7F\u7528",
+    canceled: "\u8BA2\u9605\u5DF2\u53D6\u6D88\uFF08canceled\uFF09" + (end ? "\uFF0C" + end + " \u540E\u505C\u6B62\u7EED\u8BA2" : ""),
+    cancelled: "\u8BA2\u9605\u5DF2\u53D6\u6D88\uFF08cancelled\uFF09" + (end ? "\uFF0C" + end + " \u540E\u505C\u6B62\u7EED\u8BA2" : ""),
+    incomplete_expired: "\u8BA2\u9605\u672A\u5B8C\u6210\u652F\u4ED8\u5DF2\u5931\u6548\uFF08incomplete_expired\uFF09\uFF0C\u9700\u91CD\u65B0\u8BA2\u9605",
+    ended: "\u8BA2\u9605\u5DF2\u7ED3\u675F\uFF08ended\uFF09" + (end ? "\uFF08" + end + "\uFF09" : ""),
+    expired: "\u8BA2\u9605\u5DF2\u8FC7\u671F\uFF08expired\uFF09" + (end ? "\uFF08" + end + "\uFF09" : ""),
+    suspended: "\u8BA2\u9605\u5DF2\u88AB\u6682\u505C\uFF08suspended\uFF09\uFF0C\u8BF7\u68C0\u67E5\u652F\u4ED8\u65B9\u5F0F"
+  };
+  const hit = BAD[st];
+  if (hit) return { text: "\u26A0 " + hit + "\uFF1A\u8BF7\u66F4\u65B0\u652F\u4ED8\u65B9\u5F0F\u6216\u91CD\u65B0\u8BA2\u9605\uFF0C\u5904\u7406\u540E\u70B9\u300C\u5237\u65B0\u300D\u3002", tone: "bad" };
+  if (st === "active" && end) {
+    const endMs = Date.parse(end + "T23:59:59Z");
+    if (Number.isFinite(endMs) && endMs < nowMs)
+      return {
+        text: "\u26A0 \u8BA2\u9605\u5468\u671F\u5DF2\u4E8E " + end + " \u7ED3\u675F\uFF0C\u989D\u5EA6\u53EF\u80FD\u968F\u65F6\u505C\u6B62\uFF1A\u8BF7\u786E\u8BA4\u7EED\u8BA2\u72B6\u6001\u540E\u70B9\u300C\u5237\u65B0\u300D\u3002",
+        tone: "bad"
+      };
+  }
+  return null;
+}
+function buildCommandCodeView(data, opts) {
+  const monthly = numStr(data.credits["monthlyCredits"]);
+  const purchased = numStr(data.credits["purchasedCredits"]);
+  const free = numStr(data.credits["freeCredits"]);
+  const balance = monthly + purchased + free;
+  const plan = planLabel(data.subscription && data.subscription["planId"]);
+  const subStatus = data.subscription ? String(data.subscription["status"] ?? "") : "";
+  const periodEnd = data.subscription ? String(data.subscription["currentPeriodEnd"] ?? "") : "";
+  const consumed = data.usage ? numStr(data.usage["totalCredits"]) : 0;
+  const belowThreshold = data.credits["belowThreshold"] === true;
+  const exceeded = data.windowLimits["exceeded"];
+  const cancelAtPeriodEnd = data.subscription ? data.subscription["cancelAtPeriodEnd"] === true : false;
+  const sections = [];
+  sections.push(windowsSection(data.windows, "\u989D\u5EA6\u7A97\u53E3"));
+  sections.push(
+    balanceSection(
+      {
+        balance,
+        currency: "USD",
+        granted: free,
+        toppedUp: purchased,
+        isAvailable: belowThreshold ? false : balance > 0 ? true : null,
+        infos: [],
+        lowWarn: opts.lowWarn !== void 0 ? opts.lowWarn : null,
+        plan: plan || "Command Code"
+      },
+      "\u5269\u4F59\u989D\u5EA6"
+    )
+  );
+  const items = [];
+  if (plan) items.push({ label: "\u8BA2\u9605\u8BA1\u5212", value: plan + (subStatus ? "\uFF08" + subStatus + "\uFF09" : "") });
+  if (periodEnd) items.push({ label: "\u5F53\u524D\u5468\u671F\u81F3", value: periodEnd.slice(0, 10) });
+  if (data.user) {
+    const who = String(data.user["userName"] || data.user["name"] || "");
+    if (who) items.push({ label: "\u8D26\u53F7", value: who });
+  }
+  if (data.usage) {
+    items.push({ label: "\u672C\u671F\u6D88\u8D39", value: "$" + fmtMoney(numStr(data.usage["totalCost"])) });
+    items.push({ label: "\u8BF7\u6C42\u6570", value: fmtInt2(numStr(data.usage["totalCount"])) });
+    items.push({ label: "\u6210\u529F\u7387", value: numStr(data.usage["successRate"]) + "%" });
+    items.push({ label: "\u8F93\u5165 Token", value: fmtInt2(numStr(data.usage["totalTokensIn"])) });
+    items.push({ label: "\u8F93\u51FA Token", value: fmtInt2(numStr(data.usage["totalTokensOut"])) });
+  }
+  sections.push(metricsSection(items, "\u8D26\u6237\u4E0E\u7528\u91CF"));
+  const alert = subscriptionAlert(subStatus, periodEnd, Date.now());
+  if (alert) sections.push(noteSection(alert.text, alert.tone));
+  if (exceeded) sections.push(noteSection("\u5DF2\u8FBE\u5230\u7A97\u53E3\u4E0A\u9650\uFF1A" + String(exceeded) + "\uFF0C\u8BF7\u7B49\u7A97\u53E3\u91CD\u7F6E\u3002", "bad"));
+  else if (belowThreshold) sections.push(noteSection("\u989D\u5EA6\u4F4E\u4E8E\u9608\u503C\uFF0C\u8C03\u7528\u53EF\u80FD\u88AB\u62D2\u7EDD\uFF0C\u8BF7\u53CA\u65F6\u5145\u503C\u3002", "warn"));
+  if (!alert) {
+    if (cancelAtPeriodEnd) sections.push(noteSection("\u8BA2\u9605\u5DF2\u8BBE\u7F6E\u5468\u671F\u672B\u53D6\u6D88\uFF0C\u5230\u671F\u540E\u989D\u5EA6\u5C06\u505C\u6B62\u7EED\u8BA2\u3002", "warn"));
+    else if (plan && data.windows.length)
+      sections.push(noteSection(plan + " \u8BA2\u9605\u751F\u6548\u4E2D\uFF0C\u989D\u5EA6\u6309 5 \u5C0F\u65F6 / \u6BCF\u5468 / \u6BCF\u6708\u7A97\u53E3\u6EDA\u52A8\u5237\u65B0\u3002", "info"));
+  }
+  const view = makeView(sections);
+  const granted = free > 0 ? free : null;
+  const topped = purchased > 0 ? purchased : null;
+  return {
+    view,
+    billing: {
+      balance,
+      currency: "USD",
+      granted,
+      toppedUp: topped,
+      isAvailable: belowThreshold ? false : balance > 0 ? true : null,
+      infos: [],
+      lowWarn: opts.lowWarn !== void 0 ? opts.lowWarn : null,
+      plan: plan || "Command Code",
+      // 额度构成与本期消费（客户端专属 UI 用来画分解条与消耗进度）
+      monthlyCredits: monthly,
+      purchasedCredits: purchased,
+      freeCredits: free,
+      consumedCredits: consumed,
+      ...periodEnd ? { periodEnd: periodEnd.slice(0, 10) } : {}
+    }
+  };
+}
+var commandcode = {
+  type: "commandcode",
+  label: "CC",
+  title: "commandcode\uFF08Command Code\uFF09",
+  secretField: "apiKey",
+  hint: "Command Code \u989D\u5EA6\uFF1A5 \u5C0F\u65F6/\u6BCF\u5468\u6EDA\u52A8\u7A97\u53E3 + \u5269\u4F59\u989D\u5EA6 + \u672C\u8BA1\u8D39\u5468\u671F\u7528\u91CF\u3002API Key \u5728 commandcode.ai \u5DE5\u4F5C\u5BA4\uFF08Studio\uFF09\u521B\u5EFA\uFF0Cuser_ \u5F00\u5934\uFF1B\u4E0E CLI \u540C\u4E00\u628A\u94A5\u5319\u3002\u9ED8\u8BA4\u8BFB\u73AF\u5883\u53D8\u91CF/\u51ED\u636E " + DEFAULT_ENV_KEY + "\uFF08\u7559\u7A7A\u5373\u7528\uFF09\u3002",
+  fields: [
+    {
+      key: "apiKey",
+      label: "apiKey",
+      kind: "secret",
+      mono: true,
+      placeholder: "$" + DEFAULT_ENV_KEY + "\uFF08\u9ED8\u8BA4\uFF09\u6216\u7C98\u8D34 user_ \u5F00\u5934\u7684\u660E\u6587",
+      hint: "\u9ED8\u8BA4 $" + DEFAULT_ENV_KEY + "\uFF1A\u53EA\u8981\u8BE5\u73AF\u5883\u53D8\u91CF\u5DF2\u5BFC\u51FA\uFF08CLI \u7528\u7684\u540C\u4E00\u628A\u94A5\u5319\uFF09\uFF0C\u6B64\u9879\u7559\u7A7A\u5373\u53EF\uFF0C\u63D2\u4EF6\u81EA\u52A8\u56DE\u9000\u8BFB\u53D6\u3002\u4E5F\u53EF\u7C98\u8D34 user_ \u5F00\u5934\u7684\u660E\u6587\uFF0C\u6216\u7528\u300C\u5B58\u51ED\u636E\u300D\u8F6C\u6210\u5F15\u7528\u3002\u5BC6\u94A5\u83B7\u53D6\uFF1Acommandcode.ai \u2192 \u5DE5\u4F5C\u5BA4\uFF08Studio\uFF09\u2192 API keys \u521B\u5EFA\u3002"
+    },
+    {
+      key: "lowWarn",
+      label: "\u4F4E\u4F59\u989D\u9884\u8B66\u7EBF",
+      kind: "number",
+      placeholder: "\u5982\uFF1A10",
+      hint: "\u5269\u4F59\u989D\u5EA6\uFF08USD\uFF09\u4F4E\u4E8E\u6B64\u503C\u65F6\u4FA7\u8FB9\u680F\u9EC4\u8272\u63D0\u9192\u3002"
+    }
+  ],
+  /** 新增供应商时直接带上默认环境变量引用（用户无需手填）。 */
+  defaultParams: { apiKey: "$" + DEFAULT_ENV_KEY },
+  sanitizeParams(raw) {
+    const src = raw !== null && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const out = {};
+    for (const k of Object.keys(src)) {
+      const v = src[k];
+      if (v !== void 0) out[k] = typeof v === "string" ? normalizeSecretRef(v) : v;
+    }
+    if (typeof out["apiKey"] === "string") out["apiKey"] = normalizeSecretRef(out["apiKey"]);
+    return out;
+  },
+  maskParams(params) {
+    const out = { ...params };
+    if (typeof out["apiKey"] === "string" && out["apiKey"] !== "" && secretKindOfRaw(out["apiKey"]) === "plain")
+      out["apiKey"] = "";
+    return out;
+  },
+  validateParams(params) {
+    const v = params && typeof params["apiKey"] === "string" ? params["apiKey"] : "";
+    if (v && secretKindOfRaw(v) === "plain" && !KEY_RE.test(v)) return "apiKey \u5F62\u6001\u5F02\u5E38\uFF08\u5E94\u4E3A user_ \u5F00\u5934\uFF09";
+    return "";
+  },
+  async fetch(vendor, deps) {
+    const params = vendor && vendor.params || {};
+    const raw = typeof params["apiKey"] === "string" ? params["apiKey"].trim() : "";
+    const fallback = "$" + DEFAULT_ENV_KEY;
+    let r;
+    try {
+      r = await deps.resolveSecret(raw || fallback);
+    } catch (e) {
+      if (!raw)
+        throw new ProviderError("config", "apiKey \u672A\u914D\u7F6E\uFF1A\u73AF\u5883\u53D8\u91CF/\u51ED\u636E " + DEFAULT_ENV_KEY + " \u672A\u627E\u5230", {
+          cause: e,
+          hint: "\u8FD8\u5DEE\u4E00\u628A API Key \u624D\u80FD\u67E5\u989D\u5EA6\uFF1A" + DEFAULT_ENV_KEY + " \u73AF\u5883\u53D8\u91CF/\u51ED\u636E\u91CC\u6CA1\u627E\u5230\u5B83\uFF0C\u914D\u7F6E\u91CC\u4E5F\u6CA1\u586B\u3002\u5BFC\u51FA\u8BE5\u53D8\u91CF\u5373\u53EF\u81EA\u52A8\u751F\u6548\uFF0C\u6216\u76F4\u63A5\u7C98\u8D34\u660E\u6587\u3002",
+          action: "commandcode.ai \u2192 \u5DE5\u4F5C\u5BA4\uFF08Studio\uFF09\u2192 API keys\uFF08user_ \u5F00\u5934\uFF09",
+          retriable: false
+        });
+      throw e;
+    }
+    if (!r.value)
+      throw new ProviderError("config", "apiKey \u7F3A\u5C11\u6709\u6548\u503C\uFF08\u5F15\u7528\u89E3\u6790\u4E3A\u7A7A\uFF09", {
+        hint: "\u586B\u7684\u662F $" + DEFAULT_ENV_KEY + " \u5F15\u7528\uFF0C\u4F46\u8BE5\u73AF\u5883\u53D8\u91CF/\u51ED\u636E\u5F53\u524D\u4E3A\u7A7A\u3002\u5BFC\u51FA\u53D8\u91CF\u540E\u9700\u91CD\u542F dsh web\uFF0C\u6216\u6539\u586B\u660E\u6587\u3002",
+        action: "\u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
+        retriable: false
+      });
+    const fetchImpl = deps && deps.fetchImpl || fetch;
+    const nowMs = Date.now();
+    const creditsBody = await getJson("/billing/credits", r.value, fetchImpl);
+    const optional = async (path) => {
+      try {
+        return await getJson(path, r.value, fetchImpl);
+      } catch {
+        return null;
+      }
+    };
+    const [usageBody, subBody, whoBody] = await Promise.all([
+      optional("/usage/summary"),
+      optional("/billing/subscriptions"),
+      optional("/whoami")
+    ]);
+    const data = parseCommandCode(creditsBody, usageBody, subBody, whoBody, nowMs);
+    const lowWarn = params["lowWarn"] !== void 0 && params["lowWarn"] !== "" && params["lowWarn"] !== null ? numStr(params["lowWarn"]) : null;
+    const built = buildCommandCodeView(data, { lowWarn });
+    return {
+      billingKind: data.windows.length ? "rolling" : "payg",
+      ...data.windows.length ? { windows: data.windows } : {},
+      billing: built.billing,
+      view: built.view,
+      extra: viewToExtra(built.view),
+      secretKind: r.kind,
+      via: "CommandCode API"
+    };
+  }
+};
+var commandcode_default = commandcode;
 
 // src/host/providers/manual.ts
 var manual = {
@@ -2077,16 +2839,18 @@ function describeProviders() {
       if (f.showWhen) out.showWhen = { key: f.showWhen.key, eq: f.showWhen.eq };
       if (f.hint !== void 0) out.hint = f.hint || "";
       return out;
-    })
+    }),
+    defaultParams: p.defaultParams && typeof p.defaultParams === "object" ? JSON.parse(JSON.stringify(p.defaultParams)) : {}
   }));
 }
 registerProvider(opencode_default);
 registerProvider(deepseek_default);
-registerProvider(deepseek_api_default);
-registerProvider(deepseek_web_default);
+registerProvider(commandcode_default);
 registerProvider(manual_default);
 registerAlias("opencode-go", "opencode");
 registerAlias("opencode-zen", "opencode");
+registerAlias("deepseek-api", "deepseek");
+registerAlias("deepseek-web", "deepseek");
 
 // src/host/config.ts
 var NS = settingsNamespace("dshp-token-meter");
@@ -2106,7 +2870,9 @@ var VendorSchema = Schema.object({
   id: Schema.string().required(),
   name: Schema.string().required(),
   type: Schema.string().default("manual"),
-  params: Schema.dict(Schema.any()).default({})
+  params: Schema.dict(Schema.any()).default({}),
+  // 余额查询开关：false = 不参与 Host 定时拉取（手动拉取不受影响），缺省 = 启用
+  enabled: Schema.boolean().default(true)
 });
 var ConfigSchema = Schema.object({
   version: Schema.number().step(1).default(1),
@@ -2135,7 +2901,7 @@ function legacyQuotaConfigPath() {
 function settingsYamlPath() {
   return join(dshHome(), "settings.yaml");
 }
-function isRecord3(v) {
+function isRecord5(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
 function isDefaultRange(v) {
@@ -2148,7 +2914,7 @@ function normSec(v) {
   return Math.min(3600, Math.max(10, n));
 }
 function sanitizeVendor(raw) {
-  if (!isRecord3(raw)) return null;
+  if (!isRecord5(raw)) return null;
   const id = raw["id"] !== void 0 && raw["id"] !== null ? String(raw["id"]).trim() : "";
   const nm = raw["name"] !== void 0 && raw["name"] !== null ? String(raw["name"]).trim() : "";
   const typeRaw = raw["type"] !== void 0 && raw["type"] !== null ? String(raw["type"]) : "manual";
@@ -2161,10 +2927,12 @@ function sanitizeVendor(raw) {
     const pv = params[k];
     if (typeof pv === "string") params[k] = normalizeSecretRef(pv);
   }
-  return { id, name: nm, type, params };
+  const out = { id, name: nm, type, params };
+  if (raw["enabled"] === false) out.enabled = false;
+  return out;
 }
 function sanitizePatchConfig(raw) {
-  if (!isRecord3(raw)) return null;
+  if (!isRecord5(raw)) return null;
   const out = {};
   if (Object.hasOwn(raw, "activeVendor") && typeof raw["activeVendor"] === "string")
     out.activeVendor = raw["activeVendor"];
@@ -2181,7 +2949,7 @@ function sanitizePatchConfig(raw) {
   return out;
 }
 function sanitizePersisted(raw) {
-  if (!isRecord3(raw)) return null;
+  if (!isRecord5(raw)) return null;
   const out = { ...DEFAULT_CONFIG, vendors: [] };
   if (typeof raw["activeVendor"] === "string") out.activeVendor = raw["activeVendor"];
   if (raw["refreshSec"] !== void 0 && raw["refreshSec"] !== null && raw["refreshSec"] !== "")
@@ -2266,8 +3034,79 @@ function migrateYamlNamespaces() {
 }
 
 // src/host/quota.ts
-function isRecord4(v) {
+function isRecord6(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
+}
+function sanitizeView(raw) {
+  let parsed = raw;
+  try {
+    parsed = JSON.parse(JSON.stringify(raw));
+  } catch {
+    return null;
+  }
+  if (!isRecord6(parsed) || !Array.isArray(parsed["sections"])) return null;
+  const KINDS = /* @__PURE__ */ new Set(["windows", "balance", "metrics", "progress", "split", "note", "chart"]);
+  const sections = [];
+  for (const item of parsed["sections"]) {
+    if (sections.length >= 12) break;
+    if (!isRecord6(item)) continue;
+    const kind = item["kind"];
+    if (typeof kind !== "string" || !KINDS.has(kind)) continue;
+    const s = { kind };
+    if (typeof item["key"] === "string") s.key = item["key"].slice(0, 40);
+    if (typeof item["title"] === "string") s.title = item["title"].slice(0, 40);
+    if (Array.isArray(item["windows"]))
+      s.windows = item["windows"].slice(0, 8);
+    if (isRecord6(item["billing"])) s.billing = item["billing"];
+    if (Array.isArray(item["items"])) {
+      s.items = item["items"].filter(isRecord6).slice(0, 12).map((it) => ({
+        label: String(it["label"] ?? "").slice(0, 40),
+        value: String(it["value"] ?? "").slice(0, 60)
+      }));
+    }
+    if (isRecord6(item["progress"])) {
+      const p = item["progress"];
+      const used = Number(p["used"]);
+      const total = Number(p["total"]);
+      if (Number.isFinite(used) && Number.isFinite(total)) {
+        const out = { used, total };
+        if (typeof p["label"] === "string") out.label = p["label"].slice(0, 40);
+        if (typeof p["left"] === "string") out.left = p["left"].slice(0, 60);
+        s.progress = out;
+      }
+    }
+    if (isRecord6(item["split"]) && Array.isArray(item["split"]["segments"])) {
+      s.split = {
+        segments: item["split"]["segments"].filter(isRecord6).slice(0, 8).map((sg) => {
+          const seg = {
+            label: String(sg["label"] ?? "").slice(0, 40),
+            value: Number(sg["value"]) || 0
+          };
+          if (typeof sg["color"] === "string") seg.color = sg["color"].slice(0, 24);
+          return seg;
+        })
+      };
+    }
+    if (isRecord6(item["note"]) && typeof item["note"]["text"] === "string") {
+      const tone = item["note"]["tone"];
+      const note = {
+        text: item["note"]["text"].slice(0, 300)
+      };
+      if (tone === "info" || tone === "warn" || tone === "bad") note.tone = tone;
+      s.note = note;
+    }
+    if (isRecord6(item["chart"]) && Array.isArray(item["chart"]["values"])) {
+      const chart = {
+        labels: (Array.isArray(item["chart"]["labels"]) ? item["chart"]["labels"] : []).slice(-60).map((l) => String(l).slice(0, 16)),
+        values: item["chart"]["values"].slice(-60).map((v) => Number(v) || 0)
+      };
+      if (typeof item["chart"]["title"] === "string")
+        chart.title = item["chart"]["title"].slice(0, 40);
+      s.chart = chart;
+    }
+    sections.push(s);
+  }
+  return sections.length ? { sections } : null;
 }
 function sanitizeCfg(cfg) {
   const vs = Array.isArray(cfg.vendors) ? cfg.vendors : [];
@@ -2287,7 +3126,9 @@ function sanitizeCfg(cfg) {
         name: String(vv.name),
         type: String(vv.type),
         params,
-        secretKind: kind
+        secretKind: kind,
+        // 余额查询开关：缺省 = 启用（只有显式 false 才是禁用）
+        enabled: vv.enabled !== false
       };
       return out;
     })
@@ -2317,10 +3158,30 @@ async function refreshOne(st, resolveSecret, v) {
       } catch {
       }
     }
+    try {
+      snap.view = sanitizeView(data.view) || sanitizeView(
+        defaultView({
+          ...data.billingKind ? { billingKind: data.billingKind } : {},
+          ...data.windows ? { windows: data.windows } : {},
+          ...data.billing ? { billing: data.billing } : {},
+          extra: data.extra ?? null
+        })
+      );
+    } catch {
+      snap.view = null;
+    }
     if (typeof data.via === "string" && data.via) snap.via = data.via.slice(0, 24);
   } catch (e) {
     snap.ok = false;
     snap.error = e?.message || "\u62C9\u53D6\u5931\u8D25";
+    try {
+      snap.errorInfo = toErrorInfo(e, {
+        vendorName: v.name,
+        type: v.type,
+        secretKind: secretKindOf({ type: v.type, params: v.params || {} })
+      });
+    } catch {
+    }
   }
   st.snaps[v.id] = snap;
   st.lastPullMs = Date.now();
@@ -2509,6 +3370,47 @@ function registerQuotaRoutes(ctx, deps) {
   ctx.effect(
     () => ctx.webServer.register({
       kind: "exact",
+      path: `${BASE}/set-vendor-enabled`,
+      handler: async (req, res) => {
+        if (!sameOrigin(req)) return json(res, 403, { ok: false, error: "forbidden" });
+        let body = {};
+        try {
+          body = JSON.parse(await readBody(req) || "{}");
+        } catch {
+          return json(res, 200, { ok: false, error: "\u8BF7\u6C42\u4F53\u4E0D\u662F\u5408\u6CD5 JSON" });
+        }
+        try {
+          const cfg = getConfig();
+          const b = body ?? {};
+          const id = b["id"] !== void 0 && b["id"] !== null ? String(b["id"]) : "";
+          if (!id) return json(res, 200, { ok: false, error: "id \u5FC5\u586B" });
+          if (typeof b["enabled"] !== "boolean")
+            return json(res, 200, { ok: false, error: "enabled \u5FC5\u586B\uFF08\u5E03\u5C14\u503C\uFF09" });
+          const i = cfg.vendors.findIndex((v) => v.id === id);
+          if (i === -1) return json(res, 200, { ok: false, error: "\u672A\u77E5\u4F9B\u5E94\u5546:" + id });
+          const on = b["enabled"] === true;
+          const next = cfg.vendors.slice();
+          const nv = { ...cfg.vendors[i] };
+          if (on)
+            delete nv.enabled;
+          else nv.enabled = false;
+          next[i] = nv;
+          await updateConfig({ vendors: next });
+          if (on) {
+            void refreshOne(st, resolveSecret, nv).catch(() => {
+            });
+          }
+          return json(res, 200, { ok: true, id, enabled: on });
+        } catch (e) {
+          return json(res, 200, { ok: false, error: e?.message || "\u4FDD\u5B58\u5931\u8D25" });
+        }
+      }
+    }),
+    "dshp-token-meter: set-vendor-enabled route"
+  );
+  ctx.effect(
+    () => ctx.webServer.register({
+      kind: "exact",
       path: `${BASE}/add-vendor`,
       handler: async (req, res) => {
         if (!sameOrigin(req)) return json(res, 403, { ok: false, error: "forbidden" });
@@ -2561,12 +3463,14 @@ function registerQuotaRoutes(ctx, deps) {
           if (i === -1) return json(res, 200, { ok: false, error: "\u672A\u77E5\u4F9B\u5E94\u5546" });
           const next = cfg.vendors.slice();
           const stored = cfg.vendors[i];
-          next[i] = mergeVendorSecret(stored, {
+          const merged = mergeVendorSecret(stored, {
             id: vv.id,
             name: vv.name,
             type: canonicalType(String(vv.type)),
             params: vv.params ?? {}
           });
+          if (stored.enabled === false) merged.enabled = false;
+          next[i] = merged;
           await updateConfig({ vendors: next });
           return json(res, 200, { ok: true });
         } catch (e) {
@@ -2668,7 +3572,7 @@ function registerQuotaRoutes(ctx, deps) {
         } catch {
           return json(res, 200, { ok: false, error: "\u8BF7\u6C42\u4F53\u4E0D\u662F\u5408\u6CD5 JSON" });
         }
-        const a = isRecord4(body) ? body : {};
+        const a = isRecord6(body) ? body : {};
         try {
           const patchObj = {};
           let hasPatch = false;
@@ -3517,12 +4421,14 @@ function apply(ctx, rawConfig) {
           enabled: typeof r["enabled"] === "boolean" ? r["enabled"] : entry.enabled,
           vendors: Array.isArray(r["vendors"]) ? r["vendors"].map((item) => {
             const it = item ?? {};
-            return {
+            const vendor = {
               id: String(it["id"] !== void 0 ? it["id"] : ""),
               name: String(it["name"] !== void 0 ? it["name"] : ""),
               type: canonicalType(String(it["type"] !== void 0 ? it["type"] : "manual")),
               params: it["params"] && typeof it["params"] === "object" && !Array.isArray(it["params"]) ? it["params"] : {}
             };
+            if (it["enabled"] === false) vendor.enabled = false;
+            return vendor;
           }) : [],
           showToday: r["showToday"] === true,
           defaultRange: r["defaultRange"] === "7" || r["defaultRange"] === "30" || r["defaultRange"] === "90" || r["defaultRange"] === "all" ? r["defaultRange"] : entry.defaultRange
@@ -3611,9 +4517,12 @@ function apply(ctx, rawConfig) {
     let timer = null;
     const schedule = (ms) => {
       if (stopped) return;
-      timer = setTimeout(() => {
-        void tick();
-      }, Math.max(1e3, ms));
+      timer = setTimeout(
+        () => {
+          void tick();
+        },
+        Math.max(1e3, ms)
+      );
     };
     const tick = async () => {
       if (stopped) return;
@@ -3631,6 +4540,7 @@ function apply(ctx, rawConfig) {
           const list = Array.isArray(cfg.vendors) ? cfg.vendors : [];
           for (const v of list) {
             if (stopped) return;
+            if (v.enabled === false) continue;
             try {
               await refreshOne(st, resolveSecret, v);
             } catch {

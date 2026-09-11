@@ -16,6 +16,21 @@
 .tm-rowLabel{color:var(--dsw-alias-label-primary);font-size:14px;font-weight:400;line-height:22px;flex:none}
 .tm-rowDesc{color:var(--dsw-alias-label-tertiary);font-size:12px;font-weight:400;line-height:18px}
 .tm-rowValue{color:var(--dsw-alias-label-primary);font-size:13px;line-height:20px;text-align:right;min-width:0;display:flex;justify-content:flex-end;align-items:center}
+/* \u2500\u2500 \u8868\u5355\u5B57\u6BB5\uFF08\u5806\u53E0\u5F0F\uFF09\uFF1A\u6807\u7B7E \u2192 \u63A7\u4EF6 \u2192 \u8BF4\u660E\uFF0C\u5404\u5360\u6574\u884C\uFF0C\u8F93\u5165\u6846\u6C38\u4E0D\u88AB\u8BF4\u660E\u6324\u538B \u2500\u2500 */
+.tm-field{display:flex;flex-direction:column;gap:6px;padding:14px 0;border-bottom:.5px solid var(--dsw-alias-border-l2)}
+.tm-section>.tm-field:last-of-type{border-bottom:none}
+.tm-fieldHead{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tm-fieldLabel{color:var(--dsw-alias-label-primary);font-size:14px;font-weight:500;line-height:22px}
+.tm-fieldReq{flex:none;font-size:10px;line-height:15px;padding:0 6px;border-radius:4px;color:var(--dsw-alias-state-warn-label);background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 14%,transparent)}
+.tm-fieldOpt{flex:none;font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary)}
+.tm-fieldControl{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+.tm-fieldControl>.tm-inputWrap{flex:1 1 260px;min-width:0;width:auto}
+.tm-fieldControl>.tm-selector{max-width:100%}
+.tm-fieldDesc{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
+.tm-fieldNote{margin:10px 0 0;padding:8px 10px;border-radius:8px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);font-size:12px;line-height:18px}
+.tm-fieldNote b{color:var(--dsw-alias-label-primary);font-weight:600;margin-right:4px}
+.tm-inputReadonly{background:var(--dsw-alias-bg-layer-2);border-style:dashed;cursor:not-allowed}
+.tm-inputReadonly .tm-ninput{color:var(--dsw-alias-label-secondary)}
 .tm-rowControl{flex:1;min-width:0;display:flex;justify-content:flex-end}
 .tm-card{background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l1);border-radius:10px;padding:14px 16px;margin:0 0 8px}
 .tm-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-primary);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;flex:none}
@@ -67,6 +82,8 @@
 .tm-tip-v{font-variant-numeric:tabular-nums;font-weight:500}
 .tm-dot{width:10px;height:10px;border-radius:3px;flex:none;display:inline-block;background:var(--dsw-alias-state-success-primary)}
 .tm-dot.warn{background:var(--dsw-alias-state-warn-primary)}.tm-dot.bad{background:var(--dsw-alias-state-error-primary)}
+/* \u7981\u7528\uFF1A\u7EA2\u8272\u7A7A\u5FC3\u73AF\u3002\u4E0E\u300C\u62C9\u53D6\u5931\u8D25\u300D\u7684\u5B9E\u5FC3\u7EA2\u533A\u5206\u5F00\u2014\u2014\u7981\u7528\u662F\u4E3B\u52A8\u9009\u62E9\uFF0C\u5931\u8D25\u662F\u5F02\u5E38 */
+.tm-dot.off{background:transparent;box-sizing:border-box;border:1.5px solid var(--dsw-alias-state-error-primary)}
 .tm-muted{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
 .tm-chart-title{font-weight:600;font-size:12.5px;color:var(--dsw-alias-label-secondary);margin:0 0 8px;display:flex;align-items:center;justify-content:space-between;gap:6px 8px;flex-wrap:wrap}
 .tm-chart-title>span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto}
@@ -148,7 +165,9 @@
 .tm-mitem.active{color:var(--dsw-alias-label-primary);border-color:var(--dsw-alias-brand-primary)}
 .tm-mitem .grow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tm-qrow{display:flex;align-items:center;gap:6px;margin-top:6px}
-.tm-qlabel{flex:none;width:36px;font-size:11px;color:var(--dsw-alias-label-secondary)}
+/* \u6807\u7B7E\u5217\uFF1A\u5B9A\u5BBD\u8BA9\u5404\u884C\u7684\u8FDB\u5EA6\u6761\u5DE6\u7AEF\u5BF9\u9F50\uFF1Bnowrap \u4FDD\u8BC1\u6807\u7B7E\u6C38\u4E0D\u6362\u884C
+   \uFF08\u65E7\u7248\u786C\u7F16\u7801 36px\uFF0C4 \u5B57\u6807\u7B7E\u5982\u300C\u6708\u5EA6\u989D\u5EA6\u300D\u4F1A\u88AB\u6324\u6210\u4E24\u884C\uFF09 */
+.tm-qlabel{flex:none;width:52px;min-width:52px;font-size:11px;line-height:16px;color:var(--dsw-alias-label-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tm-qbar{flex:1;min-width:0;height:6px;border-radius:99px;background:var(--dsw-alias-bg-layer-2);overflow:hidden}
 /* \u5360\u7528\u56DB\u6863\uFF1Aok \u84DD / warn \u9EC4(\u226570%) / bad \u7EA2"\u5FEB\u5B8C\u4E86"(\u226590%) / over \u7EA2+\u8109\u51B2(\u2265100%) */
 .tm-qfill{display:block;height:100%;border-radius:99px;background:var(--dsw-alias-brand-primary);transition:width .8s ease}
@@ -161,7 +180,10 @@
 .tm-qsum-warn{color:var(--dsw-alias-state-warn-label)}
 .tm-qsum-bad,.tm-qsum-over{color:var(--dsw-alias-state-error-primary)}
 @keyframes tm-qpulse{0%,100%{opacity:1}50%{opacity:.55}}
-.tm-qleft{flex:none;font-size:10px;color:var(--dsw-alias-label-secondary)}
+.tm-qleft{flex:0 1 auto;min-width:0;font-size:10px;color:var(--dsw-alias-label-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* \u7A97\u53E3\u72B6\u6001\u5FBD\u6807\uFF1A\u4E0A\u6E38\u975E ok\uFF08\u5982 opencode \u7684 rate-limited\uFF09\u65F6\u8D34\u5728\u767E\u5206\u6BD4\u540E\uFF0C
+   \u56E0\u4E3A\u6B64\u65F6 pct \u53EF\u80FD\u8FD8\u6CA1\u5230 100%\uFF08\u9650\u6D41 \u2260 \u7528\u5C3D\uFF09\uFF0C\u5FC5\u987B\u5355\u72EC\u8BF4\u6E05\u695A */
+.tm-qstatus{flex:none;font-size:9.5px;line-height:15px;padding:0 6px;border-radius:99px;white-space:nowrap;color:var(--dsw-alias-state-error-primary);background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 14%,transparent)}
 .tm-qbal{display:flex;align-items:baseline;justify-content:space-between;margin-top:6px}
 .tm-qbal b{font-size:15px;color:var(--dsw-alias-label-primary)}
 .tm-qbal span{font-size:10px;color:var(--dsw-alias-label-secondary)}
@@ -185,16 +207,60 @@
 .tm-xstats{margin-top:8px;display:flex;flex-direction:column;gap:4px}
 .tm-xrow{display:flex;justify-content:space-between;font-size:11px;color:var(--dsw-alias-label-secondary)}
 .tm-xrow b{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums}
+/* \u4E24\u5217\u7D27\u51D1\u6307\u6807\u7F51\u683C\uFF1A\u5355\u5217\u957F\u5217\u8868\u4F1A\u628A\u5361\u7247\u6491\u9AD8\uFF0C\u4E24\u5217\u76F4\u63A5\u51CF\u534A */
+.tm-xgrid{margin-top:8px}
+.tm-xgridBody{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 12px}
+.tm-xcell{display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0;font-size:11px;color:var(--dsw-alias-label-secondary)}
+.tm-xcellLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tm-xcellValue{flex:none;color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* \u7A84\u5361\u7247\uFF08\u4FA7\u8FB9\u680F/\u6D6E\u7A97\uFF09\u9000\u56DE\u5355\u5217\uFF0C\u907F\u514D\u4E24\u5217\u540E\u6BCF\u683C\u592A\u6324 */
+@container tm (max-width: 300px){.tm-xgridBody{grid-template-columns:minmax(0,1fr)}}
+/* \u7D27\u51D1\u4F59\u989D\u5757\uFF1A\u5927\u6570\u5B57\u662F\u6838\u5FC3\uFF0C\u51CF\u5C11\u4E0A\u4E0B\u7559\u767D */
+.tm-payg-compact .tm-payg-amt{font-size:20px}
+.tm-payg-compact .tm-payg-sub{margin-top:0}
+.tm-payg-compact .tm-warn{margin-top:4px}
+/* \u5206\u7EC4\u6807\u9898\uFF1A\u8BF4\u660E\u300C\u5DF2\u7981\u7528\u6C89\u5E95\u300D\u662F\u6709\u610F\u6392\u5E8F\uFF0C\u4E0D\u662F\u914D\u7F6E\u987A\u5E8F */
+.tm-grouplabel{margin:2px 0 6px;font-size:11px;font-weight:500;color:var(--dsw-alias-label-tertiary);letter-spacing:.02em}
 .tm-xchart{margin-top:8px}
 .tm-xtitle{font-size:10px;color:var(--dsw-alias-label-secondary);margin-bottom:2px}
 .tm-xsplit{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--dsw-alias-bg-layer-2);margin-top:6px}
 .tm-xsplit span{display:block;height:100%}
 .tm-xdot{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:5px}
-.tm-errbox{margin-top:8px;background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-state-error-primary);border-radius:8px;padding:6px 8px}
-.tm-errbtn{display:flex;align-items:center;gap:8px;width:100%;background:transparent;border:none;padding:0;cursor:pointer;text-align:left}
-.tm-erricon{flex:none;width:18px;height:18px;border-radius:50%;background:var(--dsw-alias-state-error-primary);color:#fff;font-size:12px;font-weight:700;line-height:18px;text-align:center}
-.tm-errtext{flex:1;min-width:0;font-size:12px;color:var(--dsw-alias-state-error-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tm-errdetail{margin-top:6px;padding-top:6px;border-top:1px solid var(--dsw-alias-border-l1);font-size:11px;line-height:1.7;color:var(--dsw-alias-label-secondary);word-break:break-all;white-space:pre-wrap}
+.tm-sections{display:flex;flex-direction:column}
+.tm-ui{display:flex;flex-direction:column}
+.tm-xprog{margin-top:8px}
+.tm-vchips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.tm-vchip{display:inline-flex;align-items:center;font-size:10.5px;line-height:16px;padding:0 8px;border-radius:99px;border:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-layer-2);white-space:nowrap}
+.tm-vchip-ok{color:var(--dsw-alias-state-success-primary);border-color:var(--dsw-alias-state-success-primary)}
+.tm-vchip-warn{color:var(--dsw-alias-state-warn-primary);border-color:var(--dsw-alias-state-warn-primary)}
+.tm-vchip-bad{color:var(--dsw-alias-state-error-primary);border-color:var(--dsw-alias-state-error-primary)}
+.tm-vchip-info{color:var(--dsw-alias-state-business-primary);border-color:var(--dsw-alias-state-business-primary)}
+/* \u2500\u2500 \u5931\u8D25\u5361\uFF1A\u7ED3\u8BBA + \u5904\u7F6E + \u53EF\u5C55\u5F00\u6392\u67E5\u8BE6\u60C5\uFF08\u7EA2/\u9EC4/\u84DD\u4E09\u6863\u4E25\u91CD\u5EA6\uFF09\u2500\u2500 */
+.tm-errbox{margin-top:8px;background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l1);border-left:3px solid var(--dsw-alias-state-warn-primary);border-radius:8px;padding:8px 10px}
+.tm-errbox-bad{border-color:color-mix(in srgb,var(--dsw-alias-state-error-primary) 45%,var(--dsw-alias-border-l1));border-left-color:var(--dsw-alias-state-error-primary)}
+.tm-errbox-warn{border-left-color:var(--dsw-alias-state-warn-primary)}
+.tm-errbox-info{border-left-color:var(--dsw-alias-state-business-primary)}
+.tm-errhead{display:flex;align-items:flex-start;gap:8px;width:100%;background:transparent;border:none;padding:0;cursor:pointer;text-align:left;font:inherit}
+.tm-erricon{flex:none;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;line-height:1;background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 18%,transparent)}
+.tm-erricon-bad{background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 18%,transparent)}
+.tm-erricon-info{background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 18%,transparent)}
+.tm-errtitlewrap{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.tm-errtitle{font-size:12.5px;font-weight:600;color:var(--dsw-alias-state-warn-label)}
+.tm-errbox-bad .tm-errtitle{color:var(--dsw-alias-state-error-primary)}
+.tm-errbox-info .tm-errtitle{color:var(--dsw-alias-label-primary)}
+.tm-errhint{font-size:11px;line-height:1.6;color:var(--dsw-alias-label-secondary)}
+.tm-erraction{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 0 30px}
+.tm-erractionText{flex:1;min-width:0;font-size:11px;color:var(--dsw-alias-label-secondary)}
+.tm-errabtns{display:inline-flex;gap:4px;flex:none}
+.tm-errdetail{margin-top:8px;padding-top:8px;border-top:1px solid var(--dsw-alias-border-l1);font-size:11px;line-height:1.7;color:var(--dsw-alias-label-secondary)}
+.tm-errsub{font-size:10.5px;font-weight:600;color:var(--dsw-alias-label-secondary);margin:0 0 2px}
+.tm-errsteps{margin:0 0 8px;padding-left:18px}
+.tm-errsteps li{margin:2px 0}
+.tm-errraw{margin:0;padding:6px 8px;border-radius:6px;background:var(--dsw-alias-bg-layer-1);font-family:var(--ds-font-family-code);font-size:10.5px;line-height:1.6;color:var(--dsw-alias-label-secondary);word-break:break-all;white-space:pre-wrap;max-height:160px;overflow:auto}
+.tm-errdactions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tm-errmeta{font-size:10.5px;color:var(--dsw-alias-label-tertiary);margin-left:auto}
+.tm-errbox-compact{padding:6px 8px}
+.tm-errbox-compact .tm-erraction{margin-left:0}
 .tm-qmeta{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
 .tm-qmeta span{font-size:10px;color:var(--dsw-alias-label-secondary)}
 .tm-mini{background:transparent;border:1px solid transparent;border-radius:6px;cursor:pointer;color:var(--dsw-alias-label-secondary);font-size:11px;padding:2px 6px}
@@ -344,8 +410,10 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 .tm-legend{gap:3px}
 .tm-modelchip{max-width:140px}
 .tm-qrow{gap:4px}
+.tm-qlabel{width:48px;min-width:48px}
 .tm-qpct{font-size:10px}
 .tm-qleft{font-size:9px}
+.tm-qstatus{font-size:9px;padding:0 5px}
 .tm-minibtn{padding:2px 4px}
 .tm-btn{padding:5px 9px;font-size:12px}
 .tm-selector{font-size:13px;padding:0 12px}
@@ -388,6 +456,23 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 .tm-card,.tm-side,.tm-today,.tm-stat,.tm-float,.tm-pop,.tm-tip,.tm-tipfixed,.tm-popmenu,.tm-errbox,.tm-btn,.tm-inputWrap,.tm-textarea,.tm-seg,.tm-tabs{corner-shape:var(--dsw-corner-shape)}
 .tm-modelchip,.tm-qbar,.tm-qfill,.tm-xsplit,.tm-compose,.tm-bartrack,.tm-barfill,.tm-streakbar,.tm-streakfill,.tm-pop-fill,.tm-switch,.tm-badge,.tm-dot,.tm-spinner,.tm-knob,.tm-thumb,.tm-xdot,.tm-cell,.tm-hcell,.tm-selector{corner-shape:round}
 }
+/* \u2500\u2500 \u5CF0\u8C37\u6C1B\u56F4\uFF08\u7F6E\u4E8E\u672B\u5C3E\u4EE5\u8986\u76D6\u524D\u5E8F\u540C\u7279\u5F02\u6027\u58F0\u660E\uFF09\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+ * \u5CF0\uFF08\u5DE5\u4F5C\u65E5 9:00\u201318:00\uFF09\uFF1A\u6696\u8272\u5DE6\u7F18 + \u6781\u7F13\u547C\u5438\u5149\u6655 \u2014\u2014 \u7D27\u5F20\u3001\u6D88\u8017\u52A0\u901F\uFF1B
+ * \u8C37\uFF1A\u51B7\u7EFF\u5DE6\u7F18 + \u9759\u7A33\u5E95\u8272 \u2014\u2014 \u8D39\u7387\u4F4E\u3001\u53EF\u4ECE\u4ECE\u5BB9\u5BB9\u8DD1\u91CF\uFF1B
+ * \u7981\u7528\uFF08enabled:false\uFF09\uFF1A\u7EA2\u8272\u5DE6\u7F18 \u2014\u2014 \u4E0D\u53C2\u4E0E\u5B9A\u65F6\u62C9\u53D6\u3002 */
+.tm-card.mood-peak,.tm-side.mood-peak{border-left:3px solid var(--dsw-alias-state-warn-primary);background:linear-gradient(180deg,color-mix(in srgb,var(--dsw-alias-state-warn-primary) 10%,transparent),transparent 64%),var(--dsw-alias-bg-layer-1)}
+.tm-card.mood-valley,.tm-side.mood-valley{border-left:3px solid var(--dsw-alias-state-success-primary);background:linear-gradient(180deg,color-mix(in srgb,var(--dsw-alias-state-success-primary) 8%,transparent),transparent 64%),var(--dsw-alias-bg-layer-1)}
+.tm-card.tm-off,.tm-side.tm-off{border-left:3px solid var(--dsw-alias-state-error-primary);background:linear-gradient(180deg,color-mix(in srgb,var(--dsw-alias-state-error-primary) 8%,transparent),transparent 64%),var(--dsw-alias-bg-layer-1)}
+.tm-card.mood-peak{animation:tm-fadeup .42s ease backwards,tm-peak-breathe 2.4s ease-in-out .5s infinite}
+@keyframes tm-peak-breathe{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 0 3px color-mix(in srgb,var(--dsw-alias-state-warn-primary) 16%,transparent)}}
+.tm-badge-bad{background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 16%,transparent);color:var(--dsw-alias-state-error-primary)}
+.tm-offtxt{color:var(--dsw-alias-state-error-primary)}
+.tm-peak.peak{border-color:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 46%,var(--dsw-alias-border-l1));background:linear-gradient(180deg,color-mix(in srgb,var(--dsw-alias-state-warn-primary) 9%,transparent),transparent 70%),var(--dsw-alias-bg-layer-2);animation:tm-peak-breathe 2.6s ease-in-out infinite}
+.tm-peak.valley{border-color:color-mix(in srgb,var(--dsw-alias-state-success-primary) 32%,var(--dsw-alias-border-l1));background:linear-gradient(180deg,color-mix(in srgb,var(--dsw-alias-state-success-primary) 8%,transparent),transparent 70%),var(--dsw-alias-bg-layer-2)}
+.tm-peak.peak .tm-peakTitle{color:var(--dsw-alias-state-warn-label)}
+.tm-peak.valley .tm-peakTitle{color:var(--dsw-alias-state-success-primary)}
+.tm-peakCell.von{background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 24%,var(--dsw-alias-interactive-bg-hover))}
+@media (prefers-reduced-motion:reduce){.tm-card.mood-peak,.tm-peak.peak{animation:none}}
 `;
 
   // src/client/icons.ts
@@ -415,7 +500,16 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         svgProps(props),
         h("rect", { key: "body", x: 2.5, y: 7, width: 16, height: 10, rx: 2.6 }),
         h("path", { key: "cap", d: "M21.2 10.4v3.2" }),
-        h("rect", { key: "level", x: 5, y: 9.4, width: 6.4, height: 5.2, rx: 1.3, fill: "currentColor", stroke: "none" })
+        h("rect", {
+          key: "level",
+          x: 5,
+          y: 9.4,
+          width: 6.4,
+          height: 5.2,
+          rx: 1.3,
+          fill: "currentColor",
+          stroke: "none"
+        })
       );
     }
     function UsageIcon(props) {
@@ -450,6 +544,867 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
   async function fetchStats() {
     const r = await fetch(`${BASE}/stats`, { cache: "no-store" });
     return await r.json();
+  }
+
+  // src/client/ErrorBox.ts
+  var ICONS = {
+    auth: "\u{1F511}",
+    session: "\u23F3",
+    plan: "\u{1F4C5}",
+    balance: "\u{1F4B0}",
+    rate: "\u{1F422}",
+    network: "\u{1F310}",
+    parse: "\u{1F9E9}",
+    config: "\u2699\uFE0F",
+    server: "\u{1F6E0}\uFE0F",
+    unknown: "\u26A0\uFE0F"
+  };
+  var FALLBACK_RULES = [
+    [/未配置|凭据未配置|必填|参数非法|workspaceId 非法/, "config"],
+    [/会话失效|会话已过期|登录失效|登录态|被风控|logged out/i, "session"],
+    [/密钥无效|密钥已失效|密钥引用.*为空|Invalid 'Authorization'|401|403/i, "auth"],
+    [/upgrade_required|订阅.*(到期|结束|失败|取消)|计划.*(不含|不支持)/, "plan"],
+    [/余额不足|insufficient|402/, "balance"],
+    [/限流|429|rate.?limit/i, "rate"],
+    [/fetch failed|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|network|超时|timeout/i, "network"],
+    [/非 JSON|结构异常|字段缺失|解析失败|改版|未命中/, "parse"],
+    [/\b5\d\d\b/, "server"]
+  ];
+  var FALLBACK_TITLES = {
+    auth: "\u5BC6\u94A5\u65E0\u6548\u6216\u5DF2\u5931\u6548",
+    session: "\u767B\u5F55\u72B6\u6001\u5DF2\u8FC7\u671F",
+    plan: "\u8BA2\u9605\u5DF2\u5230\u671F\u6216\u8BA1\u5212\u4E0D\u652F\u6301",
+    balance: "\u4F59\u989D\u4E0D\u8DB3",
+    rate: "\u8BF7\u6C42\u8FC7\u4E8E\u9891\u7E41\uFF08\u88AB\u9650\u6D41\uFF09",
+    network: "\u7F51\u7EDC\u4E0D\u53EF\u8FBE",
+    parse: "\u63A5\u53E3\u8FD4\u56DE\u7ED3\u6784\u5F02\u5E38",
+    config: "\u4F9B\u5E94\u5546\u914D\u7F6E\u4E0D\u5B8C\u6574",
+    server: "\u4E0A\u6E38\u670D\u52A1\u5F02\u5E38",
+    unknown: "\u62C9\u53D6\u5931\u8D25"
+  };
+  function fallbackErrorInfo(message) {
+    const msg = String(message || "\u62C9\u53D6\u5931\u8D25");
+    let kind = "unknown";
+    for (const [re, k] of FALLBACK_RULES) {
+      if (re.test(msg)) {
+        kind = k;
+        break;
+      }
+    }
+    const tone = kind === "auth" || kind === "session" || kind === "plan" || kind === "balance" ? "bad" : "warn";
+    return {
+      kind,
+      title: FALLBACK_TITLES[kind],
+      hint: "\u672C\u6B21\u62C9\u53D6\u6CA1\u6709\u6210\u529F\uFF0C\u5C55\u5F00\u53EF\u89C1\u539F\u59CB\u4FE1\u606F\u3002",
+      action: "\u70B9\u300C\u5237\u65B0\u300D\u91CD\u8BD5\uFF1B\u82E5\u6301\u7EED\u5931\u8D25\u8BF7\u628A\u8BE6\u60C5\u53CD\u9988\u7ED9\u7EF4\u62A4\u8005",
+      steps: ["\u70B9\u300C\u5237\u65B0\u300D\u91CD\u8BD5\u4E00\u6B21", "\u82E5\u6301\u7EED\u5931\u8D25\uFF0C\u628A\u300C\u539F\u59CB\u4FE1\u606F\u300D\u53CD\u9988\u7ED9\u63D2\u4EF6\u7EF4\u62A4\u8005"],
+      detail: msg,
+      retriable: true,
+      tone
+    };
+  }
+  function createErrorBox(React, deps) {
+    const h = React.createElement;
+    const useState = React.useState;
+    function copy(text, done) {
+      try {
+        const nav = typeof navigator !== "undefined" ? navigator : null;
+        if (nav && nav.clipboard && typeof nav.clipboard.writeText === "function") {
+          void nav.clipboard.writeText(text).then(
+            () => done(true),
+            () => done(false)
+          );
+          return;
+        }
+      } catch {
+      }
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand && document.execCommand("copy");
+        document.body.removeChild(ta);
+        done(!!ok);
+      } catch {
+        done(false);
+      }
+    }
+    return function ErrorBox(props) {
+      const raw = props.info || null;
+      const info = raw || fallbackErrorInfo(props.msg || "\u62C9\u53D6\u5931\u8D25");
+      const open = deps.isOpen();
+      const [copied, setCopied] = useState("");
+      const tone = info.tone || "warn";
+      const steps = Array.isArray(info.steps) ? info.steps.slice(0, 6) : [];
+      const detailText = info.detail + (props.meta ? "\n" + props.meta : "") + (info.status ? "\nHTTP " + info.status : "") + (info.docs ? "\n\u6587\u6863\uFF1A" + info.docs : "");
+      const icon = ICONS[info.kind] || ICONS.unknown;
+      const head = h(
+        "button",
+        {
+          key: "h",
+          type: "button",
+          className: "tm-errhead",
+          title: open ? "\u6536\u8D77\u8BE6\u60C5" : "\u5C55\u5F00\u6392\u67E5\u8BE6\u60C5",
+          "aria-expanded": open,
+          onClick: () => deps.toggle()
+        },
+        h("span", { key: "i", className: "tm-erricon tm-erricon-" + tone }, icon),
+        h(
+          "span",
+          { key: "t", className: "tm-errtitlewrap" },
+          h("span", { key: "a", className: "tm-errtitle" }, info.title),
+          h("span", { key: "b", className: "tm-errhint" }, info.hint)
+        ),
+        h("span", { key: "c", className: "tm-vcaret" }, open ? "\u25B4" : "\u25BE")
+      );
+      const actionRow = h(
+        "div",
+        { key: "a", className: "tm-erraction" },
+        info.action ? h("span", { key: "p", className: "tm-erractionText" }, "\u2192 " + info.action) : null,
+        h(
+          "span",
+          { key: "btns", className: "tm-errabtns" },
+          props.onRetry && info.retriable ? h(
+            "button",
+            {
+              key: "retry",
+              type: "button",
+              className: "tm-mini",
+              title: "\u7ACB\u5373\u91CD\u65B0\u62C9\u53D6\u4E00\u6B21",
+              onClick: () => props.onRetry && props.onRetry()
+            },
+            "\u21BB \u91CD\u8BD5"
+          ) : props.onRetry && !info.retriable ? h(
+            "button",
+            {
+              key: "recheck",
+              type: "button",
+              className: "tm-mini",
+              title: "\u6309\u4E0A\u9762\u6B65\u9AA4\u5904\u7406\u5B8C\u540E\uFF0C\u70B9\u8FD9\u91CC\u7ACB\u5373\u9A8C\u8BC1\u4E00\u6B21",
+              onClick: () => props.onRetry && props.onRetry()
+            },
+            "\u2713 \u5DF2\u5904\u7406\uFF0C\u9A8C\u8BC1"
+          ) : null,
+          deps.openSettings ? h(
+            "button",
+            {
+              key: "settings",
+              type: "button",
+              className: "tm-mini",
+              title: "\u524D\u5F80\u8BBE\u7F6E\u9875\u4FEE\u6539\u8BE5\u4F9B\u5E94\u5546\u914D\u7F6E",
+              onClick: () => deps.openSettings && deps.openSettings()
+            },
+            "\u8BBE\u7F6E\u9875"
+          ) : null
+        )
+      );
+      const body = open ? h(
+        "div",
+        { key: "d", className: "tm-errdetail" },
+        steps.length ? h(
+          "div",
+          { key: "steps" },
+          h("div", { className: "tm-errsub" }, "\u6392\u67E5\u6B65\u9AA4"),
+          h(
+            "ol",
+            { className: "tm-errsteps" },
+            steps.map((s, i) => h("li", { key: "s" + i }, s))
+          )
+        ) : null,
+        h(
+          "div",
+          { key: "raw" },
+          h("div", { className: "tm-errsub" }, "\u539F\u59CB\u4FE1\u606F"),
+          h("pre", { className: "tm-errraw" }, detailText)
+        ),
+        h(
+          "div",
+          { key: "acts", className: "tm-errdactions" },
+          h(
+            "button",
+            {
+              type: "button",
+              className: "tm-mini",
+              onClick: () => copy(detailText, (ok) => {
+                setCopied(ok ? "\u5DF2\u590D\u5236" : "\u590D\u5236\u5931\u8D25");
+                window.setTimeout(() => setCopied(""), 1600);
+              })
+            },
+            copied || "\u590D\u5236\u8BE6\u60C5"
+          ),
+          info.docs ? h(
+            "a",
+            {
+              className: "tm-mini",
+              href: info.docs,
+              target: "_blank",
+              rel: "noreferrer noopener"
+            },
+            "\u5B98\u65B9\u6587\u6863"
+          ) : null,
+          props.meta ? h("span", { className: "tm-errmeta" }, props.meta) : null
+        )
+      ) : null;
+      return h(
+        "div",
+        { className: "tm-errbox tm-errbox-" + tone + (props.compact ? " tm-errbox-compact" : "") },
+        head,
+        actionRow,
+        body
+      );
+    };
+  }
+
+  // src/client/providers/kit.ts
+  var X_PAL = ["#4c7ef3", "#2fb261", "#f5a623", "#e05e4e", "#9a6ef1", "#25b8c4"];
+  function createProviderKit(React, deps) {
+    const h = React.createElement;
+    const { num: num2, fmt: fmt3, fmtLeft: fmtLeft2, curSymbol, remainOf, timeAgo: timeAgo2, levelOf: levelOf2, levelTip: levelTip2 } = deps;
+    function SectionTitle(props) {
+      return props.text ? h("div", { className: "tm-xtitle" }, props.text) : null;
+    }
+    function statusText(st) {
+      const k = st.toLowerCase().replace(/[\s_-]/g, "");
+      const MAP = {
+        ratelimited: "\u5DF2\u9650\u6D41",
+        throttled: "\u5DF2\u9650\u6D41",
+        exceeded: "\u5DF2\u8D85\u9650",
+        overlimit: "\u5DF2\u8D85\u9650",
+        disabled: "\u5DF2\u505C\u7528",
+        paused: "\u5DF2\u6682\u505C",
+        expired: "\u5DF2\u8FC7\u671F"
+      };
+      return MAP[k] || st;
+    }
+    function RollingBar(props) {
+      const pct = Number(props.pct) || 0;
+      const lvl = levelOf2(pct);
+      const cls = lvl === "ok" ? "" : " " + lvl;
+      const bad = props.status && props.status !== "ok" ? props.status : "";
+      const barTitle = levelTip2(lvl) + "\uFF08" + Math.round(pct) + "%\uFF09" + (bad ? " \xB7 \u4E0A\u6E38\u72B6\u6001\uFF1A" + bad : "");
+      return h(
+        "div",
+        { className: "tm-qrow", key: props.barKey },
+        h("span", { className: "tm-qlabel" }, props.label),
+        h(
+          "div",
+          { className: "tm-qbar", title: barTitle },
+          h("span", { className: "tm-qfill" + cls, style: { width: Math.min(100, pct) + "%" } })
+        ),
+        h("span", { className: "tm-qpct" + cls }, Math.round(pct) + "%"),
+        bad ? h("span", { className: "tm-qstatus", title: "\u4E0A\u6E38\u7A97\u53E3\u72B6\u6001\uFF1A" + bad }, statusText(bad)) : null,
+        props.left ? h("span", { className: "tm-qleft" }, props.left) : null
+      );
+    }
+    function WindowGroup(props) {
+      const wins = (Array.isArray(props.windows) ? props.windows : []).filter(
+        (w) => w && w.label !== void 0
+      );
+      if (!wins.length) return null;
+      const kids = [];
+      if (props.title) kids.push(h(SectionTitle, { key: "t", text: props.title }));
+      wins.forEach((w, i) => {
+        const left = w.resetInSec > 0 ? fmtLeft2(remainOf(w, props.snap, props.now)) : void 0;
+        kids.push(
+          h(RollingBar, {
+            key: w.key || "w" + i,
+            label: w.label,
+            pct: w.pct,
+            ...left ? { left } : {},
+            ...w.status ? { status: w.status } : {}
+          })
+        );
+      });
+      if (wins.length > 1 && !props.noSummary) {
+        const worst = wins.reduce((m, w) => w.pct > m.pct ? w : m, wins[0]);
+        const minRem = wins.reduce((m, w) => Math.min(m, remainOf(w, props.snap, props.now)), Infinity);
+        kids.push(
+          h(
+            "div",
+            { key: "sum", className: "tm-payg-sub" },
+            "\u6700\u9AD8\u5360\u7528 " + worst.label + " " + Math.round(worst.pct) + "% \xB7 \u6700\u65E9\u91CD\u7F6E" + fmtLeft2(minRem)
+          )
+        );
+      }
+      return h("div", { className: "tm-body" }, kids);
+    }
+    function BalanceBlock(props) {
+      const b = props.billing || {};
+      if (!Object.keys(b).length) return null;
+      const amt = num2(b["balance"], 0);
+      const cur = String(b["currency"] || "CNY");
+      const granted = b["granted"] !== void 0 && b["granted"] !== null ? num2(b["granted"], 0) : null;
+      const topped = b["toppedUp"] !== void 0 && b["toppedUp"] !== null ? num2(b["toppedUp"], 0) : null;
+      const avail = b["isAvailable"];
+      const availCls = avail === true ? "ok" : avail === false ? "bad" : "unknown";
+      const availTxt = avail === true ? "\u53EF\u7528" : avail === false ? "\u4E0D\u8DB3" : "\u72B6\u6001\u672A\u77E5";
+      const warnLine = b["lowWarn"] !== void 0 && b["lowWarn"] !== null && b["lowWarn"] !== "" ? num2(b["lowWarn"], 0) : null;
+      const infos = Array.isArray(b["infos"]) ? b["infos"] : [];
+      const kids = [];
+      if (props.title) kids.push(h(SectionTitle, { key: "t", text: props.title }));
+      kids.push(
+        h(
+          "div",
+          { key: "top", className: "tm-payg-top" },
+          h(
+            "div",
+            null,
+            h("span", { className: "tm-payg-cur" }, curSymbol(cur) + cur),
+            h("span", { className: "tm-payg-amt" + (amt < 0 ? " neg" : "") }, fmt3(amt))
+          ),
+          h("span", { className: "tm-avail " + availCls }, availTxt)
+        )
+      );
+      const parts = [];
+      if (granted !== null && granted > 0) parts.push("\u8D60\u9001 " + fmt3(granted));
+      if (topped !== null && topped > 0) parts.push("\u5145\u503C " + fmt3(topped));
+      if (warnLine !== null) parts.push("\u9884\u8B66\u7EBF " + fmt3(warnLine));
+      if (parts.length) kids.push(h("div", { key: "parts", className: "tm-payg-sub" }, parts.join(" \xB7 ")));
+      if (infos.length > 1)
+        kids.push(
+          h(
+            "div",
+            { key: "infos", className: "tm-infos" },
+            infos.map(
+              (x, i) => h(
+                "div",
+                { key: String(x["currency"] || i), className: "tm-inforow" },
+                h("span", null, String(x["currency"] || "?")),
+                h("b", null, fmt3(x["total"]))
+              )
+            )
+          )
+        );
+      const empty = amt <= 0 || avail === false;
+      const low = !empty && warnLine !== null && amt <= warnLine;
+      if (empty)
+        kids.push(
+          h("div", { key: "warn", className: "tm-warn bad" }, "\u4F59\u989D\u4E0D\u8DB3\uFF0CAPI \u8C03\u7528\u53EF\u80FD\u88AB\u62D2\u7EDD\uFF0C\u8BF7\u53CA\u65F6\u5145\u503C\u3002")
+        );
+      else if (low)
+        kids.push(
+          h(
+            "div",
+            { key: "warn", className: "tm-warn" },
+            "\u4F59\u989D\u4F4E\u4E8E\u9884\u8B66\u7EBF " + fmt3(warnLine) + "\uFF0C\u5EFA\u8BAE\u53CA\u65F6\u5145\u503C\u3002"
+          )
+        );
+      return h("div", { className: "tm-payg" + (props.compact ? " tm-payg-compact" : "") }, kids);
+    }
+    function MetricRows(props) {
+      const items = (Array.isArray(props.items) ? props.items : []).filter((it) => it && it.label);
+      if (!items.length) return null;
+      return h(
+        "div",
+        { className: "tm-xstats" },
+        props.title ? h(SectionTitle, { key: "t", text: props.title }) : null,
+        items.map(
+          (it, i) => h(
+            "div",
+            { key: "r" + i, className: "tm-xrow" },
+            h("span", null, String(it.label)),
+            h("b", null, String(it.value))
+          )
+        )
+      );
+    }
+    function MetricGrid(props) {
+      const items = (Array.isArray(props.items) ? props.items : []).filter((it) => it && it.label);
+      if (!items.length) return null;
+      const cells = [];
+      if (props.mergePairs) {
+        for (let i = 0; i < items.length; i += 2) {
+          const a = items[i];
+          const b = items[i + 1];
+          if (b) cells.push({ label: a.label + " / " + b.label, value: a.value + " \xB7 " + b.value });
+          else cells.push(a);
+        }
+      } else {
+        for (const it of items) cells.push(it);
+      }
+      return h(
+        "div",
+        { className: "tm-xgrid" },
+        props.title ? h(SectionTitle, { key: "t", text: props.title }) : null,
+        h(
+          "div",
+          { key: "g", className: "tm-xgridBody" },
+          cells.map(
+            (c, i) => h(
+              "div",
+              { key: "c" + i, className: "tm-xcell", title: c.label + "\uFF1A" + c.value },
+              h("span", { className: "tm-xcellLabel" }, c.label),
+              h("b", { className: "tm-xcellValue" }, c.value)
+            )
+          )
+        )
+      );
+    }
+    function SplitBar(props) {
+      const segs = (Array.isArray(props.segments) ? props.segments : []).filter((sg) => sg && isFinite(Number(sg.value)) && Number(sg.value) > 0).slice(0, 8);
+      if (!segs.length) return null;
+      const sum = segs.reduce((acc, x) => acc + Number(x.value), 0);
+      const color = (i) => segs[i]?.color || X_PAL[i % X_PAL.length];
+      return h(
+        "div",
+        null,
+        props.title ? h(SectionTitle, { key: "t", text: props.title }) : null,
+        h(
+          "div",
+          { className: "tm-xsplit" },
+          segs.map(
+            (sg, i) => h("span", { key: "g" + i, style: { flexGrow: Number(sg.value), background: color(i) } })
+          )
+        ),
+        h(
+          "div",
+          { className: "tm-xstats" },
+          segs.map(
+            (sg, i) => h(
+              "div",
+              { key: "l" + i, className: "tm-xrow" },
+              h(
+                "span",
+                null,
+                h("span", { className: "tm-xdot", style: { background: color(i) } }),
+                String(sg.label || "")
+              ),
+              h("b", null, String(Math.round(Number(sg.value) * 100 / sum)) + "%")
+            )
+          )
+        )
+      );
+    }
+    function NoteLine(props) {
+      const t = typeof props.text === "string" ? props.text : "";
+      if (!t) return null;
+      const tone = props.tone === "bad" ? "tm-warn bad" : props.tone === "warn" ? "tm-warn" : "tm-payg-sub";
+      return h("div", { className: tone }, t);
+    }
+    function MiniChart(props) {
+      const ch = props.chart;
+      const vals = (ch && Array.isArray(ch.values) ? ch.values : []).map((v) => isFinite(Number(v)) ? Number(v) : 0).slice(-60);
+      if (vals.length < 2) return null;
+      const W = 248;
+      const Hh = 52;
+      const Pd = 3;
+      const max = Math.max.apply(null, vals.concat([1]));
+      const step = vals.length > 1 ? (W - Pd * 2) / (vals.length - 1) : 0;
+      const pts = vals.map((v, i) => [Pd + step * i, Hh - Pd - v / max * (Hh - Pd * 2)]);
+      const line = pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
+      const area = Pd + "," + (Hh - Pd) + " " + line + " " + (W - Pd) + "," + (Hh - Pd);
+      return h(
+        "div",
+        { className: "tm-xchart" },
+        ch && ch.title ? h("div", { className: "tm-xtitle" }, String(ch.title)) : null,
+        h(
+          "svg",
+          {
+            viewBox: "0 0 " + W + " " + Hh,
+            preserveAspectRatio: "none",
+            style: { display: "block", width: "100%", height: Hh + "px" }
+          },
+          h("polygon", {
+            points: area,
+            style: { fill: "var(--dsw-alias-state-business-primary)", opacity: 0.15 }
+          }),
+          h("polyline", {
+            points: line,
+            fill: "none",
+            style: {
+              stroke: "var(--dsw-alias-state-business-primary)",
+              strokeWidth: 1.6,
+              strokeLinecap: "round",
+              strokeLinejoin: "round"
+            }
+          })
+        )
+      );
+    }
+    function Chips(props) {
+      const chips = (Array.isArray(props.chips) ? props.chips : []).filter((c) => c && c.text);
+      if (!chips.length) return null;
+      return h(
+        "div",
+        { className: "tm-vchips" },
+        chips.map(
+          (c, i) => h("span", { key: i, className: "tm-vchip" + (c.tone ? " tm-vchip-" + c.tone : "") }, c.text)
+        )
+      );
+    }
+    const ErrorCard = createErrorBox(React, {
+      isOpen: deps.errOpen,
+      toggle: deps.toggleErr,
+      ...deps.openSettings ? { openSettings: deps.openSettings } : {}
+    });
+    return {
+      h,
+      React,
+      RollingBar,
+      WindowGroup,
+      BalanceBlock,
+      MetricRows,
+      MetricGrid,
+      SplitBar,
+      NoteLine,
+      MiniChart,
+      SectionTitle,
+      Chips,
+      ErrorCard,
+      num: num2,
+      fmt: fmt3,
+      fmtLeft: fmtLeft2,
+      curSymbol,
+      remainOf,
+      timeAgo: timeAgo2,
+      levelOf: levelOf2
+    };
+  }
+
+  // src/client/providers/sections.ts
+  function createSectionRenderer(K) {
+    const h = K.h;
+    function renderSection(s, ctx, i) {
+      if (!s || typeof s !== "object") return null;
+      const key = "sec:" + (s.key || s.kind) + ":" + i;
+      switch (s.kind) {
+        case "windows":
+          return h(K.WindowGroup, { key, windows: s.windows, snap: ctx.snap, now: ctx.now, title: s.title });
+        case "balance":
+          return h(K.BalanceBlock, { key, billing: s.billing, title: s.title });
+        case "metrics":
+          return h(K.MetricRows, { key, items: s.items, title: s.title });
+        case "progress": {
+          const p = s.progress;
+          if (!p) return null;
+          const total = Number(p.total);
+          const used = Number(p.used);
+          if (!isFinite(total) || total <= 0 || !isFinite(used)) return null;
+          const pct = Math.min(100, Math.max(0, used / total * 100));
+          const left = p.left !== void 0 && p.left !== "" ? String(p.left) : "\u5269\u4F59 " + (total - used);
+          return h("div", { key, className: "tm-xprog" }, [
+            h(K.SectionTitle, { key: "t", text: s.title }),
+            h(K.RollingBar, {
+              key: "bar",
+              label: String(p.label || s.title || "\u989D\u5EA6"),
+              pct,
+              left
+            })
+          ]);
+        }
+        case "split":
+          return h(K.SplitBar, { key, segments: s.split && s.split.segments, title: s.title });
+        case "note":
+          return h(K.NoteLine, { key, text: s.note && s.note.text, tone: s.note && s.note.tone });
+        case "chart":
+          return h(K.MiniChart, { key, chart: s.chart });
+        default:
+          return null;
+      }
+    }
+    function renderSections(sections, ctx) {
+      if (!Array.isArray(sections) || !sections.length) return null;
+      const kids = sections.map((s, i) => renderSection(s, ctx, i)).filter((n) => n !== null && n !== void 0 && n !== false);
+      if (!kids.length) return null;
+      return h("div", { className: "tm-sections" }, kids);
+    }
+    return { renderSection, renderSections };
+  }
+
+  // src/client/providers/ui/commandcode.ts
+  function commandcodeUI(ctx, K) {
+    const h = K.h;
+    const snap = ctx.snap;
+    const b = snap.billing || {};
+    const plan = b["plan"] ? String(b["plan"]) : "";
+    const wins = Array.isArray(snap.windows) ? snap.windows : [];
+    const notes = (snap.extra && Array.isArray(snap.extra.blocks) ? snap.extra.blocks : []).filter(
+      (x) => x && x.kind === "note" && x.text
+    );
+    const alerts = notes.filter((n) => n.tone === "bad" || n.tone === "warn");
+    const kids = [];
+    const metrics = (snap.extra && Array.isArray(snap.extra.stats) ? snap.extra.stats : []).slice(0, 12);
+    const planMetric = metrics.filter((m) => m && m.label === "\u8BA2\u9605\u8BA1\u5212")[0];
+    const planStatus = planMetric ? String(planMetric.value).replace(/^[^（(]*[（(]/, "").replace(/[）)]\s*$/, "") : "";
+    const restMetrics = metrics.filter((m) => m && m.label !== "\u8BA2\u9605\u8BA1\u5212");
+    const chips = [];
+    if (plan)
+      chips.push({
+        text: planStatus ? plan + " \xB7 " + planStatus : plan,
+        tone: /active|生效/i.test(planStatus) ? "ok" : "info"
+      });
+    if (alerts.length) chips.push({ text: "\u9700\u5904\u7406", tone: "bad" });
+    else if (wins.some((w) => Number(w.pct) >= 100)) chips.push({ text: "\u7A97\u53E3\u5DF2\u6EE1", tone: "bad" });
+    if (chips.length) kids.push(h(K.Chips, { key: "chips", chips }));
+    kids.push(h(K.BalanceBlock, { key: "bal", billing: b, compact: true }));
+    if (wins.length)
+      kids.push(
+        h(K.WindowGroup, {
+          key: "win",
+          windows: wins,
+          snap,
+          now: ctx.now,
+          title: "\u989D\u5EA6\u7A97\u53E3",
+          noSummary: true
+        })
+      );
+    const monthly = K.num(b["monthlyCredits"], 0);
+    const purchased = K.num(b["purchasedCredits"], 0);
+    const free = K.num(b["freeCredits"], 0);
+    const segs = [
+      { label: "\u6708\u5EA6\u989D\u5EA6", value: monthly, color: "#4c7ef3" },
+      { label: "\u5145\u503C\u989D\u5EA6", value: purchased, color: "#2fb261" },
+      { label: "\u8D60\u9001\u989D\u5EA6", value: free, color: "#f5a623" }
+    ].filter((s) => s.value > 0);
+    if (segs.length > 1) kids.push(h(K.SplitBar, { key: "split", segments: segs, title: "\u989D\u5EA6\u6784\u6210" }));
+    const items = [];
+    for (const it of restMetrics) items.push({ label: it.label, value: it.value });
+    if (!items.length) {
+      if (plan) items.push({ label: "\u8BA2\u9605\u8BA1\u5212", value: plan });
+      if (b["periodEnd"]) items.push({ label: "\u5F53\u524D\u5468\u671F\u81F3", value: String(b["periodEnd"]) });
+    }
+    kids.push(h(K.MetricGrid, { key: "metrics", items, title: "\u8D26\u6237\u4E0E\u7528\u91CF", mergePairs: true }));
+    for (let i = 0; i < alerts.length && i < 2; i++) {
+      const n = alerts[i];
+      kids.push(h(K.NoteLine, { key: "note" + i, text: n.text, tone: n.tone || "warn" }));
+    }
+    return h("div", { className: "tm-ui tm-ui-commandcode" }, kids);
+  }
+
+  // src/client/providers/ui/deepseek.ts
+  function deepseekUI(ctx, K) {
+    const h = K.h;
+    const snap = ctx.snap;
+    const b = snap.billing || {};
+    const via = String(snap.via || "");
+    const isWeb = via.indexOf("\u7F51\u9875") >= 0;
+    const kids = [];
+    const chips = [];
+    if (via) chips.push({ text: isWeb ? "\u7F51\u9875\u8D26\u5355\u63A5\u53E3" : "\u5B98\u65B9\u4F59\u989D\u63A5\u53E3", tone: isWeb ? "info" : "ok" });
+    if (snap.secretKind)
+      chips.push({ text: "\u51ED\u636E " + K.curSymbol("") + String(snap.secretKind), tone: "info" });
+    if (isWeb) chips.push({ text: "\u7968\u636E\u4F1A\u8FC7\u671F", tone: "warn" });
+    if (chips.length) kids.push(h(K.Chips, { key: "chips", chips }));
+    kids.push(h(K.BalanceBlock, { key: "bal", billing: b, title: "\u8D26\u6237\u4F59\u989D" }));
+    const granted = b["granted"] !== void 0 && b["granted"] !== null ? K.num(b["granted"], 0) : null;
+    const topped = b["toppedUp"] !== void 0 && b["toppedUp"] !== null ? K.num(b["toppedUp"], 0) : null;
+    const totalQuota = (granted || 0) + (topped || 0);
+    const balance = K.num(b["balance"], 0);
+    if (totalQuota > 0) {
+      const used = Math.max(0, totalQuota - balance);
+      const segs = [
+        { label: "\u8D60\u9001\u989D\u5EA6", value: granted || 0, color: "#4c7ef3" },
+        { label: "\u5145\u503C\u989D\u5EA6", value: topped || 0, color: "#2fb261" }
+      ].filter((s) => s.value > 0);
+      if (segs.length > 1) kids.push(h(K.SplitBar, { key: "split", segments: segs, title: "\u989D\u5EA6\u6784\u6210" }));
+      kids.push(
+        h("div", { key: "prog", className: "tm-xprog" }, [
+          h(K.SectionTitle, { key: "t", text: "\u603B\u989D\u5EA6\u6D88\u8017" }),
+          h(K.RollingBar, {
+            key: "bar",
+            label: "\u603B\u989D\u5EA6",
+            pct: totalQuota > 0 ? Math.min(100, used / totalQuota * 100) : 0,
+            left: "\u5DF2\u7528 " + K.fmt(used) + " / \u5171 " + K.fmt(totalQuota)
+          })
+        ])
+      );
+    }
+    const items = (snap.extra && Array.isArray(snap.extra.stats) ? snap.extra.stats : []).slice(0, 8);
+    if (items.length) kids.push(h(K.MetricRows, { key: "metrics", items, title: "\u6D88\u8D39\u7EDF\u8BA1" }));
+    const chart = snap.extra && snap.extra.chart ? snap.extra.chart : null;
+    if (chart && Array.isArray(chart.values) && chart.values.length > 1) {
+      kids.push(h(K.MiniChart, { key: "chart", chart }));
+    } else if (!isWeb) {
+      kids.push(
+        h(K.NoteLine, {
+          key: "nochart",
+          text: "\u5B98\u65B9\u4F59\u989D\u63A5\u53E3\u4E0D\u63D0\u4F9B\u5386\u53F2\u8D8B\u52BF\uFF1B\u5982\u9700\u8D8B\u52BF\u56FE\uFF0C\u53EF\u5728\u300C\u7F16\u8F91\u300D\u91CC\u540C\u65F6\u586B\u5165\u7F51\u9875 token\uFF08\u4F1A\u8BDD\u7968\u636E\uFF09\uFF0C\u63D2\u4EF6\u4F1A\u81EA\u52A8\u6539\u7528\u7F51\u9875\u8D26\u5355\u63A5\u53E3\u3002",
+          tone: "info"
+        })
+      );
+    }
+    if (isWeb) {
+      kids.push(
+        h(K.NoteLine, {
+          key: "note",
+          text: "\u5F53\u524D\u8D70\u7F51\u9875\u8D26\u5355\u63A5\u53E3\uFF08\u542B\u8D8B\u52BF\uFF09\uFF0C\u4F9D\u8D56\u767B\u5F55\u4F1A\u8BDD\u7968\u636E\uFF1B\u7968\u636E\u8FC7\u671F\u540E\u5361\u7247\u4F1A\u63D0\u793A\u91CD\u65B0\u6293\u53D6\u3002\u5B98\u65B9 sk- \u5BC6\u94A5\u957F\u671F\u6709\u6548\u4F46\u65E0\u8D8B\u52BF\u3002",
+          tone: "info"
+        })
+      );
+    }
+    return h("div", { className: "tm-ui tm-ui-deepseek" }, kids);
+  }
+
+  // src/client/providers/ui/opencode.ts
+  function opencodeUI(ctx, K) {
+    const h = K.h;
+    const snap = ctx.snap;
+    const b = snap.billing || {};
+    const plan = b["plan"] ? String(b["plan"]) : "";
+    const wins = Array.isArray(snap.windows) ? snap.windows : [];
+    const balance = b["balance"] !== void 0 && b["balance"] !== null ? K.num(b["balance"], 0) : null;
+    const kids = [];
+    const chips = [];
+    if (plan) chips.push({ text: "\u8BA2\u9605 " + plan, tone: "info" });
+    for (const w of wins) {
+      const pct = Math.round(Number(w.pct) || 0);
+      chips.push({ text: w.label + " " + pct + "%", tone: pct >= 90 ? "bad" : pct >= 70 ? "warn" : "ok" });
+    }
+    if (!wins.length && balance !== null) chips.push({ text: "\u6309\u91CF\u8BA1\u8D39", tone: "info" });
+    if (chips.length) kids.push(h(K.Chips, { key: "chips", chips }));
+    if (wins.length) {
+      kids.push(h(K.WindowGroup, { key: "win", windows: wins, snap, now: ctx.now, title: "\u8BA2\u9605\u7A97\u53E3" }));
+    }
+    if (balance !== null && balance !== void 0) {
+      const onlyBalance = !wins.length;
+      kids.push(
+        h(K.BalanceBlock, {
+          key: "bal",
+          billing: b,
+          title: onlyBalance ? "\u8D26\u6237\u4F59\u989D" : "\u5145\u503C\u4F59\u989D"
+        })
+      );
+    }
+    const notes = (snap.extra && Array.isArray(snap.extra.blocks) ? snap.extra.blocks : []).filter(
+      (x) => x && x.kind === "note" && x.text
+    );
+    if (notes.length) {
+      kids.push(h(K.NoteLine, { key: "note", text: notes[0].text, tone: "info" }));
+    } else if (wins.length) {
+      const monthly = wins.filter((w) => w.key === "monthly")[0];
+      if (monthly && monthly.resetInSec > 0) {
+        kids.push(
+          h(K.NoteLine, {
+            key: "note",
+            text: "\u8BA2\u9605\u7EA6 " + K.fmtLeft(monthly.resetInSec) + "\u540E\u91CD\u7F6E/\u5230\u671F\uFF08\u4EE5\u6BCF\u6708\u7A97\u53E3\u4E3A\u51C6\uFF09\u3002",
+            tone: "info"
+          })
+        );
+      }
+    }
+    return h("div", { className: "tm-ui tm-ui-opencode" }, kids);
+  }
+
+  // src/client/providers/ui/manual.ts
+  function manualUI(ctx, K) {
+    const h = K.h;
+    const snap = ctx.snap;
+    const b = snap.billing || {};
+    const wins = Array.isArray(snap.windows) ? snap.windows : [];
+    const kids = [];
+    kids.push(h(K.Chips, { key: "chips", chips: [{ text: "\u672C\u5730\u624B\u586B", tone: "info" }] }));
+    if (wins.length) {
+      kids.push(h(K.WindowGroup, { key: "win", windows: wins, snap, now: ctx.now, title: "\u989D\u5EA6" }));
+    }
+    if (Object.keys(b).length) {
+      const isPayg = !wins.length;
+      kids.push(h(K.BalanceBlock, { key: "bal", billing: b, title: isPayg ? "\u5F53\u524D\u4F59\u989D" : void 0 }));
+    }
+    const items = [];
+    const total = wins.length ? K.num(wins[0]?.limit, 0) : 0;
+    const used = wins.length ? K.num(wins[0]?.used, 0) : 0;
+    if (wins.length) {
+      items.push({ label: "\u603B\u989D\u5EA6", value: K.fmt(total) });
+      items.push({ label: "\u5DF2\u7528", value: K.fmt(used) });
+      items.push({ label: "\u5269\u4F59", value: K.fmt(Math.max(0, total - used)) });
+    }
+    if (items.length) kids.push(h(K.MetricRows, { key: "metrics", items, title: "\u8D26\u672C\u660E\u7EC6" }));
+    kids.push(
+      h(K.NoteLine, {
+        key: "note",
+        text: "\u6570\u636E\u6765\u81EA\u672C\u5730\u624B\u586B\uFF08\u975E\u5E73\u53F0\u5B9E\u65F6\u63A5\u53E3\uFF09\uFF1A\u5728\u300C\u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u2192 \u7F16\u8F91\u300D\u91CC\u66F4\u65B0\uFF0C\u6539\u5B8C\u70B9\u300C\u5237\u65B0\u300D\u5373\u53EF\u3002",
+        tone: "info"
+      })
+    );
+    return h("div", { className: "tm-ui tm-ui-manual" }, kids);
+  }
+
+  // src/client/providers/ui/index.ts
+  var UIS = /* @__PURE__ */ new Map();
+  function registerProviderUI(type, ui) {
+    if (typeof type === "string" && type && typeof ui === "function") UIS.set(type, ui);
+  }
+  function getProviderUI(type) {
+    return UIS.get(type);
+  }
+  function hasProviderUI(type) {
+    return UIS.has(type);
+  }
+  function providerUITypes() {
+    return [...UIS.keys()];
+  }
+  registerProviderUI("commandcode", commandcodeUI);
+  registerProviderUI("deepseek", deepseekUI);
+  registerProviderUI("opencode", opencodeUI);
+  registerProviderUI("manual", manualUI);
+
+  // src/client/providers/registry.ts
+  function legacySections(snap) {
+    const out = [];
+    if (snap.billingKind === "payg")
+      out.push({ kind: "balance", key: "balance", title: "\u8D26\u6237\u4F59\u989D", billing: snap.billing || {} });
+    else if (Array.isArray(snap.windows) && snap.windows.length)
+      out.push({ kind: "windows", key: "windows", windows: snap.windows });
+    const extra = snap.extra;
+    if (extra) {
+      const stats = Array.isArray(extra.stats) ? extra.stats.slice(0, 6) : [];
+      if (stats.length) out.push({ kind: "metrics", key: "stats", items: stats });
+      const blocks = Array.isArray(extra.blocks) ? extra.blocks.slice(0, 8) : [];
+      for (let i = 0; i < blocks.length; i++) {
+        const b = blocks[i];
+        if (!b || typeof b !== "object") continue;
+        if (b.kind === "kv" && b.label)
+          out.push({
+            kind: "metrics",
+            key: "kv" + i,
+            items: [{ label: String(b.label), value: String(b.value ?? "") }]
+          });
+        else if (b.kind === "progress" && isFinite(Number(b.used)) && Number(b.total) > 0) {
+          const p = { used: Number(b.used), total: Number(b.total) };
+          if (b.label) p.label = String(b.label);
+          if (b.left !== void 0 && b.left !== null && b.left !== "") p.left = String(b.left);
+          out.push({ kind: "progress", key: "pg" + i, progress: p });
+        } else if (b.kind === "split" && Array.isArray(b.segments))
+          out.push({ kind: "split", key: "sp" + i, split: { segments: b.segments } });
+        else if (b.kind === "note" && b.text) {
+          const n = { text: String(b.text) };
+          if (b.tone) n.tone = b.tone;
+          out.push({ kind: "note", key: "nt" + i, note: n });
+        }
+      }
+      if (extra.chart && Array.isArray(extra.chart.values) && extra.chart.values.length > 1)
+        out.push({ kind: "chart", key: "chart", chart: extra.chart });
+    }
+    return out;
+  }
+  function createProviderRenderers(React, K) {
+    const { renderSections } = createSectionRenderer(K);
+    function generic(ctx) {
+      const sections = ctx.snap.view && Array.isArray(ctx.snap.view.sections) ? ctx.snap.view.sections : null;
+      const rendered = sections ? renderSections(sections, ctx) : null;
+      if (rendered) return rendered;
+      return renderSections(legacySections(ctx.snap), ctx);
+    }
+    function renderBody(type, snap, now) {
+      const ctx = { snap, now, type, vendorName: snap.vendorName || "" };
+      const ui = getProviderUI(type);
+      if (ui) {
+        try {
+          const out = ui(ctx, K);
+          if (out !== null && out !== void 0) return out;
+        } catch {
+        }
+      }
+      return generic(ctx);
+    }
+    return {
+      renderBody,
+      hasBespoke: (type) => hasProviderUI(type),
+      bespokeTypes: () => providerUITypes()
+    };
   }
 
   // src/client/QuotaSection.ts
@@ -499,15 +1454,14 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
   }
   var TYPE_LABEL_FALLBACK = {
     opencode: "OC",
-    "opencode-go": "Go",
-    "opencode-zen": "Zen",
     deepseek: "DS",
+    commandcode: "CC",
     manual: "\u624B\u52A8"
   };
   var TYPE_TITLE_FALLBACK = [
     { type: "opencode", title: "opencode\uFF08Go+Zen \u5408\u5E76\uFF09" },
-    { type: "opencode-go", title: "opencode-go\uFF08\u6293\u5305\uFF09" },
-    { type: "deepseek", title: "deepseek\uFF08API\uFF09" },
+    { type: "deepseek", title: "deepseek\uFF08\u5B98\u65B9\xB7\u81EA\u52A8\u9009\u8DEF\uFF09" },
+    { type: "commandcode", title: "commandcode\uFF08Command Code\uFF09" },
     { type: "manual", title: "manual\uFF08\u624B\u52A8\uFF09" }
   ];
   var FLOAT_LS_OPEN = "tm-quota-float";
@@ -534,7 +1488,11 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
   function saveFloat(open, pos) {
     try {
       window.localStorage.setItem(FLOAT_LS_OPEN, open ? "1" : "0");
-      if (pos) window.localStorage.setItem(FLOAT_LS_POS, JSON.stringify({ x: Math.round(pos.x), y: Math.round(pos.y) }));
+      if (pos)
+        window.localStorage.setItem(
+          FLOAT_LS_POS,
+          JSON.stringify({ x: Math.round(pos.x), y: Math.round(pos.y) })
+        );
     } catch {
     }
   }
@@ -612,6 +1570,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         "quota.set-active": ["POST", "/set-active"],
         "quota.set-refresh": ["POST", "/set-refresh"],
         "quota.set-enabled": ["POST", "/set-enabled"],
+        "quota.set-vendor-enabled": ["POST", "/set-vendor-enabled"],
         "quota.add-vendor": ["POST", "/add-vendor"],
         "quota.update-vendor": ["POST", "/update-vendor"],
         "quota.delete-vendor": ["POST", "/delete-vendor"],
@@ -625,7 +1584,12 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         const r2 = await fetch(path, { cache: "no-store" });
         return r2.json();
       }
-      const r = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(args || {}), cache: "no-store" });
+      const r = await fetch(path, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(args || {}),
+        cache: "no-store"
+      });
       return r.json();
     }
     let syncRefs = 0;
@@ -656,7 +1620,15 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       try {
         const r = await call("quota.load");
         if (r && r.ok) {
-          store.set({ loading: false, cfg: r.config, snaps: r.snaps || {}, namespace: r.namespace || "", docPath: r.docPath || "", providers: r.providers || null, error: r.error || "" });
+          store.set({
+            loading: false,
+            cfg: r.config,
+            snaps: r.snaps || {},
+            namespace: r.namespace || "",
+            docPath: r.docPath || "",
+            providers: r.providers || null,
+            error: r.error || ""
+          });
         } else store.set({ loading: false, error: r && r.error || "\u52A0\u8F7D\u5931\u8D25" });
       } catch {
         store.set({ loading: false, error: "\u8FDE\u63A5 Host \u5931\u8D25" });
@@ -749,6 +1721,28 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         store.set({ error: "\u8FDE\u63A5 Host \u5931\u8D25" });
       }
     }
+    async function setVendorEnabled(id, enabled) {
+      try {
+        const r = await call("quota.set-vendor-enabled", { id, enabled });
+        if (!(r && r.ok)) {
+          store.set({ error: r && r.error || "\u4FDD\u5B58\u5931\u8D25" });
+          return;
+        }
+        const cur = store.get();
+        const cfg = cur.cfg ? Object.assign({}, cur.cfg, {
+          vendors: (cur.cfg.vendors || []).map((v) => {
+            if (v.id !== id) return v;
+            const nv = { ...v };
+            if (enabled) delete nv.enabled;
+            else nv.enabled = false;
+            return nv;
+          })
+        }) : cur.cfg;
+        store.set({ cfg, error: "" });
+      } catch {
+        store.set({ error: "\u8FDE\u63A5 Host \u5931\u8D25" });
+      }
+    }
     async function setRefresh(sec) {
       try {
         const r = await call("quota.set-refresh", { sec });
@@ -786,7 +1780,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     function curSymbol(cur) {
       if (cur === "CNY") return "\xA5";
       if (cur === "USD") return "$";
-      return cur + " " ;
+      return cur ? cur + " " : "";
     }
     function providerMetas() {
       try {
@@ -814,184 +1808,34 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       if (ps) return ps.filter((x) => x && x.type === type)[0] || null;
       return null;
     }
-    function QRow(props) {
-      const w = props.w;
-      const lvl = levelOf(w.pct);
-      const cls = lvl === "ok" ? "" : " " + lvl;
-      return h(
-        "div",
-        { className: "tm-qrow" },
-        h("span", { className: "tm-qlabel" }, w.label),
-        h(
-          "div",
-          { className: "tm-qbar", title: levelTip(lvl) + "\uFF08" + Math.round(w.pct) + "%\uFF09" },
-          h("span", { className: "tm-qfill" + cls, style: { width: Math.min(100, w.pct) + "%" } })
-        ),
-        h("span", { className: "tm-qpct" + cls }, Math.round(w.pct) + "%"),
-        props.left ? h("span", { className: "tm-qleft" }, props.left) : null
-      );
+    const kit = createProviderKit(React, {
+      num,
+      fmt,
+      fmtLeft,
+      curSymbol,
+      remainOf,
+      timeAgo,
+      levelOf,
+      levelTip,
+      errOpen: () => !!store.get().errOpen,
+      toggleErr: () => store.set({ errOpen: !store.get().errOpen })
+    });
+    const providerViews = createProviderRenderers(React, kit);
+    const ErrBox = kit.ErrorCard;
+    function SnapBody(props) {
+      return providerViews.renderBody(props.type || "", props.snap, props.now);
     }
-    function RollingBody(props) {
-      const snap = props.snap;
-      const now = props.now;
-      const wins = Array.isArray(snap.windows) ? snap.windows : [];
-      if (!wins.length) return h("div", { className: "tm-qmeta" }, h("span", null, "\u6682\u65E0\u6EDA\u52A8\u7A97\u53E3"));
-      const worst = wins.reduce((m, w) => w.pct > m.pct ? w : m, wins[0]);
-      const minRem = wins.reduce((m, w) => Math.min(m, remainOf(w, snap, now)), Infinity);
-      const worstLvl = levelOf(worst.pct);
-      return h(
-        "div",
-        { className: "tm-body" },
-        wins.map((w) => h(QRow, { key: w.key, w, left: fmtLeft(remainOf(w, snap, now)) })),
-        h("div", {
-          className: "tm-payg-sub" + (worstLvl === "ok" ? "" : " tm-qsum-" + worstLvl),
-          title: levelTip(worstLvl)
-        }, "\u6700\u9AD8\u5360\u7528 " + worst.label + " " + Math.round(worst.pct) + "% \xB7 \u6700\u65E9\u91CD\u7F6E" + fmtLeft(minRem))
-      );
+    function errInfoOf(snap, fallbackMsg) {
+      const info = snap && snap.errorInfo;
+      if (info && typeof info === "object" && typeof info.title === "string") return info;
+      return fallbackErrorInfo(snap && snap.error || fallbackMsg);
     }
-    function PaygBody(props) {
-      const snap = props.snap;
-      const b = snap.billing || {};
-      const vendorName = snap.vendorName || b.plan || "\u6309\u91CF\u8BA1\u8D39";
-      const amt = num(b.balance, 0);
-      const cur = b.currency || "CNY";
-      const granted = b.granted !== void 0 && b.granted !== null ? num(b.granted, 0) : null;
-      const topped = b.toppedUp !== void 0 && b.toppedUp !== null ? num(b.toppedUp, 0) : null;
-      const avail = b.isAvailable;
-      const availCls = avail === true ? "ok" : avail === false ? "bad" : "unknown";
-      const availTxt = avail === true ? "\u53EF\u7528" : avail === false ? "\u4E0D\u8DB3" : "\u72B6\u6001\u672A\u77E5";
-      const warnLine = b.lowWarn !== void 0 && b.lowWarn !== null && b.lowWarn !== "" ? num(b.lowWarn, 0) : null;
-      const empty = amt <= 0 || avail === false;
-      const low = !empty && warnLine !== null && amt <= warnLine;
-      const infos = Array.isArray(b.infos) ? b.infos : [];
-      const kids = [];
-      kids.push(h(
-        "div",
-        { key: "top", className: "tm-payg-top" },
-        h(
-          "div",
-          null,
-          h("span", { className: "tm-payg-cur" }, curSymbol(cur) + cur),
-          h("span", { className: "tm-payg-amt" + (amt < 0 ? " neg" : "") }, fmt(amt))
-        ),
-        h("span", { className: "tm-avail " + availCls }, availTxt)
-      ));
-      kids.push(h("div", { key: "sub", className: "tm-payg-sub" }, vendorName + (snap.at ? " \xB7 \u66F4\u65B0" + timeAgo(snap.at) : "")));
-      const parts = [];
-      if (granted !== null) parts.push("\u8D60\u9001 " + fmt(granted));
-      if (topped !== null) parts.push("\u5145\u503C " + fmt(topped));
-      if (warnLine !== null) parts.push("\u9884\u8B66\u7EBF " + fmt(warnLine));
-      if (parts.length) kids.push(h("div", { key: "parts", className: "tm-payg-sub" }, parts.join(" \xB7 ")));
-      if (infos.length > 1) kids.push(h("div", { key: "infos", className: "tm-infos" }, infos.map((x) => h(
-        "div",
-        { key: x.currency || "?", className: "tm-inforow" },
-        h("span", null, x.currency || "?"),
-        h("b", null, fmt(x.total))
-      ))));
-      if (empty) kids.push(h("div", { key: "warn", className: "tm-warn bad" }, vendorName + "\u4F59\u989D\u4E0D\u8DB3\uFF0CAPI \u8C03\u7528\u53EF\u80FD\u88AB\u62D2\u7EDD\uFF0C\u8BF7\u53CA\u65F6\u5145\u503C\u3002"));
-      else if (low) kids.push(h("div", { key: "warn", className: "tm-warn" }, vendorName + "\u4F59\u989D\u4F4E\u4E8E\u9884\u8B66\u7EBF " + fmt(warnLine) + "\uFF0C\u5EFA\u8BAE\u53CA\u65F6\u5145\u503C\u3002"));
-      return h("div", { className: "tm-payg" }, kids);
-    }
-    const X_PAL = ["#4c7ef3", "#2fb261", "#f5a623", "#e05e4e", "#9a6ef1", "#25b8c4"];
-    function ExtraBody(props) {
-      const extra = props && props.extra || {};
-      const kids = [];
-      const stats = Array.isArray(extra.stats) ? extra.stats.slice(0, 6) : [];
-      if (stats.length) kids.push(h("div", { key: "s", className: "tm-xstats" }, stats.map((r, i) => h(
-        "div",
-        { key: "r" + i, className: "tm-xrow" },
-        h("span", null, String(r && r.label || "")),
-        h("b", null, String(r && r.value || ""))
-      ))));
-      const blocks = Array.isArray(extra.blocks) ? extra.blocks.slice(0, 8) : [];
-      blocks.forEach((b, bi) => {
-        if (!b || typeof b !== "object") return;
-        if (b.kind === "kv" && b.label) {
-          kids.push(h(
-            "div",
-            { key: "xb" + bi, className: "tm-xstats" },
-            h(
-              "div",
-              { className: "tm-xrow" },
-              h("span", null, String(b.label)),
-              h("b", null, String(b.value !== void 0 && b.value !== null ? b.value : ""))
-            )
-          ));
-        } else if (b.kind === "progress" && isFinite(Number(b.used)) && Number(b.total) > 0) {
-          const used = Number(b.used), total = Number(b.total);
-          const pct = Math.min(100, Math.max(0, used / total * 100));
-          const left = b.left !== void 0 && b.left !== null && b.left !== "" ? String(b.left) : "\u5269\u4F59 " + (total - used);
-          kids.push(h(
-            "div",
-            { key: "xb" + bi, className: "tm-xprog" },
-            h(QRow, { w: { key: "xb" + bi, label: String(b.label || "\u989D\u5EA6"), pct }, left })
-          ));
-        } else if (b.kind === "split" && Array.isArray(b.segments)) {
-          const segs = b.segments.filter((sg) => sg && isFinite(Number(sg.value)) && Number(sg.value) > 0).slice(0, 6);
-          if (!segs.length) return;
-          const sum = segs.reduce((s2, x) => s2 + Number(x.value), 0);
-          kids.push(h(
-            "div",
-            { key: "xb" + bi },
-            b.label ? h("div", { className: "tm-xtitle" }, String(b.label)) : null,
-            h("div", { className: "tm-xsplit" }, segs.map((sg, si) => h("span", { key: "xg" + si, style: { flexGrow: Number(sg.value), background: sg.color || X_PAL[si % X_PAL.length] } }))),
-            h("div", { className: "tm-xstats" }, segs.map((sg, si) => h(
-              "div",
-              { key: "xl" + si, className: "tm-xrow" },
-              h(
-                "span",
-                null,
-                h("span", { className: "tm-xdot", style: { background: sg.color || X_PAL[si % X_PAL.length] } }),
-                String(sg.label || "")
-              ),
-              h("b", null, String(Math.round(Number(sg.value) * 100 / sum)) + "%")
-            )))
-          ));
-        } else if (b.kind === "note" && b.text) {
-          const tone = b.tone === "bad" ? "tm-warn bad" : b.tone === "warn" ? "tm-warn" : "tm-payg-sub";
-          kids.push(h("div", { key: "xb" + bi, className: tone }, String(b.text)));
-        }
-      });
-      const ch = extra.chart;
-      if (ch && Array.isArray(ch.values) && ch.values.length > 1) {
-        const vals = ch.values.map((v) => isFinite(Number(v)) ? Number(v) : 0).slice(-60);
-        const W = 248, Hh = 52, Pd = 3;
-        const max = Math.max.apply(null, vals.concat([1]));
-        const step = vals.length > 1 ? (W - Pd * 2) / (vals.length - 1) : 0;
-        const pts = vals.map((v, i) => [Pd + step * i, Hh - Pd - v / max * (Hh - Pd * 2)]);
-        const line = pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
-        const area = Pd + "," + (Hh - Pd) + " " + line + " " + (W - Pd) + "," + (Hh - Pd);
-        kids.push(h(
-          "div",
-          { key: "c", className: "tm-xchart" },
-          ch.title ? h("div", { className: "tm-xtitle" }, String(ch.title)) : null,
-          h(
-            "svg",
-            { viewBox: "0 0 " + W + " " + Hh, preserveAspectRatio: "none", style: { display: "block", width: "100%", height: Hh + "px" } },
-            h("polygon", { points: area, style: { fill: "var(--dsw-alias-state-business-primary)", opacity: 0.15 } }),
-            h("polyline", { points: line, fill: "none", style: { stroke: "var(--dsw-alias-state-business-primary)", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round" } })
-          )
-        ));
-      }
-      if (!kids.length) return null;
-      return h("div", null, kids);
-    }
-    function ErrBox(props) {
-      const msg = props.msg || "\u62C9\u53D6\u5931\u8D25";
-      const meta = props.meta || "";
-      const open = !!store.get().errOpen;
-      return h(
-        "div",
-        { className: "tm-errbox" },
-        h(
-          "button",
-          { className: "tm-errbtn", title: "\u70B9\u51FB\u67E5\u770B\u5931\u8D25\u8BE6\u60C5", onClick: () => store.set({ errOpen: !store.get().errOpen }) },
-          h("span", { className: "tm-erricon" }, "!"),
-          h("span", { className: "tm-errtext" }, "\u8BF7\u6C42\u5931\u8D25\uFF0C\u70B9\u51FB\u67E5\u770B\u8BE6\u60C5"),
-          h("span", { className: "tm-vcaret" }, open ? "\u25B4" : "\u25BE")
-        ),
-        open ? h("div", { className: "tm-errdetail" }, msg + (meta ? "\n" + meta : "")) : null
-      );
+    function dotToneOf(snap) {
+      if (!snap) return "";
+      if (snap.ok) return "";
+      const info = snap.errorInfo;
+      const tone = info && info.tone ? String(info.tone) : "warn";
+      return tone === "bad" ? " bad" : " warn";
     }
     function openMenu(e) {
       const open = !store.get().menuOpen;
@@ -1030,63 +1874,91 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         my = Math.max(8, my);
       }
       const style = { left: mx + "px", top: my + "px" };
-      return tmPortal(h(
-        "div",
-        null,
-        h("button", { className: "tm-backdrop", "aria-label": "\u5173\u95ED\u4F9B\u5E94\u5546\u83DC\u5355", onClick: () => store.set({ menuOpen: false, menuAt: null }) }),
+      return tmPortal(
         h(
           "div",
-          { className: "tm-popmenu tm-in", style },
-          vendors.map((v) => h(
-            "button",
-            {
-              key: v.id,
-              className: "tm-mitem" + (v.id === curId ? " active" : ""),
-              onClick: () => void setActive(v.id)
-            },
-            h("span", { className: "grow" }, v.name),
-            h("span", { className: "tm-vtype" }, typeLabel(v.type))
-          )),
+          null,
+          h("button", {
+            className: "tm-backdrop",
+            "aria-label": "\u5173\u95ED\u4F9B\u5E94\u5546\u83DC\u5355",
+            onClick: () => store.set({ menuOpen: false, menuAt: null })
+          }),
           h(
-            "button",
-            {
-              key: "__none",
-              className: "tm-mitem" + (!curId ? " active" : ""),
-              title: "\u4E0D\u663E\u793A\u4EFB\u4F55\u4F9B\u5E94\u5546\u989D\u5EA6\uFF0C\u4FDD\u6301\u6781\u7B80",
-              onClick: () => void setActive("")
-            },
-            h("span", { className: "grow" }, "\u65E0 \xB7 \u6781\u7B80\u6A21\u5F0F"),
-            h("span", { className: "tm-vtype" }, "\u9690\u85CF")
+            "div",
+            { className: "tm-popmenu tm-in", style },
+            vendors.map(
+              (v) => h(
+                "button",
+                {
+                  key: v.id,
+                  className: "tm-mitem" + (v.id === curId ? " active" : ""),
+                  onClick: () => void setActive(v.id)
+                },
+                h("span", { className: "grow" }, v.name),
+                h("span", { className: "tm-vtype" }, typeLabel(v.type))
+              )
+            ),
+            h(
+              "button",
+              {
+                key: "__none",
+                className: "tm-mitem" + (!curId ? " active" : ""),
+                title: "\u4E0D\u663E\u793A\u4EFB\u4F55\u4F9B\u5E94\u5546\u989D\u5EA6\uFF0C\u4FDD\u6301\u6781\u7B80",
+                onClick: () => void setActive("")
+              },
+              h("span", { className: "grow" }, "\u65E0 \xB7 \u6781\u7B80\u6A21\u5F0F"),
+              h("span", { className: "tm-vtype" }, "\u9690\u85CF")
+            )
           )
         )
-      ));
+      );
     }
     function quotaContent(s, a, snap, now) {
       const stale = s.lastErr && (!s.lastErr.id || s.lastErr.id === a.id) && snap && snap.ok ? s.lastErr : null;
       let cbody = null;
       if (snap && snap.ok) {
-        cbody = snap.billingKind === "payg" ? h(PaygBody, { snap }) : h(RollingBody, { snap, now });
+        cbody = h(SnapBody, { snap, type: a.type, now });
       } else if (s.loading) {
         cbody = h("div", { className: "tm-qmeta" }, h("span", null, "\u62C9\u53D6\u4E2D\u2026"));
       } else {
         const le0 = s.lastErr && (!s.lastErr.id || s.lastErr.id === a.id) ? s.lastErr : null;
         const msg = snap && snap.error || (le0 ? le0.msg : "") || s.error || "\u6682\u65E0\u6570\u636E\uFF0C\u70B9\u51FB\u21BB\u5237\u65B0";
-        const meta = a.name + (snap && snap.at ? " \xB7 \u5931\u8D25\u4E8E" + timeAgo(snap.at) : le0 && le0.at ? " \xB7 \u5931\u8D25\u4E8E" + timeAgo(le0.at) : "") + (snap && snap.secretKind ? " \xB7 \u5BC6\u94A5:" + snap.secretKind : "");
-        cbody = h(ErrBox, { msg, meta });
+        const meta = a.name + (snap && snap.at ? " \xB7 \u5931\u8D25\u4E8E" + timeAgo(snap.at) : le0 && le0.at ? " \xB7 \u5931\u8D25\u4E8E" + timeAgo(le0.at) : "") + (snap && snap.secretKind ? " \xB7 \u51ED\u636E:" + snap.secretKind : "");
+        cbody = h(ErrBox, {
+          info: snap ? errInfoOf(snap, msg) : fallbackErrorInfo(msg),
+          msg,
+          meta,
+          onRetry: () => void refreshVendor(a.id)
+        });
       }
       return [
         s.error ? h("div", { key: "e", className: "tm-err" }, s.error) : null,
         h("div", { key: "b" }, cbody),
-        snap && snap.ok && snap.extra ? h(ExtraBody, { key: "x", extra: snap.extra }) : null,
         h(
           "div",
           { key: "m", className: "tm-qmeta" },
-          h("span", null, (snap && snap.at ? "\u66F4\u65B0" + timeAgo(snap.at) : "\u672A\u62C9\u53D6") + (snap && snap.ok && snap.via ? " \xB7 " + snap.via : "")),
           h(
             "span",
             null,
-            stale ? h("button", { className: "tm-mini warn", title: stale.msg + "\uFF08\u65E7\u6570\u636E\u4ECD\u53EF\u7528\uFF09", onClick: () => store.set({ errOpen: !store.get().errOpen }) }, "\u26A0\u65E7\u6570\u636E") : null,
-            h("button", { className: "tm-mini", title: "\u5237\u65B0\u5F53\u524D\u4F9B\u5E94\u5546", onClick: () => void refreshVendor(a.id) }, "\u21BB \u5237\u65B0")
+            (snap && snap.at ? "\u66F4\u65B0" + timeAgo(snap.at) : "\u672A\u62C9\u53D6") + (snap && snap.ok && snap.via ? " \xB7 " + snap.via : "")
+          ),
+          h(
+            "span",
+            null,
+            stale ? h(
+              "button",
+              {
+                className: "tm-mini warn",
+                title: stale.msg + "\uFF08\u65E7\u6570\u636E\u4ECD\u53EF\u7528\uFF09",
+                onClick: () => store.set({ errOpen: !store.get().errOpen })
+              },
+              "\u26A0\u65E7\u6570\u636E"
+            ) : null,
+            h(
+              "button",
+              { className: "tm-mini", title: "\u5237\u65B0\u5F53\u524D\u4F9B\u5E94\u5546", onClick: () => void refreshVendor(a.id) },
+              "\u21BB \u5237\u65B0"
+            )
           )
         ),
         stale && s.errOpen ? h("div", { key: "d", className: "tm-errdetail" }, stale.msg) : null
@@ -1163,35 +2035,61 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       if (!s.cfg || s.cfg.enabled === false || !a) return null;
       const pos = clampFloatPos(s.floatPos || loadFloatPos() || defaultFloatPos());
       const snap = s.snaps[a.id];
-      return tmPortal(h(
-        "div",
-        { className: "tm-float tm-in", style: { left: pos.x + "px", top: pos.y + "px" } },
+      return tmPortal(
         h(
           "div",
-          {
-            className: "tm-float-hd",
-            title: "\u6309\u4F4F\u62D6\u5230\u4EFB\u610F\u4F4D\u7F6E \xB7 \u53CC\u51FB\u6536\u56DE\u4FA7\u8FB9\u680F",
-            onPointerDown: startFloatDrag,
-            onDoubleClick: () => setFloatOpen(false)
-          },
-          h("span", { className: "tm-dot" + (snap && !snap.ok ? " bad" : "") }),
-          h("span", { className: "tm-vname" }, a.name),
-          h("span", { className: "tm-vtype" }, typeLabel(a.type)),
-          h("button", { className: "tm-mini", title: "\u5207\u6362\u4F9B\u5E94\u5546", onClick: (e) => {
-            if (e.stopPropagation) e.stopPropagation();
-            openMenu(e);
-          } }, "\u25BE"),
-          h("button", { className: "tm-mini", title: "\u5237\u65B0\u5F53\u524D\u4F9B\u5E94\u5546", onClick: (e) => {
-            if (e.stopPropagation) e.stopPropagation();
-            void refreshVendor(a.id);
-          } }, "\u21BB"),
-          h("button", { className: "tm-mini", title: "\u6536\u56DE\u4FA7\u8FB9\u680F", onClick: (e) => {
-            if (e.stopPropagation) e.stopPropagation();
-            setFloatOpen(false);
-          } }, "\u{1F4CC}")
-        ),
-        h("div", { className: "tm-float-bd" }, quotaContent(s, a, snap, now))
-      ));
+          { className: "tm-float tm-in", style: { left: pos.x + "px", top: pos.y + "px" } },
+          h(
+            "div",
+            {
+              className: "tm-float-hd",
+              title: "\u6309\u4F4F\u62D6\u5230\u4EFB\u610F\u4F4D\u7F6E \xB7 \u53CC\u51FB\u6536\u56DE\u4FA7\u8FB9\u680F",
+              onPointerDown: startFloatDrag,
+              onDoubleClick: () => setFloatOpen(false)
+            },
+            h("span", { className: "tm-dot" + (snap && !snap.ok ? dotToneOf(snap) : "") }),
+            h("span", { className: "tm-vname" }, a.name),
+            h("span", { className: "tm-vtype" }, typeLabel(a.type)),
+            h(
+              "button",
+              {
+                className: "tm-mini",
+                title: "\u5207\u6362\u4F9B\u5E94\u5546",
+                onClick: (e) => {
+                  if (e.stopPropagation) e.stopPropagation();
+                  openMenu(e);
+                }
+              },
+              "\u25BE"
+            ),
+            h(
+              "button",
+              {
+                className: "tm-mini",
+                title: "\u5237\u65B0\u5F53\u524D\u4F9B\u5E94\u5546",
+                onClick: (e) => {
+                  if (e.stopPropagation) e.stopPropagation();
+                  void refreshVendor(a.id);
+                }
+              },
+              "\u21BB"
+            ),
+            h(
+              "button",
+              {
+                className: "tm-mini",
+                title: "\u6536\u56DE\u4FA7\u8FB9\u680F",
+                onClick: (e) => {
+                  if (e.stopPropagation) e.stopPropagation();
+                  setFloatOpen(false);
+                }
+              },
+              "\u{1F4CC}"
+            )
+          ),
+          h("div", { className: "tm-float-bd" }, quotaContent(s, a, snap, now))
+        )
+      );
     }
     function QuotaFloatEntry() {
       return h(React.Fragment, null, h(VendorPopOverlay, null), h(FloatingQuota, null));
@@ -1233,7 +2131,16 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       }
       const vendors = s.cfg && s.cfg.vendors || [];
       const a = activeOf(s);
-      if (!s.cfg) return h("div", { className: "tm-side" }, h("div", { className: "tm-qmeta" }, h("span", null, s.loading ? "\u989D\u5EA6\u52A0\u8F7D\u4E2D\u2026" : s.error || "\u989D\u5EA6\u52A0\u8F7D\u5931\u8D25")));
+      if (!s.cfg)
+        return h(
+          "div",
+          { className: "tm-side" },
+          h(
+            "div",
+            { className: "tm-qmeta" },
+            h("span", null, s.loading ? "\u989D\u5EA6\u52A0\u8F7D\u4E2D\u2026" : s.error || "\u989D\u5EA6\u52A0\u8F7D\u5931\u8D25")
+          )
+        );
       if (s.cfg.enabled === false) {
         return h(
           "div",
@@ -1252,7 +2159,11 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           { className: "tm-side tm-in" },
           h(
             "button",
-            { className: "tm-vendor", title: "\u70B9\u51FB\u9009\u62E9\u8BA1\u8D39\u4F9B\u5E94\u5546\uFF08\u5F53\u524D\uFF1A\u65E0\uFF09", onClick: (e) => openMenu(e) },
+            {
+              className: "tm-vendor",
+              title: "\u70B9\u51FB\u9009\u62E9\u8BA1\u8D39\u4F9B\u5E94\u5546\uFF08\u5F53\u524D\uFF1A\u65E0\uFF09",
+              onClick: (e) => openMenu(e)
+            },
             h("span", { className: "tm-dot" }),
             h("span", { className: "tm-vname" }, "\u989D\u5EA6\u5DF2\u9690\u85CF"),
             h("span", { className: "tm-vtype" }, "\u6781\u7B80"),
@@ -1271,20 +2182,34 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const failed = !!(snap && !snap.ok);
       return h(
         "div",
-        { className: "tm-side tm-in" + (s.loading ? " loading" : "") + (failed && !s.loading ? " error" : "") },
+        {
+          className: "tm-side tm-in" + (s.loading ? " loading" : "") + (failed && !s.loading ? " error" : "") + moodClass(a.enabled === false, isPeakHour(new Date(now)))
+        },
         h(
           "div",
           { className: "tm-vendor-row" },
-          h("span", { className: "tm-grip", title: "\u6309\u4F4F\u62D6\u51FA\u4E3A\u6D6E\u7A97\uFF0C\u70B9\u6309\u76F4\u63A5\u5F39\u51FA", onPointerDown: gripDragOut }, "\u283F"),
+          h(
+            "span",
+            { className: "tm-grip", title: "\u6309\u4F4F\u62D6\u51FA\u4E3A\u6D6E\u7A97\uFF0C\u70B9\u6309\u76F4\u63A5\u5F39\u51FA", onPointerDown: gripDragOut },
+            "\u283F"
+          ),
           h(
             "button",
             { className: "tm-vendor", title: "\u70B9\u51FB\u5207\u6362\u8BA1\u8D39\u4F9B\u5E94\u5546", onClick: (e) => openMenu(e) },
-            h("span", { className: "tm-dot" + (snap && !snap.ok ? " bad" : "") }),
+            h("span", { className: "tm-dot" + (snap && !snap.ok ? dotToneOf(snap) : "") }),
             h("span", { className: "tm-vname" }, a.name),
             h("span", { className: "tm-vtype" }, typeLabel(a.type)),
             h("span", { className: "tm-vcaret" }, s.menuOpen ? "\u25B4" : "\u25BE")
           ),
-          h("button", { className: "tm-mini", title: "\u5F39\u51FA\u4E3A\u6D6E\u7A97\uFF08\u53EF\u62D6\u5230\u5C4F\u5E55\u4EFB\u610F\u4F4D\u7F6E\uFF09", onClick: () => setFloatOpen(true) }, "\u29C9")
+          h(
+            "button",
+            {
+              className: "tm-mini",
+              title: "\u5F39\u51FA\u4E3A\u6D6E\u7A97\uFF08\u53EF\u62D6\u5230\u5C4F\u5E55\u4EFB\u610F\u4F4D\u7F6E\uFF09",
+              onClick: () => setFloatOpen(true)
+            },
+            "\u29C9"
+          )
         ),
         quotaContent(s, a, snap, now)
       );
@@ -1295,14 +2220,39 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     function SecRow(props) {
       return h(
         "div",
-        { className: "tm-row", style: props.wrap ? { flexWrap: "wrap", flexDirection: "column", alignItems: "stretch" } : null },
+        {
+          className: "tm-row",
+          style: props.wrap ? { flexWrap: "wrap", flexDirection: "column", alignItems: "stretch" } : null
+        },
         h(
           "div",
           { className: "tm-rowText" },
           h("div", { className: "tm-rowLabel" }, props.label),
           props.desc ? h("div", { className: "tm-rowDesc" }, props.desc) : null
         ),
-        h("span", { className: props.wrap ? "tm-rowValue" : void 0, style: props.wrap ? { flexBasis: "100%", justifyContent: "flex-start" } : null }, props.children)
+        h(
+          "span",
+          {
+            className: props.wrap ? "tm-rowValue" : void 0,
+            style: props.wrap ? { flexBasis: "100%", justifyContent: "flex-start" } : null
+          },
+          props.children
+        )
+      );
+    }
+    function FormField(props) {
+      return h(
+        "div",
+        { className: "tm-field" },
+        h(
+          "div",
+          { className: "tm-fieldHead" },
+          h("span", { className: "tm-fieldLabel" }, props.label),
+          props.required ? h("span", { className: "tm-fieldReq" }, "\u5FC5\u586B") : null,
+          props.hint ? h("span", { className: "tm-fieldOpt" }, props.hint) : null
+        ),
+        h("div", { className: "tm-fieldControl" }, props.children),
+        props.desc ? h("div", { className: "tm-fieldDesc" }, props.desc) : null
       );
     }
     function PillSelect(props) {
@@ -1329,10 +2279,20 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           h(
             "div",
             { className: "tm-popmenu", style: { position: "absolute" } },
-            props.options.map((o) => h("button", { key: o.id, className: "tm-mitem" + (o.id === props.value ? " active" : ""), onClick: () => {
-              setOpen(false);
-              props.onSelect(o.id);
-            } }, o.label))
+            props.options.map(
+              (o) => h(
+                "button",
+                {
+                  key: o.id,
+                  className: "tm-mitem" + (o.id === props.value ? " active" : ""),
+                  onClick: () => {
+                    setOpen(false);
+                    props.onSelect(o.id);
+                  }
+                },
+                o.label
+              )
+            )
           )
         );
       }
@@ -1369,54 +2329,113 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const nameOk = !!(d.name && String(d.name).trim());
       const canSubmit = idOk && nameOk && !busy;
       const secretPh = isEdit ? "\u7559\u7A7A=\u4FDD\u7559\u539F\u503C\uFF0C\u6216\u586B $NAME \u5F15\u7528 / \u65B0\u660E\u6587" : "\u586B $NAME \u5F15\u7528\uFF08\u63A8\u8350\uFF09\u6216\u7C98\u8D34\u660E\u6587";
-      const inputWrap = (opts, inner) => h("div", { className: "tm-inputWrap", style: opts && opts.maxWidth ? { maxWidth: opts.maxWidth } : null }, inner);
-      const textInput = (opts) => inputWrap(opts, h("input", {
-        className: "tm-ninput" + (opts && opts.mono ? " tm-mono" : ""),
-        style: opts && opts.alignRight ? { textAlign: "right", fontVariantNumeric: "tabular-nums" } : null,
-        value: opts.value,
-        placeholder: opts.placeholder || "",
-        autoComplete: "off",
-        inputMode: opts.inputMode,
-        disabled: busy,
-        onChange: opts.onChange
-      }));
+      const inputWrap = (opts, inner) => h(
+        "div",
+        { className: "tm-inputWrap", style: opts && opts.maxWidth ? { maxWidth: opts.maxWidth } : null },
+        inner
+      );
+      const textInput = (opts) => inputWrap(
+        opts,
+        h("input", {
+          className: "tm-ninput" + (opts && opts.mono ? " tm-mono" : ""),
+          style: opts && opts.alignRight ? { textAlign: "right", fontVariantNumeric: "tabular-nums" } : null,
+          value: opts.value,
+          placeholder: opts.placeholder || "",
+          autoComplete: "off",
+          inputMode: opts.inputMode,
+          disabled: busy,
+          onChange: opts.onChange
+        })
+      );
       const rows = [];
-      rows.push(h(
-        SecRow,
-        { key: "name", label: "\u663E\u793A\u540D\u5B57 *", desc: "\u4FA7\u8FB9\u680F\u5361\u7247\u5C55\u793A\u7684\u4F9B\u5E94\u5546\u540D\u79F0\u3002" },
-        textInput({ value: d.name || "", placeholder: "\u5982\uFF1AOpencode GO \u4E3B\u53F7", onChange: (e) => put("name")(e.target.value) })
-      ));
+      rows.push(
+        h(
+          FormField,
+          {
+            key: "name",
+            label: "\u663E\u793A\u540D\u79F0",
+            required: true,
+            desc: "\u53EA\u7ED9\u4F60\u81EA\u5DF1\u770B\u7684\u540D\u5B57\uFF1A\u663E\u793A\u5728\u4FA7\u8FB9\u680F\u989D\u5EA6\u5361\u3001\u4F9B\u5E94\u5546\u5217\u8868\u548C\u5207\u6362\u83DC\u5355\u91CC\uFF0C\u4E0D\u53C2\u4E0E\u4EFB\u4F55\u8BF7\u6C42\u3002\u540C\u540D\u4E5F\u6CA1\u5173\u7CFB\uFF0C\u968F\u4FBF\u586B\uFF08\u652F\u6301\u4E2D\u6587\uFF09\uFF0C\u4F8B\u5982\u300CDeepSeek \u4E3B\u53F7\u300D\u300C\u516C\u53F8\u8D26\u53F7\u300D\u3002"
+          },
+          textInput({
+            value: d.name || "",
+            placeholder: "\u5982\uFF1ADeepSeek \u4E3B\u53F7",
+            onChange: (e) => put("name")(e.target.value)
+          })
+        )
+      );
       const typeSel = h(PillSelect, {
         disabled: busy,
         value: d.type,
         selectedLabel: (typeOptions().filter((o) => o.type === d.type)[0] || {}).title || d.type,
         options: typeOptions().map((o) => ({ id: o.type, label: o.title })),
-        onSelect: (id) => put("type")(id)
+        onSelect: (id) => {
+          const meta = providerMetaOf(id);
+          const defaults = meta && meta.defaultParams && typeof meta.defaultParams === "object" ? JSON.parse(JSON.stringify(meta.defaultParams)) : {};
+          const keep = {};
+          for (const k of ["lowWarn", "currency", "billing", "total", "used", "balance", "granted"]) {
+            if (p[k] !== void 0 && p[k] !== "") keep[k] = p[k];
+          }
+          set(Object.assign({}, d, { type: id, params: Object.assign({}, defaults, keep) }));
+        }
       });
-      rows.push(h(
-        SecRow,
-        { key: "idtype", label: isEdit ? "ID\uFF08\u4E0D\u53EF\u6539\uFF09" : "ID * / \u7C7B\u578B", desc: isEdit ? "ID \u662F\u4F9B\u5E94\u5546\u4E3B\u952E\uFF0C\u4E0D\u53EF\u4FEE\u6539\u3002" : "\u5C0F\u5199\u5B57\u6BCD/\u6570\u5B57/\u6A2A\u7EBF\uFF0C2-31 \u4F4D\u3002" },
-        isEdit ? h("span", { className: "tm-mono", style: { color: "var(--dsw-alias-label-primary)" }, title: "ID \u662F\u4F9B\u5E94\u5546\u4E3B\u952E\uFF0C\u4E0D\u53EF\u4FEE\u6539" }, d.id) : h(
-          "span",
-          { style: { display: "flex", gap: 8, alignItems: "center", flex: 1, minWidth: 0, justifyContent: "flex-end" } },
-          inputWrap({}, h("input", {
-            className: "tm-ninput tm-mono",
-            value: d.id || "",
-            placeholder: "\u5982\uFF1Ago-main",
-            autoComplete: "off",
-            disabled: busy,
-            onChange: (e) => put("id")(e.target.value)
-          })),
+      rows.push(
+        h(
+          FormField,
+          {
+            key: "id",
+            label: "ID\uFF08\u914D\u7F6E\u6807\u8BC6\uFF09",
+            required: !isEdit,
+            hint: isEdit ? "\u6DFB\u52A0\u540E\u4E0D\u53EF\u4FEE\u6539" : void 0,
+            desc: isEdit ? "\u8FD9\u662F\u8BE5\u4F9B\u5E94\u5546\u5728\u914D\u7F6E\u91CC\u7684\u552F\u4E00\u6807\u8BC6\uFF08\u4E3B\u952E\uFF09\uFF0C\u7528\u6765\u5728 settings.yaml \u4E2D\u533A\u5206\u4E0D\u540C\u8D26\u53F7\uFF0C\u4E5F\u88AB\u300C\u8BBE\u4E3A\u5F53\u524D\u300D\u7B49\u64CD\u4F5C\u5F15\u7528\u3002\u5DF2\u6DFB\u52A0\u7684\u4F9B\u5E94\u5546\u4E0D\u80FD\u6539 ID\uFF0C\u9700\u8981\u522B\u7684 ID \u8BF7\u5220\u6389\u91CD\u65B0\u6DFB\u52A0\u3002" : "\u8BE5\u4F9B\u5E94\u5546\u5728\u914D\u7F6E\u91CC\u7684\u552F\u4E00\u6807\u8BC6\uFF08\u4E3B\u952E\uFF09\uFF1A\u7528\u4E8E\u5728 settings.yaml \u4E2D\u533A\u5206\u4E0D\u540C\u8D26\u53F7\uFF0C\u4E5F\u88AB\u300C\u8BBE\u4E3A\u5F53\u524D\u300D\u7B49\u64CD\u4F5C\u5F15\u7528\u3002\u586B\u7B80\u77ED\u82F1\u6587/\u6570\u5B57\u5373\u53EF\uFF0C\u4F8B\u5982 ds-main\u3001cc-work\u3001go-2\u3002\u89C4\u5219\uFF1A\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u3001\u6A2A\u7EBF\uFF0C2\u201331 \u4F4D\uFF0C\u5B57\u6BCD\u6216\u6570\u5B57\u5F00\u5934\uFF1B\u6DFB\u52A0\u540E\u4E0D\u53EF\u4FEE\u6539\u3002"
+          },
+          isEdit ? h(
+            "span",
+            {
+              className: "tm-inputWrap tm-inputReadonly",
+              title: "ID \u662F\u914D\u7F6E\u4E3B\u952E\uFF0C\u4E0D\u53EF\u4FEE\u6539"
+            },
+            h("span", { className: "tm-ninput tm-mono" }, d.id)
+          ) : inputWrap(
+            {},
+            h("input", {
+              className: "tm-ninput tm-mono",
+              value: d.id || "",
+              placeholder: "\u5982\uFF1Ads-main",
+              autoComplete: "off",
+              disabled: busy,
+              onChange: (e) => put("id")(e.target.value)
+            })
+          )
+        )
+      );
+      if (!isEdit && !idOk && (d.id || ""))
+        rows.push(
+          h(
+            "p",
+            { key: "idhint", className: "tm-notice tm-notice-warn" },
+            "ID \u4E0D\u5408\u6CD5\uFF1A\u9700\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u6216\u6A2A\u7EBF\uFF0C2\u201331 \u4F4D\uFF0C\u4E14\u4EE5\u5B57\u6BCD\u6216\u6570\u5B57\u5F00\u5934\uFF08\u4E0D\u80FD\u6709\u7A7A\u683C\u3001\u4E0B\u5212\u7EBF\u3001\u4E2D\u6587\uFF09\u3002"
+          )
+        );
+      rows.push(
+        h(
+          FormField,
+          {
+            key: "type",
+            label: "\u7C7B\u578B",
+            required: true,
+            desc: "\u51B3\u5B9A\u53BB\u54EA\u4E2A\u5E73\u53F0\u3001\u7528\u54EA\u4E2A\u63A5\u53E3\u62C9\u53D6\u989D\u5EA6\u3002\u5207\u6362\u7C7B\u578B\u4F1A\u540C\u65F6\u91CD\u7F6E\u8BE5\u7C7B\u578B\u7684\u53C2\u6570\uFF08\u5DF2\u586B\u7684\u9884\u8B66\u7EBF\u3001\u5E01\u79CD\u7B49\u901A\u7528\u9879\u4F1A\u4FDD\u7559\uFF09\u3002"
+          },
           typeSel
         )
-      ));
-      if (!isEdit && !idOk && (d.id || "")) rows.push(h("p", { key: "idhint", className: "tm-cardHint" }, "ID \u89C4\u5219\uFF1A\u5C0F\u5199\u5B57\u6BCD/\u6570\u5B57/\u6A2A\u7EBF\uFF0C2\u201331 \u4F4D\u3002"));
+      );
       const dynMeta = providerMetaOf(d.type);
       if (dynMeta && Array.isArray(dynMeta.fields)) {
         const dynFields = dynMeta.fields.filter((f) => {
           if (!f || !f.showWhen) return true;
           let cur = p[f.showWhen.key];
-          if (cur === void 0 || cur === null || cur === "") cur = f.showWhen.key === "billing" ? "rolling" : "";
+          if (cur === void 0 || cur === null || cur === "")
+            cur = f.showWhen.key === "billing" ? "rolling" : "";
           return String(cur) === String(f.showWhen.eq);
         });
         dynFields.forEach((f, idx) => {
@@ -1424,118 +2443,91 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           const key = "dyn:" + f.key + ":" + idx;
           if (f.kind === "select") {
             const selVal = val === void 0 || val === null || val === "" ? f.key === "billing" ? "rolling" : "" : String(val);
-            rows.push(h(
-              SecRow,
-              { key, label: f.label || f.key },
-              h(PillSelect, {
-                disabled: busy,
-                value: selVal,
-                selectedLabel: ((f.options || []).filter((o) => o.value === selVal)[0] || {}).label || selVal,
-                options: (f.options || []).map((o) => ({ id: o.value, label: o.label })),
-                onSelect: /* @__PURE__ */ ((k) => (id) => putP(k)(id))(f.key)
-              })
-            ));
+            rows.push(
+              h(
+                FormField,
+                {
+                  key,
+                  label: f.label || f.key,
+                  required: f.required === true,
+                  desc: f.hint || void 0
+                },
+                h(PillSelect, {
+                  disabled: busy,
+                  value: selVal,
+                  selectedLabel: ((f.options || []).filter((o) => o.value === selVal)[0] || {}).label || selVal,
+                  options: (f.options || []).map((o) => ({ id: o.value, label: o.label })),
+                  onSelect: /* @__PURE__ */ ((k) => (id) => putP(k)(id))(f.key)
+                })
+              )
+            );
           } else if (f.kind === "number") {
-            rows.push(h(
-              SecRow,
-              { key, label: f.label || f.key },
-              textInput({
-                maxWidth: 170,
-                inputMode: "decimal",
-                placeholder: f.placeholder || "",
-                value: val === void 0 || val === null ? "" : String(val),
-                onChange: /* @__PURE__ */ ((k) => (e) => putP(k)(e.target.value))(f.key)
-              })
-            ));
+            rows.push(
+              h(
+                FormField,
+                { key, label: f.label || f.key, required: f.required === true, desc: f.hint || void 0 },
+                textInput({
+                  maxWidth: 220,
+                  inputMode: "decimal",
+                  placeholder: f.placeholder || "",
+                  value: val === void 0 || val === null ? "" : String(val),
+                  onChange: /* @__PURE__ */ ((k) => (e) => putP(k)(e.target.value))(f.key)
+                })
+              )
+            );
           } else {
             const isSecret = f.kind === "secret";
-            rows.push(h(
-              SecRow,
-              { key, label: f.label || f.key },
-              textInput({
-                mono: !!f.mono,
-                placeholder: f.placeholder || (isSecret ? secretPh : ""),
-                value: val === void 0 || val === null ? "" : String(val),
-                onChange: /* @__PURE__ */ ((k) => (e) => putP(k)(e.target.value))(f.key)
-              })
-            ));
+            rows.push(
+              h(
+                FormField,
+                {
+                  key,
+                  label: f.label || f.key,
+                  required: f.required === true,
+                  hint: isSecret ? "\u586B $NAME \u5F15\u7528\u6216\u660E\u6587\uFF1B\u660E\u6587\u4FDD\u5B58\u540E\u4E0D\u56DE\u663E" : void 0,
+                  desc: f.hint || void 0
+                },
+                textInput({
+                  mono: !!f.mono,
+                  placeholder: f.placeholder || (isSecret ? secretPh : ""),
+                  value: val === void 0 || val === null ? "" : String(val),
+                  onChange: /* @__PURE__ */ ((k) => (e) => putP(k)(e.target.value))(f.key)
+                })
+              )
+            );
           }
-          if (f.hint) rows.push(h("p", { key: key + ":hint", className: "tm-cardHint" }, f.hint));
         });
-        if (dynMeta.hint) rows.push(h("p", { key: "dyn:hint", className: "tm-cardHint" }, dynMeta.hint));
-      } else if (d.type === "opencode" || d.type === "opencode-go") {
-        rows.push(h(
-          SecRow,
-          { key: "wid", label: "workspaceId *" },
-          textInput({ mono: true, value: p.workspaceId || "", placeholder: "\u5982\uFF1Awrk_xxx", onChange: (e) => putP("workspaceId")(e.target.value) })
-        ));
-        rows.push(h(
-          SecRow,
-          { key: "auth", label: "cookie *" },
-          textInput({ mono: true, value: p.cookie || p.auth || "", placeholder: secretPh, onChange: (e) => putP("cookie")(e.target.value) })
-        ));
-      } else if (d.type === "deepseek") {
-        rows.push(h(
-          SecRow,
-          { key: "key", label: "apiKey / token *" },
-          textInput({ mono: true, value: p.apiKey || p.token || "", placeholder: secretPh, onChange: (e) => putP("apiKey")(e.target.value) })
-        ));
-        rows.push(h(
-          SecRow,
-          { key: "low", label: "\u4F4E\u4F59\u989D\u9884\u8B66\u7EBF" },
-          textInput({ maxWidth: 140, inputMode: "decimal", value: p.lowWarn || "", placeholder: "\u5982\uFF1A20", onChange: (e) => putP("lowWarn")(e.target.value) })
-        ));
-        rows.push(h("p", { key: "dshint", className: "tm-cardHint" }, "\u5B98\u65B9\u63A5\u53E3 GET /user/balance\uFF0C\u5E01\u79CD\u81EA\u52A8\u5F52\u4E00\uFF08CNY \u4F18\u5148\uFF09\uFF0C\u6B64\u5904\u65E0\u9700\u586B\u5199\u3002"));
+        if (dynMeta.hint)
+          rows.push(
+            h("p", { key: "dyn:hint", className: "tm-fieldNote" }, h("b", null, "\u5173\u4E8E\u8BE5\u7C7B\u578B\uFF1A"), dynMeta.hint)
+          );
       } else {
-        const billing = p.billing || "rolling";
-        rows.push(h(
-          SecRow,
-          { key: "billing", label: "\u8BA1\u8D39\u5F62\u6001" },
-          h(PillSelect, {
-            disabled: busy,
-            value: billing,
-            selectedLabel: billing === "payg" ? "\u6309\u91CF\u4ED8\u8D39" : "\u6EDA\u52A8\u5237\u65B0",
-            options: [{ id: "rolling", label: "\u6EDA\u52A8\u5237\u65B0" }, { id: "payg", label: "\u6309\u91CF\u4ED8\u8D39" }],
-            onSelect: (id) => putP("billing")(id)
-          })
-        ));
-        if (billing === "rolling") {
-          rows.push(h(
-            SecRow,
-            { key: "total", label: "\u603B\u989D\u5EA6" },
-            textInput({ maxWidth: 170, inputMode: "decimal", value: p.total !== void 0 ? String(p.total) : "", placeholder: "\u5982\uFF1A1000", onChange: (e) => putP("total")(e.target.value) })
-          ));
-          rows.push(h(
-            SecRow,
-            { key: "used", label: "\u5DF2\u7528" },
-            textInput({ maxWidth: 170, inputMode: "decimal", value: p.used !== void 0 ? String(p.used) : "", placeholder: "\u5982\uFF1A100", onChange: (e) => putP("used")(e.target.value) })
-          ));
-        } else {
-          rows.push(h(
-            SecRow,
-            { key: "bal", label: "\u4F59\u989D" },
-            textInput({ maxWidth: 170, inputMode: "decimal", value: p.balance !== void 0 ? String(p.balance) : "", placeholder: "\u5982\uFF1A50", onChange: (e) => putP("balance")(e.target.value) })
-          ));
-          rows.push(h(
-            SecRow,
-            { key: "granted", label: "\u603B\u989D\u5EA6" },
-            textInput({ maxWidth: 170, inputMode: "decimal", value: p.granted !== void 0 ? String(p.granted) : "", placeholder: "\u5982\uFF1A100", onChange: (e) => putP("granted")(e.target.value) })
-          ));
-          rows.push(h(
-            SecRow,
-            { key: "mlow", label: "\u9884\u8B66\u7EBF" },
-            textInput({ maxWidth: 170, inputMode: "decimal", value: p.lowWarn !== void 0 ? String(p.lowWarn) : "", placeholder: "\u5982\uFF1A10", onChange: (e) => putP("lowWarn")(e.target.value) })
-          ));
-        }
+        rows.push(
+          h(
+            "p",
+            { key: "nometa", className: "tm-notice tm-notice-warn" },
+            "Host \u672A\u4E0A\u62A5\u7C7B\u578B\u300C" + String(d.type) + "\u300D\u7684\u5B57\u6BB5\u5B9A\u4E49\uFF1A\u8BF7\u91CD\u542F dsh web \u8BA9\u63D2\u4EF6\u91CD\u65B0\u6CE8\u518C\uFF0C\u7136\u540E\u5237\u65B0\u672C\u9875\u3002"
+          )
+        );
       }
       const Btn = P.Button || (({ children, ...rest }) => h("button", { type: "button", className: "tm-btn", ...rest }, children));
-      rows.push(h(
-        "div",
-        { key: "actions", className: "tm-bar" },
-        h(Btn, { variant: "primary", size: "sm", disabled: !canSubmit, onClick: props.onSubmit }, busy ? "\u4FDD\u5B58\u4E2D\u2026" : props.submitLabel || "\u4FDD\u5B58"),
-        props.onCancel ? h(Btn, { variant: "outline", size: "sm", disabled: busy, onClick: props.onCancel }, "\u53D6\u6D88") : null,
-        !idOk || !nameOk ? h("span", { className: "tm-hint" }, "\u8BF7\u5148\u586B\u5199\u663E\u793A\u540D\u5B57\u4E0E\u5408\u6CD5 ID\u3002") : null
-      ));
+      rows.push(
+        h(
+          "div",
+          { key: "actions", className: "tm-bar" },
+          h(
+            Btn,
+            { variant: "primary", size: "sm", disabled: !canSubmit, onClick: props.onSubmit },
+            busy ? "\u4FDD\u5B58\u4E2D\u2026" : props.submitLabel || "\u4FDD\u5B58"
+          ),
+          props.onCancel ? h(Btn, { variant: "outline", size: "sm", disabled: busy, onClick: props.onCancel }, "\u53D6\u6D88") : null,
+          !idOk || !nameOk ? h(
+            "span",
+            { className: "tm-hint" },
+            !nameOk ? "\u8BF7\u5148\u586B\u5199\u663E\u793A\u540D\u79F0\u3002" : "ID \u4E0D\u5408\u6CD5\uFF1A\u9700\u5C0F\u5199\u5B57\u6BCD/\u6570\u5B57/\u6A2A\u7EBF\uFF0C2\u201331 \u4F4D\uFF0C\u5B57\u6BCD\u6216\u6570\u5B57\u5F00\u5934\u3002"
+          ) : null
+        )
+      );
       return h("div", { className: "tm-section" }, rows);
     }
     const NEW_VENDOR2 = { id: "", name: "", type: "opencode", params: { workspaceId: "", cookie: "" } };
@@ -1544,7 +2536,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       return n === 0 ? "\u5173\u95ED\u81EA\u52A8\u5237\u65B0" : n + " \u79D2";
     }
     function aiManual(namespace, docPath) {
-      let types = "opencode / deepseek / deepseek-api / deepseek-web / manual";
+      let types = "opencode / deepseek / commandcode / manual";
       try {
         const ps = providerMetas();
         if (ps && ps.length) types = ps.map((x) => x.type).join(" / ");
@@ -1565,15 +2557,20 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         "      name: DeepSeek \u5B98\u65B9",
         "      type: deepseek",
         '      params: { token: "$DS_TOKEN", apiKey: "$DEEPSEEK_API_KEY", lowWarn: 5 }',
-        "      # deepseek \u6309\u5BC6\u94A5\u683C\u5F0F\u81EA\u52A8\u9009\u8DEF\uFF1Ask- \u5F00\u5934\u8D70\u5B98\u65B9\u4F59\u989D\uFF0C\u5176\u4F59\u8D70\u7F51\u9875\u8D26\u5355\uFF08\u542B\u5386\u53F2\uFF09\uFF1B\u4E00\u8DEF\u5931\u6548\u81EA\u52A8\u6362\u8DEF",
-        "      # \u7EAF\u901A\u9053\uFF1Atype: deepseek-api\uFF08\u53EA\u8981 apiKey\uFF09/ deepseek-web\uFF08\u53EA\u8981 token\uFF0C\u53EF\u9009 cookie\uFF09",
+        "      # deepseek \u4E00\u4E2A\u7C7B\u578B\u641E\u5B9A\u4E24\u79CD\u51ED\u636E\uFF1Ask- \u5F00\u5934\u7684 apiKey \u8D70\u5B98\u65B9\u4F59\u989D\uFF0C\u4F1A\u8BDD token \u8D70\u7F51\u9875\u8D26\u5355\uFF08\u542B\u5386\u53F2\uFF09\uFF1B\u4E00\u8DEF\u5931\u6548\u81EA\u52A8\u6362\u8DEF",
+        "      # \u65E7 type deepseek-api / deepseek-web \u5DF2\u5408\u5E76\u4E3A\u522B\u540D\uFF0C\u8001\u914D\u7F6E\u539F\u6837\u53EF\u7528\uFF08\u8BFB\u8DEF\u5F84\u81EA\u52A8\u5F52\u4E00\uFF0C\u4E0D\u4F1A\u6539\u5199\u4F60\u7684\u6587\u4EF6\uFF09",
+        "    - id: cc-main",
+        "      name: Command Code",
+        "      type: commandcode",
+        '      params: { apiKey: "$COMMAND_CODE_API_KEY", lowWarn: 10 }',
+        "      # apiKey \u7559\u7A7A\u65F6\u81EA\u52A8\u56DE\u9000\u8BFB $COMMAND_CODE_API_KEY\uFF08\u4E0E CLI \u540C\u4E00\u7EA6\u5B9A\uFF09",
         "    - id: m1",
         "      name: \u624B\u52A8\u8D26\u672C",
         "      type: manual",
         "      params: { billing: payg, balance: 50, granted: 100, lowWarn: 10 }",
         "\u5BC6\u94A5\uFF1A$NAME\uFF08\u63A8\u8350\uFF1A\u5148\u8BFB ~/.dsh/.credentials.yaml\uFF0C\u518D\u8BFB\u73AF\u5883\u53D8\u91CF\uFF09/ \u660E\u6587\uFF08\u8BBE\u7F6E\u9875\u4E0D\u660E\u6587\u56DE\u663E\uFF0C\u7F16\u8F91\u7559\u7A7A\u5373\u4FDD\u7559\uFF09/ {env:}/{cred:}\uFF08\u65E7\u5199\u6CD5\uFF0C\u4EC5\u517C\u5BB9\uFF09",
         "cookie\uFF1A\u6D4F\u89C8\u5668\u5F00\u53D1\u8005\u5DE5\u5177 \u2192 Application \u2192 Cookies \u2192 \u590D\u5236 auth \u7684\u503C\uFF0C\u6574\u6BB5 Cookie \u539F\u6837\u7C98\u8D34\u4EA6\u53EF\uFF1BworkspaceId \u89C1\u5404\u5B57\u6BB5\u4E0B\u65B9\u7684\u83B7\u53D6\u8BF4\u660E",
-        "deepseek \u4E09\u7C7B\u578B\uFF1Adeepseek\uFF08\u81EA\u52A8\u9009\u8DEF\uFF0C\u63A8\u8350\uFF09/ deepseek-api\uFF08\u7EAF apiKey\uFF09/ deepseek-web\uFF08\u7EAF\u4F1A\u8BDD token\uFF09\uFF1BapiKey \u4E0E\u4F1A\u8BDD\u7968\u636E\u4E0D\u901A\u7528\uFF08\u5B9E\u6D4B 40003\uFF09\uFF0C\u4E0D\u8981\u6DF7\u586B\u5230\u5BF9\u65B9\u5B57\u6BB5",
+        "deepseek\uFF1A\u5355\u7C7B\u578B\u81EA\u52A8\u9009\u8DEF\uFF08\u65E7 deepseek-api / deepseek-web \u4E3A\u522B\u540D\uFF09\uFF1BapiKey \u4E0E\u4F1A\u8BDD\u7968\u636E\u4E0D\u901A\u7528\uFF08\u5B9E\u6D4B 40003\uFF09\uFF0C\u4E0D\u8981\u6DF7\u586B\u5230\u5BF9\u65B9\u5B57\u6BB5",
         "manual\uFF1Abilling=rolling \u586B total/used\uFF1Bbilling=payg \u586B balance/granted/lowWarn",
         "\u53EF\u7528 type\uFF08\u672C\u673A Host \u5DF2\u6CE8\u518C\uFF09\uFF1A" + types + "\uFF08\u65B0\u589E\u4F9B\u5E94\u5546\u53EA\u9700 Host \u6CE8\u518C\uFF0C\u65B0 type \u81EA\u52A8\u51FA\u73B0\u5728\u6B64\uFF09"
       ].join("\n");
@@ -1682,239 +2679,385 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const rawSec = s.cfg ? s.cfg.refreshSec : void 0;
       const curSec = rawSec === void 0 || rawSec === null || rawSec === "" ? 60 : Number(rawSec) === 0 ? 0 : isFinite(Number(rawSec)) ? Math.min(3600, Math.max(10, Number(rawSec) || 60)) : 60;
       const kids = [];
-      kids.push(h(
-        "p",
-        { key: "d", className: "tm-intro" },
-        "\u591A\u4F9B\u5E94\u5546\u6EDA\u52A8\u989D\u5EA6 / \u6309\u91CF\u4F59\u989D\uFF0C\u4FA7\u8FB9\u680F\u5B9E\u65F6\u5361\u7247\u5C55\u793A\u3002\u914D\u7F6E\u6301\u4E45\u5316\u5728 settings.yaml\uFF08",
-        h("code", { className: "tm-mono" }, s.namespace || "dshp-token-meter"),
-        " \u547D\u540D\u7A7A\u95F4" + (s.docPath ? "\uFF0C\u6587\u4EF6 " + s.docPath : "") + "\uFF09\uFF0C\u5916\u90E8\u7F16\u8F91\u70ED\u91CD\u8F7D\uFF1B\u5BC6\u94A5\u7528 $NAME \u5F15\u7528\u6216\u660E\u6587\u3002"
-      ));
+      kids.push(
+        h(
+          "p",
+          { key: "d", className: "tm-intro" },
+          "\u591A\u4F9B\u5E94\u5546\u6EDA\u52A8\u989D\u5EA6 / \u6309\u91CF\u4F59\u989D\uFF0C\u4FA7\u8FB9\u680F\u5B9E\u65F6\u5361\u7247\u5C55\u793A\u3002\u914D\u7F6E\u6301\u4E45\u5316\u5728 settings.yaml\uFF08",
+          h("code", { className: "tm-mono" }, s.namespace || "dshp-token-meter"),
+          " \u547D\u540D\u7A7A\u95F4" + (s.docPath ? "\uFF0C\u6587\u4EF6 " + s.docPath : "") + "\uFF09\uFF0C\u5916\u90E8\u7F16\u8F91\u70ED\u91CD\u8F7D\uFF1B\u5BC6\u94A5\u7528 $NAME \u5F15\u7528\u6216\u660E\u6587\u3002"
+        )
+      );
       if (s.error) kids.push(h("p", { key: "err", className: "tm-notice tm-notice-err" }, s.error));
       if (!s.cfg) {
-        kids.push(h(
-          "div",
-          { key: "loading", className: "tm-loading" },
-          h("span", { className: "tm-spinner" }),
-          h("span", { className: "tm-loadingText" }, s.loading ? "\u6B63\u5728\u8BFB\u53D6\u989D\u5EA6\u914D\u7F6E\u2026" : "\u989D\u5EA6\u914D\u7F6E\u52A0\u8F7D\u5931\u8D25")
-        ));
+        kids.push(
+          h(
+            "div",
+            { key: "loading", className: "tm-loading" },
+            h("span", { className: "tm-spinner" }),
+            h("span", { className: "tm-loadingText" }, s.loading ? "\u6B63\u5728\u8BFB\u53D6\u989D\u5EA6\u914D\u7F6E\u2026" : "\u989D\u5EA6\u914D\u7F6E\u52A0\u8F7D\u5931\u8D25")
+          )
+        );
         return h("div", { className: "tm-page" }, kids);
       }
       const a0 = activeOf(s);
       const aSnap = a0 && s.snaps[a0.id];
-      kids.push(h(
-        "div",
-        { key: "status", className: "tm-section" },
+      kids.push(
         h(
-          SecRow,
-          { key: "a", label: "\u5F53\u524D\u4F9B\u5E94\u5546", desc: "\u4FA7\u8FB9\u680F\u5361\u7247\u5C55\u793A\u7684\u989D\u5EA6\u6765\u6E90\u3002" },
-          a0 ? h("span", null, a0.name, " ", h(Badge, { kind: "info", text: typeLabel(a0.type) })) : h(Badge, { kind: "muted", text: "\u6781\u7B80\u6A21\u5F0F\uFF08\u65E0\uFF09" })
-        ),
-        h(
-          SecRow,
-          { key: "n", label: "\u4F9B\u5E94\u5546\u6570\u91CF" },
-          h(Badge, { kind: vendors.length ? "info" : "muted", text: vendors.length + " \u4E2A" })
-        ),
-        h(
-          SecRow,
-          { key: "v", label: "\u989D\u5EA6\u663E\u793A" },
-          shown ? h(Badge, { kind: "ok", text: "\u663E\u793A\u4E2D" }) : h(Badge, { kind: "muted", text: "\u5DF2\u9690\u85CF" })
-        ),
-        h(
-          SecRow,
-          { key: "r", label: "\u81EA\u52A8\u5237\u65B0" },
-          curSec === 0 ? h(Badge, { kind: "muted", text: "\u5DF2\u5173\u95ED" }) : h(Badge, { kind: "ok", text: "\u6BCF " + curSec + " \u79D2" })
-        ),
-        h(
-          SecRow,
-          { key: "u", label: "\u6700\u8FD1\u62C9\u53D6" },
-          aSnap && aSnap.at ? h("span", { className: "tm-hint" }, timeAgo(aSnap.at)) : h("span", { className: "tm-hint" }, a0 ? "\u672A\u62C9\u53D6" : "\u2014")
-        ),
-        h(
-          SecRow,
-          { key: "f", label: "\u6D6E\u7A97" },
-          s.floatOpen ? h(
-            "span",
-            { className: "tm-bar", style: { padding: 0, border: "none" } },
-            h(Badge, { kind: "info", text: "\u5DF2\u5F39\u51FA" }),
-            h(Btn, { variant: "outline", size: "sm", disabled: busy, onClick: () => setFloatOpen(false) }, "\u6536\u56DE\u4FA7\u8FB9\u680F")
-          ) : h("span", { className: "tm-hint" }, "\u5728\u4FA7\u8FB9\u680F\u4E2D\uFF08\u5361\u7247\u6807\u9898\u680F \u283F \u53EF\u62D6\u51FA\uFF09")
+          "div",
+          { key: "status", className: "tm-section" },
+          h(
+            SecRow,
+            { key: "a", label: "\u5F53\u524D\u4F9B\u5E94\u5546", desc: "\u4FA7\u8FB9\u680F\u5361\u7247\u5C55\u793A\u7684\u989D\u5EA6\u6765\u6E90\u3002" },
+            a0 ? h("span", null, a0.name, " ", h(Badge, { kind: "info", text: typeLabel(a0.type) })) : h(Badge, { kind: "muted", text: "\u6781\u7B80\u6A21\u5F0F\uFF08\u65E0\uFF09" })
+          ),
+          h(
+            SecRow,
+            { key: "n", label: "\u4F9B\u5E94\u5546\u6570\u91CF" },
+            h(Badge, { kind: vendors.length ? "info" : "muted", text: vendors.length + " \u4E2A" })
+          ),
+          h(
+            SecRow,
+            { key: "v", label: "\u989D\u5EA6\u663E\u793A" },
+            shown ? h(Badge, { kind: "ok", text: "\u663E\u793A\u4E2D" }) : h(Badge, { kind: "muted", text: "\u5DF2\u9690\u85CF" })
+          ),
+          h(
+            SecRow,
+            { key: "r", label: "\u81EA\u52A8\u5237\u65B0" },
+            curSec === 0 ? h(Badge, { kind: "muted", text: "\u5DF2\u5173\u95ED" }) : h(Badge, { kind: "ok", text: "\u6BCF " + curSec + " \u79D2" })
+          ),
+          h(
+            SecRow,
+            { key: "u", label: "\u6700\u8FD1\u62C9\u53D6" },
+            aSnap && aSnap.at ? h("span", { className: "tm-hint" }, timeAgo(aSnap.at)) : h("span", { className: "tm-hint" }, a0 ? "\u672A\u62C9\u53D6" : "\u2014")
+          ),
+          h(
+            SecRow,
+            { key: "f", label: "\u6D6E\u7A97" },
+            s.floatOpen ? h(
+              "span",
+              { className: "tm-bar", style: { padding: 0, border: "none" } },
+              h(Badge, { kind: "info", text: "\u5DF2\u5F39\u51FA" }),
+              h(
+                Btn,
+                { variant: "outline", size: "sm", disabled: busy, onClick: () => setFloatOpen(false) },
+                "\u6536\u56DE\u4FA7\u8FB9\u680F"
+              )
+            ) : h("span", { className: "tm-hint" }, "\u5728\u4FA7\u8FB9\u680F\u4E2D\uFF08\u5361\u7247\u6807\u9898\u680F \u283F \u53EF\u62D6\u51FA\uFF09")
+          )
         )
-      ));
-      kids.push(h(
-        "div",
-        { key: "display", className: "tm-section" },
+      );
+      kids.push(
         h(
-          SecRow,
-          { key: "sw", label: "\u4FA7\u8FB9\u680F\u989D\u5EA6\u5361", desc: "\u5173\u95ED\u540E\u4FA7\u8FB9\u680F\u4EC5\u4FDD\u7559\u5360\u4F4D\u63D0\u793A\uFF0C\u4E0D\u518D\u81EA\u52A8\u62C9\u53D6\uFF1B\u4F9B\u5E94\u5546\u914D\u7F6E\u4E0E\u624B\u52A8\u62C9\u53D6\u4E0D\u53D7\u5F71\u54CD\u3002" },
-          h("button", {
-            className: "tm-switch" + (shown ? " tm-switchOn" : ""),
-            role: "switch",
-            "aria-checked": shown,
-            disabled: busy,
-            "aria-label": "\u4FA7\u8FB9\u680F\u989D\u5EA6\u5361",
-            onClick: () => void toggleEnabled()
-          }, h("span", { className: "tm-knob" }))
+          "div",
+          { key: "display", className: "tm-section" },
+          h(
+            SecRow,
+            {
+              key: "sw",
+              label: "\u4FA7\u8FB9\u680F\u989D\u5EA6\u5361",
+              desc: "\u5173\u95ED\u540E\u4FA7\u8FB9\u680F\u4EC5\u4FDD\u7559\u5360\u4F4D\u63D0\u793A\uFF0C\u4E0D\u518D\u81EA\u52A8\u62C9\u53D6\uFF1B\u4F9B\u5E94\u5546\u914D\u7F6E\u4E0E\u624B\u52A8\u62C9\u53D6\u4E0D\u53D7\u5F71\u54CD\u3002"
+            },
+            h(
+              "button",
+              {
+                className: "tm-switch" + (shown ? " tm-switchOn" : ""),
+                role: "switch",
+                "aria-checked": shown,
+                disabled: busy,
+                "aria-label": "\u4FA7\u8FB9\u680F\u989D\u5EA6\u5361",
+                onClick: () => void toggleEnabled()
+              },
+              h("span", { className: "tm-knob" })
+            )
+          )
         )
-      ));
+      );
       const activeSelect = h(PillSelect, {
         disabled: busy,
         value: activeId,
         selectedLabel: a0 ? a0.name + "\uFF08" + typeLabel(a0.type) + "\uFF09" : "\u65E0 \xB7 \u6781\u7B80\u6A21\u5F0F\uFF08\u4E0D\u62C9\u53D6\uFF09",
-        options: [{ id: "", label: "\u65E0 \xB7 \u6781\u7B80\u6A21\u5F0F\uFF08\u4E0D\u62C9\u53D6\uFF09" }].concat(vendors.map((v) => ({ id: v.id, label: v.name + "\uFF08" + typeLabel(v.type) + "\uFF09" }))),
+        options: [{ id: "", label: "\u65E0 \xB7 \u6781\u7B80\u6A21\u5F0F\uFF08\u4E0D\u62C9\u53D6\uFF09" }].concat(
+          vendors.map((v) => ({ id: v.id, label: v.name + "\uFF08" + typeLabel(v.type) + "\uFF09" }))
+        ),
         onSelect: (id) => void applyActive(id)
       });
-      const vrows = [h(SecRow, { key: "__active", label: "\u5F53\u524D\u4F9B\u5E94\u5546", desc: "\u70B9\u5F00\u9009\u62E9\u4FA7\u8FB9\u680F\u5C55\u793A\u7684\u4F9B\u5E94\u5546\uFF1B\u65E0 = \u6781\u7B80\u6A21\u5F0F\u3002" }, activeSelect)];
+      const vrows = [
+        h(
+          SecRow,
+          { key: "__active", label: "\u5F53\u524D\u4F9B\u5E94\u5546", desc: "\u70B9\u5F00\u9009\u62E9\u4FA7\u8FB9\u680F\u5C55\u793A\u7684\u4F9B\u5E94\u5546\uFF1B\u65E0 = \u6781\u7B80\u6A21\u5F0F\u3002" },
+          activeSelect
+        )
+      ];
       vendors.forEach((v) => {
         const snap = s.snaps[v.id];
         const isCur = v.id === activeId;
-        const status = snap && snap.ok ? h("span", { className: "tm-hint" }, "\u66F4\u65B0" + timeAgo(snap.at)) : snap ? P.Tooltip ? h(P.Tooltip, { label: snap.error || "\u62C9\u53D6\u5931\u8D25", side: "top" }, h("span", { className: "tm-hint" }, "\u62C9\u53D6\u5931\u8D25")) : h("span", { className: "tm-hint", title: snap.error || "\u62C9\u53D6\u5931\u8D25" }, "\u62C9\u53D6\u5931\u8D25") : h("span", { className: "tm-hint" }, "\u672A\u62C9\u53D6");
-        vrows.push(h(
-          SecRow,
-          {
-            key: "v:" + v.id,
-            wrap: true,
-            label: h(
-              "span",
-              { style: { display: "flex", alignItems: "center", gap: 6, minWidth: 0, maxWidth: "100%" } },
-              h("span", { className: "tm-dot" + (snap && !snap.ok ? " bad" : "") }),
-              h("span", { className: "tm-vname2", style: { maxWidth: 280 } }, v.name),
-              h(Badge, { kind: "info", text: typeLabel(v.type) }),
-              isCur ? h(Badge, { kind: "ok", text: "\u5F53\u524D" }) : null,
-              secretBadge(v.secretKind)
-            )
-          },
+        const status = snap && snap.ok ? h("span", { className: "tm-hint" }, "\u66F4\u65B0" + timeAgo(snap.at)) : snap ? P.Tooltip ? h(
+          P.Tooltip,
+          { label: snap.error || "\u62C9\u53D6\u5931\u8D25", side: "top" },
+          h("span", { className: "tm-hint" }, "\u62C9\u53D6\u5931\u8D25")
+        ) : h("span", { className: "tm-hint", title: snap.error || "\u62C9\u53D6\u5931\u8D25" }, "\u62C9\u53D6\u5931\u8D25") : h("span", { className: "tm-hint" }, "\u672A\u62C9\u53D6");
+        vrows.push(
           h(
-            "span",
-            { className: "tm-bar", style: { width: "100%", padding: 0, border: "none" } },
-            status,
-            h("span", { style: { flex: 1 } }),
-            h(Btn, { variant: "outline", size: "sm", disabled: busy, onClick: () => void refreshVendor(v.id) }, "\u62C9\u53D6"),
-            h(Btn, { variant: "outline", size: "sm", disabled: busy, onClick: () => setEditing({ id: v.id, data: JSON.parse(JSON.stringify(v)) }) }, "\u7F16\u8F91"),
-            v.secretKind === "plain" ? h(Btn, { variant: "ghost", size: "sm", disabled: busy, title: "\u660E\u6587\u8F6C\u5B58\u7CFB\u7EDF\u51ED\u636E\uFF0C\u6539\u5199\u4E3A $NAME \u5F15\u7528", onClick: () => void toCred(v.id) }, "\u5B58\u51ED\u636E") : null,
-            h(Btn, { variant: "ghost", size: "sm", disabled: busy, onClick: () => requestDelVendor(v) }, "\u5220\u9664")
+            SecRow,
+            {
+              key: "v:" + v.id,
+              wrap: true,
+              label: h(
+                "span",
+                { style: { display: "flex", alignItems: "center", gap: 6, minWidth: 0, maxWidth: "100%" } },
+                h("span", { className: "tm-dot" + (snap && !snap.ok ? dotToneOf(snap) : "") }),
+                h("span", { className: "tm-vname2", style: { maxWidth: 280 } }, v.name),
+                h(Badge, { kind: "info", text: typeLabel(v.type) }),
+                isCur ? h(Badge, { kind: "ok", text: "\u5F53\u524D" }) : null,
+                secretBadge(v.secretKind)
+              )
+            },
+            h(
+              "span",
+              { className: "tm-bar", style: { width: "100%", padding: 0, border: "none" } },
+              status,
+              h("span", { style: { flex: 1 } }),
+              h(
+                Btn,
+                { variant: "outline", size: "sm", disabled: busy, onClick: () => void refreshVendor(v.id) },
+                "\u62C9\u53D6"
+              ),
+              h(
+                Btn,
+                {
+                  variant: "outline",
+                  size: "sm",
+                  disabled: busy,
+                  onClick: () => setEditing({ id: v.id, data: JSON.parse(JSON.stringify(v)) })
+                },
+                "\u7F16\u8F91"
+              ),
+              v.secretKind === "plain" ? h(
+                Btn,
+                {
+                  variant: "ghost",
+                  size: "sm",
+                  disabled: busy,
+                  title: "\u660E\u6587\u8F6C\u5B58\u7CFB\u7EDF\u51ED\u636E\uFF0C\u6539\u5199\u4E3A $NAME \u5F15\u7528",
+                  onClick: () => void toCred(v.id)
+                },
+                "\u5B58\u51ED\u636E"
+              ) : null,
+              h(
+                Btn,
+                { variant: "ghost", size: "sm", disabled: busy, onClick: () => requestDelVendor(v) },
+                "\u5220\u9664"
+              )
+            )
           )
-        ));
+        );
       });
-      kids.push(h(
-        "div",
-        { key: "vendors", className: "tm-section" },
-        h("div", { className: "tm-sectionHead" }, "\u4F9B\u5E94\u5546"),
-        h("p", { className: "tm-cardHint", style: { margin: "0 0 4px" } }, "\u4FA7\u8FB9\u680F\u5361\u7247\u70B9\u4F9B\u5E94\u5546\u540D\u4E5F\u53EF\u5207\u6362\u3002\u5BC6\u94A5 $NAME \u5F15\u7528\u4F18\u5148\uFF0C\u660E\u6587\u4FDD\u5B58\u540E\u4E0D\u660E\u6587\u56DE\u663E\u3002"),
-        vrows
-      ));
-      if (editing) kids.push(h(
-        "div",
-        { key: "edit", className: "tm-section" },
-        h("div", { className: "tm-sectionHead" }, "\u7F16\u8F91 " + editing.id),
-        h("p", { className: "tm-cardHint", style: { margin: "0 0 4px" } }, "ID \u662F\u4E3B\u952E\uFF0C\u4E0D\u53EF\u4FEE\u6539\uFF1B\u5BC6\u94A5\u7559\u7A7A\u5373\u4FDD\u7559\u539F\u503C\u3002"),
-        h(VendorForm, {
-          draft: editing.data,
-          set: (nd) => setEditing({ id: editing.id, data: nd }),
-          submitLabel: "\u4FDD\u5B58\u4FEE\u6539",
-          busy,
-          isEdit: true,
-          onCancel: () => setEditing(null),
-          onSubmit: () => void saveVendor(editing.data, true)
-        })
-      ));
-      kids.push(h(
-        "div",
-        { key: "add", className: "tm-section" },
-        h("div", { className: "tm-sectionHead" }, "\u6DFB\u52A0\u4F9B\u5E94\u5546"),
-        h(VendorForm, {
-          draft,
-          set: setDraft,
-          submitLabel: "\u6DFB\u52A0",
-          busy,
-          onSubmit: () => void saveVendor(draft, false)
-        })
-      ));
-      const allSecs = SEC_PRESETS2.indexOf(curSec) >= 0 ? SEC_PRESETS2 : [curSec].concat(SEC_PRESETS2);
-      kids.push(h(
-        "div",
-        { key: "refresh", className: "tm-section" },
-        h("div", { className: "tm-sectionHead" }, "\u81EA\u52A8\u5237\u65B0"),
-        h(
-          SecRow,
-          { key: "sec", label: "\u5237\u65B0\u95F4\u9694", desc: "\u5F53\u524D\u4F9B\u5E94\u5546\u6309\u95F4\u9694\u81EA\u52A8\u62C9\u53D6\uFF1B\u5207\u6362\u4F9B\u5E94\u5546\u4F1A\u7ACB\u5373\u5237\u65B0\u4E00\u6B21\uFF1B\u5931\u8D25\u65F6\u4FDD\u7559\u65E7\u6570\u636E\u5E76\u5728\u5361\u7247\u6807\u6CE8\u3002" },
-          h(PillSelect, {
-            disabled: busy,
-            value: String(curSec),
-            selectedLabel: secLabel2(curSec),
-            options: allSecs.map((n) => ({ id: String(n), label: secLabel2(n) })),
-            onSelect: (id) => void saveSecVal(Number(id))
-          })
-        )
-      ));
-      kids.push(h(
-        "div",
-        { key: "tools", className: "tm-section" },
+      kids.push(
         h(
           "div",
-          { className: "tm-bar", style: { borderBottom: "none" } },
-          h(Btn, { variant: "outline", size: "sm", disabled: busy, onClick: () => void withBusy(() => reload()) }, busy ? "\u8BFB\u53D6\u4E2D\u2026" : "\u91CD\u65B0\u8BFB\u53D6"),
-          h(Btn, { variant: "outline", size: "sm", disabled: busy, onClick: () => void withBusy(() => refreshVendor()) }, "\u5168\u90E8\u62C9\u53D6")
+          { key: "vendors", className: "tm-section" },
+          h("div", { className: "tm-sectionHead" }, "\u4F9B\u5E94\u5546"),
+          h(
+            "p",
+            { className: "tm-cardHint", style: { margin: "0 0 4px" } },
+            "\u4FA7\u8FB9\u680F\u5361\u7247\u70B9\u4F9B\u5E94\u5546\u540D\u4E5F\u53EF\u5207\u6362\u3002\u5BC6\u94A5 $NAME \u5F15\u7528\u4F18\u5148\uFF0C\u660E\u6587\u4FDD\u5B58\u540E\u4E0D\u660E\u6587\u56DE\u663E\u3002"
+          ),
+          vrows
         )
-      ));
+      );
+      if (editing)
+        kids.push(
+          h(
+            "div",
+            { key: "edit", className: "tm-section" },
+            h("div", { className: "tm-sectionHead" }, "\u7F16\u8F91 " + editing.id),
+            h(
+              "p",
+              { className: "tm-cardHint", style: { margin: "0 0 4px" } },
+              "ID \u662F\u4E3B\u952E\uFF0C\u4E0D\u53EF\u4FEE\u6539\uFF1B\u5BC6\u94A5\u7559\u7A7A\u5373\u4FDD\u7559\u539F\u503C\u3002"
+            ),
+            h(VendorForm, {
+              draft: editing.data,
+              set: (nd) => setEditing({ id: editing.id, data: nd }),
+              submitLabel: "\u4FDD\u5B58\u4FEE\u6539",
+              busy,
+              isEdit: true,
+              onCancel: () => setEditing(null),
+              onSubmit: () => void saveVendor(editing.data, true)
+            })
+          )
+        );
+      kids.push(
+        h(
+          "div",
+          { key: "add", className: "tm-section" },
+          h("div", { className: "tm-sectionHead" }, "\u6DFB\u52A0\u4F9B\u5E94\u5546"),
+          h(VendorForm, {
+            draft,
+            set: setDraft,
+            submitLabel: "\u6DFB\u52A0",
+            busy,
+            onSubmit: () => void saveVendor(draft, false)
+          })
+        )
+      );
+      const allSecs = SEC_PRESETS2.indexOf(curSec) >= 0 ? SEC_PRESETS2 : [curSec].concat(SEC_PRESETS2);
+      kids.push(
+        h(
+          "div",
+          { key: "refresh", className: "tm-section" },
+          h("div", { className: "tm-sectionHead" }, "\u81EA\u52A8\u5237\u65B0"),
+          h(
+            SecRow,
+            {
+              key: "sec",
+              label: "\u5237\u65B0\u95F4\u9694",
+              desc: "\u5F53\u524D\u4F9B\u5E94\u5546\u6309\u95F4\u9694\u81EA\u52A8\u62C9\u53D6\uFF1B\u5207\u6362\u4F9B\u5E94\u5546\u4F1A\u7ACB\u5373\u5237\u65B0\u4E00\u6B21\uFF1B\u5931\u8D25\u65F6\u4FDD\u7559\u65E7\u6570\u636E\u5E76\u5728\u5361\u7247\u6807\u6CE8\u3002"
+            },
+            h(PillSelect, {
+              disabled: busy,
+              value: String(curSec),
+              selectedLabel: secLabel2(curSec),
+              options: allSecs.map((n) => ({ id: String(n), label: secLabel2(n) })),
+              onSelect: (id) => void saveSecVal(Number(id))
+            })
+          )
+        )
+      );
+      kids.push(
+        h(
+          "div",
+          { key: "tools", className: "tm-section" },
+          h(
+            "div",
+            { className: "tm-bar", style: { borderBottom: "none" } },
+            h(
+              Btn,
+              { variant: "outline", size: "sm", disabled: busy, onClick: () => void withBusy(() => reload()) },
+              busy ? "\u8BFB\u53D6\u4E2D\u2026" : "\u91CD\u65B0\u8BFB\u53D6"
+            ),
+            h(
+              Btn,
+              {
+                variant: "outline",
+                size: "sm",
+                disabled: busy,
+                onClick: () => void withBusy(() => refreshVendor())
+              },
+              "\u5168\u90E8\u62C9\u53D6"
+            )
+          )
+        )
+      );
       const manual = aiManual(s.namespace || "dshp-token-meter", s.docPath || "");
-      kids.push(h(
-        "div",
-        { key: "manual", className: "tm-section" },
-        h("div", { className: "tm-sectionHead" }, "\u7ED9 AI \u7684\u914D\u7F6E\u8BF4\u660E\u4E66"),
-        h("p", { className: "tm-cardHint", style: { margin: "0 0 4px" } }, "AI \u53EF\u76F4\u63A5\u7F16\u8F91 settings.yaml \u7684 ", h("code", { className: "tm-mono" }, s.namespace || "dshp-token-meter"), " \u5206\u8282\uFF0C\u4FDD\u5B58\u5373\u751F\u6548\uFF08\u70ED\u91CD\u8F7D\uFF09\uFF0C\u65E0\u9700\u8D70\u8868\u5355\u3002\u5BC6\u94A5\u4F18\u5148\u7528 $NAME \u5F15\u7528\u5199\u6CD5\u3002"),
-        P.CodeBlock ? h(P.CodeBlock, { code: manual, lang: "yaml", copyLabel: "\u590D\u5236", copiedLabel: "\u5DF2\u590D\u5236", className: "tm-codeblock" }) : h("pre", { className: "tm-mono", style: { fontSize: 11, whiteSpace: "pre-wrap", wordBreak: "break-all" } }, manual)
-      ));
-      kids.push(h("p", { key: "foot", className: "tm-footerNote", style: { marginTop: 4 } }, "manual \u7C7B\u578B\u76F4\u63A5\u5199\u6570\u5B57\uFF0C\u65E0\u9700\u62C9\u53D6\uFF1BactiveVendor \u4E3A\u7A7A\u5B57\u7B26\u4E32\u65F6\u8FDB\u5165\u6781\u7B80\u6A21\u5F0F\u3002"));
+      kids.push(
+        h(
+          "div",
+          { key: "manual", className: "tm-section" },
+          h("div", { className: "tm-sectionHead" }, "\u7ED9 AI \u7684\u914D\u7F6E\u8BF4\u660E\u4E66"),
+          h(
+            "p",
+            { className: "tm-cardHint", style: { margin: "0 0 4px" } },
+            "AI \u53EF\u76F4\u63A5\u7F16\u8F91 settings.yaml \u7684 ",
+            h("code", { className: "tm-mono" }, s.namespace || "dshp-token-meter"),
+            " \u5206\u8282\uFF0C\u4FDD\u5B58\u5373\u751F\u6548\uFF08\u70ED\u91CD\u8F7D\uFF09\uFF0C\u65E0\u9700\u8D70\u8868\u5355\u3002\u5BC6\u94A5\u4F18\u5148\u7528 $NAME \u5F15\u7528\u5199\u6CD5\u3002"
+          ),
+          P.CodeBlock ? h(P.CodeBlock, {
+            code: manual,
+            lang: "yaml",
+            copyLabel: "\u590D\u5236",
+            copiedLabel: "\u5DF2\u590D\u5236",
+            className: "tm-codeblock"
+          }) : h(
+            "pre",
+            {
+              className: "tm-mono",
+              style: { fontSize: 11, whiteSpace: "pre-wrap", wordBreak: "break-all" }
+            },
+            manual
+          )
+        )
+      );
+      kids.push(
+        h(
+          "p",
+          { key: "foot", className: "tm-footerNote", style: { marginTop: 4 } },
+          "manual \u7C7B\u578B\u76F4\u63A5\u5199\u6570\u5B57\uFF0C\u65E0\u9700\u62C9\u53D6\uFF1BactiveVendor \u4E3A\u7A7A\u5B57\u7B26\u4E32\u65F6\u8FDB\u5165\u6781\u7B80\u6A21\u5F0F\u3002"
+        )
+      );
       if (confirmDel) {
         const target = confirmDel;
         if (P.RiskConfirmation) {
-          kids.push(h(P.RiskConfirmation, {
-            key: "confirm-del",
-            open: true,
-            title: "\u5220\u9664\u4F9B\u5E94\u5546\u300C" + target.name + "\u300D\uFF1F",
-            description: "\u8BE5\u4F9B\u5E94\u5546\u7684\u914D\u7F6E\u4E0E\u4FA7\u8FB9\u680F\u5FEB\u7167\u5C06\u4E00\u5E76\u6E05\u9664\uFF0C\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002",
-            acknowledgeLabel: "\u6211\u5DF2\u4E86\u89E3\uFF0C\u5220\u9664\u8BE5\u4F9B\u5E94\u5546",
-            cancelLabel: "\u53D6\u6D88",
-            closeLabel: "\u5173\u95ED",
-            confirmLabel: "\u5220\u9664",
-            acknowledged: acked,
-            onAcknowledgedChange: setAcked,
-            onCancel: () => setConfirmDel(null),
-            onConfirm: () => {
-              setConfirmDel(null);
-              void delVendor(target.id);
-            }
-          }));
-        } else if (acked) {
-          kids.push(h(
-            "div",
-            { key: "confirm-del", className: "tm-errbox" },
-            h("div", { className: "tm-errtext" }, "\u786E\u8BA4\u5220\u9664\u300C" + target.name + "\u300D\uFF1F"),
-            h(
-              "div",
-              { style: { display: "flex", gap: 8, marginTop: 6 } },
-              h(Btn, { variant: "outline", size: "sm", onClick: () => {
+          kids.push(
+            h(P.RiskConfirmation, {
+              key: "confirm-del",
+              open: true,
+              title: "\u5220\u9664\u4F9B\u5E94\u5546\u300C" + target.name + "\u300D\uFF1F",
+              description: "\u8BE5\u4F9B\u5E94\u5546\u7684\u914D\u7F6E\u4E0E\u4FA7\u8FB9\u680F\u5FEB\u7167\u5C06\u4E00\u5E76\u6E05\u9664\uFF0C\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002",
+              acknowledgeLabel: "\u6211\u5DF2\u4E86\u89E3\uFF0C\u5220\u9664\u8BE5\u4F9B\u5E94\u5546",
+              cancelLabel: "\u53D6\u6D88",
+              closeLabel: "\u5173\u95ED",
+              confirmLabel: "\u5220\u9664",
+              acknowledged: acked,
+              onAcknowledgedChange: setAcked,
+              onCancel: () => setConfirmDel(null),
+              onConfirm: () => {
                 setConfirmDel(null);
                 void delVendor(target.id);
-              } }, "\u786E\u8BA4\u5220\u9664"),
-              h(Btn, { variant: "outline", size: "sm", onClick: () => {
-                setConfirmDel(null);
-                setAcked(false);
-              } }, "\u53D6\u6D88")
-            )
-          ));
-        } else {
-          kids.push(h(
-            "div",
-            { key: "confirm-del", className: "tm-errbox" },
-            h("div", { className: "tm-errtext" }, "\u5220\u9664\u4F9B\u5E94\u5546\u300C" + target.name + "\u300D\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002"),
+              }
+            })
+          );
+        } else if (acked) {
+          kids.push(
             h(
               "div",
-              { style: { display: "flex", gap: 8, marginTop: 6 } },
-              h(Btn, { variant: "outline", size: "sm", onClick: () => setAcked(true) }, "\u6211\u5DF2\u4E86\u89E3"),
-              h(Btn, { variant: "outline", size: "sm", onClick: () => setConfirmDel(null) }, "\u53D6\u6D88")
+              { key: "confirm-del", className: "tm-errbox" },
+              h("div", { className: "tm-errtext" }, "\u786E\u8BA4\u5220\u9664\u300C" + target.name + "\u300D\uFF1F"),
+              h(
+                "div",
+                { style: { display: "flex", gap: 8, marginTop: 6 } },
+                h(
+                  Btn,
+                  {
+                    variant: "outline",
+                    size: "sm",
+                    onClick: () => {
+                      setConfirmDel(null);
+                      void delVendor(target.id);
+                    }
+                  },
+                  "\u786E\u8BA4\u5220\u9664"
+                ),
+                h(
+                  Btn,
+                  {
+                    variant: "outline",
+                    size: "sm",
+                    onClick: () => {
+                      setConfirmDel(null);
+                      setAcked(false);
+                    }
+                  },
+                  "\u53D6\u6D88"
+                )
+              )
             )
-          ));
+          );
+        } else {
+          kids.push(
+            h(
+              "div",
+              { key: "confirm-del", className: "tm-errbox" },
+              h("div", { className: "tm-errtext" }, "\u5220\u9664\u4F9B\u5E94\u5546\u300C" + target.name + "\u300D\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002"),
+              h(
+                "div",
+                { style: { display: "flex", gap: 8, marginTop: 6 } },
+                h(Btn, { variant: "outline", size: "sm", onClick: () => setAcked(true) }, "\u6211\u5DF2\u4E86\u89E3"),
+                h(Btn, { variant: "outline", size: "sm", onClick: () => setConfirmDel(null) }, "\u53D6\u6D88")
+              )
+            )
+          );
         }
       }
       return h("div", { className: "tm-page" }, kids);
@@ -1936,44 +3079,93 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         return () => stopSyncLoop();
       }, [syncMs]);
       const v = (s.cfg && s.cfg.vendors || []).filter((x) => x.id === props.vendorId)[0];
-      if (!s.cfg) return h("div", { className: "tm-card" }, h("div", { className: "tm-hint" }, s.loading ? "\u989D\u5EA6\u52A0\u8F7D\u4E2D\u2026" : s.error || "\u989D\u5EA6\u52A0\u8F7D\u5931\u8D25"));
-      if (!v) return h("div", { className: "tm-card" }, h("div", { className: "tm-hint" }, "\u4F9B\u5E94\u5546\u5DF2\u5220\u9664\uFF0C\u5173\u95ED\u672C\u6D6E\u7A97\u5373\u53EF\u3002"));
+      if (!s.cfg)
+        return h(
+          "div",
+          { className: "tm-card" },
+          h("div", { className: "tm-hint" }, s.loading ? "\u989D\u5EA6\u52A0\u8F7D\u4E2D\u2026" : s.error || "\u989D\u5EA6\u52A0\u8F7D\u5931\u8D25")
+        );
+      if (!v)
+        return h(
+          "div",
+          { className: "tm-card" },
+          h("div", { className: "tm-hint" }, "\u4F9B\u5E94\u5546\u5DF2\u5220\u9664\uFF0C\u5173\u95ED\u672C\u6D6E\u7A97\u5373\u53EF\u3002")
+        );
       const snap = s.snaps[v.id];
       const isCur = v.id === s.cfg.activeVendor;
       const failed = !!(snap && !snap.ok);
+      const off = v.enabled === false;
+      const peakNow = isPeakHour(new Date(now));
       const wid = "quota:" + v.id;
       return h(
         "div",
-        { className: "tm-card" + (failed && !s.loading ? " tm-side error" : ""), style: { marginBottom: 12 } },
+        {
+          className: "tm-card" + (failed && !s.loading ? " tm-side error" : "") + moodClass(off, peakNow),
+          style: { marginBottom: 12 }
+        },
         h(
           "div",
           { style: { display: "flex", alignItems: "center", gap: 6, minWidth: 0, flexWrap: "wrap" } },
-          h("span", { className: "tm-dot" + (snap && !snap.ok ? " bad" : "") }),
+          h("span", { className: "tm-dot" + (off ? " off" : snap && !snap.ok ? dotToneOf(snap) : "") }),
           h("span", { className: "tm-vname2", style: { maxWidth: 220 } }, v.name),
           h(Badge, { kind: "info", text: typeLabel(v.type) }),
           secretBadge(v.secretKind),
           isCur ? h(Badge, { kind: "ok", text: "\u5F53\u524D" }) : null,
+          off ? h(Badge, { kind: "bad", text: "\u5DF2\u7981\u7528" }) : null,
           h("span", { style: { flex: "1 1 auto" } }),
           h(
             "span",
             { style: { display: "inline-flex", gap: 6, alignItems: "center", flexWrap: "wrap" } },
-            isCur ? null : h(Btn, { variant: "outline", size: "sm", disabled: s.loading, onClick: () => void setActive(v.id) }, "\u8BBE\u4E3A\u5F53\u524D"),
-            h(Btn, { variant: "outline", size: "sm", disabled: s.loading, onClick: () => void refreshVendor(v.id) }, "\u62C9\u53D6"),
+            isCur ? null : h(
+              Btn,
+              { variant: "outline", size: "sm", disabled: s.loading, onClick: () => void setActive(v.id) },
+              "\u8BBE\u4E3A\u5F53\u524D"
+            ),
+            h(
+              Btn,
+              {
+                variant: "outline",
+                size: "sm",
+                disabled: s.loading,
+                title: off ? "\u5DF2\u7981\u7528\u5B9A\u65F6\u62C9\u53D6\uFF0C\u624B\u52A8\u62C9\u53D6\u4ECD\u7136\u53EF\u7528" : void 0,
+                onClick: () => void refreshVendor(v.id)
+              },
+              "\u62C9\u53D6"
+            ),
+            h(
+              Btn,
+              {
+                variant: "ghost",
+                size: "sm",
+                disabled: s.loading,
+                title: off ? "\u91CD\u65B0\u52A0\u5165 Host \u5B9A\u65F6\u62C9\u53D6" : "\u9000\u51FA Host \u5B9A\u65F6\u62C9\u53D6\uFF08\u624B\u52A8\u62C9\u53D6\u4E0D\u53D7\u5F71\u54CD\uFF09",
+                onClick: () => void setVendorEnabled(v.id, off)
+              },
+              off ? "\u542F\u7528" : "\u7981\u7528"
+            ),
             WG ? h(WG.WidgetToggle, { id: wid }) : null
           )
         ),
         snap ? snap.ok ? h(
           "div",
           { style: { marginTop: 6 } },
-          snap.billingKind === "payg" ? h(PaygBody, { snap }) : h(RollingBody, { snap, now }),
-          snap.extra ? h(ExtraBody, { extra: snap.extra }) : null,
+          h(SnapBody, { snap, type: v.type, now }),
           h(
             "div",
             { className: "tm-qmeta" },
-            h("span", null, "\u66F4\u65B0" + timeAgo(snap.at) + (snap.via ? " \xB7 " + snap.via : "")),
+            h(
+              "span",
+              null,
+              "\u66F4\u65B0" + timeAgo(snap.at) + (snap.via ? " \xB7 " + snap.via : "")
+            ),
             h("span", null, "")
           )
-        ) : h(ErrBox, { msg: snap.error || "\u62C9\u53D6\u5931\u8D25", meta: v.name + " \xB7 \u5931\u8D25\u4E8E" + timeAgo(snap.at) }) : h("div", { className: "tm-hint", style: { marginTop: 6 } }, "\u5C1A\u672A\u62C9\u53D6\uFF0C\u70B9\u51FB\u62C9\u53D6\u83B7\u53D6\u6700\u65B0\u989D\u5EA6\u3002")
+        ) : h(ErrBox, {
+          info: errInfoOf(snap, snap.error || "\u62C9\u53D6\u5931\u8D25"),
+          msg: snap.error || "\u62C9\u53D6\u5931\u8D25",
+          meta: v.name + " \xB7 \u5931\u8D25\u4E8E" + timeAgo(snap.at),
+          onRetry: () => void refreshVendor(v.id)
+        }) : h("div", { className: "tm-hint", style: { marginTop: 6 } }, "\u5C1A\u672A\u62C9\u53D6\uFF0C\u70B9\u51FB\u62C9\u53D6\u83B7\u53D6\u6700\u65B0\u989D\u5EA6\u3002")
       );
     }
     const PEAK_RULE = { weekdays: [1, 2, 3, 4, 5], startHour: 9, endHour: 18 };
@@ -1982,6 +3174,10 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       if (!PEAK_RULE.weekdays.includes(w)) return false;
       const hr = t.getHours();
       return hr >= PEAK_RULE.startHour && hr < PEAK_RULE.endHour;
+    }
+    function moodClass(off, peak) {
+      if (off) return " tm-off";
+      return peak ? " mood-peak" : " mood-valley";
     }
     function nextPeakSwitch(nowMs, peak) {
       const step = 6e4;
@@ -2008,18 +3204,20 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const cells = [];
       for (let hr = 0; hr < 24; hr++) {
         const on = !isWeekend && hr >= PEAK_RULE.startHour && hr < PEAK_RULE.endHour;
-        cells.push(h("span", {
-          key: hr,
-          className: "tm-peakCell" + (on ? " on" : "") + (hr === d.getHours() ? " now" : ""),
-          title: String(hr).padStart(2, "0") + ":00" + (on ? " \u5CF0" : " \u8C37")
-        }));
+        cells.push(
+          h("span", {
+            key: hr,
+            className: "tm-peakCell" + (on ? " on" : " von") + (hr === d.getHours() ? " now" : ""),
+            title: String(hr).padStart(2, "0") + ":00" + (on ? " \u5CF0" : " \u8C37")
+          })
+        );
       }
       const bandLabel = isWeekend ? "\u5468\u672B\u5168\u5929\u4E3A\u8C37" : PEAK_RULE.startHour + ":00\u2013" + PEAK_RULE.endHour + ":00 \u4E3A\u5CF0";
       const curTxt = peak ? "\u5CF0\u65F6\u6BB5" : "\u8C37\u65F6\u6BB5";
       const nextTxt = ns.toPeak ? "\u7EA6 " + fmtDur(ns.ms) + " \u540E\u8FDB\u5165\u5CF0" : "\u7EA6 " + fmtDur(ns.ms) + " \u540E\u8FDB\u5165\u8C37";
       return h(
         "div",
-        { className: "tm-peak" },
+        { className: "tm-peak " + (peak ? "peak" : "valley") },
         h(
           "div",
           { className: "tm-peakHead" },
@@ -2033,7 +3231,11 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           "div",
           { className: "tm-peakHint" },
           "\u90E8\u5206\u4F9B\u5E94\u5546\u91C7\u7528\u5CF0\u8C37\u5B9A\u4EF7\uFF1A" + bandLabel + "\uFF0C",
-          h("b", null, peak ? "\u5F53\u524D\u4E3A\u5CF0\uFF0C\u7528\u91CF\u6D88\u8017\u52A0\u901F\uFF0C\u8BF7\u7559\u610F\u989D\u5EA6\u3002" : "\u5F53\u524D\u4E3A\u8C37\uFF0C\u8D39\u7387\u76F8\u5BF9\u4F4E\u3002")
+          h(
+            "b",
+            null,
+            peak ? "\u5F53\u524D\u4E3A\u5CF0\uFF0C\u7528\u91CF\u6D88\u8017\u52A0\u901F\u3001\u989D\u5EA6\u8D70\u5F97\u66F4\u5FEB\uFF0C\u5EFA\u8BAE\u9519\u5CF0\u8DD1\u91CF\u6216\u7559\u610F\u4F59\u989D\u3002" : "\u5F53\u524D\u4E3A\u8C37\uFF0C\u8D39\u7387\u76F8\u5BF9\u4F4E\uFF0C\u9002\u5408\u6279\u91CF\u4E0E\u957F\u4EFB\u52A1\u8DD1\u91CF\u3002"
+          )
         )
       );
     }
@@ -2047,25 +3249,48 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       if (!floats.some((w) => w.id === "peak")) {
         kids.push(h(PeakIndicator, { key: "peak", widgets: WG || void 0, widgetId: "peak" }));
       }
-      kids.push(h("p", { key: "d", className: "tm-intro" }, "\u5168\u90E8\u4F9B\u5E94\u5546\u989D\u5EA6\u4E00\u89C8\uFF08\u53F3\u4FA7\u680F\u7A7A\u95F4\u66F4\u5BBD\uFF0C\u56FE\u8868\u5B8C\u6574\u5C55\u5F00\uFF09\u3002\u589E\u5220\u6539\u8BF7\u5230 \u8BBE\u7F6E \u2192 Token \u8BA1\u91CF\u3002"));
+      kids.push(
+        h(
+          "p",
+          { key: "d", className: "tm-intro" },
+          "\u5168\u90E8\u4F9B\u5E94\u5546\u989D\u5EA6\u4E00\u89C8\uFF08\u53F3\u4FA7\u680F\u7A7A\u95F4\u66F4\u5BBD\uFF0C\u56FE\u8868\u5B8C\u6574\u5C55\u5F00\uFF09\u3002\u589E\u5220\u6539\u8BF7\u5230 \u8BBE\u7F6E \u2192 Token \u8BA1\u91CF\u3002"
+        )
+      );
       if (s.error) kids.push(h("p", { key: "err", className: "tm-notice tm-notice-err" }, s.error));
       if (!s.cfg) {
-        kids.push(h(
-          "div",
-          { key: "loading", className: "tm-loading" },
-          h("span", { className: "tm-spinner" }),
-          h("span", { className: "tm-loadingText" }, s.loading ? "\u6B63\u5728\u8BFB\u53D6\u989D\u5EA6\u914D\u7F6E\u2026" : "\u989D\u5EA6\u914D\u7F6E\u52A0\u8F7D\u5931\u8D25")
-        ));
+        kids.push(
+          h(
+            "div",
+            { key: "loading", className: "tm-loading" },
+            h("span", { className: "tm-spinner" }),
+            h("span", { className: "tm-loadingText" }, s.loading ? "\u6B63\u5728\u8BFB\u53D6\u989D\u5EA6\u914D\u7F6E\u2026" : "\u989D\u5EA6\u914D\u7F6E\u52A0\u8F7D\u5931\u8D25")
+          )
+        );
         return h("div", { className: "tm-page" }, kids);
       }
       const vendors = s.cfg.vendors || [];
       if (!vendors.length) {
-        kids.push(h("div", { key: "empty", className: "tm-card tm-empty" }, "\u6682\u65E0\u4F9B\u5E94\u5546\uFF0C\u53BB \u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u6DFB\u52A0\u7B2C\u4E00\u4E2A\u3002"));
+        kids.push(
+          h(
+            "div",
+            { key: "empty", className: "tm-card tm-empty" },
+            "\u6682\u65E0\u4F9B\u5E94\u5546\uFF0C\u53BB \u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u6DFB\u52A0\u7B2C\u4E00\u4E2A\u3002"
+          )
+        );
         return h("div", { className: "tm-page" }, kids);
       }
       const activeId = s.cfg.activeVendor || "";
-      const ordered = vendors.filter((v) => v.id === activeId).concat(vendors.filter((v) => v.id !== activeId));
+      const activeFirst = (list) => list.filter((v) => v.id === activeId).concat(list.filter((v) => v.id !== activeId));
+      const on = vendors.filter((v) => v.enabled !== false);
+      const off = vendors.filter((v) => v.enabled === false);
+      const ordered = activeFirst(on).concat(activeFirst(off));
+      const bothGroups = on.length > 0 && off.length > 0;
+      let shownOffLabel = false;
       for (const v of ordered) {
+        if (bothGroups && v.enabled === false && !shownOffLabel) {
+          shownOffLabel = true;
+          kids.push(h("div", { key: "grp-off", className: "tm-grouplabel" }, "\u5DF2\u7981\u7528 \xB7 " + off.length + " \u4E2A"));
+        }
         if (floats.some((w) => w.id === "quota:" + v.id)) continue;
         kids.push(h(QuotaVendorWidget, { key: v.id, vendorId: v.id }));
       }
@@ -2087,6 +3312,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         syncState,
         setActive,
         setEnabled,
+        setVendorEnabled,
         setRefresh,
         setFloatOpen,
         openMenu,
@@ -2096,7 +3322,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         remainOf,
         call
       },
-      quotaUI: { Badge, SecRow, PillSelect, VendorForm, secretBadge }
+      quotaUI: { Badge, SecRow, FormField, PillSelect, VendorForm, secretBadge }
     };
   }
 
@@ -2219,7 +3445,19 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       if (first === null || r.d < first) first = r.d;
       if (last === null || r.d > last) last = r.d;
     }
-    return { byDay, byModel, byHour, i: si, o: so, cr: scr, cw: scw, n: sn, total: si + so + scr + scw, first, last };
+    return {
+      byDay,
+      byModel,
+      byHour,
+      i: si,
+      o: so,
+      cr: scr,
+      cw: scw,
+      n: sn,
+      total: si + so + scr + scw,
+      first,
+      last
+    };
   }
   function streaks(byDay) {
     const set = new Set(byDay.keys());
@@ -2274,7 +3512,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     const n = pts.length;
     if (n === 0) return "";
     if (n === 1) return "M " + pts[0][0] + " " + pts[0][1];
-    if (n === 2) return "M " + pts[0][0] + " " + pts[0][1] + " L " + pts[1][0] + " " + pts[1][1];
+    if (n === 2)
+      return "M " + pts[0][0] + " " + pts[0][1] + " L " + pts[1][0] + " " + pts[1][1];
     let d = "M " + pts[0][0].toFixed(1) + " " + pts[0][1].toFixed(1);
     for (let i = 0; i < n - 1; i++) {
       const p0 = pts[Math.max(0, i - 1)];
@@ -2301,7 +3540,9 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
   }
   function tmTodayLoadPos() {
     try {
-      const v = JSON.parse(window.localStorage.getItem(TM_TODAY_LS_POS) || window.localStorage.getItem(TS_TODAY_LS_POS) || "null");
+      const v = JSON.parse(
+        window.localStorage.getItem(TM_TODAY_LS_POS) || window.localStorage.getItem(TS_TODAY_LS_POS) || "null"
+      );
       if (v && isFinite(v.x) && isFinite(v.y)) return { x: Number(v.x), y: Number(v.y) };
     } catch {
     }
@@ -2310,7 +3551,11 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
   function tmTodaySave(open, pos) {
     try {
       window.localStorage.setItem(TM_TODAY_LS_OPEN, open ? "1" : "0");
-      if (pos) window.localStorage.setItem(TM_TODAY_LS_POS, JSON.stringify({ x: Math.round(pos.x), y: Math.round(pos.y) }));
+      if (pos)
+        window.localStorage.setItem(
+          TM_TODAY_LS_POS,
+          JSON.stringify({ x: Math.round(pos.x), y: Math.round(pos.y) })
+        );
     } catch {
     }
   }
@@ -2478,15 +3723,29 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         return () => cancelAnimationFrame(raf);
       }, [props.value]);
       const format = props.format || ((v) => Math.round(v).toLocaleString("en-US"));
-      return h("div", { className: props.className || "", style: props.style || void 0 }, format(disp));
+      return h(
+        "div",
+        { className: props.className || "", style: props.style || void 0 },
+        format(disp)
+      );
     }
     function Seg(props) {
-      return h("div", { className: "tm-seg" }, (props.options || []).map((o) => h("button", {
-        key: o.v,
-        className: "tm-seg-btn" + (props.current === o.v ? " tm-seg-on" : ""),
-        "aria-pressed": props.current === o.v ? "true" : "false",
-        onClick: () => props.onPick(o.v)
-      }, o.t)));
+      return h(
+        "div",
+        { className: "tm-seg" },
+        (props.options || []).map(
+          (o) => h(
+            "button",
+            {
+              key: o.v,
+              className: "tm-seg-btn" + (props.current === o.v ? " tm-seg-on" : ""),
+              "aria-pressed": props.current === o.v ? "true" : "false",
+              onClick: () => props.onPick(o.v)
+            },
+            o.t
+          )
+        )
+      );
     }
     function StatCard(props) {
       const valueNode = props.count !== void 0 ? h(AnimatedNumber, { className: "tm-stat-value", value: props.count, format: props.fmt || fmt2 }) : h("div", { className: "tm-stat-value" }, props.value);
@@ -2511,12 +3770,18 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         "div",
         null,
         h("div", { className: "tm-pop-title" }, title),
-        parts.map((p) => h(
-          "div",
-          { key: p[0], className: "tm-pop-row" },
-          h("span", { className: "tm-pop-k" }, p[0]),
-          h("span", { className: "tm-pop-v" }, fmtFull(p[1]) + " \xB7 " + (p[3] > 0 ? (p[1] / p[3] * 100).toFixed(1) : "0.0") + "%")
-        ))
+        parts.map(
+          (p) => h(
+            "div",
+            { key: p[0], className: "tm-pop-row" },
+            h("span", { className: "tm-pop-k" }, p[0]),
+            h(
+              "span",
+              { className: "tm-pop-v" },
+              fmtFull(p[1]) + " \xB7 " + (p[3] > 0 ? (p[1] / p[3] * 100).toFixed(1) : "0.0") + "%"
+            )
+          )
+        )
       );
     }
     function ComposeBar(props) {
@@ -2526,19 +3791,18 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       return h(
         "div",
         null,
-        h("div", { className: "tm-compose" }, parts.filter((p) => p[1] > 0).map((p) => {
-          const w = p[1] / total * 100;
-          return h("span", { key: p[0], style: { width: w.toFixed(2) + "%", background: p[2] } });
-        })),
+        h(
+          "div",
+          { className: "tm-compose" },
+          parts.filter((p) => p[1] > 0).map((p) => {
+            const w = p[1] / total * 100;
+            return h("span", { key: p[0], style: { width: w.toFixed(2) + "%", background: p[2] } });
+          })
+        ),
         h(
           "div",
           { className: "tm-compose-legend" },
-          parts.map((p) => h(
-            "span",
-            { key: p[0] },
-            h("i", { style: { background: p[2] } }),
-            p[0]
-          ))
+          parts.map((p) => h("span", { key: p[0] }, h("i", { style: { background: p[2] } }), p[0]))
         )
       );
     }
@@ -2556,9 +3820,24 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       return h(
         "svg",
         { className: "tm-spark", viewBox: "0 0 " + W + " " + H, preserveAspectRatio: "none" },
-        h("path", { d: area, className: "tm-fadein", style: { fill: c, fillOpacity: 0.13, animationDelay: ".18s" } }),
-        h("path", { d: line, className: "tm-draw", fill: "none", style: { stroke: c, strokeWidth: 1.5, strokeLinecap: "round", animationDelay: ".12s" } }),
-        h("circle", { cx: xs(vals.length - 1), cy: ys(vals[vals.length - 1]), r: 1.8, className: "tm-fadein", style: { fill: c, animationDelay: ".55s" } })
+        h("path", {
+          d: area,
+          className: "tm-fadein",
+          style: { fill: c, fillOpacity: 0.13, animationDelay: ".18s" }
+        }),
+        h("path", {
+          d: line,
+          className: "tm-draw",
+          fill: "none",
+          style: { stroke: c, strokeWidth: 1.5, strokeLinecap: "round", animationDelay: ".12s" }
+        }),
+        h("circle", {
+          cx: xs(vals.length - 1),
+          cy: ys(vals[vals.length - 1]),
+          r: 1.8,
+          className: "tm-fadein",
+          style: { fill: c, animationDelay: ".55s" }
+        })
       );
     }
     function TrendDelta(props) {
@@ -2590,7 +3869,13 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       return h(
         "div",
         { className: "tm-streakbar" },
-        h("span", { className: "tm-streakfill", style: { width: pct.toFixed(1) + "%", background: "linear-gradient(90deg, var(--dsw-alias-state-business-primary), color-mix(in srgb, var(--dsw-alias-state-business-primary) 55%, transparent))" } })
+        h("span", {
+          className: "tm-streakfill",
+          style: {
+            width: pct.toFixed(1) + "%",
+            background: "linear-gradient(90deg, var(--dsw-alias-state-business-primary), color-mix(in srgb, var(--dsw-alias-state-business-primary) 55%, transparent))"
+          }
+        })
       );
     }
     function DaysRibbon(props) {
@@ -2611,7 +3896,14 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         { className: "tm-dayscroll" },
         buckets.map((b, i) => {
           const ratio = b.total > 0 ? b.active / b.total : 0;
-          return h("span", { key: i, style: { background: BP, opacity: ratio === 0 ? 0.08 : 0.15 + ratio * 0.8, animationDelay: i * 26 + "ms" } });
+          return h("span", {
+            key: i,
+            style: {
+              background: BP,
+              opacity: ratio === 0 ? 0.08 : 0.15 + ratio * 0.8,
+              animationDelay: i * 26 + "ms"
+            }
+          });
         })
       );
     }
@@ -2621,9 +3913,40 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const H = height || 14;
       return h(
         "div",
-        { className: props.className || "", style: { display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 3, height: H + 2, marginTop: 3 } },
-        h("span", { className: "tm-rise", style: { width: 9, borderRadius: "2px 2px 0 0", background: BP, display: "block", height: Math.max(2, a / max * H).toFixed(1) + "px", animationDelay: "60ms" } }),
-        h("span", { className: "tm-rise", style: { width: 9, borderRadius: "2px 2px 0 0", background: BP, opacity: 0.28, display: "block", height: Math.max(2, b / max * H).toFixed(1) + "px", animationDelay: "150ms" } })
+        {
+          className: props.className || "",
+          style: {
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "center",
+            gap: 3,
+            height: H + 2,
+            marginTop: 3
+          }
+        },
+        h("span", {
+          className: "tm-rise",
+          style: {
+            width: 9,
+            borderRadius: "2px 2px 0 0",
+            background: BP,
+            display: "block",
+            height: Math.max(2, a / max * H).toFixed(1) + "px",
+            animationDelay: "60ms"
+          }
+        }),
+        h("span", {
+          className: "tm-rise",
+          style: {
+            width: 9,
+            borderRadius: "2px 2px 0 0",
+            background: BP,
+            opacity: 0.28,
+            display: "block",
+            height: Math.max(2, b / max * H).toFixed(1) + "px",
+            animationDelay: "150ms"
+          }
+        })
       );
     }
     function TrendChart(props) {
@@ -2647,7 +3970,13 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       for (const fr of [0, 0.25, 0.5, 0.75, 1]) {
         const yy = ys(top * fr);
         kids.push(h("line", { key: "g" + fr, x1: pl, x2: W - pr, y1: yy, y2: yy, className: "tm-gridln" }));
-        kids.push(h("text", { key: "gt" + fr, x: pl - 8, y: yy + 4, textAnchor: "end", className: "tm-axislbl" }, fmt2(top * fr)));
+        kids.push(
+          h(
+            "text",
+            { key: "gt" + fr, x: pl - 8, y: yy + 4, textAnchor: "end", className: "tm-axislbl" },
+            fmt2(top * fr)
+          )
+        );
       }
       const tickCount = Math.min(n, 9);
       const xt = [];
@@ -2656,69 +3985,152 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         if (xt.length === 0 || xt[xt.length - 1] !== idx) xt.push(idx);
       }
       for (const i of xt) {
-        kids.push(h("text", { key: "x" + i, x: xs(i), y: H - 9, textAnchor: i === 0 ? "start" : i === n - 1 ? "end" : "middle", className: "tm-axislbl" }, labels[i]));
+        kids.push(
+          h(
+            "text",
+            {
+              key: "x" + i,
+              x: xs(i),
+              y: H - 9,
+              textAnchor: i === 0 ? "start" : i === n - 1 ? "end" : "middle",
+              className: "tm-axislbl"
+            },
+            labels[i]
+          )
+        );
       }
       if (hover !== null) {
-        kids.push(h("line", { key: "ch", x1: xs(hover.i), x2: xs(hover.i), y1: pt, y2: H - pb, style: { stroke: BP, strokeWidth: 1, strokeDasharray: "3 3", opacity: 0.7 } }));
+        kids.push(
+          h("line", {
+            key: "ch",
+            x1: xs(hover.i),
+            x2: xs(hover.i),
+            y1: pt,
+            y2: H - pb,
+            style: { stroke: BP, strokeWidth: 1, strokeDasharray: "3 3", opacity: 0.7 }
+          })
+        );
         for (const s of vis) {
           if (s.values[hover.i] === void 0) continue;
-          kids.push(h("circle", { key: "d" + s.name, cx: xs(hover.i), cy: ys(s.values[hover.i]), r: 3.5, style: { fill: s.color, stroke: "var(--dsw-alias-bg-layer-1)", strokeWidth: 1.5 } }));
+          kids.push(
+            h("circle", {
+              key: "d" + s.name,
+              cx: xs(hover.i),
+              cy: ys(s.values[hover.i]),
+              r: 3.5,
+              style: { fill: s.color, stroke: "var(--dsw-alias-bg-layer-1)", strokeWidth: 1.5 }
+            })
+          );
         }
       }
       let li = 0;
       for (const s of seriesList) {
         if (!s.visible) continue;
-        kids.push(h("path", {
-          key: "ln" + s.name,
-          className: "tm-draw",
-          d: smoothPath(s.values.map((v, i) => [xs(i), ys(v)])),
-          fill: "none",
-          style: { stroke: s.color, strokeWidth: s.isTotal ? 2.6 : 1.9, strokeLinecap: "round", strokeLinejoin: "round", opacity: s.isTotal ? 1 : 0.92, animationDelay: 0.15 + li * 0.09 + "s" }
-        }));
+        kids.push(
+          h("path", {
+            key: "ln" + s.name,
+            className: "tm-draw",
+            d: smoothPath(s.values.map((v, i) => [xs(i), ys(v)])),
+            fill: "none",
+            style: {
+              stroke: s.color,
+              strokeWidth: s.isTotal ? 2.6 : 1.9,
+              strokeLinecap: "round",
+              strokeLinejoin: "round",
+              opacity: s.isTotal ? 1 : 0.92,
+              animationDelay: 0.15 + li * 0.09 + "s"
+            }
+          })
+        );
         li++;
       }
-      kids.push(h("rect", { key: "cap", x: 0, y: 0, width: W, height: H, fill: "transparent", style: { cursor: "crosshair" }, onMouseMove: onMove, onMouseLeave: () => setHover(null) }));
+      kids.push(
+        h("rect", {
+          key: "cap",
+          x: 0,
+          y: 0,
+          width: W,
+          height: H,
+          fill: "transparent",
+          style: { cursor: "crosshair" },
+          onMouseMove: onMove,
+          onMouseLeave: () => setHover(null)
+        })
+      );
       const tip = hover !== null ? (() => {
         const active = vis.filter((s) => (s.values[hover.i] || 0) > 0);
-        const rows = sorted(active, (a, b) => (b.values[hover.i] || 0) - (a.values[hover.i] || 0));
+        const rows = sorted(
+          active,
+          (a, b) => (b.values[hover.i] || 0) - (a.values[hover.i] || 0)
+        );
         const comp = props.comp ? props.comp[hover.i] : void 0;
         const compTotal = comp ? comp.i + comp.o + comp.cr + comp.cw : 0;
         const pos = tipPos(hover.mx, hover.my, 270, (comp ? 98 : 44) + rows.length * 18);
-        return tmPortal(h(
-          "div",
-          { className: "tm-tipfixed" + (props.above ? " tm-tip-above" : ""), style: pos },
-          h("div", { className: "tm-tiprow", style: { fontWeight: 600, marginBottom: 2 } }, titles[hover.i]),
-          comp ? h(
+        return tmPortal(
+          h(
             "div",
-            { className: "tm-tiprow" },
-            h("span", { className: "tm-tip-k" }, "\u603B Token"),
-            h("span", { className: "tm-tip-v" }, fmt2(compTotal))
-          ) : null,
-          comp ? h(
-            "div",
-            { className: "tm-tiprow" },
-            h("span", { className: "tm-tip-k" }, "\u8F93\u5165 / \u8F93\u51FA"),
-            h("span", { className: "tm-tip-v" }, fmt2(comp.i) + " / " + fmt2(comp.o))
-          ) : null,
-          comp ? h(
-            "div",
-            { className: "tm-tiprow", style: { marginBottom: rows.length > 0 ? 4 : 0 } },
-            h("span", { className: "tm-tip-k" }, "\u7F13\u5B58\u8BFB / \u5199"),
-            h("span", { className: "tm-tip-v" }, fmt2(comp.cr) + " / " + fmt2(comp.cw))
-          ) : null,
-          rows.length > 0 ? rows.map((s) => h(
-            "div",
-            { key: s.name, className: "tm-tiprow" },
-            h("span", { className: "tm-dot", style: { background: s.color, width: 8, height: 8 } }),
-            h("span", { className: "tm-tip-k", style: { flex: "1 1 auto", overflow: "hidden", textOverflow: "ellipsis" } }, s.shortName),
-            h("span", { className: "tm-tip-v" }, fmt2(s.values[hover.i] || 0))
-          )) : comp ? null : h("div", { className: "tm-tiprow", style: { color: "var(--dsw-alias-label-tertiary)" } }, emptyText)
-        ));
+            { className: "tm-tipfixed" + (props.above ? " tm-tip-above" : ""), style: pos },
+            h(
+              "div",
+              { className: "tm-tiprow", style: { fontWeight: 600, marginBottom: 2 } },
+              titles[hover.i]
+            ),
+            comp ? h(
+              "div",
+              { className: "tm-tiprow" },
+              h("span", { className: "tm-tip-k" }, "\u603B Token"),
+              h("span", { className: "tm-tip-v" }, fmt2(compTotal))
+            ) : null,
+            comp ? h(
+              "div",
+              { className: "tm-tiprow" },
+              h("span", { className: "tm-tip-k" }, "\u8F93\u5165 / \u8F93\u51FA"),
+              h("span", { className: "tm-tip-v" }, fmt2(comp.i) + " / " + fmt2(comp.o))
+            ) : null,
+            comp ? h(
+              "div",
+              { className: "tm-tiprow", style: { marginBottom: rows.length > 0 ? 4 : 0 } },
+              h("span", { className: "tm-tip-k" }, "\u7F13\u5B58\u8BFB / \u5199"),
+              h("span", { className: "tm-tip-v" }, fmt2(comp.cr) + " / " + fmt2(comp.cw))
+            ) : null,
+            rows.length > 0 ? rows.map(
+              (s) => h(
+                "div",
+                { key: s.name, className: "tm-tiprow" },
+                h("span", {
+                  className: "tm-dot",
+                  style: { background: s.color, width: 8, height: 8 }
+                }),
+                h(
+                  "span",
+                  {
+                    className: "tm-tip-k",
+                    style: { flex: "1 1 auto", overflow: "hidden", textOverflow: "ellipsis" }
+                  },
+                  s.shortName
+                ),
+                h("span", { className: "tm-tip-v" }, fmt2(s.values[hover.i] || 0))
+              )
+            ) : comp ? null : h(
+              "div",
+              { className: "tm-tiprow", style: { color: "var(--dsw-alias-label-tertiary)" } },
+              emptyText
+            )
+          )
+        );
       })() : null;
       return h(
         "div",
         { className: "tm-svgwrap" },
-        h("svg", { viewBox: "0 0 " + W + " " + H, style: { width: "100%", height: "auto", display: "block" }, ref: svgRef }, kids),
+        h(
+          "svg",
+          {
+            viewBox: "0 0 " + W + " " + H,
+            style: { width: "100%", height: "auto", display: "block" },
+            ref: svgRef
+          },
+          kids
+        ),
         tip
       );
     }
@@ -2767,22 +4179,43 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         const cells = [];
         for (let w = 0; w < weeks; w++) {
           const cell = cols[w][r];
-          cells.push(h("div", {
-            key: w,
-            className: "tm-hcell",
-            "data-lv": cell === null || cell.v <= 0 ? "0" : String(levelOf2(cell.v)),
-            style: cell === null ? { visibility: "hidden" } : cell.v > 0 ? { background: BP, opacity: OPS[levelOf2(cell.v)], animationDelay: w * 45 % 480 + "ms" } : void 0,
-            onMouseEnter: cell ? (e) => onCell(cell, e) : void 0,
-            onMouseMove: cell ? (e) => onCell(cell, e) : void 0,
-            onMouseLeave: () => setHover(null)
-          }));
+          cells.push(
+            h("div", {
+              key: w,
+              className: "tm-hcell",
+              "data-lv": cell === null || cell.v <= 0 ? "0" : String(levelOf2(cell.v)),
+              style: cell === null ? { visibility: "hidden" } : cell.v > 0 ? {
+                background: BP,
+                opacity: OPS[levelOf2(cell.v)],
+                animationDelay: w * 45 % 480 + "ms"
+              } : void 0,
+              onMouseEnter: cell ? (e) => onCell(cell, e) : void 0,
+              onMouseMove: cell ? (e) => onCell(cell, e) : void 0,
+              onMouseLeave: () => setHover(null)
+            })
+          );
         }
-        rows.push(h(
-          "div",
-          { key: r, style: { display: "flex", gap: 4, alignItems: "center" } },
-          h("span", { style: { width: 14, fontSize: 9, color: "var(--dsw-alias-label-caption)", flex: "none", textAlign: "center", lineHeight: "14px" } }, r % 2 === 0 ? WL[r] : ""),
-          h("div", { className: "tm-heatrow", style: { gap: cellGap + "px" } }, cells)
-        ));
+        rows.push(
+          h(
+            "div",
+            { key: r, style: { display: "flex", gap: 4, alignItems: "center" } },
+            h(
+              "span",
+              {
+                style: {
+                  width: 14,
+                  fontSize: 9,
+                  color: "var(--dsw-alias-label-caption)",
+                  flex: "none",
+                  textAlign: "center",
+                  lineHeight: "14px"
+                }
+              },
+              r % 2 === 0 ? WL[r] : ""
+            ),
+            h("div", { className: "tm-heatrow", style: { gap: cellGap + "px" } }, cells)
+          )
+        );
       }
       const monthLabels = [];
       let prevM = null;
@@ -2800,7 +4233,23 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         h(
           "div",
           { style: { display: "flex", gap: cellGap + "px", flex: "1 1 auto", minHeight: 12 } },
-          monthLabels.map((m, i) => h("span", { key: i, style: { fontSize: 9.5, color: "var(--dsw-alias-label-caption)", width: (100 / weeks).toFixed(3) + "%", flex: "none", overflow: "hidden", whiteSpace: "nowrap" } }, m.mo + "\u6708"))
+          monthLabels.map(
+            (m, i) => h(
+              "span",
+              {
+                key: i,
+                style: {
+                  fontSize: 9.5,
+                  color: "var(--dsw-alias-label-caption)",
+                  width: (100 / weeks).toFixed(3) + "%",
+                  flex: "none",
+                  overflow: "hidden",
+                  whiteSpace: "nowrap"
+                }
+              },
+              m.mo + "\u6708"
+            )
+          )
         )
       );
       let pop = null;
@@ -2811,53 +4260,108 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         const cache = (d.cr || 0) + (d.cw || 0);
         const cachePct = tot > 0 ? cache / tot * 100 : 0;
         const pos = tipPos(hover.mx, hover.my, 300, 134 + Math.min(entries.length, 8) * 18);
-        pop = tmPortal(h(
-          "div",
-          { className: "tm-pop" + (props.above ? " tm-tip-above" : ""), style: pos },
-          h("div", { className: "tm-pop-title" }, cnDate(hover.k)),
+        pop = tmPortal(
           h(
             "div",
-            { className: "tm-pop-row", style: { marginBottom: 2 } },
-            h("span", { className: "tm-pop-k" }, "\u603B\u6D88\u8017"),
-            h("span", { className: "tm-pop-v" }, fmt2(tot)),
-            h("span", { className: "tm-pop-k", style: { paddingLeft: 12 } }, "\u4F1A\u8BDD"),
-            h("span", { className: "tm-pop-v" }, String(hover.sess))
-          ),
-          h(
-            "div",
-            { className: "tm-pop-row" },
-            h("span", { className: "tm-pop-k" }, "\u8F93\u5165 / \u8F93\u51FA"),
-            h("span", { className: "tm-pop-v" }, fmt2(d.i || 0) + " / " + fmt2(d.o || 0))
-          ),
-          // 缓存：读/写各自占比条（与模型占比条同样式），数值 + 占当日总量比例
-          h(
-            "div",
-            { className: "tm-pop-row" },
-            h("span", { className: "tm-pop-k" }, "\u7F13\u5B58\u8BFB"),
-            h("span", { className: "tm-pop-bar" }, h("span", { className: "tm-pop-fill", style: { width: (tot > 0 ? (d.cr || 0) / tot * 100 : 0).toFixed(1) + "%", background: "#f5a623" } })),
-            h("span", { className: "tm-pop-v" }, fmt2(d.cr || 0) + " \xB7 " + (tot > 0 ? ((d.cr || 0) / tot * 100).toFixed(0) : 0) + "%")
-          ),
-          h(
-            "div",
-            { className: "tm-pop-row", style: { marginBottom: entries.length > 0 ? 4 : 0 } },
-            h("span", { className: "tm-pop-k" }, "\u7F13\u5B58\u5199"),
-            h("span", { className: "tm-pop-bar" }, h("span", { className: "tm-pop-fill", style: { width: (tot > 0 ? (d.cw || 0) / tot * 100 : 0).toFixed(1) + "%", background: "#9a6ef1" } })),
-            h("span", { className: "tm-pop-v" }, fmt2(d.cw || 0) + " \xB7 \u5360\u6BD4 " + cachePct.toFixed(1) + "%")
-          ),
-          tot > 0 ? entries.slice(0, 8).map(([mk, v]) => {
-            const info = (props.models || {})[mk];
-            const color = modelColor(mk);
-            return h(
+            { className: "tm-pop" + (props.above ? " tm-tip-above" : ""), style: pos },
+            h("div", { className: "tm-pop-title" }, cnDate(hover.k)),
+            h(
               "div",
-              { key: mk, className: "tm-pop-row" },
-              h("span", { className: "tm-dot", style: { background: color } }),
-              h("span", { style: { maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, info ? info.model : mk),
-              h("span", { className: "tm-pop-bar" }, h("span", { className: "tm-pop-fill", style: { width: (tot > 0 ? v / tot * 100 : 0).toFixed(1) + "%", background: color } })),
-              h("span", { className: "tm-pop-v" }, fmt2(v) + " \xB7 " + (tot > 0 ? (v / tot * 100).toFixed(0) : 0) + "%")
-            );
-          }) : h("div", { className: "tm-pop-k" }, "\u5F53\u65E5\u65E0\u7528\u91CF"),
-          entries.length > 8 ? h("div", { className: "tm-pop-k", style: { marginTop: 4 } }, "\u2026\u53E6\u6709 " + (entries.length - 8) + " \u4E2A\u6A21\u578B") : null
-        ));
+              { className: "tm-pop-row", style: { marginBottom: 2 } },
+              h("span", { className: "tm-pop-k" }, "\u603B\u6D88\u8017"),
+              h("span", { className: "tm-pop-v" }, fmt2(tot)),
+              h("span", { className: "tm-pop-k", style: { paddingLeft: 12 } }, "\u4F1A\u8BDD"),
+              h("span", { className: "tm-pop-v" }, String(hover.sess))
+            ),
+            h(
+              "div",
+              { className: "tm-pop-row" },
+              h("span", { className: "tm-pop-k" }, "\u8F93\u5165 / \u8F93\u51FA"),
+              h("span", { className: "tm-pop-v" }, fmt2(d.i || 0) + " / " + fmt2(d.o || 0))
+            ),
+            // 缓存：读/写各自占比条（与模型占比条同样式），数值 + 占当日总量比例
+            h(
+              "div",
+              { className: "tm-pop-row" },
+              h("span", { className: "tm-pop-k" }, "\u7F13\u5B58\u8BFB"),
+              h(
+                "span",
+                { className: "tm-pop-bar" },
+                h("span", {
+                  className: "tm-pop-fill",
+                  style: {
+                    width: (tot > 0 ? (d.cr || 0) / tot * 100 : 0).toFixed(1) + "%",
+                    background: "#f5a623"
+                  }
+                })
+              ),
+              h(
+                "span",
+                { className: "tm-pop-v" },
+                fmt2(d.cr || 0) + " \xB7 " + (tot > 0 ? ((d.cr || 0) / tot * 100).toFixed(0) : 0) + "%"
+              )
+            ),
+            h(
+              "div",
+              { className: "tm-pop-row", style: { marginBottom: entries.length > 0 ? 4 : 0 } },
+              h("span", { className: "tm-pop-k" }, "\u7F13\u5B58\u5199"),
+              h(
+                "span",
+                { className: "tm-pop-bar" },
+                h("span", {
+                  className: "tm-pop-fill",
+                  style: {
+                    width: (tot > 0 ? (d.cw || 0) / tot * 100 : 0).toFixed(1) + "%",
+                    background: "#9a6ef1"
+                  }
+                })
+              ),
+              h("span", { className: "tm-pop-v" }, fmt2(d.cw || 0) + " \xB7 \u5360\u6BD4 " + cachePct.toFixed(1) + "%")
+            ),
+            tot > 0 ? entries.slice(0, 8).map(([mk, v]) => {
+              const info = (props.models || {})[mk];
+              const color = modelColor(mk);
+              return h(
+                "div",
+                { key: mk, className: "tm-pop-row" },
+                h("span", { className: "tm-dot", style: { background: color } }),
+                h(
+                  "span",
+                  {
+                    style: {
+                      maxWidth: 120,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap"
+                    }
+                  },
+                  info ? info.model : mk
+                ),
+                h(
+                  "span",
+                  { className: "tm-pop-bar" },
+                  h("span", {
+                    className: "tm-pop-fill",
+                    style: {
+                      width: (tot > 0 ? v / tot * 100 : 0).toFixed(1) + "%",
+                      background: color
+                    }
+                  })
+                ),
+                h(
+                  "span",
+                  { className: "tm-pop-v" },
+                  fmt2(v) + " \xB7 " + (tot > 0 ? (v / tot * 100).toFixed(0) : 0) + "%"
+                )
+              );
+            }) : h("div", { className: "tm-pop-k" }, "\u5F53\u65E5\u65E0\u7528\u91CF"),
+            entries.length > 8 ? h(
+              "div",
+              { className: "tm-pop-k", style: { marginTop: 4 } },
+              "\u2026\u53E6\u6709 " + (entries.length - 8) + " \u4E2A\u6A21\u578B"
+            ) : null
+          )
+        );
       }
       return h(
         "div",
@@ -2871,29 +4375,44 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const entries = props.entries;
       const total = props.total;
       const size = 168, cx = 84, cy = 84, r = 57, C = 2 * Math.PI * r;
-      const kids = [h("circle", { key: "bg", cx, cy, r, fill: "none", style: { stroke: "var(--dsw-alias-interactive-bg-hover)", strokeWidth: 18 } })];
-      let acc = 0;
-      for (let i = 0; i < entries.length; i++) {
-        const it = entries[i];
-        const len = total > 0 ? it.t / total * C : 0;
-        kids.push(h("circle", {
-          key: "s" + i,
+      const kids = [
+        h("circle", {
+          key: "bg",
           cx,
           cy,
           r,
           fill: "none",
-          className: "tm-donutseg",
-          strokeDasharray: len.toFixed(2) + " " + (C - len).toFixed(2),
-          strokeDashoffset: (-acc).toFixed(2),
-          style: { stroke: it.color, strokeWidth: 18, animationDelay: i * 70 + "ms" },
-          transform: "rotate(-90 " + cx + " " + cy + ")"
-        }));
+          style: { stroke: "var(--dsw-alias-interactive-bg-hover)", strokeWidth: 18 }
+        })
+      ];
+      let acc = 0;
+      for (let i = 0; i < entries.length; i++) {
+        const it = entries[i];
+        const len = total > 0 ? it.t / total * C : 0;
+        kids.push(
+          h("circle", {
+            key: "s" + i,
+            cx,
+            cy,
+            r,
+            fill: "none",
+            className: "tm-donutseg",
+            strokeDasharray: len.toFixed(2) + " " + (C - len).toFixed(2),
+            strokeDashoffset: (-acc).toFixed(2),
+            style: { stroke: it.color, strokeWidth: 18, animationDelay: i * 70 + "ms" },
+            transform: "rotate(-90 " + cx + " " + cy + ")"
+          })
+        );
         acc += len;
       }
       return h(
         "div",
         { className: "tm-donutBox", style: { position: "relative", width: size, height: size } },
-        h("svg", { viewBox: "0 0 " + size + " " + size, style: { width: "100%", height: "100%", display: "block" } }, kids),
+        h(
+          "svg",
+          { viewBox: "0 0 " + size + " " + size, style: { width: "100%", height: "100%", display: "block" } },
+          kids
+        ),
         h(AnimatedNumber, { className: "tm-donut-c", value: total, format: fmt2 }),
         h("div", { className: "tm-donut-cap" }, "\u7D2F\u8BA1 Token")
       );
@@ -2915,43 +4434,118 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       };
       const kids = [];
       if (hover !== null) {
-        kids.push(h("line", { key: "ch", x1: xs(hover.i), x2: xs(hover.i), y1: PAD, y2: H - PAD, style: { stroke: BP, strokeWidth: 1, strokeDasharray: "2 2", opacity: 0.7 } }));
+        kids.push(
+          h("line", {
+            key: "ch",
+            x1: xs(hover.i),
+            x2: xs(hover.i),
+            y1: PAD,
+            y2: H - PAD,
+            style: { stroke: BP, strokeWidth: 1, strokeDasharray: "2 2", opacity: 0.7 }
+          })
+        );
       }
       for (let si = 0; si < seriesList.length; si++) {
         const s = seriesList[si];
-        kids.push(h("path", {
-          key: "l" + s.name,
-          className: "tm-draw",
-          d: smoothPath(s.values.map((v, i) => [xs(i), ys(v)])),
-          fill: "none",
-          style: { stroke: s.color, strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round", opacity: 0.9, animationDelay: 0.1 + si * 0.12 + "s" }
-        }));
-        kids.push(h("circle", { key: "e" + s.name, cx: xs(n - 1), cy: ys(s.values[n - 1] || 0), r: 1.8, className: "tm-fadein", style: { fill: s.color, animationDelay: 0.55 + si * 0.12 + "s" } }));
+        kids.push(
+          h("path", {
+            key: "l" + s.name,
+            className: "tm-draw",
+            d: smoothPath(s.values.map((v, i) => [xs(i), ys(v)])),
+            fill: "none",
+            style: {
+              stroke: s.color,
+              strokeWidth: 1.6,
+              strokeLinecap: "round",
+              strokeLinejoin: "round",
+              opacity: 0.9,
+              animationDelay: 0.1 + si * 0.12 + "s"
+            }
+          })
+        );
+        kids.push(
+          h("circle", {
+            key: "e" + s.name,
+            cx: xs(n - 1),
+            cy: ys(s.values[n - 1] || 0),
+            r: 1.8,
+            className: "tm-fadein",
+            style: { fill: s.color, animationDelay: 0.55 + si * 0.12 + "s" }
+          })
+        );
         if (hover !== null) {
-          kids.push(h("circle", { key: "h" + s.name, cx: xs(hover.i), cy: ys(s.values[hover.i] || 0), r: 2.2, style: { fill: s.color, stroke: "var(--dsw-alias-bg-layer-1)", strokeWidth: 1 } }));
+          kids.push(
+            h("circle", {
+              key: "h" + s.name,
+              cx: xs(hover.i),
+              cy: ys(s.values[hover.i] || 0),
+              r: 2.2,
+              style: { fill: s.color, stroke: "var(--dsw-alias-bg-layer-1)", strokeWidth: 1 }
+            })
+          );
         }
       }
-      kids.push(h("rect", { key: "cap", x: 0, y: 0, width: W, height: H, fill: "transparent", style: { cursor: "crosshair" }, onMouseMove: onMove, onMouseLeave: () => setHover(null) }));
+      kids.push(
+        h("rect", {
+          key: "cap",
+          x: 0,
+          y: 0,
+          width: W,
+          height: H,
+          fill: "transparent",
+          style: { cursor: "crosshair" },
+          onMouseMove: onMove,
+          onMouseLeave: () => setHover(null)
+        })
+      );
       const tip = hover !== null ? (() => {
         const active = seriesList.filter((s) => (s.values[hover.i] || 0) > 0);
         const pos = tipPos(hover.mx, hover.my, 170, 34 + active.length * 16);
-        return tmPortal(h(
-          "div",
-          { className: "tm-tipfixed" + (props.floatTip === true ? " tm-tipfloat" : ""), style: { ...pos, fontSize: 10.5 } },
-          h("div", { style: { fontWeight: 600 } }, tickLabels !== null ? tickLabels[hover.i] : hover.i + ":00"),
-          active.length > 0 ? sorted(active, (a, b) => (b.values[hover.i] || 0) - (a.values[hover.i] || 0)).map((s) => h(
+        return tmPortal(
+          h(
             "div",
-            { key: s.name, className: "tm-tiprow" },
-            h("span", { className: "tm-dot", style: { background: s.color, width: 6, height: 6 } }),
-            h("span", { className: "tm-tip-k", style: { overflow: "hidden", textOverflow: "ellipsis", maxWidth: 80 } }, s.shortName),
-            h("span", { className: "tm-tip-v" }, fmt2(s.values[hover.i] || 0))
-          )) : h("div", { style: { color: "var(--dsw-alias-label-tertiary)" } }, "\u8BE5\u5C0F\u65F6\u65E0\u6D88\u8017")
-        ));
+            {
+              className: "tm-tipfixed" + (props.floatTip === true ? " tm-tipfloat" : ""),
+              style: { ...pos, fontSize: 10.5 }
+            },
+            h(
+              "div",
+              { style: { fontWeight: 600 } },
+              tickLabels !== null ? tickLabels[hover.i] : hover.i + ":00"
+            ),
+            active.length > 0 ? sorted(
+              active,
+              (a, b) => (b.values[hover.i] || 0) - (a.values[hover.i] || 0)
+            ).map(
+              (s) => h(
+                "div",
+                { key: s.name, className: "tm-tiprow" },
+                h("span", {
+                  className: "tm-dot",
+                  style: { background: s.color, width: 6, height: 6 }
+                }),
+                h(
+                  "span",
+                  {
+                    className: "tm-tip-k",
+                    style: { overflow: "hidden", textOverflow: "ellipsis", maxWidth: 80 }
+                  },
+                  s.shortName
+                ),
+                h("span", { className: "tm-tip-v" }, fmt2(s.values[hover.i] || 0))
+              )
+            ) : h("div", { style: { color: "var(--dsw-alias-label-tertiary)" } }, "\u8BE5\u5C0F\u65F6\u65E0\u6D88\u8017")
+          )
+        );
       })() : null;
       return h(
         "div",
         { className: "tm-svgwrap" },
-        h("svg", { className: "tm-spark", viewBox: "0 0 " + W + " " + H, preserveAspectRatio: "none", ref: svgRef }, kids),
+        h(
+          "svg",
+          { className: "tm-spark", viewBox: "0 0 " + W + " " + H, preserveAspectRatio: "none", ref: svgRef },
+          kids
+        ),
         tip
       );
     }
@@ -3074,92 +4668,186 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const prev7 = allDays.slice(-14, -7).reduce((s, k) => s + dayVal(k), 0);
       const CI = "#4c7ef3", CO = "#2fb261", CC = "#f5a623";
       const cards = [];
-      cards.push(h(StatCard, {
-        label: "\u7D2F\u8BA1 Token",
-        count: aggAll.total,
-        tint: true,
-        sub: "\u8F93\u5165 " + fmt2(aggAll.i) + " \xB7 \u8F93\u51FA " + fmt2(aggAll.o),
-        delay: cards.length * 45,
-        onHover: (e) => setPop({ mx: e.clientX, my: e.clientY, content: breakdown("\u7D2F\u8BA1\u6784\u6210", [["\u8F93\u5165", aggAll.i, 1, aggAll.total], ["\u8F93\u51FA", aggAll.o, 1, aggAll.total], ["\u7F13\u5B58\u8BFB", aggAll.cr, 1, aggAll.total], ["\u7F13\u5B58\u5199", aggAll.cw, 1, aggAll.total]]) }),
-        onLeave: leave,
-        visual: [h(ComposeBar, { parts: [["\u8F93\u5165", aggAll.i, CI], ["\u8F93\u51FA", aggAll.o, CO], ["\u7F13\u5B58\u8BFB", aggAll.cr, CC], ["\u7F13\u5B58\u5199", aggAll.cw, "#9a6ef1"]] })]
-      }));
-      cards.push(h(StatCard, {
-        label: "\u8FD1 30 \u5929\u8D70\u52BF",
-        count: sparkVals.reduce((s, v) => s + v, 0),
-        sub: "\u6BCF\u65E5\u7528\u91CF\u8FF7\u4F60\u56FE",
-        delay: cards.length * 45,
-        visual: [h(Sparkline, { values: sparkVals }), h(TrendDelta, { recent: last7, before: prev7 })]
-      }));
-      cards.push(h(StatCard, {
-        label: "\u7F13\u5B58 Token",
-        count: aggAll.cr + aggAll.cw,
-        sub: "\u547D\u4E2D " + fmt2(aggAll.cr) + " \xB7 \u5199\u5165 " + fmt2(aggAll.cw),
-        delay: cards.length * 45,
-        onHover: (e) => setPop({ mx: e.clientX, my: e.clientY, content: breakdown("\u7F13\u5B58\u6784\u6210 \xB7 \u547D\u4E2D\u7387 " + (aggAll.total > 0 ? (aggAll.cr / aggAll.total * 100).toFixed(1) : "0.0") + "%", [["\u7F13\u5B58\u8BFB\uFF08\u547D\u4E2D\uFF09", aggAll.cr, 1, aggAll.total], ["\u7F13\u5B58\u5199", aggAll.cw, 1, aggAll.total]]) }),
-        onLeave: leave,
-        visual: [h(ComposeBar, { parts: [["\u7F13\u5B58\u8BFB", aggAll.cr, CC], ["\u7F13\u5B58\u5199", aggAll.cw, "#9a6ef1"]] })]
-      }));
-      cards.push(data.peakStep ? h(StatCard, {
-        label: "\u5CF0\u503C\u5355\u6B21\u8BF7\u6C42",
-        count: data.peakStep.tokens,
-        sub: data.peakStep.model + " \xB7 " + dispDay(data.peakStep.d),
-        delay: cards.length * 45
-      }) : null);
-      cards.push(peakDay ? h(StatCard, {
-        label: "\u5CF0\u503C\u5355\u65E5",
-        count: peakDay.t,
-        sub: dispDay(peakDay.d),
-        delay: cards.length * 45,
-        onHover: (e) => setPop({ mx: e.clientX, my: e.clientY, content: breakdown(peakDay.d + " \u5404\u6A21\u578B", sorted(Object.entries(peakDay.byModel || {}), (a, b) => b[1] - a[1]).slice(0, 6).map(([mk, v]) => [mk, v, 1, peakDay.t])) }),
-        onLeave: leave,
-        visual: [h(ComposeBar, { parts: sorted(Object.entries(peakDay.byModel || {}), (a, b) => b[1] - a[1]).slice(0, 4).map(([mk, v]) => {
-          const info = data.models[mk];
-          return [info ? info.model : mk, v, modelColor(mk)];
-        }) })]
-      }) : null);
-      cards.push(h(StatCard, {
-        label: "\u65E5\u5747\u6D88\u8017",
-        count: avgDay,
-        sub: "\u6309\u6D3B\u8DC3\u65E5\u5E73\u5747",
-        delay: cards.length * 45,
-        visual: [h(Sparkline, { values: sparkVals, color: CO })]
-      }));
-      cards.push(h(StatCard, { label: "\u65E5\u6D88\u8017\u4E2D\u4F4D\u6570", count: medDay, sub: "\u6309\u6D3B\u8DC3\u65E5\u53D6\u4E2D\u4F4D", delay: cards.length * 45 }));
-      cards.push(h(StatCard, {
-        label: "\u5F53\u524D\u8FDE\u7EED\u4F7F\u7528",
-        count: st.current,
-        fmt: (v) => fmt2(v) + " \u5929",
-        sub: "\u6309\u81EA\u7136\u65E5\u7EDF\u8BA1",
-        delay: cards.length * 45,
-        visual: [h(StreakBar, { current: st.current, best: st.longest })]
-      }));
-      cards.push(h(StatCard, {
-        label: "\u6700\u957F\u8FDE\u7EED\u4F7F\u7528",
-        count: st.longest,
-        fmt: (v) => fmt2(v) + " \u5929",
-        sub: "\u5386\u53F2\u6700\u4F73\u7EAA\u5F55",
-        delay: cards.length * 45,
-        visual: [h(StreakBar, { current: st.current, best: st.longest })]
-      }));
-      cards.push(h(StatCard, {
-        label: "\u6D3B\u8DC3\u5929\u6570",
-        count: aggAll.byDay.size,
-        fmt: (v) => fmt2(v) + " \u5929",
-        sub: "\u5171 " + data.sessions + " \u4E2A\u4F1A\u8BDD",
-        delay: cards.length * 45,
-        visual: [h(DaysRibbon, { byDay: aggAll.byDay })]
-      }));
-      cards.push(h(StatCard, { label: "\u6A21\u578B\u8C03\u7528\u6B21\u6570", count: aggAll.n, sub: data.active + " \u4E2A\u4F1A\u8BDD\u6709\u7528\u91CF", delay: cards.length * 45 }));
+      cards.push(
+        h(StatCard, {
+          label: "\u7D2F\u8BA1 Token",
+          count: aggAll.total,
+          tint: true,
+          sub: "\u8F93\u5165 " + fmt2(aggAll.i) + " \xB7 \u8F93\u51FA " + fmt2(aggAll.o),
+          delay: cards.length * 45,
+          onHover: (e) => setPop({
+            mx: e.clientX,
+            my: e.clientY,
+            content: breakdown("\u7D2F\u8BA1\u6784\u6210", [
+              ["\u8F93\u5165", aggAll.i, 1, aggAll.total],
+              ["\u8F93\u51FA", aggAll.o, 1, aggAll.total],
+              ["\u7F13\u5B58\u8BFB", aggAll.cr, 1, aggAll.total],
+              ["\u7F13\u5B58\u5199", aggAll.cw, 1, aggAll.total]
+            ])
+          }),
+          onLeave: leave,
+          visual: [
+            h(ComposeBar, {
+              parts: [
+                ["\u8F93\u5165", aggAll.i, CI],
+                ["\u8F93\u51FA", aggAll.o, CO],
+                ["\u7F13\u5B58\u8BFB", aggAll.cr, CC],
+                ["\u7F13\u5B58\u5199", aggAll.cw, "#9a6ef1"]
+              ]
+            })
+          ]
+        })
+      );
+      cards.push(
+        h(StatCard, {
+          label: "\u8FD1 30 \u5929\u8D70\u52BF",
+          count: sparkVals.reduce((s, v) => s + v, 0),
+          sub: "\u6BCF\u65E5\u7528\u91CF\u8FF7\u4F60\u56FE",
+          delay: cards.length * 45,
+          visual: [h(Sparkline, { values: sparkVals }), h(TrendDelta, { recent: last7, before: prev7 })]
+        })
+      );
+      cards.push(
+        h(StatCard, {
+          label: "\u7F13\u5B58 Token",
+          count: aggAll.cr + aggAll.cw,
+          sub: "\u547D\u4E2D " + fmt2(aggAll.cr) + " \xB7 \u5199\u5165 " + fmt2(aggAll.cw),
+          delay: cards.length * 45,
+          onHover: (e) => setPop({
+            mx: e.clientX,
+            my: e.clientY,
+            content: breakdown(
+              "\u7F13\u5B58\u6784\u6210 \xB7 \u547D\u4E2D\u7387 " + (aggAll.total > 0 ? (aggAll.cr / aggAll.total * 100).toFixed(1) : "0.0") + "%",
+              [
+                ["\u7F13\u5B58\u8BFB\uFF08\u547D\u4E2D\uFF09", aggAll.cr, 1, aggAll.total],
+                ["\u7F13\u5B58\u5199", aggAll.cw, 1, aggAll.total]
+              ]
+            )
+          }),
+          onLeave: leave,
+          visual: [
+            h(ComposeBar, {
+              parts: [
+                ["\u7F13\u5B58\u8BFB", aggAll.cr, CC],
+                ["\u7F13\u5B58\u5199", aggAll.cw, "#9a6ef1"]
+              ]
+            })
+          ]
+        })
+      );
+      cards.push(
+        data.peakStep ? h(StatCard, {
+          label: "\u5CF0\u503C\u5355\u6B21\u8BF7\u6C42",
+          count: data.peakStep.tokens,
+          sub: data.peakStep.model + " \xB7 " + dispDay(data.peakStep.d),
+          delay: cards.length * 45
+        }) : null
+      );
+      cards.push(
+        peakDay ? h(StatCard, {
+          label: "\u5CF0\u503C\u5355\u65E5",
+          count: peakDay.t,
+          sub: dispDay(peakDay.d),
+          delay: cards.length * 45,
+          onHover: (e) => setPop({
+            mx: e.clientX,
+            my: e.clientY,
+            content: breakdown(
+              peakDay.d + " \u5404\u6A21\u578B",
+              sorted(
+                Object.entries(peakDay.byModel || {}),
+                (a, b) => b[1] - a[1]
+              ).slice(0, 6).map(
+                ([mk, v]) => [mk, v, 1, peakDay.t]
+              )
+            )
+          }),
+          onLeave: leave,
+          visual: [
+            h(ComposeBar, {
+              parts: sorted(
+                Object.entries(peakDay.byModel || {}),
+                (a, b) => b[1] - a[1]
+              ).slice(0, 4).map(([mk, v]) => {
+                const info = data.models[mk];
+                return [info ? info.model : mk, v, modelColor(mk)];
+              })
+            })
+          ]
+        }) : null
+      );
+      cards.push(
+        h(StatCard, {
+          label: "\u65E5\u5747\u6D88\u8017",
+          count: avgDay,
+          sub: "\u6309\u6D3B\u8DC3\u65E5\u5E73\u5747",
+          delay: cards.length * 45,
+          visual: [h(Sparkline, { values: sparkVals, color: CO })]
+        })
+      );
+      cards.push(
+        h(StatCard, { label: "\u65E5\u6D88\u8017\u4E2D\u4F4D\u6570", count: medDay, sub: "\u6309\u6D3B\u8DC3\u65E5\u53D6\u4E2D\u4F4D", delay: cards.length * 45 })
+      );
+      cards.push(
+        h(StatCard, {
+          label: "\u5F53\u524D\u8FDE\u7EED\u4F7F\u7528",
+          count: st.current,
+          fmt: (v) => fmt2(v) + " \u5929",
+          sub: "\u6309\u81EA\u7136\u65E5\u7EDF\u8BA1",
+          delay: cards.length * 45,
+          visual: [h(StreakBar, { current: st.current, best: st.longest })]
+        })
+      );
+      cards.push(
+        h(StatCard, {
+          label: "\u6700\u957F\u8FDE\u7EED\u4F7F\u7528",
+          count: st.longest,
+          fmt: (v) => fmt2(v) + " \u5929",
+          sub: "\u5386\u53F2\u6700\u4F73\u7EAA\u5F55",
+          delay: cards.length * 45,
+          visual: [h(StreakBar, { current: st.current, best: st.longest })]
+        })
+      );
+      cards.push(
+        h(StatCard, {
+          label: "\u6D3B\u8DC3\u5929\u6570",
+          count: aggAll.byDay.size,
+          fmt: (v) => fmt2(v) + " \u5929",
+          sub: "\u5171 " + data.sessions + " \u4E2A\u4F1A\u8BDD",
+          delay: cards.length * 45,
+          visual: [h(DaysRibbon, { byDay: aggAll.byDay })]
+        })
+      );
+      cards.push(
+        h(StatCard, {
+          label: "\u6A21\u578B\u8C03\u7528\u6B21\u6570",
+          count: aggAll.n,
+          sub: data.active + " \u4E2A\u4F1A\u8BDD\u6709\u7528\u91CF",
+          delay: cards.length * 45
+        })
+      );
       cards.push(h(StatCard, { label: "\u9996\u6B21\u4F7F\u7528", value: dispDay(aggAll.first), sub: aggAll.first }));
       cards.push(h(StatCard, { label: "\u6700\u8FD1\u4F7F\u7528", value: dispDay(aggAll.last), sub: aggAll.last }));
-      const toolbar = props.widgets && props.widgetId ? h("div", { style: { display: "flex", justifyContent: "flex-end", marginBottom: 6 } }, widgetBtns(props.widgets, props.widgetId)) : null;
+      const toolbar = props.widgets && props.widgetId ? h(
+        "div",
+        { style: { display: "flex", justifyContent: "flex-end", marginBottom: 6 } },
+        widgetBtns(props.widgets, props.widgetId)
+      ) : null;
       return h(
         "div",
         { className: "tm-card" },
         toolbar,
         h("div", { className: "tm-grid" }, cards),
-        pop !== null ? tmPortal(h("div", { className: "tm-pop" + (props.inFloat ? " tm-tip-above" : ""), style: tipPos(pop.mx, pop.my, 280, 60) }, pop.content)) : null
+        pop !== null ? tmPortal(
+          h(
+            "div",
+            {
+              className: "tm-pop" + (props.inFloat ? " tm-tip-above" : ""),
+              style: tipPos(pop.mx, pop.my, 280, 60)
+            },
+            pop.content
+          )
+        ) : null
       );
     }
     function TrendSection(props) {
@@ -3187,7 +4875,11 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         trendTitles = slots.map((s) => cnDate(s.d) + " " + s.h + ":00\u2013" + (s.h + 1) + ":00");
         trendEmpty = "\u8BE5\u5C0F\u65F6\u65E0\u6D88\u8017";
         const slotIdx = /* @__PURE__ */ new Map();
-        for (let i = 0; i < slots.length; i++) slotIdx.set(slots[i].d + "|" + slots[i].h, i);
+        for (let i = 0; i < slots.length; i++)
+          slotIdx.set(
+            slots[i].d + "|" + slots[i].h,
+            i
+          );
         slotComp = Array.from({ length: 24 }, newComp);
         const hourVals = /* @__PURE__ */ new Map();
         for (const r of data.records || []) {
@@ -3219,7 +4911,14 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             visible: !modelOff[mk]
           });
         }
-        trendSeries.push({ name: "__total__", shortName: "\u603B Token", color: "#8a94a6", isTotal: true, values: hourTotal, visible: showTotal });
+        trendSeries.push({
+          name: "__total__",
+          shortName: "\u603B Token",
+          color: "#8a94a6",
+          isTotal: true,
+          values: hourTotal,
+          visible: showTotal
+        });
       } else {
         const N = trendRange === "7d" ? 7 : 30;
         const dayList = buildDayList(keyOf(fromKey(todayK) - (N - 1) * 864e5), todayK);
@@ -3270,27 +4969,46 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         h(
           "div",
           { className: "tm-chart-title" },
-          h("span", { className: "tm-chart-name" }, "Token \u4F7F\u7528\u8D8B\u52BF\uFF08" + (trendRange === "24h" ? "\u8FD124\u5C0F\u65F6\u6309\u5C0F\u65F6" : trendRange === "7d" ? "\u8FD17\u5929\u6309\u5929" : "\u8FD130\u5929\u6309\u5929") + " \xB7 \u60AC\u6D6E\u67E5\u770B\u660E\u7EC6\uFF09"),
+          h(
+            "span",
+            { className: "tm-chart-name" },
+            "Token \u4F7F\u7528\u8D8B\u52BF\uFF08" + (trendRange === "24h" ? "\u8FD124\u5C0F\u65F6\u6309\u5C0F\u65F6" : trendRange === "7d" ? "\u8FD17\u5929\u6309\u5929" : "\u8FD130\u5929\u6309\u5929") + " \xB7 \u60AC\u6D6E\u67E5\u770B\u660E\u7EC6\uFF09"
+          ),
           h(
             "span",
             { style: { display: "inline-flex", gap: 6, alignItems: "center" } },
-            h(Seg, { options: [{ v: "24h", t: "\u8FD124\u5C0F\u65F6" }, { v: "7d", t: "\u8FD17\u5929" }, { v: "30d", t: "\u8FD130\u5929" }], current: trendRange, onPick: setTrendRange }),
+            h(Seg, {
+              options: [
+                { v: "24h", t: "\u8FD124\u5C0F\u65F6" },
+                { v: "7d", t: "\u8FD17\u5929" },
+                { v: "30d", t: "\u8FD130\u5929" }
+              ],
+              current: trendRange,
+              onPick: setTrendRange
+            }),
             widgetBtns(props.widgets, props.widgetId)
           )
         ),
         h(
           "div",
           { className: "tm-legend", style: { marginBottom: 2, marginTop: 0 } },
-          trendSeries.map((s) => h("button", {
-            key: s.name,
-            className: "tm-modelchip",
-            "data-off": s.visible ? "0" : "1",
-            "aria-pressed": s.visible ? "true" : "false",
-            onClick: () => {
-              if (s.name === "__total__") setShowTotal(!showTotal);
-              else setModelOff({ ...modelOff, [s.name]: !modelOff[s.name] });
-            }
-          }, h("span", { className: "tm-dot", style: { background: s.color } }), h("span", { className: "tm-mc-name" }, s.shortName))),
+          trendSeries.map(
+            (s) => h(
+              "button",
+              {
+                key: s.name,
+                className: "tm-modelchip",
+                "data-off": s.visible ? "0" : "1",
+                "aria-pressed": s.visible ? "true" : "false",
+                onClick: () => {
+                  if (s.name === "__total__") setShowTotal(!showTotal);
+                  else setModelOff({ ...modelOff, [s.name]: !modelOff[s.name] });
+                }
+              },
+              h("span", { className: "tm-dot", style: { background: s.color } }),
+              h("span", { className: "tm-mc-name" }, s.shortName)
+            )
+          ),
           h("span", { className: "tm-hint", style: { marginLeft: 6 } }, "\u9ED8\u8BA4\u9690\u85CF\u603B\u66F2\u7EBF")
         ),
         anyVisible ? h(TrendChart, {
@@ -3321,7 +5039,16 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           h(
             "span",
             { style: { display: "inline-flex", gap: 6, alignItems: "center" } },
-            h(Seg, { options: [{ v: "1", t: "1\u4E2A\u6708" }, { v: "3", t: "3\u4E2A\u6708" }, { v: "6", t: "6\u4E2A\u6708" }, { v: "12", t: "12\u4E2A\u6708" }], current: heatSpan, onPick: setHeatSpan }),
+            h(Seg, {
+              options: [
+                { v: "1", t: "1\u4E2A\u6708" },
+                { v: "3", t: "3\u4E2A\u6708" },
+                { v: "6", t: "6\u4E2A\u6708" },
+                { v: "12", t: "12\u4E2A\u6708" }
+              ],
+              current: heatSpan,
+              onPick: setHeatSpan
+            }),
             widgetBtns(props.widgets, props.widgetId)
           )
         ),
@@ -3337,7 +5064,9 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           "div",
           { className: "tm-legend" },
           h("span", { className: "tm-muted" }, "\u5C11"),
-          HEAT_OPS.map((o, i) => h("span", { key: i, className: "tm-cell", style: { background: BP, opacity: o } })),
+          HEAT_OPS.map(
+            (o, i) => h("span", { key: i, className: "tm-cell", style: { background: BP, opacity: o } })
+          ),
           h("span", { className: "tm-muted" }, "\u591A")
         ),
         // 缓存汇总行（全量）：不悬停也能直接看到缓存读/写与占比
@@ -3350,7 +5079,11 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           h("span", { className: "tm-xdot", style: { background: "#9a6ef1" } }),
           h("span", null, "\u7F13\u5B58\u5199 " + fmt2(aggAll.cw)),
           h("span", { className: "tm-cacheSep" }, "\xB7"),
-          h("span", null, "\u7F13\u5B58\u5360\u6BD4 " + (aggAll.total > 0 ? ((aggAll.cr + aggAll.cw) / aggAll.total * 100).toFixed(1) : "0.0") + "%")
+          h(
+            "span",
+            null,
+            "\u7F13\u5B58\u5360\u6BD4 " + (aggAll.total > 0 ? ((aggAll.cr + aggAll.cw) / aggAll.total * 100).toFixed(1) : "0.0") + "%"
+          )
         )
       );
     }
@@ -3365,13 +5098,19 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       if (arr.length === 0) return h("div", { className: "tm-card tm-empty" }, "\u8BE5\u8303\u56F4\u5185\u6682\u65E0\u6A21\u578B\u7528\u91CF");
       const donutEntries = arr.slice(0, 7).map((m) => ({ name: m.m, t: m.t, color: modelColor(m.m) }));
       const rest = arr.slice(7);
-      if (rest.length > 0) donutEntries.push({ name: "\u5176\u4ED6", t: rest.reduce((s, m) => s + m.t, 0), color: "#8a94a6" });
+      if (rest.length > 0)
+        donutEntries.push({ name: "\u5176\u4ED6", t: rest.reduce((s, m) => s + m.t, 0), color: "#8a94a6" });
       const modelRows = arr.map((m, i) => {
         const info = data.models[m.m] || null;
         const name = info ? info.model : m.m;
         const color = modelColor(m.m);
         const pct = sc.total > 0 ? m.t / sc.total * 100 : 0;
-        const hoverContent = () => breakdown(m.m + " \u7528\u91CF\u6784\u6210", [["\u8F93\u5165", m.i, 1, m.t], ["\u8F93\u51FA", m.o, 1, m.t], ["\u7F13\u5B58\u8BFB", m.cr, 1, m.t], ["\u7F13\u5B58\u5199", m.cw, 1, m.t]]);
+        const hoverContent = () => breakdown(m.m + " \u7528\u91CF\u6784\u6210", [
+          ["\u8F93\u5165", m.i, 1, m.t],
+          ["\u8F93\u51FA", m.o, 1, m.t],
+          ["\u7F13\u5B58\u8BFB", m.cr, 1, m.t],
+          ["\u7F13\u5B58\u5199", m.cw, 1, m.t]
+        ]);
         return h(
           "div",
           {
@@ -3394,7 +5133,14 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             h(
               "div",
               { className: "tm-bartrack" },
-              h("span", { className: "tm-barfill", style: { width: (m.t / arr[0].t * 100).toFixed(1) + "%", background: color, animationDelay: i * 40 + 120 + "ms" } })
+              h("span", {
+                className: "tm-barfill",
+                style: {
+                  width: (m.t / arr[0].t * 100).toFixed(1) + "%",
+                  background: color,
+                  animationDelay: i * 40 + 120 + "ms"
+                }
+              })
             ),
             h(
               "div",
@@ -3420,7 +5166,16 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           h(Donut, { entries: donutEntries, total: sc.total }),
           h("div", { className: "tm-models" }, modelRows)
         ),
-        pop !== null ? tmPortal(h("div", { className: "tm-pop" + (props.inFloat ? " tm-tip-above" : ""), style: tipPos(pop.mx, pop.my, 280, 60) }, pop.content)) : null
+        pop !== null ? tmPortal(
+          h(
+            "div",
+            {
+              className: "tm-pop" + (props.inFloat ? " tm-tip-above" : ""),
+              style: tipPos(pop.mx, pop.my, 280, 60)
+            },
+            pop.content
+          )
+        ) : null
       );
     }
     function StatsWidget(props) {
@@ -3432,7 +5187,11 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         return aggregate(data.records || [], null);
       }, [data]);
       if (!data || !aggAll) {
-        return h("div", { className: "tm-hint" }, err ? "\u7EDF\u8BA1\u52A0\u8F7D\u5931\u8D25\uFF1A" + err : loading ? "\u6B63\u5728\u805A\u5408\u4F1A\u8BDD\u65E5\u5FD7\u2026" : "\u6682\u65E0\u6570\u636E\uFF08\u6253\u5F00\u53F3\u4FA7\u680F\u7528\u91CF\u9762\u677F\u53EF\u52A0\u901F\u52A0\u8F7D\uFF09");
+        return h(
+          "div",
+          { className: "tm-hint" },
+          err ? "\u7EDF\u8BA1\u52A0\u8F7D\u5931\u8D25\uFF1A" + err : loading ? "\u6B63\u5728\u805A\u5408\u4F1A\u8BDD\u65E5\u5FD7\u2026" : "\u6682\u65E0\u6570\u636E\uFF08\u6253\u5F00\u53F3\u4FA7\u680F\u7528\u91CF\u9762\u677F\u53EF\u52A0\u901F\u52A0\u8F7D\uFF09"
+        );
       }
       const aa = aggAll;
       const w = { widgets: props.widgets, widgetId: props.widgetId };
@@ -3451,11 +5210,21 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           prepend: h(
             "div",
             { className: "tm-segRow" },
-            h(Seg, { options: [{ v: "7", t: "\u8FD17\u5929" }, { v: "30", t: "\u8FD130\u5929" }, { v: "90", t: "\u8FD190\u5929" }, { v: "all", t: "\u5168\u90E8" }], current: range, onPick: setRange })
+            h(Seg, {
+              options: [
+                { v: "7", t: "\u8FD17\u5929" },
+                { v: "30", t: "\u8FD130\u5929" },
+                { v: "90", t: "\u8FD190\u5929" },
+                { v: "all", t: "\u5168\u90E8" }
+              ],
+              current: range,
+              onPick: setRange
+            })
           )
         });
       }
-      if (props.kind === "today") return h(TodayCard, { wide: true, bare: true, name: "\u4ECA\u65E5\u6D88\u8017", inFloat: true, ...w });
+      if (props.kind === "today")
+        return h(TodayCard, { wide: true, bare: true, name: "\u4ECA\u65E5\u6D88\u8017", inFloat: true, ...w });
       return h(StatCardsSection, { aggAll: aa, data, inFloat: true, ...w });
     }
     function StatsSettingsPage(props) {
@@ -3538,19 +5307,22 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         }
         const arm = () => {
           if (!alive) return;
-          timer = window.setTimeout(() => {
-            if (!alive) return;
-            const d = dataRef.current;
-            if (d !== null && d.partial === true) {
-              if (d.scanned === st.scanned) st.same++;
-              else {
-                st.same = 0;
-                st.scanned = d.scanned;
+          timer = window.setTimeout(
+            () => {
+              if (!alive) return;
+              const d = dataRef.current;
+              if (d !== null && d.partial === true) {
+                if (d.scanned === st.scanned) st.same++;
+                else {
+                  st.same = 0;
+                  st.scanned = d.scanned;
+                }
+                if (document.visibilityState === "visible") refresh();
               }
-              if (document.visibilityState === "visible") refresh();
-            }
-            arm();
-          }, st.same >= 8 ? 12e3 : 2e3);
+              arm();
+            },
+            st.same >= 8 ? 12e3 : 2e3
+          );
         };
         arm();
         return () => {
@@ -3585,41 +5357,59 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const children = [];
       children.push(h("h3", { className: "tm-title" }, "Token \u7528\u91CF\u7EDF\u8BA1"));
       if (showPrefs) {
-        children.push(h(
-          "p",
-          { className: "tm-desc" },
-          "\u805A\u5408\u672C\u673A\u5168\u90E8\u4F1A\u8BDD\u65E5\u5FD7\uFF08\u542B\u5B50\u4EE3\u7406\u4F1A\u8BDD\uFF1Bfork/resume \u79CD\u5B50\u4E8B\u4EF6\u5DF2\u53BB\u91CD\uFF09\u3002\u6570\u636E\u6BCF 60 \u79D2\u81EA\u52A8\u5237\u65B0\uFF1B\u65F6\u95F4\u8303\u56F4\u4F5C\u7528\u4E8E\u5F53\u524D\u8303\u56F4\u5361\u7247\u4E0E\u6A21\u578B\u5206\u5E03\uFF0C\u8D8B\u52BF\u56FE\u7528\u81EA\u5E26\u7684\u8FD124\u5C0F\u65F6 / \u8FD17\u5929 / \u8FD130\u5929\u5207\u6362\uFF0C\u603B\u89C8\u4E0E\u70ED\u529B\u56FE\u4E3A\u5168\u91CF\u6570\u636E\u3002"
-        ));
+        children.push(
+          h(
+            "p",
+            { className: "tm-desc" },
+            "\u805A\u5408\u672C\u673A\u5168\u90E8\u4F1A\u8BDD\u65E5\u5FD7\uFF08\u542B\u5B50\u4EE3\u7406\u4F1A\u8BDD\uFF1Bfork/resume \u79CD\u5B50\u4E8B\u4EF6\u5DF2\u53BB\u91CD\uFF09\u3002\u6570\u636E\u6BCF 60 \u79D2\u81EA\u52A8\u5237\u65B0\uFF1B\u65F6\u95F4\u8303\u56F4\u4F5C\u7528\u4E8E\u5F53\u524D\u8303\u56F4\u5361\u7247\u4E0E\u6A21\u578B\u5206\u5E03\uFF0C\u8D8B\u52BF\u56FE\u7528\u81EA\u5E26\u7684\u8FD124\u5C0F\u65F6 / \u8FD17\u5929 / \u8FD130\u5929\u5207\u6362\uFF0C\u603B\u89C8\u4E0E\u70ED\u529B\u56FE\u4E3A\u5168\u91CF\u6570\u636E\u3002"
+          )
+        );
       }
       if (showPrefs) {
-        children.push(h(
-          "div",
-          { className: "tm-swrow" },
+        children.push(
           h(
             "div",
-            { className: "tm-swrowText" },
-            h("div", { className: "tm-swlabel" }, "\u5728\u4FA7\u8FB9\u680F\u663E\u793A\u4ECA\u65E5\u7528\u91CF"),
-            h("div", { className: "tm-swhint" }, "\u5F00\u542F\u540E\u5DE6\u4FA7\u8FB9\u680F\u5E95\u90E8\u663E\u793A\u4ECA\u65E5 Token \u6D88\u8017\u5C0F\u5361\u7247\uFF08\u542B\u5206\u8272\u5C0F\u65F6\u66F2\u7EBF\u4E0E\u6628\u65E5\u5BF9\u6BD4\uFF1B\u504F\u597D\u5B58 settings.yaml \xB7 dshp-token-meter\uFF09")
-          ),
-          h("button", {
-            className: "tm-switch",
-            role: "switch",
-            "aria-checked": todayOn ? "true" : "false",
-            "aria-label": "\u5728\u4FA7\u8FB9\u680F\u663E\u793A\u4ECA\u65E5\u7528\u91CF",
-            onClick: () => void setToday(!todayOn)
-          }, h("span", { className: "tm-knob" }))
-        ));
-        children.push(h(
-          "div",
-          { className: "tm-swrow" },
+            { className: "tm-swrow" },
+            h(
+              "div",
+              { className: "tm-swrowText" },
+              h("div", { className: "tm-swlabel" }, "\u5728\u4FA7\u8FB9\u680F\u663E\u793A\u4ECA\u65E5\u7528\u91CF"),
+              h(
+                "div",
+                { className: "tm-swhint" },
+                "\u5F00\u542F\u540E\u5DE6\u4FA7\u8FB9\u680F\u5E95\u90E8\u663E\u793A\u4ECA\u65E5 Token \u6D88\u8017\u5C0F\u5361\u7247\uFF08\u542B\u5206\u8272\u5C0F\u65F6\u66F2\u7EBF\u4E0E\u6628\u65E5\u5BF9\u6BD4\uFF1B\u504F\u597D\u5B58 settings.yaml \xB7 dshp-token-meter\uFF09"
+              )
+            ),
+            h(
+              "button",
+              {
+                className: "tm-switch",
+                role: "switch",
+                "aria-checked": todayOn ? "true" : "false",
+                "aria-label": "\u5728\u4FA7\u8FB9\u680F\u663E\u793A\u4ECA\u65E5\u7528\u91CF",
+                onClick: () => void setToday(!todayOn)
+              },
+              h("span", { className: "tm-knob" })
+            )
+          )
+        );
+        children.push(
           h(
             "div",
-            { className: "tm-swrowText" },
-            h("div", { className: "tm-swlabel" }, "\u4ECA\u65E5\u5361\u7247\u6D6E\u7A97"),
-            h("div", { className: "tm-swhint" }, "\u5F39\u51FA\u540E\u53EF\u62D6\u5230\u5C4F\u5E55\u4EFB\u610F\u4F4D\u7F6E\uFF0C\u4FA7\u8FB9\u680F\u4E0D\u518D\u5360\u4F4D\uFF1B\u5F00\u5173\u4E0E\u5750\u6807\u5B58\u672C\u673A localStorage")
-          ),
-          fl.open ? h(Btn, { variant: "outline", size: "sm", onClick: () => tmTodaySet(false) }, "\u6536\u56DE\u4FA7\u8FB9\u680F") : h("div", { className: "tm-hint" }, "\u5728\u4FA7\u8FB9\u680F\u4E2D\uFF08\u5361\u7247\u6807\u9898\u680F \u283F \u53EF\u62D6\u51FA\uFF09")
-        ));
+            { className: "tm-swrow" },
+            h(
+              "div",
+              { className: "tm-swrowText" },
+              h("div", { className: "tm-swlabel" }, "\u4ECA\u65E5\u5361\u7247\u6D6E\u7A97"),
+              h(
+                "div",
+                { className: "tm-swhint" },
+                "\u5F39\u51FA\u540E\u53EF\u62D6\u5230\u5C4F\u5E55\u4EFB\u610F\u4F4D\u7F6E\uFF0C\u4FA7\u8FB9\u680F\u4E0D\u518D\u5360\u4F4D\uFF1B\u5F00\u5173\u4E0E\u5750\u6807\u5B58\u672C\u673A localStorage"
+              )
+            ),
+            fl.open ? h(Btn, { variant: "outline", size: "sm", onClick: () => tmTodaySet(false) }, "\u6536\u56DE\u4FA7\u8FB9\u680F") : h("div", { className: "tm-hint" }, "\u5728\u4FA7\u8FB9\u680F\u4E2D\uFF08\u5361\u7247\u6807\u9898\u680F \u283F \u53EF\u62D6\u51FA\uFF09")
+          )
+        );
       }
       if (err) {
         children.push(h("div", { className: "tm-notice tm-notice-err" }, "\u8BFB\u53D6\u5931\u8D25\uFF1A" + err));
@@ -3627,101 +5417,147 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         return h("div", { className: "tm-page" }, children);
       }
       if (data === null) {
-        children.push(h("div", { className: "tm-notice tm-notice-empty" }, loading ? "\u6B63\u5728\u7EDF\u8BA1\u4F1A\u8BDD\u65E5\u5FD7\u2026" : "\u6682\u65E0\u6570\u636E"));
+        children.push(
+          h("div", { className: "tm-notice tm-notice-empty" }, loading ? "\u6B63\u5728\u7EDF\u8BA1\u4F1A\u8BDD\u65E5\u5FD7\u2026" : "\u6682\u65E0\u6570\u636E")
+        );
         return h("div", { className: "tm-page" }, children);
       }
       const dd = derived;
       const scoped = dd.scoped;
       const aggAll = dd.aggAll;
       const hasData = aggAll.first !== null;
-      children.push(h(
-        "div",
-        { className: "tm-toolbar" },
-        h("label", { className: "tm-hint" }, "\u65F6\u95F4\u8303\u56F4"),
-        h(RangeSelect, { options: RANGES, value: range, onPick: (v) => setRange(v) }),
-        h(
-          "span",
-          { className: "tm-hint", style: { marginLeft: "auto" } },
-          "\u66F4\u65B0\u4E8E " + hhmm(data.generatedAt) + (loading ? " \xB7 \u5237\u65B0\u4E2D\u2026" : "")
-        ),
-        data.storage === "disabled" ? P.Tooltip ? h(
-          P.Tooltip,
-          { label: "\u7EDF\u8BA1\u4ECD\u6B63\u5E38\u8FD0\u884C\uFF1B\u91CD\u542F\u540E\u9700\u5168\u91CF\u91CD\u626B\u3002\u8BE6\u60C5\u89C1\u5BBF\u4E3B\u65E5\u5FD7 [dshp-token-meter] storage domain", side: "bottom" },
-          h("span", { className: "tm-hint", style: { cursor: "help" } }, "\u26A0 \u65E0\u6301\u4E45\u7F13\u5B58")
-        ) : h("span", { className: "tm-hint", title: "\u7EDF\u8BA1\u4ECD\u6B63\u5E38\u8FD0\u884C\uFF1B\u91CD\u542F\u540E\u9700\u5168\u91CF\u91CD\u626B" }, "\u26A0 \u65E0\u6301\u4E45\u7F13\u5B58") : null,
-        h(Btn, {
-          variant: "outline",
-          size: "sm",
-          onClick: () => refresh(),
-          disabled: loading,
-          icon: loading && P.IconLoadingOutline16 ? h(P.IconLoadingOutline16) : P.IconRefreshOutline14 ? h(P.IconRefreshOutline14) : void 0
-        }, loading ? "\u5237\u65B0\u4E2D\u2026" : "\u5237\u65B0")
-      ));
-      {
-        const pct = data.total > 0 ? Math.round(data.scanned / data.total * 100) : 0;
-        children.push(data.partial === true ? h(
-          "div",
-          { className: "tm-notice tm-notice-empty", style: { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" } },
-          h("span", null, "\u540E\u53F0\u7EDF\u8BA1\u4E2D " + pct + "%\uFF08" + data.scanned + "/" + data.total + " \u4E2A\u4F1A\u8BDD\uFF09\u2014\u2014 \u5DF2\u626B\u63CF\u90E8\u5206\u5148\u5C55\u793A\uFF0C\u5B8C\u6210\u540E\u81EA\u52A8\u8865\u5168\u3002"),
-          data.errors > 0 ? h("span", { className: "tm-muted" }, data.errors + " \u4E2A\u4F1A\u8BDD\u8BFB\u53D6\u5931\u8D25\u5DF2\u8DF3\u8FC7") : null
-        ) : null);
-      }
-      if (!hasData) {
-        children.push(h(
-          "div",
-          { className: "tm-empty" },
-          "\u6682\u65E0 Token \u7528\u91CF\u6570\u636E \u2014 \u53D1\u8D77\u4E00\u6B21\u5BF9\u8BDD\u540E\u4F1A\u81EA\u52A8\u7EDF\u8BA1\uFF08\u5DF2\u626B\u63CF " + data.sessions + " \u4E2A\u4F1A\u8BDD\uFF09"
-        ));
-        return h("div", { className: "tm-page" }, children);
-      }
-      children.push(h(StatCardsSection, {
-        aggAll,
-        data,
-        widgets: props.widgets || null,
-        widgetId: "stats:cards",
-        inPlace: true
-      }));
-      children.push(scoped !== null ? h(
-        "div",
-        { className: "tm-card" },
+      children.push(
         h(
           "div",
-          { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" } },
-          h("span", { className: "tm-muted" }, "\u5F53\u524D\u8303\u56F4\uFF08" + rangeText(range) + "\uFF09"),
+          { className: "tm-toolbar" },
+          h("label", { className: "tm-hint" }, "\u65F6\u95F4\u8303\u56F4"),
+          h(RangeSelect, { options: RANGES, value: range, onPick: (v) => setRange(v) }),
           h(
             "span",
-            { style: { fontVariantNumeric: "tabular-nums" } },
-            fmt2(scoped.total) + " tokens \xB7 \u8F93\u5165 " + fmt2(scoped.i) + " \xB7 \u8F93\u51FA " + fmt2(scoped.o) + " \xB7 " + fmtFull(scoped.n) + " \u6B21\u8C03\u7528"
+            { className: "tm-hint", style: { marginLeft: "auto" } },
+            "\u66F4\u65B0\u4E8E " + hhmm(data.generatedAt) + (loading ? " \xB7 \u5237\u65B0\u4E2D\u2026" : "")
+          ),
+          data.storage === "disabled" ? P.Tooltip ? h(
+            P.Tooltip,
+            {
+              label: "\u7EDF\u8BA1\u4ECD\u6B63\u5E38\u8FD0\u884C\uFF1B\u91CD\u542F\u540E\u9700\u5168\u91CF\u91CD\u626B\u3002\u8BE6\u60C5\u89C1\u5BBF\u4E3B\u65E5\u5FD7 [dshp-token-meter] storage domain",
+              side: "bottom"
+            },
+            h("span", { className: "tm-hint", style: { cursor: "help" } }, "\u26A0 \u65E0\u6301\u4E45\u7F13\u5B58")
+          ) : h("span", { className: "tm-hint", title: "\u7EDF\u8BA1\u4ECD\u6B63\u5E38\u8FD0\u884C\uFF1B\u91CD\u542F\u540E\u9700\u5168\u91CF\u91CD\u626B" }, "\u26A0 \u65E0\u6301\u4E45\u7F13\u5B58") : null,
+          h(
+            Btn,
+            {
+              variant: "outline",
+              size: "sm",
+              onClick: () => refresh(),
+              disabled: loading,
+              icon: loading && P.IconLoadingOutline16 ? h(P.IconLoadingOutline16) : P.IconRefreshOutline14 ? h(P.IconRefreshOutline14) : void 0
+            },
+            loading ? "\u5237\u65B0\u4E2D\u2026" : "\u5237\u65B0"
           )
         )
-      ) : null);
-      children.push(h(TrendSection, {
-        data,
-        aggAll,
-        widgets: props.widgets || null,
-        widgetId: "stats:trend",
-        inPlace: true
-      }));
-      children.push(h(HeatSection, {
-        data,
-        aggAll,
-        widgets: props.widgets || null,
-        widgetId: "stats:heat",
-        inPlace: true
-      }));
-      children.push(h(DonutSection, {
-        data,
-        agg: scoped !== null ? scoped : aggAll,
-        rangeLabel: rangeText(range),
-        widgets: props.widgets || null,
-        widgetId: "stats:donut",
-        inPlace: true
-      }));
-      children.push(h(
-        "div",
-        { className: "tm-muted", style: { margin: "4px 2px 0" } },
-        "\u7EDF\u8BA1\u53E3\u5F84\uFF1A\u603B Token = \u8F93\u5165 + \u7F13\u5B58\u8BFB + \u7F13\u5B58\u5199 + \u8F93\u51FA\uFF08reasoning \u5DF2\u542B\u5728\u8F93\u51FA\u5185\uFF09\uFF1B\u540C\u4E00\u8BF7\u6C42\u7684\u91C7\u6837 usage \u88AB\u7EC8\u503C\u8986\u76D6\uFF0C\u4E0D\u91CD\u590D\u7D2F\u8BA1\uFF1Bfork/resume \u79CD\u5B50\u4E8B\u4EF6\u5DF2\u53BB\u91CD\u3002"
-      ));
+      );
+      {
+        const pct = data.total > 0 ? Math.round(data.scanned / data.total * 100) : 0;
+        children.push(
+          data.partial === true ? h(
+            "div",
+            {
+              className: "tm-notice tm-notice-empty",
+              style: { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }
+            },
+            h(
+              "span",
+              null,
+              "\u540E\u53F0\u7EDF\u8BA1\u4E2D " + pct + "%\uFF08" + data.scanned + "/" + data.total + " \u4E2A\u4F1A\u8BDD\uFF09\u2014\u2014 \u5DF2\u626B\u63CF\u90E8\u5206\u5148\u5C55\u793A\uFF0C\u5B8C\u6210\u540E\u81EA\u52A8\u8865\u5168\u3002"
+            ),
+            data.errors > 0 ? h(
+              "span",
+              { className: "tm-muted" },
+              data.errors + " \u4E2A\u4F1A\u8BDD\u8BFB\u53D6\u5931\u8D25\u5DF2\u8DF3\u8FC7"
+            ) : null
+          ) : null
+        );
+      }
+      if (!hasData) {
+        children.push(
+          h(
+            "div",
+            { className: "tm-empty" },
+            "\u6682\u65E0 Token \u7528\u91CF\u6570\u636E \u2014 \u53D1\u8D77\u4E00\u6B21\u5BF9\u8BDD\u540E\u4F1A\u81EA\u52A8\u7EDF\u8BA1\uFF08\u5DF2\u626B\u63CF " + data.sessions + " \u4E2A\u4F1A\u8BDD\uFF09"
+          )
+        );
+        return h("div", { className: "tm-page" }, children);
+      }
+      children.push(
+        h(StatCardsSection, {
+          aggAll,
+          data,
+          widgets: props.widgets || null,
+          widgetId: "stats:cards",
+          inPlace: true
+        })
+      );
+      children.push(
+        scoped !== null ? h(
+          "div",
+          { className: "tm-card" },
+          h(
+            "div",
+            {
+              style: {
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+                flexWrap: "wrap"
+              }
+            },
+            h("span", { className: "tm-muted" }, "\u5F53\u524D\u8303\u56F4\uFF08" + rangeText(range) + "\uFF09"),
+            h(
+              "span",
+              { style: { fontVariantNumeric: "tabular-nums" } },
+              fmt2(scoped.total) + " tokens \xB7 \u8F93\u5165 " + fmt2(scoped.i) + " \xB7 \u8F93\u51FA " + fmt2(scoped.o) + " \xB7 " + fmtFull(scoped.n) + " \u6B21\u8C03\u7528"
+            )
+          )
+        ) : null
+      );
+      children.push(
+        h(TrendSection, {
+          data,
+          aggAll,
+          widgets: props.widgets || null,
+          widgetId: "stats:trend",
+          inPlace: true
+        })
+      );
+      children.push(
+        h(HeatSection, {
+          data,
+          aggAll,
+          widgets: props.widgets || null,
+          widgetId: "stats:heat",
+          inPlace: true
+        })
+      );
+      children.push(
+        h(DonutSection, {
+          data,
+          agg: scoped !== null ? scoped : aggAll,
+          rangeLabel: rangeText(range),
+          widgets: props.widgets || null,
+          widgetId: "stats:donut",
+          inPlace: true
+        })
+      );
+      children.push(
+        h(
+          "div",
+          { className: "tm-muted", style: { margin: "4px 2px 0" } },
+          "\u7EDF\u8BA1\u53E3\u5F84\uFF1A\u603B Token = \u8F93\u5165 + \u7F13\u5B58\u8BFB + \u7F13\u5B58\u5199 + \u8F93\u51FA\uFF08reasoning \u5DF2\u542B\u5728\u8F93\u51FA\u5185\uFF09\uFF1B\u540C\u4E00\u8BF7\u6C42\u7684\u91C7\u6837 usage \u88AB\u7EC8\u503C\u8986\u76D6\uFF0C\u4E0D\u91CD\u590D\u7D2F\u8BA1\uFF1Bfork/resume \u79CD\u5B50\u4E8B\u4EF6\u5DF2\u53BB\u91CD\u3002"
+        )
+      );
       return h("div", { className: "tm-page" }, children);
     }
     function TodayCard(props) {
@@ -3751,16 +5587,32 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         if (isFloat) {
           return h(
             "div",
-            { className: "tm-float", style: { left: floatXY.x + "px", top: floatXY.y + "px" } },
+            {
+              className: "tm-float",
+              style: { left: floatXY.x + "px", top: floatXY.y + "px" }
+            },
             h(
               "div",
-              { className: "tm-todayhead tm-floathead", title: "\u6309\u4F4F\u62D6\u5230\u4EFB\u610F\u4F4D\u7F6E \xB7 \u53CC\u51FB\u6536\u56DE\u4FA7\u8FB9\u680F", onPointerDown: tmFloatDrag, onDoubleClick: () => tmTodaySet(false) },
+              {
+                className: "tm-todayhead tm-floathead",
+                title: "\u6309\u4F4F\u62D6\u5230\u4EFB\u610F\u4F4D\u7F6E \xB7 \u53CC\u51FB\u6536\u56DE\u4FA7\u8FB9\u680F",
+                onPointerDown: tmFloatDrag,
+                onDoubleClick: () => tmTodaySet(false)
+              },
               h("span", { className: "tm-todaylabel" }, "\u4ECA\u65E5\u7528\u91CF"),
               h("span", { className: "tm-todayval", style: { opacity: 0.5 } }, "\u2026"),
-              h("button", { className: "tm-minibtn", title: "\u6536\u56DE\u4FA7\u8FB9\u680F", onClick: (e) => {
-                if (e.stopPropagation) e.stopPropagation();
-                tmTodaySet(false);
-              } }, "\u{1F4CC}")
+              h(
+                "button",
+                {
+                  className: "tm-minibtn",
+                  title: "\u6536\u56DE\u4FA7\u8FB9\u680F",
+                  onClick: (e) => {
+                    if (e.stopPropagation) e.stopPropagation();
+                    tmTodaySet(false);
+                  }
+                },
+                "\u{1F4CC}"
+              )
             )
           );
         }
@@ -3799,14 +5651,35 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           h(DualBars, { className: "tm-dualbars", a: todayTotal, b: yTotal }),
           tip === null ? null : (() => {
             const pos = tipPos(tip.mx, tip.my, 190, 82);
-            return tmPortal(h(
-              "div",
-              { className: "tm-tipfixed", style: pos },
-              h("div", { className: "tm-tiprow", style: { fontWeight: 600, marginBottom: 2 } }, "\u4ECA\u65E5\u7528\u91CF"),
-              h("div", { className: "tm-tiprow" }, h("span", { className: "tm-tip-k" }, "\u4ECA\u65E5"), h("span", { className: "tm-tip-v" }, fmt2(todayTotal))),
-              h("div", { className: "tm-tiprow" }, h("span", { className: "tm-tip-k" }, "\u6628\u65E5"), h("span", { className: "tm-tip-v" }, fmt2(yTotal))),
-              h("div", { className: "tm-tiprow" }, h("span", { className: "tm-tip-k" }, "\u5BF9\u6BD4"), h("span", { className: "tm-tip-v" }, dTxt))
-            ));
+            return tmPortal(
+              h(
+                "div",
+                { className: "tm-tipfixed", style: pos },
+                h(
+                  "div",
+                  { className: "tm-tiprow", style: { fontWeight: 600, marginBottom: 2 } },
+                  "\u4ECA\u65E5\u7528\u91CF"
+                ),
+                h(
+                  "div",
+                  { className: "tm-tiprow" },
+                  h("span", { className: "tm-tip-k" }, "\u4ECA\u65E5"),
+                  h("span", { className: "tm-tip-v" }, fmt2(todayTotal))
+                ),
+                h(
+                  "div",
+                  { className: "tm-tiprow" },
+                  h("span", { className: "tm-tip-k" }, "\u6628\u65E5"),
+                  h("span", { className: "tm-tip-v" }, fmt2(yTotal))
+                ),
+                h(
+                  "div",
+                  { className: "tm-tiprow" },
+                  h("span", { className: "tm-tip-k" }, "\u5BF9\u6BD4"),
+                  h("span", { className: "tm-tip-v" }, dTxt)
+                )
+              )
+            );
           })()
         );
       }
@@ -3819,7 +5692,11 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       }
       const hourLabels = hourSlots.map((s) => s.d === todayK ? s.h + ":00" : "\u6628\u65E5" + s.h + ":00");
       const hourIdx = /* @__PURE__ */ new Map();
-      for (let i = 0; i < hourSlots.length; i++) hourIdx.set(hourSlots[i].d + "|" + hourSlots[i].h, i);
+      for (let i = 0; i < hourSlots.length; i++)
+        hourIdx.set(
+          hourSlots[i].d + "|" + hourSlots[i].h,
+          i
+        );
       const hourArrs = /* @__PURE__ */ new Map();
       for (const r of data.records || []) {
         const idx = hourIdx.get(r.d + "|" + r.h);
@@ -3843,39 +5720,77 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       }
       return h(
         "div",
-        isFloat ? { className: "tm-float", style: { left: floatXY.x + "px", top: floatXY.y + "px" } } : { className: "tm-today" },
+        isFloat ? {
+          className: "tm-float",
+          style: { left: floatXY.x + "px", top: floatXY.y + "px" }
+        } : { className: "tm-today" },
         h(
           "div",
-          isFloat ? { className: "tm-todayhead tm-floathead", title: "\u6309\u4F4F\u62D6\u5230\u4EFB\u610F\u4F4D\u7F6E \xB7 \u53CC\u51FB\u6536\u56DE\u4FA7\u8FB9\u680F", onPointerDown: tmFloatDrag, onDoubleClick: () => tmTodaySet(false) } : { className: "tm-todayhead" },
-          isFloat || bare ? null : h("span", { className: "tm-grip", title: "\u6309\u4F4F\u62D6\u51FA\u4E3A\u6D6E\u7A97\uFF0C\u70B9\u6309\u76F4\u63A5\u5F39\u51FA", onPointerDown: tmGripDragOut }, "\u283F"),
+          isFloat ? {
+            className: "tm-todayhead tm-floathead",
+            title: "\u6309\u4F4F\u62D6\u5230\u4EFB\u610F\u4F4D\u7F6E \xB7 \u53CC\u51FB\u6536\u56DE\u4FA7\u8FB9\u680F",
+            onPointerDown: tmFloatDrag,
+            onDoubleClick: () => tmTodaySet(false)
+          } : { className: "tm-todayhead" },
+          isFloat || bare ? null : h(
+            "span",
+            { className: "tm-grip", title: "\u6309\u4F4F\u62D6\u51FA\u4E3A\u6D6E\u7A97\uFF0C\u70B9\u6309\u76F4\u63A5\u5F39\u51FA", onPointerDown: tmGripDragOut },
+            "\u283F"
+          ),
           h("span", { className: "tm-todaylabel" }, props.name || "\u4ECA\u65E5 Token"),
           h(AnimatedNumber, { className: "tm-todayval", value: todayTotal, format: fmt2 }),
-          bare ? widgetBtns(props.widgets, props.widgetId) : h("button", {
-            className: "tm-minibtn",
-            title: isFloat ? "\u6536\u56DE\u4FA7\u8FB9\u680F" : "\u5F39\u51FA\u4E3A\u6D6E\u7A97\uFF08\u53EF\u62D6\u5230\u5C4F\u5E55\u4EFB\u610F\u4F4D\u7F6E\uFF09",
-            onClick: (e) => {
-              if (e.stopPropagation) e.stopPropagation();
-              tmTodaySet(!isFloat);
-            }
-          }, isFloat ? "\u{1F4CC}" : "\u29C9")
+          bare ? widgetBtns(props.widgets, props.widgetId) : h(
+            "button",
+            {
+              className: "tm-minibtn",
+              title: isFloat ? "\u6536\u56DE\u4FA7\u8FB9\u680F" : "\u5F39\u51FA\u4E3A\u6D6E\u7A97\uFF08\u53EF\u62D6\u5230\u5C4F\u5E55\u4EFB\u610F\u4F4D\u7F6E\uFF09",
+              onClick: (e) => {
+                if (e.stopPropagation) e.stopPropagation();
+                tmTodaySet(!isFloat);
+              }
+            },
+            isFloat ? "\u{1F4CC}" : "\u29C9"
+          )
         ),
-        h(TodayChart, { series: modelHourSeries, n: 24, labels: hourLabels, floatTip: isFloat || props.inFloat === true }),
+        h(TodayChart, {
+          series: modelHourSeries,
+          n: 24,
+          labels: hourLabels,
+          floatTip: isFloat || props.inFloat === true
+        }),
         modelHourSeries.length > 0 ? h(
           "div",
           { className: "tm-todaymodels" },
-          modelHourSeries.map((s, si) => h(
-            "span",
-            { key: s.name, className: "tm-todaymchip tm-fadein", style: { animationDelay: si * 60 + "ms" } },
-            h("span", { className: "tm-dot", style: { background: s.color } }),
-            h("span", null, s.shortName)
-          ))
+          modelHourSeries.map(
+            (s, si) => h(
+              "span",
+              {
+                key: s.name,
+                className: "tm-todaymchip tm-fadein",
+                style: { animationDelay: si * 60 + "ms" }
+              },
+              h("span", { className: "tm-dot", style: { background: s.color } }),
+              h("span", null, s.shortName)
+            )
+          )
         ) : null,
         delta !== null ? h(
           "div",
-          { className: "tm-statgrow tm-fadein", style: { marginTop: 4, color: delta >= 0 ? "var(--dsw-alias-state-success-primary)" : "var(--dsw-alias-state-error-primary)", fontSize: 10.5 } },
+          {
+            className: "tm-statgrow tm-fadein",
+            style: {
+              marginTop: 4,
+              color: delta >= 0 ? "var(--dsw-alias-state-success-primary)" : "var(--dsw-alias-state-error-primary)",
+              fontSize: 10.5
+            }
+          },
           h("span", { className: "tm-arrow " + (delta >= 0 ? "tm-arrow-up" : "tm-arrow-down") }),
           h("span", null, (delta >= 0 ? "+" : "") + delta.toFixed(0) + "% vs \u6628\u65E5")
-        ) : h("div", { className: "tm-muted", style: { fontSize: 10, marginTop: 4 } }, todayTotal > 0 ? "\u6628\u65E5\u65E0\u6D88\u8017" : "\u5F00\u59CB\u4F7F\u7528\u540E\u7EDF\u8BA1")
+        ) : h(
+          "div",
+          { className: "tm-muted", style: { fontSize: 10, marginTop: 4 } },
+          todayTotal > 0 ? "\u6628\u65E5\u65E0\u6D88\u8017" : "\u5F00\u59CB\u4F7F\u7528\u540E\u7EDF\u8BA1"
+        )
       );
     }
     function TodayFloatEntry() {
@@ -4008,13 +5923,18 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           listeners.delete(fn);
         };
       }, []);
-      return Object.keys(open).map((id) => ({ id, pos: open[id] }));
+      return Object.keys(open).map((id) => ({
+        id,
+        pos: open[id]
+      }));
     }
     function isOpen(id) {
       return Object.hasOwn(open, id);
     }
     function openWidget(id, at) {
-      const pos = clampPos(at || open[id] || cascadePos(Object.keys(open).length));
+      const pos = clampPos(
+        at || open[id] || cascadePos(Object.keys(open).length)
+      );
       open = Object.assign({}, open, { [id]: pos });
       order = order.filter((x) => x !== id).concat(id);
       emit(true);
@@ -4153,11 +6073,17 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           "div",
           {
             className: "tm-widgetFloat tm-in",
-            style: { left: cur.pos.x + "px", top: cur.pos.y + "px", width: FLOAT_W + "px", zIndex: zOf(props.id) },
+            style: {
+              left: cur.pos.x + "px",
+              top: cur.pos.y + "px",
+              width: FLOAT_W + "px",
+              zIndex: zOf(props.id)
+            },
             onPointerDown: (e) => {
               raise(props.id);
               const t = e.target;
-              if (t && t.closest && t.closest("button, input, select, textarea, a, .tm-grip, .tm-seg, .tm-modelchip, .tm-switch")) return;
+              if (t && t.closest && t.closest("button, input, select, textarea, a, .tm-grip, .tm-seg, .tm-modelchip, .tm-switch"))
+                return;
               startDrag(props.id, cur.pos, e);
             }
           },
@@ -4171,11 +6097,30 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       return h(
         "span",
         { style: { display: "inline-flex", gap: 2, alignItems: "center", marginLeft: 6, flex: "none" } },
-        h("span", Object.assign(
-          { className: "tm-grip", title: opened ? "\u5DF2\u5F39\u51FA\u4E3A\u72EC\u7ACB\u6D6E\u7A97\uFF08\u53EF\u62D6\u52A8\uFF09" : "\u6309\u4F4F\u62D6\u51FA\u4E3A\u72EC\u7ACB\u6D6E\u7A97\uFF0C\u70B9\u6309\u76F4\u63A5\u5F39\u51FA" },
-          gripProps(props.id)
-        ), "\u283F"),
-        opened ? h("button", { className: "tm-minibtn", title: "\u56DE\u5F52\u4FA7\u680F\uFF08\u5173\u95ED\u6D6E\u7A97\uFF0C\u5185\u5BB9\u4ECD\u5728\u539F\u4F4D\uFF09", onClick: () => closeWidget(props.id) }, "\u56DE\u5F52") : h("button", { className: "tm-minibtn", title: "\u5F39\u51FA\u4E3A\u72EC\u7ACB\u6D6E\u7A97", onClick: () => openWidget(props.id) }, "\u29C9")
+        h(
+          "span",
+          Object.assign(
+            {
+              className: "tm-grip",
+              title: opened ? "\u5DF2\u5F39\u51FA\u4E3A\u72EC\u7ACB\u6D6E\u7A97\uFF08\u53EF\u62D6\u52A8\uFF09" : "\u6309\u4F4F\u62D6\u51FA\u4E3A\u72EC\u7ACB\u6D6E\u7A97\uFF0C\u70B9\u6309\u76F4\u63A5\u5F39\u51FA"
+            },
+            gripProps(props.id)
+          ),
+          "\u283F"
+        ),
+        opened ? h(
+          "button",
+          {
+            className: "tm-minibtn",
+            title: "\u56DE\u5F52\u4FA7\u680F\uFF08\u5173\u95ED\u6D6E\u7A97\uFF0C\u5185\u5BB9\u4ECD\u5728\u539F\u4F4D\uFF09",
+            onClick: () => closeWidget(props.id)
+          },
+          "\u56DE\u5F52"
+        ) : h(
+          "button",
+          { className: "tm-minibtn", title: "\u5F39\u51FA\u4E3A\u72EC\u7ACB\u6D6E\u7A97", onClick: () => openWidget(props.id) },
+          "\u29C9"
+        )
       );
     }
     return {
@@ -4284,22 +6229,26 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         else notifyPrefs({ defaultRange: v });
       });
       const kids = [];
-      kids.push(h(
-        "p",
-        { key: "d", className: "tm-intro" },
-        "\u989D\u5EA6\u4F9B\u5E94\u5546\u4E0E\u504F\u597D\u3002\u8BE6\u7EC6\u989D\u5EA6\u4E0E\u7528\u91CF\u56FE\u8868\u8BF7\u5230\u53F3\u4FA7\u680F\u300C\u989D\u5EA6 / \u7528\u91CF\u300D\u9762\u677F\u67E5\u770B\uFF08\u7A7A\u95F4\u66F4\u5BBD\uFF09\u3002\u914D\u7F6E\u6301\u4E45\u5316\u5728 settings.yaml\uFF08",
-        h("code", { className: "tm-mono" }, s.namespace || "dshp-token-meter"),
-        " \u547D\u540D\u7A7A\u95F4\uFF09\uFF0C\u5916\u90E8\u7F16\u8F91\u70ED\u91CD\u8F7D\u3002"
-      ));
+      kids.push(
+        h(
+          "p",
+          { key: "d", className: "tm-intro" },
+          "\u989D\u5EA6\u4F9B\u5E94\u5546\u4E0E\u504F\u597D\u3002\u8BE6\u7EC6\u989D\u5EA6\u4E0E\u7528\u91CF\u56FE\u8868\u8BF7\u5230\u53F3\u4FA7\u680F\u300C\u989D\u5EA6 / \u7528\u91CF\u300D\u9762\u677F\u67E5\u770B\uFF08\u7A7A\u95F4\u66F4\u5BBD\uFF09\u3002\u914D\u7F6E\u6301\u4E45\u5316\u5728 settings.yaml\uFF08",
+          h("code", { className: "tm-mono" }, s.namespace || "dshp-token-meter"),
+          " \u547D\u540D\u7A7A\u95F4\uFF09\uFF0C\u5916\u90E8\u7F16\u8F91\u70ED\u91CD\u8F7D\u3002"
+        )
+      );
       if (s.error) kids.push(h("p", { key: "err", className: "tm-notice tm-notice-err" }, s.error));
       if (opErr) kids.push(h("p", { key: "operr", className: "tm-notice tm-notice-err" }, opErr));
       if (!s.cfg) {
-        kids.push(h(
-          "div",
-          { key: "loading", className: "tm-loading" },
-          h("span", { className: "tm-spinner" }),
-          h("span", { className: "tm-loadingText" }, s.loading ? "\u6B63\u5728\u8BFB\u53D6\u914D\u7F6E\u2026" : "\u914D\u7F6E\u52A0\u8F7D\u5931\u8D25")
-        ));
+        kids.push(
+          h(
+            "div",
+            { key: "loading", className: "tm-loading" },
+            h("span", { className: "tm-spinner" }),
+            h("span", { className: "tm-loadingText" }, s.loading ? "\u6B63\u5728\u8BFB\u53D6\u914D\u7F6E\u2026" : "\u914D\u7F6E\u52A0\u8F7D\u5931\u8D25")
+          )
+        );
         return h("div", { className: "tm-page" }, kids);
       }
       const vendors = s.cfg.vendors || [];
@@ -4308,172 +6257,286 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const rawSec = s.cfg.refreshSec;
       const curSec = rawSec === void 0 || rawSec === null || rawSec === "" ? 60 : Number(rawSec) === 0 ? 0 : isFinite(Number(rawSec)) ? Math.min(3600, Math.max(10, Number(rawSec) || 60)) : 60;
       const defRange = String(s.cfg.defaultRange || "30");
-      kids.push(h(
-        "div",
-        { key: "display", className: "tm-section" },
-        h("div", { className: "tm-sectionHead" }, "\u504F\u597D"),
+      kids.push(
         h(
-          UI.SecRow,
-          { key: "sec", label: "\u81EA\u52A8\u5237\u65B0", desc: "\u53F3\u680F\u6253\u5F00\u65F6\uFF0C\u5F53\u524D\u4F9B\u5E94\u5546\u6309\u95F4\u9694\u81EA\u52A8\u62C9\u53D6\uFF1B0=\u5173\u95ED\u3002" },
-          h(UI.PillSelect, {
-            disabled: busy,
-            value: String(curSec),
-            selectedLabel: secLabel(curSec),
-            options: (SEC_PRESETS.indexOf(curSec) >= 0 ? SEC_PRESETS : [curSec].concat(SEC_PRESETS)).map((n) => ({ id: String(n), label: secLabel(n) })),
-            onSelect: (id) => void withBusy(() => store.setRefresh(Number(id)))
-          })
-        ),
-        h(
-          UI.SecRow,
-          { key: "range", label: "\u9ED8\u8BA4\u8303\u56F4", desc: "\u7528\u91CF\u9762\u677F\u6253\u5F00\u65F6\u7684\u9ED8\u8BA4\u65F6\u95F4\u8303\u56F4\u3002" },
-          h(UI.PillSelect, {
-            disabled: busy,
-            value: defRange,
-            selectedLabel: defRange === "all" ? "\u5168\u90E8" : "\u8FD1 " + defRange + " \u5929",
-            options: [
-              { id: "7", label: "\u8FD1 7 \u5929" },
-              { id: "30", label: "\u8FD1 30 \u5929" },
-              { id: "90", label: "\u8FD1 90 \u5929" },
-              { id: "all", label: "\u5168\u90E8" }
-            ],
-            onSelect: (id) => void pickRange(id)
-          })
+          "div",
+          { key: "display", className: "tm-section" },
+          h("div", { className: "tm-sectionHead" }, "\u504F\u597D"),
+          h(
+            UI.SecRow,
+            {
+              key: "sec",
+              label: "\u81EA\u52A8\u5237\u65B0",
+              desc: "\u6BCF\u9694\u8FD9\u4E48\u4E45\u81EA\u52A8\u53BB\u5E73\u53F0\u62C9\u4E00\u6B21\u989D\u5EA6\uFF08\u53EA\u62C9\u300C\u5DF2\u542F\u7528\u300D\u7684\u4F9B\u5E94\u5546\uFF0C\u7981\u7528\u7684\u89C1\u4E0B\u65B9\u5217\u8868\uFF09\u3002\u9009\u300C\u5173\u95ED\u81EA\u52A8\u5237\u65B0\u300D\u540E\u4E0D\u518D\u5B9A\u65F6\u62C9\u53D6\uFF0C\u4ECD\u53EF\u968F\u65F6\u624B\u52A8\u70B9\u300C\u62C9\u53D6\u300D\u3002"
+            },
+            h(UI.PillSelect, {
+              disabled: busy,
+              value: String(curSec),
+              selectedLabel: secLabel(curSec),
+              options: (SEC_PRESETS.indexOf(curSec) >= 0 ? SEC_PRESETS : [curSec].concat(SEC_PRESETS)).map(
+                (n) => ({ id: String(n), label: secLabel(n) })
+              ),
+              onSelect: (id) => void withBusy(() => store.setRefresh(Number(id)))
+            })
+          ),
+          h(
+            UI.SecRow,
+            { key: "range", label: "\u9ED8\u8BA4\u8303\u56F4", desc: "\u53F3\u4FA7\u680F\u300C\u7528\u91CF\u300D\u9762\u677F\u6253\u5F00\u65F6\u9ED8\u8BA4\u7EDF\u8BA1\u591A\u5C11\u5929\u7684\u6570\u636E\u3002" },
+            h(UI.PillSelect, {
+              disabled: busy,
+              value: defRange,
+              selectedLabel: defRange === "all" ? "\u5168\u90E8" : "\u8FD1 " + defRange + " \u5929",
+              options: [
+                { id: "7", label: "\u8FD1 7 \u5929" },
+                { id: "30", label: "\u8FD1 30 \u5929" },
+                { id: "90", label: "\u8FD1 90 \u5929" },
+                { id: "all", label: "\u5168\u90E8" }
+              ],
+              onSelect: (id) => void pickRange(id)
+            })
+          )
         )
-      ));
+      );
       const vrows = [
-        h(UI.SecRow, {
-          key: "__active",
-          label: "\u5F53\u524D\u4F9B\u5E94\u5546",
-          desc: "\u4FA7\u8FB9\u680F/\u53F3\u680F\u989D\u5EA6\u5361\u5C55\u793A\u7684\u989D\u5EA6\u6765\u6E90\uFF1B\u65E0 = \u6781\u7B80\u6A21\u5F0F\u3002"
-        }, h(UI.PillSelect, {
-          disabled: busy,
-          value: activeId,
-          selectedLabel: a0 ? a0.name + "\uFF08" + store.typeLabel(a0.type) + "\uFF09" : "\u65E0 \xB7 \u6781\u7B80\u6A21\u5F0F\uFF08\u4E0D\u62C9\u53D6\uFF09",
-          options: [{ id: "", label: "\u65E0 \xB7 \u6781\u7B80\u6A21\u5F0F\uFF08\u4E0D\u62C9\u53D6\uFF09" }].concat(vendors.map((v) => ({ id: v.id, label: v.name + "\uFF08" + store.typeLabel(v.type) + "\uFF09" }))),
-          onSelect: (id) => void withBusy(async () => {
-            await store.setActive(id);
-            await store.reload();
-          })
-        }))
-      ];
-      vendors.forEach((v) => {
-        const snap = s.snaps[v.id];
-        const isCur = v.id === activeId;
-        const status = snap && snap.ok ? h("span", { className: "tm-hint" }, "\u62C9\u53D6\u6B63\u5E38") : snap ? h("span", { className: "tm-hint", title: snap.error || "\u62C9\u53D6\u5931\u8D25" }, "\u62C9\u53D6\u5931\u8D25") : h("span", { className: "tm-hint" }, "\u672A\u62C9\u53D6");
-        vrows.push(h(
+        h(
           UI.SecRow,
           {
-            key: "v:" + v.id,
-            wrap: true,
-            label: h(
-              "span",
-              { style: { display: "flex", alignItems: "center", gap: 6, minWidth: 0, maxWidth: "100%" } },
-              h("span", { className: "tm-dot" + (snap && !snap.ok ? " bad" : "") }),
-              h("span", { className: "tm-vname2", style: { maxWidth: 280 } }, v.name),
-              h(UI.Badge, { kind: "info", text: store.typeLabel(v.type) }),
-              isCur ? h(UI.Badge, { kind: "ok", text: "\u5F53\u524D" }) : null,
-              UI.secretBadge(v.secretKind)
-            )
+            key: "__active",
+            label: "\u5F53\u524D\u4F9B\u5E94\u5546",
+            desc: "\u4FA7\u8FB9\u680F\u4E0E\u53F3\u4FA7\u680F\u989D\u5EA6\u5361\u5C55\u793A\u54EA\u4E00\u5BB6\u7684\u989D\u5EA6\uFF1B\u9009\u300C\u65E0\u300D= \u6781\u7B80\u6A21\u5F0F\uFF08\u4E0D\u5C55\u793A\u3001\u4E5F\u4E0D\u62C9\u53D6\u4EFB\u4F55\u989D\u5EA6\uFF09\u3002"
           },
+          h(UI.PillSelect, {
+            disabled: busy,
+            value: activeId,
+            selectedLabel: a0 ? a0.name + "\uFF08" + store.typeLabel(a0.type) + "\uFF09" : "\u65E0 \xB7 \u6781\u7B80\u6A21\u5F0F\uFF08\u4E0D\u62C9\u53D6\uFF09",
+            options: [{ id: "", label: "\u65E0 \xB7 \u6781\u7B80\u6A21\u5F0F\uFF08\u4E0D\u62C9\u53D6\uFF09" }].concat(
+              vendors.map((v) => ({ id: v.id, label: v.name + "\uFF08" + store.typeLabel(v.type) + "\uFF09" }))
+            ),
+            onSelect: (id) => void withBusy(async () => {
+              await store.setActive(id);
+              await store.reload();
+            })
+          })
+        )
+      ];
+      const listOn = vendors.filter((v) => v.enabled !== false);
+      const listOff = vendors.filter((v) => v.enabled === false);
+      const activeFirstOf = (list) => list.filter((v) => v.id === activeId).concat(list.filter((v) => v.id !== activeId));
+      activeFirstOf(listOn).concat(activeFirstOf(listOff)).forEach((v) => {
+        const snap = s.snaps[v.id];
+        const isCur = v.id === activeId;
+        const off = v.enabled === false;
+        const status = off ? h("span", { className: "tm-hint tm-offtxt" }, "\u5DF2\u7981\u7528\u5B9A\u65F6\u62C9\u53D6") : snap && snap.ok ? h("span", { className: "tm-hint" }, "\u62C9\u53D6\u6B63\u5E38") : snap ? h("span", { className: "tm-hint", title: snap.error || "\u62C9\u53D6\u5931\u8D25" }, "\u62C9\u53D6\u5931\u8D25") : h("span", { className: "tm-hint" }, "\u672A\u62C9\u53D6");
+        vrows.push(
           h(
-            "span",
-            { className: "tm-bar", style: { width: "100%", padding: 0, border: "none" } },
-            status,
-            h("span", { style: { flex: 1 } }),
-            h(Btn, { variant: "outline", size: "sm", disabled: busy, onClick: () => void withBusy(() => store.refreshVendor(v.id)) }, "\u62C9\u53D6"),
-            h(Btn, { variant: "outline", size: "sm", disabled: busy, onClick: () => setEditing({ id: v.id, data: JSON.parse(JSON.stringify(v)) }) }, "\u7F16\u8F91"),
-            v.secretKind === "plain" ? h(Btn, { variant: "ghost", size: "sm", disabled: busy, title: "\u660E\u6587\u8F6C\u5B58\u7CFB\u7EDF\u51ED\u636E\uFF0C\u6539\u5199\u4E3A $NAME \u5F15\u7528", onClick: () => void toCred(v.id) }, "\u5B58\u51ED\u636E") : null,
-            h(Btn, { variant: "ghost", size: "sm", disabled: busy, onClick: () => {
-              setAcked(false);
-              setConfirmDel(v);
-            } }, "\u5220\u9664")
+            UI.SecRow,
+            {
+              key: "v:" + v.id,
+              wrap: true,
+              label: h(
+                "span",
+                { style: { display: "flex", alignItems: "center", gap: 6, minWidth: 0, maxWidth: "100%" } },
+                h("span", { className: "tm-dot" + (off ? " off" : snap && !snap.ok ? " bad" : "") }),
+                h("span", { className: "tm-vname2", style: { maxWidth: 280 } }, v.name),
+                h(UI.Badge, { kind: "info", text: store.typeLabel(v.type) }),
+                isCur ? h(UI.Badge, { kind: "ok", text: "\u5F53\u524D" }) : null,
+                off ? h(UI.Badge, { kind: "bad", text: "\u5DF2\u7981\u7528" }) : null,
+                UI.secretBadge(v.secretKind)
+              )
+            },
+            h(
+              "span",
+              { className: "tm-bar", style: { width: "100%", padding: 0, border: "none" } },
+              status,
+              h("span", { style: { flex: 1 } }),
+              h(
+                Btn,
+                {
+                  variant: "outline",
+                  size: "sm",
+                  disabled: busy,
+                  onClick: () => void withBusy(() => store.refreshVendor(v.id))
+                },
+                "\u62C9\u53D6"
+              ),
+              h(
+                Btn,
+                {
+                  variant: "ghost",
+                  size: "sm",
+                  disabled: busy,
+                  title: off ? "\u91CD\u65B0\u52A0\u5165 Host \u5B9A\u65F6\u62C9\u53D6" : "\u9000\u51FA Host \u5B9A\u65F6\u62C9\u53D6\uFF08\u624B\u52A8\u62C9\u53D6\u4E0D\u53D7\u5F71\u54CD\uFF09",
+                  onClick: () => void withBusy(() => store.setVendorEnabled(v.id, off))
+                },
+                off ? "\u542F\u7528" : "\u7981\u7528"
+              ),
+              h(
+                Btn,
+                {
+                  variant: "outline",
+                  size: "sm",
+                  disabled: busy,
+                  onClick: () => setEditing({ id: v.id, data: JSON.parse(JSON.stringify(v)) })
+                },
+                "\u7F16\u8F91"
+              ),
+              v.secretKind === "plain" ? h(
+                Btn,
+                {
+                  variant: "ghost",
+                  size: "sm",
+                  disabled: busy,
+                  title: "\u660E\u6587\u8F6C\u5B58\u7CFB\u7EDF\u51ED\u636E\uFF0C\u6539\u5199\u4E3A $NAME \u5F15\u7528",
+                  onClick: () => void toCred(v.id)
+                },
+                "\u5B58\u51ED\u636E"
+              ) : null,
+              h(
+                Btn,
+                {
+                  variant: "ghost",
+                  size: "sm",
+                  disabled: busy,
+                  onClick: () => {
+                    setAcked(false);
+                    setConfirmDel(v);
+                  }
+                },
+                "\u5220\u9664"
+              )
+            )
           )
-        ));
+        );
       });
-      kids.push(h(
-        "div",
-        { key: "vendors", className: "tm-section" },
-        h("div", { className: "tm-sectionHead" }, "\u4F9B\u5E94\u5546\uFF08" + vendors.length + "\uFF09"),
-        h("p", { className: "tm-cardHint", style: { margin: "0 0 4px" } }, "\u5BC6\u94A5 $NAME \u5F15\u7528\u4F18\u5148\uFF0C\u660E\u6587\u4FDD\u5B58\u540E\u4E0D\u660E\u6587\u56DE\u663E\u3002"),
-        vrows
-      ));
-      if (editing) kids.push(h(
-        "div",
-        { key: "edit", className: "tm-section" },
-        h("div", { className: "tm-sectionHead" }, "\u7F16\u8F91 " + editing.id),
-        h("p", { className: "tm-cardHint", style: { margin: "0 0 4px" } }, "ID \u662F\u4E3B\u952E\uFF0C\u4E0D\u53EF\u4FEE\u6539\uFF1B\u5BC6\u94A5\u7559\u7A7A\u5373\u4FDD\u7559\u539F\u503C\u3002"),
-        h(UI.VendorForm, {
-          draft: editing.data,
-          set: (nd) => setEditing({ id: editing.id, data: nd }),
-          submitLabel: "\u4FDD\u5B58\u4FEE\u6539",
-          busy,
-          isEdit: true,
-          onCancel: () => setEditing(null),
-          onSubmit: () => void saveVendor(editing.data, true)
-        })
-      ));
-      kids.push(h(
-        "div",
-        { key: "add", className: "tm-section" },
-        h("div", { className: "tm-sectionHead" }, "\u6DFB\u52A0\u4F9B\u5E94\u5546"),
-        h(UI.VendorForm, {
-          draft,
-          set: setDraft,
-          submitLabel: "\u6DFB\u52A0",
-          busy,
-          onSubmit: () => void saveVendor(draft, false)
-        })
-      ));
+      kids.push(
+        h(
+          "div",
+          { key: "vendors", className: "tm-section" },
+          h("div", { className: "tm-sectionHead" }, "\u4F9B\u5E94\u5546\uFF08" + vendors.length + "\uFF09"),
+          h(
+            "p",
+            { className: "tm-cardHint", style: { margin: "0 0 4px" } },
+            "\u5BC6\u94A5\u5EFA\u8BAE\u586B $NAME \u5F15\u7528\uFF08\u5148\u5B58\u7CFB\u7EDF\u51ED\u636E\uFF0C\u914D\u7F6E\u6587\u4EF6\u91CC\u770B\u4E0D\u5230\u660E\u6587\uFF09\uFF1B\u76F4\u63A5\u586B\u660E\u6587\u4E5F\u4E0D\u4F1A\u88AB\u56DE\u663E\u3002\u300C\u7981\u7528\u300D\u53EA\u662F\u9000\u51FA\u5B9A\u65F6\u62C9\u53D6\uFF0C\u968F\u65F6\u53EF\u4EE5\u624B\u52A8\u300C\u62C9\u53D6\u300D\uFF0C\u4E5F\u53EF\u518D\u70B9\u300C\u542F\u7528\u300D\u6062\u590D\u3002"
+          ),
+          vrows
+        )
+      );
+      if (editing)
+        kids.push(
+          h(
+            "div",
+            { key: "edit", className: "tm-section" },
+            h("div", { className: "tm-sectionHead" }, "\u7F16\u8F91 " + editing.id),
+            h(
+              "p",
+              { className: "tm-cardHint", style: { margin: "0 0 4px" } },
+              "ID \u662F\u4E3B\u952E\uFF0C\u4E0D\u53EF\u4FEE\u6539\uFF1B\u5BC6\u94A5\u7559\u7A7A\u5373\u4FDD\u7559\u539F\u503C\u3002"
+            ),
+            h(UI.VendorForm, {
+              draft: editing.data,
+              set: (nd) => setEditing({ id: editing.id, data: nd }),
+              submitLabel: "\u4FDD\u5B58\u4FEE\u6539",
+              busy,
+              isEdit: true,
+              onCancel: () => setEditing(null),
+              onSubmit: () => void saveVendor(editing.data, true)
+            })
+          )
+        );
+      kids.push(
+        h(
+          "div",
+          { key: "add", className: "tm-section" },
+          h("div", { className: "tm-sectionHead" }, "\u6DFB\u52A0\u4F9B\u5E94\u5546"),
+          h(UI.VendorForm, {
+            draft,
+            set: setDraft,
+            submitLabel: "\u6DFB\u52A0",
+            busy,
+            onSubmit: () => void saveVendor(draft, false)
+          })
+        )
+      );
       if (confirmDel) {
         const target = confirmDel;
         if (P.RiskConfirmation) {
-          kids.push(h(P.RiskConfirmation, {
-            key: "confirm-del",
-            open: true,
-            title: "\u5220\u9664\u4F9B\u5E94\u5546\u300C" + target.name + "\u300D\uFF1F",
-            description: "\u8BE5\u4F9B\u5E94\u5546\u7684\u914D\u7F6E\u4E0E\u4FA7\u8FB9\u680F\u5FEB\u7167\u5C06\u4E00\u5E76\u6E05\u9664\uFF0C\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002",
-            acknowledgeLabel: "\u6211\u5DF2\u4E86\u89E3\uFF0C\u5220\u9664\u8BE5\u4F9B\u5E94\u5546",
-            cancelLabel: "\u53D6\u6D88",
-            closeLabel: "\u5173\u95ED",
-            confirmLabel: "\u5220\u9664",
-            acknowledged: acked,
-            onAcknowledgedChange: setAcked,
-            onCancel: () => setConfirmDel(null),
-            onConfirm: () => {
-              setConfirmDel(null);
-              void delVendor(target.id);
-            }
-          }));
+          kids.push(
+            h(P.RiskConfirmation, {
+              key: "confirm-del",
+              open: true,
+              title: "\u5220\u9664\u4F9B\u5E94\u5546\u300C" + target.name + "\u300D\uFF1F",
+              description: "\u8BE5\u4F9B\u5E94\u5546\u7684\u914D\u7F6E\u4E0E\u4FA7\u8FB9\u680F\u5FEB\u7167\u5C06\u4E00\u5E76\u6E05\u9664\uFF0C\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002",
+              acknowledgeLabel: "\u6211\u5DF2\u4E86\u89E3\uFF0C\u5220\u9664\u8BE5\u4F9B\u5E94\u5546",
+              cancelLabel: "\u53D6\u6D88",
+              closeLabel: "\u5173\u95ED",
+              confirmLabel: "\u5220\u9664",
+              acknowledged: acked,
+              onAcknowledgedChange: setAcked,
+              onCancel: () => setConfirmDel(null),
+              onConfirm: () => {
+                setConfirmDel(null);
+                void delVendor(target.id);
+              }
+            })
+          );
         } else {
-          kids.push(h(
-            "div",
-            { key: "confirm-del", className: "tm-errbox" },
-            h("div", { className: "tm-errtext" }, "\u5220\u9664\u4F9B\u5E94\u5546\u300C" + target.name + "\u300D\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002" + (acked ? "" : "\u8BF7\u5148\u786E\u8BA4\u3002")),
+          kids.push(
             h(
               "div",
-              { style: { display: "flex", gap: 8, marginTop: 6 } },
-              acked ? h(Btn, { variant: "outline", size: "sm", onClick: () => {
-                setConfirmDel(null);
-                setAcked(false);
-                void delVendor(target.id);
-              } }, "\u786E\u8BA4\u5220\u9664") : h(Btn, { variant: "outline", size: "sm", onClick: () => setAcked(true) }, "\u6211\u5DF2\u4E86\u89E3"),
-              h(Btn, { variant: "outline", size: "sm", onClick: () => {
-                setConfirmDel(null);
-                setAcked(false);
-              } }, "\u53D6\u6D88")
+              { key: "confirm-del", className: "tm-errbox" },
+              h(
+                "div",
+                { className: "tm-errtext" },
+                "\u5220\u9664\u4F9B\u5E94\u5546\u300C" + target.name + "\u300D\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002" + (acked ? "" : "\u8BF7\u5148\u786E\u8BA4\u3002")
+              ),
+              h(
+                "div",
+                { style: { display: "flex", gap: 8, marginTop: 6 } },
+                acked ? h(
+                  Btn,
+                  {
+                    variant: "outline",
+                    size: "sm",
+                    onClick: () => {
+                      setConfirmDel(null);
+                      setAcked(false);
+                      void delVendor(target.id);
+                    }
+                  },
+                  "\u786E\u8BA4\u5220\u9664"
+                ) : h(Btn, { variant: "outline", size: "sm", onClick: () => setAcked(true) }, "\u6211\u5DF2\u4E86\u89E3"),
+                h(
+                  Btn,
+                  {
+                    variant: "outline",
+                    size: "sm",
+                    onClick: () => {
+                      setConfirmDel(null);
+                      setAcked(false);
+                    }
+                  },
+                  "\u53D6\u6D88"
+                )
+              )
             )
-          ));
+          );
         }
       }
       return h("div", { className: "tm-page" }, kids);
     }
     function StatsRightPane() {
-      const [prefs, setPrefs] = useState({ showToday: false, defaultRange: "30" });
+      const [prefs, setPrefs] = useState({
+        showToday: false,
+        defaultRange: "30"
+      });
       const loadPrefs = async () => {
         try {
           const s = await fetchState();
           if (s.ok && s.config) {
-            setPrefs({ showToday: s.config.showToday === true, defaultRange: String(s.config.defaultRange || "30") });
+            setPrefs({
+              showToday: s.config.showToday === true,
+              defaultRange: String(s.config.defaultRange || "30")
+            });
           }
         } catch {
         }
@@ -4493,12 +6556,14 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           "div",
           { className: "tm-toolbar" },
           h("span", { className: "tm-hint" }, "\u5C0F\u7EC4\u4EF6"),
-          STATS_WIDGET_BTNS.map(([k, t]) => h(
-            "span",
-            { key: k, className: "tm-widgetBtn" },
-            h("span", { className: "tm-widgetBtn-label" }, t),
-            h(widgets.WidgetToggle, { id: "stats:" + k })
-          ))
+          STATS_WIDGET_BTNS.map(
+            ([k, t]) => h(
+              "span",
+              { key: k, className: "tm-widgetBtn" },
+              h("span", { className: "tm-widgetBtn-label" }, t),
+              h(widgets.WidgetToggle, { id: "stats:" + k })
+            )
+          )
         ),
         h(
           stats.HiddenWhenFloated,
@@ -4624,15 +6689,18 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           const slots = ctx.get("slots");
           if (slots === void 0) return;
           tmEnsureStyles();
-          ctx.effect(() => () => {
-            if (tmStyleUsers <= 0 && tmStyleEl) {
-              try {
-                tmStyleEl.remove();
-              } catch {
+          ctx.effect(
+            () => () => {
+              if (tmStyleUsers <= 0 && tmStyleEl) {
+                try {
+                  tmStyleEl.remove();
+                } catch {
+                }
+                tmStyleEl = null;
               }
-              tmStyleEl = null;
-            }
-          }, "dshp-token-meter: section styles");
+            },
+            "dshp-token-meter: section styles"
+          );
           try {
             window.localStorage.removeItem("token-stats.sidebar-today");
             window.localStorage.removeItem("tquota.float.open");

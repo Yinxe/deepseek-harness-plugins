@@ -5,7 +5,8 @@
  *
  * 职责（二合一）：
  *  - 额度（quota，原 dsh-token-quota）：多供应商滚动额度/按量余额拉取 + 内存快照 +
- *    同源 JSON 路由（state/refresh/set-active/set-refresh/set-enabled/add/update/delete/secret-to-cred/config）
+ *    同源 JSON 路由（state/refresh/set-active/set-refresh/set-enabled/set-vendor-enabled/
+ *    add/update/delete/secret-to-cred/config）
  *  - 统计（stats，原 dsh-token-stats）：sessionQuery 扫描本机全部会话日志聚合 TokenUsage，
  *    经 GET /ext/dshp-token-meter/stats（别名 /data）供设置页消费
  *
@@ -44,7 +45,7 @@ import { registerQuotaRoutes, refreshOne } from './quota.js';
 import type { QuotaState } from './quota.js';
 import { createEngine } from './stats/engine.js';
 import { registerStatsRoutes } from './stats/routes.js';
-import type { AnyCtx, PluginConfig } from './types.js';
+import type { AnyCtx, PluginConfig, Vendor } from './types.js';
 
 export const name = '@dshp/token-meter';
 export const inject: string[] = ['webServer'];
@@ -324,9 +325,9 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
           refreshSec: typeof r['refreshSec'] === 'number' ? (r['refreshSec'] as number) : entry.refreshSec,
           enabled: typeof r['enabled'] === 'boolean' ? (r['enabled'] as boolean) : entry.enabled,
           vendors: Array.isArray(r['vendors'])
-            ? (r['vendors'] as unknown[]).map((item) => {
+            ? (r['vendors'] as unknown[]).map((item): Vendor => {
                 const it = (item ?? {}) as Record<string, unknown>;
-                return {
+                const vendor: Vendor = {
                   id: String(it['id'] !== undefined ? it['id'] : ''),
                   name: String(it['name'] !== undefined ? it['name'] : ''),
                   type: canonicalType(String(it['type'] !== undefined ? it['type'] : 'manual')),
@@ -335,6 +336,9 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
                       ? (it['params'] as Record<string, unknown>)
                       : {},
                 };
+                // 余额查询开关：只有显式 false 视为禁用，缺省一律启用
+                if (it['enabled'] === false) vendor.enabled = false;
+                return vendor;
               })
             : [],
           showToday: (r['showToday'] as boolean) === true,
@@ -456,9 +460,12 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
     let timer: ReturnType<typeof setTimeout> | null = null;
     const schedule = (ms: number): void => {
       if (stopped) return;
-      timer = setTimeout(() => {
-        void tick();
-      }, Math.max(1000, ms));
+      timer = setTimeout(
+        () => {
+          void tick();
+        },
+        Math.max(1000, ms),
+      );
     };
     const tick = async (): Promise<void> => {
       if (stopped) return;
@@ -477,6 +484,8 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
           const list = Array.isArray(cfg.vendors) ? cfg.vendors : [];
           for (const v of list) {
             if (stopped) return;
+            // 被禁用的供应商不参与主动定时拉取（手动 POST /refresh 仍可拉）
+            if (v.enabled === false) continue;
             try {
               await refreshOne(st, resolveSecret, v);
             } catch {

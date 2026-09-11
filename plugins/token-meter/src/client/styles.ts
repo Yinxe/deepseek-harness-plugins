@@ -13,6 +13,21 @@ export const CSS: string = `
 .tm-rowLabel{color:var(--dsw-alias-label-primary);font-size:14px;font-weight:400;line-height:22px;flex:none}
 .tm-rowDesc{color:var(--dsw-alias-label-tertiary);font-size:12px;font-weight:400;line-height:18px}
 .tm-rowValue{color:var(--dsw-alias-label-primary);font-size:13px;line-height:20px;text-align:right;min-width:0;display:flex;justify-content:flex-end;align-items:center}
+/* ── 表单字段（堆叠式）：标签 → 控件 → 说明，各占整行，输入框永不被说明挤压 ── */
+.tm-field{display:flex;flex-direction:column;gap:6px;padding:14px 0;border-bottom:.5px solid var(--dsw-alias-border-l2)}
+.tm-section>.tm-field:last-of-type{border-bottom:none}
+.tm-fieldHead{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tm-fieldLabel{color:var(--dsw-alias-label-primary);font-size:14px;font-weight:500;line-height:22px}
+.tm-fieldReq{flex:none;font-size:10px;line-height:15px;padding:0 6px;border-radius:4px;color:var(--dsw-alias-state-warn-label);background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 14%,transparent)}
+.tm-fieldOpt{flex:none;font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary)}
+.tm-fieldControl{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
+.tm-fieldControl>.tm-inputWrap{flex:1 1 260px;min-width:0;width:auto}
+.tm-fieldControl>.tm-selector{max-width:100%}
+.tm-fieldDesc{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
+.tm-fieldNote{margin:10px 0 0;padding:8px 10px;border-radius:8px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);font-size:12px;line-height:18px}
+.tm-fieldNote b{color:var(--dsw-alias-label-primary);font-weight:600;margin-right:4px}
+.tm-inputReadonly{background:var(--dsw-alias-bg-layer-2);border-style:dashed;cursor:not-allowed}
+.tm-inputReadonly .tm-ninput{color:var(--dsw-alias-label-secondary)}
 .tm-rowControl{flex:1;min-width:0;display:flex;justify-content:flex-end}
 .tm-card{background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l1);border-radius:10px;padding:14px 16px;margin:0 0 8px}
 .tm-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-primary);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;flex:none}
@@ -64,6 +79,8 @@ export const CSS: string = `
 .tm-tip-v{font-variant-numeric:tabular-nums;font-weight:500}
 .tm-dot{width:10px;height:10px;border-radius:3px;flex:none;display:inline-block;background:var(--dsw-alias-state-success-primary)}
 .tm-dot.warn{background:var(--dsw-alias-state-warn-primary)}.tm-dot.bad{background:var(--dsw-alias-state-error-primary)}
+/* 禁用：红色空心环。与「拉取失败」的实心红区分开——禁用是主动选择，失败是异常 */
+.tm-dot.off{background:transparent;box-sizing:border-box;border:1.5px solid var(--dsw-alias-state-error-primary)}
 .tm-muted{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
 .tm-chart-title{font-weight:600;font-size:12.5px;color:var(--dsw-alias-label-secondary);margin:0 0 8px;display:flex;align-items:center;justify-content:space-between;gap:6px 8px;flex-wrap:wrap}
 .tm-chart-title>span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto}
@@ -145,7 +162,9 @@ export const CSS: string = `
 .tm-mitem.active{color:var(--dsw-alias-label-primary);border-color:var(--dsw-alias-brand-primary)}
 .tm-mitem .grow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tm-qrow{display:flex;align-items:center;gap:6px;margin-top:6px}
-.tm-qlabel{flex:none;width:36px;font-size:11px;color:var(--dsw-alias-label-secondary)}
+/* 标签列：定宽让各行的进度条左端对齐；nowrap 保证标签永不换行
+   （旧版硬编码 36px，4 字标签如「月度额度」会被挤成两行） */
+.tm-qlabel{flex:none;width:52px;min-width:52px;font-size:11px;line-height:16px;color:var(--dsw-alias-label-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tm-qbar{flex:1;min-width:0;height:6px;border-radius:99px;background:var(--dsw-alias-bg-layer-2);overflow:hidden}
 /* 占用四档：ok 蓝 / warn 黄(≥70%) / bad 红"快完了"(≥90%) / over 红+脉冲(≥100%) */
 .tm-qfill{display:block;height:100%;border-radius:99px;background:var(--dsw-alias-brand-primary);transition:width .8s ease}
@@ -158,7 +177,10 @@ export const CSS: string = `
 .tm-qsum-warn{color:var(--dsw-alias-state-warn-label)}
 .tm-qsum-bad,.tm-qsum-over{color:var(--dsw-alias-state-error-primary)}
 @keyframes tm-qpulse{0%,100%{opacity:1}50%{opacity:.55}}
-.tm-qleft{flex:none;font-size:10px;color:var(--dsw-alias-label-secondary)}
+.tm-qleft{flex:0 1 auto;min-width:0;font-size:10px;color:var(--dsw-alias-label-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 窗口状态徽标：上游非 ok（如 opencode 的 rate-limited）时贴在百分比后，
+   因为此时 pct 可能还没到 100%（限流 ≠ 用尽），必须单独说清楚 */
+.tm-qstatus{flex:none;font-size:9.5px;line-height:15px;padding:0 6px;border-radius:99px;white-space:nowrap;color:var(--dsw-alias-state-error-primary);background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 14%,transparent)}
 .tm-qbal{display:flex;align-items:baseline;justify-content:space-between;margin-top:6px}
 .tm-qbal b{font-size:15px;color:var(--dsw-alias-label-primary)}
 .tm-qbal span{font-size:10px;color:var(--dsw-alias-label-secondary)}
@@ -182,16 +204,60 @@ export const CSS: string = `
 .tm-xstats{margin-top:8px;display:flex;flex-direction:column;gap:4px}
 .tm-xrow{display:flex;justify-content:space-between;font-size:11px;color:var(--dsw-alias-label-secondary)}
 .tm-xrow b{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums}
+/* 两列紧凑指标网格：单列长列表会把卡片撑高，两列直接减半 */
+.tm-xgrid{margin-top:8px}
+.tm-xgridBody{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 12px}
+.tm-xcell{display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0;font-size:11px;color:var(--dsw-alias-label-secondary)}
+.tm-xcellLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tm-xcellValue{flex:none;color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;white-space:nowrap}
+/* 窄卡片（侧边栏/浮窗）退回单列，避免两列后每格太挤 */
+@container tm (max-width: 300px){.tm-xgridBody{grid-template-columns:minmax(0,1fr)}}
+/* 紧凑余额块：大数字是核心，减少上下留白 */
+.tm-payg-compact .tm-payg-amt{font-size:20px}
+.tm-payg-compact .tm-payg-sub{margin-top:0}
+.tm-payg-compact .tm-warn{margin-top:4px}
+/* 分组标题：说明「已禁用沉底」是有意排序，不是配置顺序 */
+.tm-grouplabel{margin:2px 0 6px;font-size:11px;font-weight:500;color:var(--dsw-alias-label-tertiary);letter-spacing:.02em}
 .tm-xchart{margin-top:8px}
 .tm-xtitle{font-size:10px;color:var(--dsw-alias-label-secondary);margin-bottom:2px}
 .tm-xsplit{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--dsw-alias-bg-layer-2);margin-top:6px}
 .tm-xsplit span{display:block;height:100%}
 .tm-xdot{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:5px}
-.tm-errbox{margin-top:8px;background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-state-error-primary);border-radius:8px;padding:6px 8px}
-.tm-errbtn{display:flex;align-items:center;gap:8px;width:100%;background:transparent;border:none;padding:0;cursor:pointer;text-align:left}
-.tm-erricon{flex:none;width:18px;height:18px;border-radius:50%;background:var(--dsw-alias-state-error-primary);color:#fff;font-size:12px;font-weight:700;line-height:18px;text-align:center}
-.tm-errtext{flex:1;min-width:0;font-size:12px;color:var(--dsw-alias-state-error-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tm-errdetail{margin-top:6px;padding-top:6px;border-top:1px solid var(--dsw-alias-border-l1);font-size:11px;line-height:1.7;color:var(--dsw-alias-label-secondary);word-break:break-all;white-space:pre-wrap}
+.tm-sections{display:flex;flex-direction:column}
+.tm-ui{display:flex;flex-direction:column}
+.tm-xprog{margin-top:8px}
+.tm-vchips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.tm-vchip{display:inline-flex;align-items:center;font-size:10.5px;line-height:16px;padding:0 8px;border-radius:99px;border:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-layer-2);white-space:nowrap}
+.tm-vchip-ok{color:var(--dsw-alias-state-success-primary);border-color:var(--dsw-alias-state-success-primary)}
+.tm-vchip-warn{color:var(--dsw-alias-state-warn-primary);border-color:var(--dsw-alias-state-warn-primary)}
+.tm-vchip-bad{color:var(--dsw-alias-state-error-primary);border-color:var(--dsw-alias-state-error-primary)}
+.tm-vchip-info{color:var(--dsw-alias-state-business-primary);border-color:var(--dsw-alias-state-business-primary)}
+/* ── 失败卡：结论 + 处置 + 可展开排查详情（红/黄/蓝三档严重度）── */
+.tm-errbox{margin-top:8px;background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l1);border-left:3px solid var(--dsw-alias-state-warn-primary);border-radius:8px;padding:8px 10px}
+.tm-errbox-bad{border-color:color-mix(in srgb,var(--dsw-alias-state-error-primary) 45%,var(--dsw-alias-border-l1));border-left-color:var(--dsw-alias-state-error-primary)}
+.tm-errbox-warn{border-left-color:var(--dsw-alias-state-warn-primary)}
+.tm-errbox-info{border-left-color:var(--dsw-alias-state-business-primary)}
+.tm-errhead{display:flex;align-items:flex-start;gap:8px;width:100%;background:transparent;border:none;padding:0;cursor:pointer;text-align:left;font:inherit}
+.tm-erricon{flex:none;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;line-height:1;background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 18%,transparent)}
+.tm-erricon-bad{background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 18%,transparent)}
+.tm-erricon-info{background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 18%,transparent)}
+.tm-errtitlewrap{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.tm-errtitle{font-size:12.5px;font-weight:600;color:var(--dsw-alias-state-warn-label)}
+.tm-errbox-bad .tm-errtitle{color:var(--dsw-alias-state-error-primary)}
+.tm-errbox-info .tm-errtitle{color:var(--dsw-alias-label-primary)}
+.tm-errhint{font-size:11px;line-height:1.6;color:var(--dsw-alias-label-secondary)}
+.tm-erraction{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 0 30px}
+.tm-erractionText{flex:1;min-width:0;font-size:11px;color:var(--dsw-alias-label-secondary)}
+.tm-errabtns{display:inline-flex;gap:4px;flex:none}
+.tm-errdetail{margin-top:8px;padding-top:8px;border-top:1px solid var(--dsw-alias-border-l1);font-size:11px;line-height:1.7;color:var(--dsw-alias-label-secondary)}
+.tm-errsub{font-size:10.5px;font-weight:600;color:var(--dsw-alias-label-secondary);margin:0 0 2px}
+.tm-errsteps{margin:0 0 8px;padding-left:18px}
+.tm-errsteps li{margin:2px 0}
+.tm-errraw{margin:0;padding:6px 8px;border-radius:6px;background:var(--dsw-alias-bg-layer-1);font-family:var(--ds-font-family-code);font-size:10.5px;line-height:1.6;color:var(--dsw-alias-label-secondary);word-break:break-all;white-space:pre-wrap;max-height:160px;overflow:auto}
+.tm-errdactions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tm-errmeta{font-size:10.5px;color:var(--dsw-alias-label-tertiary);margin-left:auto}
+.tm-errbox-compact{padding:6px 8px}
+.tm-errbox-compact .tm-erraction{margin-left:0}
 .tm-qmeta{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
 .tm-qmeta span{font-size:10px;color:var(--dsw-alias-label-secondary)}
 .tm-mini{background:transparent;border:1px solid transparent;border-radius:6px;cursor:pointer;color:var(--dsw-alias-label-secondary);font-size:11px;padding:2px 6px}
@@ -341,8 +407,10 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 .tm-legend{gap:3px}
 .tm-modelchip{max-width:140px}
 .tm-qrow{gap:4px}
+.tm-qlabel{width:48px;min-width:48px}
 .tm-qpct{font-size:10px}
 .tm-qleft{font-size:9px}
+.tm-qstatus{font-size:9px;padding:0 5px}
 .tm-minibtn{padding:2px 4px}
 .tm-btn{padding:5px 9px;font-size:12px}
 .tm-selector{font-size:13px;padding:0 12px}
@@ -385,4 +453,21 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 .tm-card,.tm-side,.tm-today,.tm-stat,.tm-float,.tm-pop,.tm-tip,.tm-tipfixed,.tm-popmenu,.tm-errbox,.tm-btn,.tm-inputWrap,.tm-textarea,.tm-seg,.tm-tabs{corner-shape:var(--dsw-corner-shape)}
 .tm-modelchip,.tm-qbar,.tm-qfill,.tm-xsplit,.tm-compose,.tm-bartrack,.tm-barfill,.tm-streakbar,.tm-streakfill,.tm-pop-fill,.tm-switch,.tm-badge,.tm-dot,.tm-spinner,.tm-knob,.tm-thumb,.tm-xdot,.tm-cell,.tm-hcell,.tm-selector{corner-shape:round}
 }
+/* ── 峰谷氛围（置于末尾以覆盖前序同特异性声明）─────────────────────────
+ * 峰（工作日 9:00–18:00）：暖色左缘 + 极缓呼吸光晕 —— 紧张、消耗加速；
+ * 谷：冷绿左缘 + 静稳底色 —— 费率低、可从从容容跑量；
+ * 禁用（enabled:false）：红色左缘 —— 不参与定时拉取。 */
+.tm-card.mood-peak,.tm-side.mood-peak{border-left:3px solid var(--dsw-alias-state-warn-primary);background:linear-gradient(180deg,color-mix(in srgb,var(--dsw-alias-state-warn-primary) 10%,transparent),transparent 64%),var(--dsw-alias-bg-layer-1)}
+.tm-card.mood-valley,.tm-side.mood-valley{border-left:3px solid var(--dsw-alias-state-success-primary);background:linear-gradient(180deg,color-mix(in srgb,var(--dsw-alias-state-success-primary) 8%,transparent),transparent 64%),var(--dsw-alias-bg-layer-1)}
+.tm-card.tm-off,.tm-side.tm-off{border-left:3px solid var(--dsw-alias-state-error-primary);background:linear-gradient(180deg,color-mix(in srgb,var(--dsw-alias-state-error-primary) 8%,transparent),transparent 64%),var(--dsw-alias-bg-layer-1)}
+.tm-card.mood-peak{animation:tm-fadeup .42s ease backwards,tm-peak-breathe 2.4s ease-in-out .5s infinite}
+@keyframes tm-peak-breathe{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 0 3px color-mix(in srgb,var(--dsw-alias-state-warn-primary) 16%,transparent)}}
+.tm-badge-bad{background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 16%,transparent);color:var(--dsw-alias-state-error-primary)}
+.tm-offtxt{color:var(--dsw-alias-state-error-primary)}
+.tm-peak.peak{border-color:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 46%,var(--dsw-alias-border-l1));background:linear-gradient(180deg,color-mix(in srgb,var(--dsw-alias-state-warn-primary) 9%,transparent),transparent 70%),var(--dsw-alias-bg-layer-2);animation:tm-peak-breathe 2.6s ease-in-out infinite}
+.tm-peak.valley{border-color:color-mix(in srgb,var(--dsw-alias-state-success-primary) 32%,var(--dsw-alias-border-l1));background:linear-gradient(180deg,color-mix(in srgb,var(--dsw-alias-state-success-primary) 8%,transparent),transparent 70%),var(--dsw-alias-bg-layer-2)}
+.tm-peak.peak .tm-peakTitle{color:var(--dsw-alias-state-warn-label)}
+.tm-peak.valley .tm-peakTitle{color:var(--dsw-alias-state-success-primary)}
+.tm-peakCell.von{background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 24%,var(--dsw-alias-interactive-bg-hover))}
+@media (prefers-reduced-motion:reduce){.tm-card.mood-peak,.tm-peak.peak{animation:none}}
 `;

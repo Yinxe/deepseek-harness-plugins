@@ -14,6 +14,8 @@ export interface QuotaWindow {
   used: number;
   limit: number;
   resetInSec: number;
+  /** 上游窗口状态原值（非 `ok` = 已限流/停用，UI 需显式提示） */
+  status?: string;
 }
 
 export interface QuotaBilling {
@@ -45,6 +47,48 @@ export interface ProviderExtra {
   blocks?: ProviderBlock[];
 }
 
+/**
+ * provider 视图区块（与 host/types.ts 对齐）。
+ * 供应商自描述「自己的数据 + 排版」，客户端按 kind 分发渲染 —— 无需认识具体供应商。
+ * 未知 kind / 字段缺失一律跳过（前向兼容：老客户端遇到新 provider 不崩）。
+ */
+export interface ProviderSection {
+  kind: 'windows' | 'balance' | 'metrics' | 'progress' | 'split' | 'note' | 'chart';
+  key?: string;
+  title?: string;
+  windows?: QuotaWindow[];
+  billing?: QuotaBilling;
+  items?: Array<{ label: string; value: string }>;
+  progress?: { label?: string; used: number; total: number; left?: string };
+  split?: { segments: Array<{ label: string; value: number; color?: string }> };
+  note?: { text: string; tone?: 'info' | 'warn' | 'bad' };
+  chart?: { title?: string; labels: string[]; values: number[] };
+}
+
+export interface ProviderView {
+  sections: ProviderSection[];
+}
+
+/** 失败原因分类（与 host/errors.ts 对齐） */
+export type ErrorKind =
+  'auth' | 'session' | 'plan' | 'balance' | 'rate' | 'network' | 'parse' | 'config' | 'server' | 'unknown';
+
+export type ErrorTone = 'bad' | 'warn' | 'info';
+
+/** 结构化失败信息：标题/解释/去哪改/排查步骤/严重度（客户端只负责渲染） */
+export interface ErrorInfo {
+  kind: ErrorKind;
+  title: string;
+  hint: string;
+  action?: string;
+  steps: string[];
+  detail: string;
+  status?: number;
+  docs?: string;
+  retriable: boolean;
+  tone: ErrorTone;
+}
+
 export interface VendorSnapshot {
   vendorId: string;
   vendorName: string;
@@ -54,10 +98,15 @@ export interface VendorSnapshot {
   billingKind?: 'rolling' | 'payg';
   windows?: QuotaWindow[];
   billing?: QuotaBilling;
+  /** 供应商自描述视图（分层渲染第 2 层；无则走 legacy 兜底） */
+  view?: ProviderView | null;
   secretKind?: string;
   extra?: ProviderExtra | null;
   via?: string;
+  /** 失败原始文案 */
   error?: string;
+  /** 失败结构化信息（友好提示与详情） */
+  errorInfo?: ErrorInfo;
 }
 
 export interface ProviderField {
@@ -79,6 +128,8 @@ export interface ProviderMeta {
   secretField: string;
   hint: string;
   fields: ProviderField[];
+  /** 新增供应商时的 params 初始值（provider 自声明；缺省 {}） */
+  defaultParams?: Record<string, unknown>;
 }
 
 export interface Vendor {
@@ -87,6 +138,8 @@ export interface Vendor {
   type: string;
   params: Record<string, unknown>;
   secretKind?: string;
+  /** 余额查询开关：false = 不参与 Host 定时拉取（手动拉取不受影响）；缺省 = 启用 */
+  enabled?: boolean;
 }
 
 export type DefaultRange = '7' | '30' | '90' | 'all';

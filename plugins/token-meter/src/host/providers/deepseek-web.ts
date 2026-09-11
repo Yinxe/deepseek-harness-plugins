@@ -1,14 +1,15 @@
 /**
- * @dshp/token-meter —— deepseek-web 适配器（网页版账单接口，纯通道）
+ * @dshp/token-meter —— deepseek 网页账单接口（纯通道实现，非独立 provider）
  *
  * 原实现：dsh-token-quota/lib/providers/deepseek-web.js（逐行对齐，仅加 TS 类型）
  *
  * 接口：`GET https://platform.deepseek.com/api/v0/users/get_user_summary`
  * 鉴权（实测结论）：`Authorization: Bearer` 会话票据是唯一必需项；
  * 官方 apiKey（`sk-`）作 Bearer 会被应用层拒绝（40003），两套凭据体系不通用。
+ *
+ * 本文件只提供 `fetchWebSummary` + 解析纯函数，由 deepseek.ts（唯一 provider）
+ * 按凭据形态决定是否调用；旧类型 `deepseek-web` 已收敛为 deepseek 的别名。
  */
-import { normalizeSecretRef, secretKindOfRaw } from '../secrets.js';
-import type { ProviderAdapter, Vendor, ProviderDeps } from '../types.js';
 
 const SUMMARY_URL = 'https://platform.deepseek.com/api/v0/users/get_user_summary';
 
@@ -45,8 +46,15 @@ const VALUE_KEYS = [
   'api_calls',
 ];
 
+import { ProviderError } from '../errors.js';
+
 function isObj(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === 'object' && !Array.isArray(v);
+}
+
+/** 同 isObj；历史命名保留（fetchWebSummary 的 error 信封判定用）。 */
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return isObj(v);
 }
 
 function toNum(v: unknown): number | null {
@@ -90,6 +98,33 @@ export function envelopeError(node: unknown): string | null {
     (msg ? ':' + String(msg).slice(0, 120) : '') +
     '（如刚登录过仍报错，请重新粘贴 cookie 与 token）'
   );
+}
+
+/**
+ * 信封错误 → 结构化抛出。
+ *
+ * 实测：无效/过期的会话票据会得到 **HTTP 200 + 信封 code=40003**
+ * （`Authorization Failed (invalid token)`）——不是 401，所以必须在这里识别，
+ * 否则用户会看到一句没有处置指引的「汇总接口报错」。
+ *
+ * 40003 有两种成因，按文案区分：
+ *  - `invalid token` / `Authorization Failed` → 会话票据失效（最常见）→ session；
+ *  - `api key` 字样 → 用户把官方 sk- 密钥填到了 token 字段（两套体系不通用）→ auth。
+ */
+function envelopeThrow(msg: string): never {
+  if (/40003/.test(msg)) {
+    if (/api.?key/i.test(msg)) {
+      throw new ProviderError('auth', msg, {
+        hint: '官方 sk- 密钥不能用于网页账单接口（两套凭据体系不通用）。请把它改填到 apiKey 栏，或直接用 deepseek 类型让它自动选路。',
+        action: '设置 → Token 计量 → 该供应商 →「编辑」',
+      });
+    }
+    throw new ProviderError('session', msg, {
+      hint: '网页账单接口拒绝了这个会话票据：多半已过期（平台返回的是「Authorization Failed (invalid token)」）。重新登录并粘贴最新票据即可；若你填的其实是 sk- 官方密钥，请改填到 apiKey 栏。',
+      action: 'platform.deepseek.com 重新登录 → 复制新 token → 设置页「编辑」',
+    });
+  }
+  throw new ProviderError('unknown', msg);
 }
 
 function pickNum(obj: unknown, keys: string[]): { value: number | null; key: string | null } {
@@ -217,14 +252,14 @@ export function parseUserSummary(
   opts?: { lowWarn?: unknown },
 ): { billing: Record<string, unknown>; extra: Record<string, unknown> | null } {
   const errTop = envelopeError(body);
-  if (errTop) throw new Error(errTop);
+  if (errTop) envelopeThrow(errTop);
   const root = unwrapEnvelope(body);
   if (!isObj(root) && !Array.isArray(root)) {
-    throw new Error('汇总接口返回结构异常(顶层非对象)，请把顶层类型发给维护者');
+    throw new ProviderError('parse', '汇总接口返回结构异常（顶层非对象），请把顶层类型发给维护者');
   }
   const scope: unknown = isObj(root) ? root : {};
   const errIn = envelopeError(scope);
-  if (errIn) throw new Error(errIn);
+  if (errIn) envelopeThrow(errIn);
   const lowWarn =
     opts && opts.lowWarn !== undefined && opts.lowWarn !== '' && opts.lowWarn !== null
       ? Number(opts.lowWarn)
@@ -235,7 +270,7 @@ export function parseUserSummary(
   const cost = firstWallet(scope, ['total_costs']);
   if (normal) {
     const balance = toNum(normal['balance']);
-    if (balance === null) throw new Error('钱包 balance 非数字，请把该字段样例发给维护者');
+    if (balance === null) throw new ProviderError('parse', '钱包 balance 非数字，请把该字段样例发给维护者');
     const currency = (typeof normal['currency'] === 'string' && normal['currency']) || 'CNY';
     const costs = cost ? toNum(cost['amount']) : null;
     const billing = {
@@ -273,8 +308,9 @@ export function parseUserSummary(
           .slice(0, 12)
           .join(',')
       : 'array';
-    throw new Error(
-      '汇总接口未命中余额字段(顶层键:' + keys + ')：接口可能改版，把脱敏后的顶层键名发给维护者即可迭代',
+    throw new ProviderError(
+      'parse',
+      '汇总接口未命中余额字段（顶层键：' + keys + '）：接口可能改版，把脱敏后的顶层键名发给维护者即可迭代',
     );
   }
   const granted = pickNum(scope, GRANTED_KEYS).value;
@@ -337,96 +373,40 @@ export async function fetchWebSummary(
   const code = res.status;
   const text = await res.text();
   if (code === 401 || code === 403)
-    throw new Error('DeepSeek 网页会话失效(' + code + ')：重新登录后更新 cookie 与 token');
-  if (code === 429) throw new Error('DeepSeek 限流(429),稍后重试');
-  if (code !== 200) throw new Error('DeepSeek 汇总接口 HTTP ' + code + ':' + text.slice(0, 100));
+    throw new ProviderError('session', 'DeepSeek 网页会话失效(' + code + ')：' + text.slice(0, 120), {
+      status: code,
+      hint: '网页登录态（Bearer 会话票据）已过期或被平台判定为未登录。重新抓取最新票据覆盖即可。',
+      action: 'platform.deepseek.com 重新登录 → 复制新 token → 设置页「编辑」',
+    });
+  if (code === 429)
+    throw new ProviderError('rate', 'DeepSeek 限流(429)：' + text.slice(0, 100), { status: code });
+  if (code >= 500)
+    throw new ProviderError('server', 'DeepSeek 服务端错误(' + code + ')：' + text.slice(0, 100), {
+      status: code,
+    });
+  if (code !== 200)
+    throw new ProviderError('unknown', 'DeepSeek 汇总接口 HTTP ' + code + '：' + text.slice(0, 100), {
+      status: code,
+    });
   let j: unknown = null;
   try {
     j = JSON.parse(text) as unknown;
   } catch {
-    throw new Error('汇总接口返回非 JSON(' + text.length + 'B):' + text.slice(0, 80));
+    throw new ProviderError('parse', '汇总接口返回非 JSON(' + text.length + 'B)：' + text.slice(0, 80));
   }
   const jr = (j ?? {}) as Record<string, unknown>;
   if (jr && jr['error']) {
     const em = isRecord(jr['error']) ? String((jr['error'] as Record<string, unknown>)['message'] ?? '') : '';
-    throw new Error('汇总接口报错:' + (em || text.slice(0, 80)));
+    throw new ProviderError('unknown', '汇总接口报错：' + (em || text.slice(0, 80)));
   }
   let parsed;
   try {
     parsed = parseUserSummary(j, { lowWarn: params['lowWarn'] });
   } catch (e) {
-    throw new Error((e as Error)?.message || '汇总解析失败', { cause: e });
+    // 解析里的分类错误（会话失效/接口改版）必须原样透出，包一层会丢掉 kind
+    if (e instanceof ProviderError) throw e;
+    throw new ProviderError('parse', (e as Error)?.message || '汇总解析失败', { cause: e });
   }
   if (params['currency']) parsed.billing['currency'] = String(params['currency']);
   return { billingKind: 'payg', billing: parsed.billing, extra: parsed.extra };
 }
-
-const deepseekWeb: ProviderAdapter = {
-  type: 'deepseek-web',
-  label: 'DS网',
-  title: 'deepseek-web（网页账单）',
-  secretField: 'token',
-  secretFields: ['token', 'cookie'],
-  hint: '网页账单抓包接口：余额 + 历史使用趋势。只要 token（已验证单 Bearer 可用）。会话过期后需重粘。',
-  fields: [
-    {
-      key: 'token',
-      label: 'token *',
-      kind: 'secret',
-      mono: true,
-      required: true,
-      placeholder: '粘贴 Bearer 会话票据',
-      hint: '会话票据：platform.deepseek.com 登录后，开发者工具 → Network 找到 get_user_summary 请求 → authorization 头里 Bearer 后面的那串（ciYi 开头）。会话过期后需重新粘贴。建议先存入系统凭据再填 $NAME。',
-    },
-    {
-      key: 'lowWarn',
-      label: '低余额预警线',
-      kind: 'number',
-      placeholder: '如：20',
-      hint: '余额低于此值时侧边栏黄色提醒（与账单币种同单位）。',
-    },
-  ],
-
-  sanitizeParams(raw: unknown): Record<string, unknown> {
-    const src =
-      raw !== null && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
-    const out: Record<string, unknown> = {};
-    for (const k of Object.keys(src)) {
-      const v = src[k];
-      if (v !== undefined) out[k] = typeof v === 'string' ? normalizeSecretRef(v) : v;
-    }
-    if (typeof out['cookie'] === 'string') out['cookie'] = normalizeSecretRef(out['cookie']) as never;
-    if (typeof out['token'] === 'string') out['token'] = normalizeSecretRef(out['token']) as never;
-    return out;
-  },
-
-  maskParams(params: Record<string, unknown>): Record<string, unknown> {
-    const out = { ...params };
-    for (const k of ['token', 'cookie']) {
-      if (typeof out[k] === 'string' && out[k] !== '' && secretKindOfRaw(out[k]) === 'plain') out[k] = '';
-    }
-    return out;
-  },
-
-  validateParams(): string {
-    return '';
-  },
-
-  async fetch(vendor: Vendor, deps: ProviderDeps) {
-    const params = (vendor && vendor.params) || {};
-    const strOf = (v: unknown): string => (typeof v === 'string' ? v : '');
-    const rc = await deps.resolveSecret(strOf(params['cookie']));
-    const rt = await deps.resolveSecret(strOf(params['token']));
-    if (!rt.value) {
-      throw new Error('token 未配置:请粘贴 Bearer 会话票据（获取方式见字段说明）');
-    }
-    const data = await fetchWebSummary(params, rc.value, rt.value, (deps && deps.fetchImpl) || fetch);
-    return { ...data, secretKind: rt.value ? rt.kind : rc.kind, via: '网页接口' };
-  },
-};
-
-function isRecord(v: unknown): v is Record<string, unknown> {
-  return v !== null && typeof v === 'object' && !Array.isArray(v);
-}
-
-export default deepseekWeb;
