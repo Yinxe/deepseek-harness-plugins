@@ -36,7 +36,8 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf lib *.tsbuildinfo",
     "test": "node --check lib/host.js && node --check lib/client.js && echo \"syntax ok\"",
-    "prepublishOnly": "pnpm typecheck && pnpm build"
+    "prepublishOnly": "pnpm typecheck && pnpm build",
+    "lint": "oxlint --deny-warnings --config ../../.oxlintrc.json src tsup.config.ts"
   },
   "repository": {
     "type": "git",

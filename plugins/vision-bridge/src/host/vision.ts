@@ -5,7 +5,15 @@
  *  1. settings 中 llm-pi-ai / llm-deepseek 命名空间下 providers[].models[] 里 input 含 image 的
  *  2. llm.listProviders() + llm.listModels(provider) 里 inputModalities 含 image 的
  */
-import type { AnyLlm, AnySettings, CandidateModel, Detail, ImageRef, PluginConfig, VisionRoute } from './types.js';
+import type {
+  AnyLlm,
+  AnySettings,
+  CandidateModel,
+  Detail,
+  ImageRef,
+  PluginConfig,
+  VisionRoute,
+} from './types.js';
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -39,14 +47,19 @@ function candidatesFromSection(sec: unknown): SectionModel[] {
       out.push({
         provider: prov,
         model: m['id'] as string,
-        name: typeof m['name'] === 'string' && (m['name'] as string).length > 0 ? (m['name'] as string) : (m['id'] as string),
+        name:
+          typeof m['name'] === 'string' && (m['name'] as string).length > 0
+            ? (m['name'] as string)
+            : (m['id'] as string),
       });
     }
   }
   return out;
 }
 
-export async function listVisionModels(ctx: { get: (k: string) => AnySettings | AnyLlm }): Promise<CandidateModel[]> {
+export async function listVisionModels(ctx: {
+  get: (k: string) => AnySettings | AnyLlm;
+}): Promise<CandidateModel[]> {
   const merged: CandidateModel[] = [];
   const seen = new Set<string>();
   function add(provider: string, model: string, name: string): void {
@@ -68,7 +81,9 @@ export async function listVisionModels(ctx: { get: (k: string) => AnySettings | 
       try {
         const sec = settings.get(ns) as unknown;
         for (const c of candidatesFromSection(sec)) add(c.provider, c.model, c.name);
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
   }
 
@@ -98,9 +113,15 @@ export async function listVisionModels(ctx: { get: (k: string) => AnySettings | 
             if (typeof info['id'] !== 'string' || typeof info['provider'] !== 'string') continue;
             const mods = info['inputModalities'];
             if (!Array.isArray(mods) || (mods as unknown[]).indexOf('image') < 0) continue;
-            add(info['provider'] as string, info['id'] as string, typeof info['name'] === 'string' ? (info['name'] as string) : (info['id'] as string));
+            add(
+              info['provider'] as string,
+              info['id'] as string,
+              typeof info['name'] === 'string' ? (info['name'] as string) : (info['id'] as string),
+            );
           }
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       }
     }
   }
@@ -146,12 +167,16 @@ async function runOneVision(
   if (typeof sessionId === 'string' && sessionId.length > 0) {
     try {
       opts['sessionId'] = sessionId;
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
   if (signal && typeof signal === 'object' && (signal as AbortSignal).aborted !== true) {
     try {
       opts['signal'] = signal;
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
   let out = '';
   let sawDelta = false;
@@ -161,13 +186,21 @@ async function runOneVision(
     if (chunk['type'] === 'text-delta' && typeof chunk['text'] === 'string') {
       sawDelta = true;
       out += chunk['text'] as string;
-    } else if (chunk['type'] === 'block-end' && isRecord(chunk['block']) && chunk['block']['type'] === 'text') {
+    } else if (
+      chunk['type'] === 'block-end' &&
+      isRecord(chunk['block']) &&
+      chunk['block']['type'] === 'text'
+    ) {
       if (!sawDelta && typeof chunk['block']['text'] === 'string') out += chunk['block']['text'] as string;
     } else if (chunk['type'] === 'finish' && isRecord(chunk['reason'])) {
       const kind = chunk['reason']['kind'];
       if (kind === 'error') {
         const failure = chunk['reason']['failure'];
-        const msg = (isRecord(failure) && typeof failure['message'] === 'string' ? (failure['message'] as string) : '视觉模型调用失败').slice(0, 500);
+        const msg = (
+          isRecord(failure) && typeof failure['message'] === 'string'
+            ? (failure['message'] as string)
+            : '视觉模型调用失败'
+        ).slice(0, 500);
         throw new Error(String(msg));
       }
       if (kind === 'aborted') throw new Error('视觉模型调用被中止');
@@ -195,10 +228,14 @@ export async function describeWithFallback(
   if (!llm || typeof llm.stream !== 'function') throw new Error('当前环境没有可用的 llm 服务');
   const attempts: Array<{ route: VisionRoute; fallback: boolean }> = [];
   if (cfg.primary) attempts.push({ route: cfg.primary, fallback: false });
-  if (cfg.fallback && !sameRoute(cfg.fallback, cfg.primary)) attempts.push({ route: cfg.fallback, fallback: true });
+  if (cfg.fallback && !sameRoute(cfg.fallback, cfg.primary))
+    attempts.push({ route: cfg.fallback, fallback: true });
   if (attempts.length === 0) {
     const models = await listVisionModels(ctx as { get: (k: string) => AnySettings | AnyLlm });
-    if (models.length === 0) throw new Error('没有可用的视觉模型：请先在设置 → 视觉模型 中选择（需要在 setting.yml 里给模型加上 input: [text, image]）');
+    if (models.length === 0)
+      throw new Error(
+        '没有可用的视觉模型：请先在设置 → 视觉模型 中选择（需要在 setting.yml 里给模型加上 input: [text, image]）',
+      );
     const first = models[0] as CandidateModel;
     attempts.push({ route: { provider: first.provider, model: first.model }, fallback: false });
   }
@@ -219,8 +256,12 @@ export function buildQuestion(base: string, detail: Detail, promptTemplate: stri
   let q = (typeof base === 'string' ? base : '').trim();
   if (!q) q = '请描述这张图片的内容。';
   let suffix = '';
-  if (detail === 'high') suffix = '\n\n请尽可能详细：主体、文字、数字、颜色、位置关系都不要遗漏。如有文字请逐字转录。';
+  if (detail === 'high')
+    suffix = '\n\n请尽可能详细：主体、文字、数字、颜色、位置关系都不要遗漏。如有文字请逐字转录。';
   else if (detail === 'low') suffix = '\n\n请用 2-3 句话简要概括。';
-  const extra = typeof promptTemplate === 'string' && promptTemplate.trim().length > 0 ? '\n\n补充要求：' + promptTemplate.trim().slice(0, 500) : '';
+  const extra =
+    typeof promptTemplate === 'string' && promptTemplate.trim().length > 0
+      ? '\n\n补充要求：' + promptTemplate.trim().slice(0, 500)
+      : '';
   return q + suffix + extra;
 }

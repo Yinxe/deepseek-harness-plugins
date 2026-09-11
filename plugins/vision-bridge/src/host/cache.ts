@@ -50,7 +50,9 @@ export function sessionIdOf(agent: unknown): string | undefined {
       if (isRecord(s) && typeof s['id'] === 'string') return s['id'];
       if (typeof agent['id'] === 'string') return agent['id'];
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return undefined;
 }
 

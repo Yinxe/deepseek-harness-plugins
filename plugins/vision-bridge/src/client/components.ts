@@ -10,7 +10,10 @@ export interface BadgeProps {
   text: string;
 }
 
-export function createComponents(React: AnyReact, P: AnyPrimitives): {
+export function createComponents(
+  React: AnyReact,
+  P: AnyPrimitives,
+): {
   Badge: (props: BadgeProps) => any;
   Row: (props: { label: string; desc?: string; children?: any }) => any;
   Select: (props: {

@@ -1,0 +1,5 @@
+{
+  "repo": "Yinxe/deepseek-harness-plugins",
+  "policy": "main 永远跟最新 DSH，直接用；历史 tag 只在 DSH 上游发新版 breaking 时回头打，给老 DSH 用户 checkout。空矩阵 = 暂无历史包袱。",
+  "compat": []
+}

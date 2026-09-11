@@ -7,6 +7,9 @@
     "typecheck": "pnpm -r typecheck",
     "clean": "pnpm -r clean",
     "test": "pnpm -r test",
+    "lint": "oxlint . --deny-warnings",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
     "dev": "pnpm --filter @dshp/vision-bridge dev"
   },
   "keywords": [],
@@ -22,6 +25,8 @@
   "type": "module",
   "devDependencies": {
     "@types/node": "^26.5.0",
+    "oxlint": "^1.82.0",
+    "prettier": "^3.9.6",
     "tsx": "^4.23.13",
     "typescript": "^7.0.2"
   },

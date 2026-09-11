@@ -48,7 +48,9 @@ export function dshHome(): string {
   try {
     const env = process.env['DSH_HOME'];
     if (typeof env === 'string' && env.length > 0) return env;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   try {
     return join(homedir(), '.dsh');
   } catch {
@@ -160,7 +162,11 @@ export function sanitizePatchConfig(raw: unknown): PluginConfigPatch | null {
     }
   }
   if (Object.hasOwn(raw, 'detail') && isDetail(raw['detail'])) out.detail = raw['detail'];
-  if (Object.hasOwn(raw, 'maxImages') && typeof raw['maxImages'] === 'number' && Number.isFinite(raw['maxImages'])) {
+  if (
+    Object.hasOwn(raw, 'maxImages') &&
+    typeof raw['maxImages'] === 'number' &&
+    Number.isFinite(raw['maxImages'])
+  ) {
     const n = Math.floor(raw['maxImages'] as number);
     if (n >= 1 && n <= 8) out.maxImages = n;
   }
@@ -192,8 +198,12 @@ export function migrateYamlNamespaceKey(): void {
     if (!hit) return;
     if (newIdx >= 0) {
       try {
-        console.info(`[dshp-vision-bridge] settings.yaml 同时存在 ${hit.key} 与 dshp-vision-bridge，以新 key 为准，请手动删除旧 ${hit.key} 段落`);
-      } catch { /* ignore */ }
+        console.info(
+          `[dshp-vision-bridge] settings.yaml 同时存在 ${hit.key} 与 dshp-vision-bridge，以新 key 为准，请手动删除旧 ${hit.key} 段落`,
+        );
+      } catch {
+        /* ignore */
+      }
       return;
     }
     const m = (lines[hit.idx] as string).match(/(#.*)$/);
@@ -201,10 +211,16 @@ export function migrateYamlNamespaceKey(): void {
     writeFileSync(p, lines.join('\n'), 'utf8');
     try {
       console.info(`[dshp-vision-bridge] 已将 settings.yaml 顶层 ${hit.key} 重命名为 dshp-vision-bridge`);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   } catch (e) {
     try {
-      console.warn('[dshp-vision-bridge] settings.yaml 命名空间重命名失败：' + String((e as Error)?.message ?? e));
-    } catch { /* ignore */ }
+      console.warn(
+        '[dshp-vision-bridge] settings.yaml 命名空间重命名失败：' + String((e as Error)?.message ?? e),
+      );
+    } catch {
+      /* ignore */
+    }
   }
 }

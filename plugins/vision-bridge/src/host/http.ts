@@ -44,7 +44,9 @@ export function readBody(req: IncomingMessage, limit = 1024 * 1024): Promise<str
         reject(new Error('payload-too-large'));
         try {
           (req as unknown as { destroy: () => void }).destroy();
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
         return;
       }
       chunks.push(chunk);

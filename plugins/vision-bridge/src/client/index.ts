@@ -21,7 +21,9 @@ declare global {
 const PLUGIN_ID = '@dshp/vision-bridge';
 
 function register(): void {
-  const loader = (typeof window !== 'undefined' ? window.__ModuleLoader__ : undefined) as Window['__ModuleLoader__'];
+  const loader = (
+    typeof window !== 'undefined' ? window.__ModuleLoader__ : undefined
+  ) as Window['__ModuleLoader__'];
   if (!loader || typeof loader.load !== 'function') return;
   loader.load({
     id: PLUGIN_ID,
@@ -48,7 +50,10 @@ function register(): void {
 
         const Section = VisionSection;
         slots.inject('settings.section', () =>
-          slots.register({ name: 'settings.section', id: 'dshp-vision-bridge', order: 25, label: '视觉模型' }, Section),
+          slots.register(
+            { name: 'settings.section', id: 'dshp-vision-bridge', order: 25, label: '视觉模型' },
+            Section,
+          ),
         );
       };
 

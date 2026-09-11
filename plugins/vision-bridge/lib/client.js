@@ -226,7 +226,11 @@
             "div",
             { className: "vb-loading" },
             React.createElement(P.IconLoadingOutline16, null),
-            React.createElement("span", { className: "vb-loadingText" }, "\u6B63\u5728\u8BFB\u53D6 setting.yml \u4E2D\u7684\u591A\u6A21\u6001\u6A21\u578B\u2026")
+            React.createElement(
+              "span",
+              { className: "vb-loadingText" },
+              "\u6B63\u5728\u8BFB\u53D6 setting.yml \u4E2D\u7684\u591A\u6A21\u6001\u6A21\u578B\u2026"
+            )
           )
         );
       }
@@ -234,15 +238,25 @@
       const fallbackKey = config?.fallback ? config.fallback.provider + "///" + config.fallback.model : "__none";
       const modelOptions = models.slice();
       if (config?.primary) {
-        const hasP = modelOptions.some((m) => m.provider === config.primary.provider && m.model === config.primary.model);
+        const hasP = modelOptions.some(
+          (m) => m.provider === config.primary.provider && m.model === config.primary.model
+        );
         if (!hasP) {
           const cur = config.primary;
-          modelOptions.unshift({ provider: cur.provider, model: cur.model, name: cur.model + "\uFF08\u5F53\u524D\u9009\u62E9\uFF0C\u4E0D\u5728\u5217\u8868\u4E2D\uFF09" });
+          modelOptions.unshift({
+            provider: cur.provider,
+            model: cur.model,
+            name: cur.model + "\uFF08\u5F53\u524D\u9009\u62E9\uFF0C\u4E0D\u5728\u5217\u8868\u4E2D\uFF09"
+          });
         }
       }
       const children = [];
       children.push(
-        React.createElement("p", { className: "vb-intro" }, "\u7EAF\u6587\u672C\u6A21\u578B\u770B\u5230\u56FE\u7247\u5360\u4F4D\u7B26\u65F6\u81EA\u52A8\u8C03\u7528 vision_describe\uFF0C\u6865\u63A5\u81F3\u6B64\u5904\u7684\u89C6\u89C9\u6A21\u578B\u3002\u4E3B\u6A21\u578B\u5931\u8D25\u65F6\u7528\u5907\u7528\u6A21\u578B\u91CD\u8BD5\u4E00\u6B21\u3002")
+        React.createElement(
+          "p",
+          { className: "vb-intro" },
+          "\u7EAF\u6587\u672C\u6A21\u578B\u770B\u5230\u56FE\u7247\u5360\u4F4D\u7B26\u65F6\u81EA\u52A8\u8C03\u7528 vision_describe\uFF0C\u6865\u63A5\u81F3\u6B64\u5904\u7684\u89C6\u89C9\u6A21\u578B\u3002\u4E3B\u6A21\u578B\u5931\u8D25\u65F6\u7528\u5907\u7528\u6A21\u578B\u91CD\u8BD5\u4E00\u6B21\u3002"
+        )
       );
       if (error) children.push(React.createElement("p", { className: "vb-notice vb-notice-err" }, error));
       if (models.length === 0)
@@ -267,7 +281,11 @@
               onChange: () => save({ enabled: !(config && config.enabled) })
             })
           ),
-          React.createElement(Row, { label: "\u53D1\u9001\u95E8\u7981\u63A5\u7BA1" }, takeover ? React.createElement(Badge, { kind: "ok", text: "\u6865\u63A5\u63A5\u7BA1\u4E2D" }) : React.createElement(Badge, { kind: "muted", text: "\u672A\u63A5\u7BA1" })),
+          React.createElement(
+            Row,
+            { label: "\u53D1\u9001\u95E8\u7981\u63A5\u7BA1" },
+            takeover ? React.createElement(Badge, { kind: "ok", text: "\u6865\u63A5\u63A5\u7BA1\u4E2D" }) : React.createElement(Badge, { kind: "muted", text: "\u672A\u63A5\u7BA1" })
+          ),
           React.createElement(
             Row,
             { label: "\u5019\u9009\u6A21\u578B" },
@@ -279,14 +297,19 @@
         disabled: saving,
         value: primaryKey,
         selectedLabel: config?.primary ? routeLabel(config.primary) : "\u8BF7\u9009\u62E9\u4E3B\u6A21\u578B\u2026",
-        options: modelOptions.map((m) => ({ id: m.provider + "///" + m.model, label: routeLabel(m) })),
+        options: modelOptions.map((m) => ({
+          id: m.provider + "///" + m.model,
+          label: routeLabel(m)
+        })),
         onSelect: (id) => save({ primary: parseKey(id) })
       });
       const fallbackSelect = React.createElement(Select, {
         disabled: saving,
         value: fallbackKey,
         selectedLabel: config?.fallback ? routeLabel(config.fallback) : "\u4E0D\u4F7F\u7528 fallback",
-        options: [{ id: "__none", label: "\u4E0D\u4F7F\u7528 fallback" }].concat(models.map((m) => ({ id: m.provider + "///" + m.model, label: routeLabel(m) }))),
+        options: [{ id: "__none", label: "\u4E0D\u4F7F\u7528 fallback" }].concat(
+          models.map((m) => ({ id: m.provider + "///" + m.model, label: routeLabel(m) }))
+        ),
         onSelect: (id) => save({ fallback: id === "__none" ? null : parseKey(id) })
       });
       children.push(
@@ -294,8 +317,19 @@
           "div",
           { className: "vb-section" },
           React.createElement("div", { className: "vb-sectionHead" }, "\u6A21\u578B\u9009\u62E9"),
-          React.createElement(Row, { label: "\u4E3B\u89C6\u89C9\u6A21\u578B", desc: "\u5019\u9009\u6765\u81EA setting.yml \u4E2D input \u542B image \u7684\u6A21\u578B + \u8FD0\u884C\u65F6 provider \u5217\u8868\u3002" }, primarySelect),
-          React.createElement(Row, { label: "\u5907\u7528\u6A21\u578B", desc: "\u4E3B\u6A21\u578B\u5931\u8D25\u65F6\u91CD\u8BD5\u4E00\u6B21\uFF1B\u4E0D\u9009\u5219\u4E0D\u91CD\u8BD5\u3002" }, fallbackSelect)
+          React.createElement(
+            Row,
+            {
+              label: "\u4E3B\u89C6\u89C9\u6A21\u578B",
+              desc: "\u5019\u9009\u6765\u81EA setting.yml \u4E2D input \u542B image \u7684\u6A21\u578B + \u8FD0\u884C\u65F6 provider \u5217\u8868\u3002"
+            },
+            primarySelect
+          ),
+          React.createElement(
+            Row,
+            { label: "\u5907\u7528\u6A21\u578B", desc: "\u4E3B\u6A21\u578B\u5931\u8D25\u65F6\u91CD\u8BD5\u4E00\u6B21\uFF1B\u4E0D\u9009\u5219\u4E0D\u91CD\u8BD5\u3002" },
+            fallbackSelect
+          )
         )
       );
       const detailSelect = React.createElement(Select, {
@@ -321,7 +355,11 @@
           "div",
           { className: "vb-section" },
           React.createElement("div", { className: "vb-sectionHead" }, "\u884C\u4E3A"),
-          React.createElement(Row, { label: "\u63CF\u8FF0\u8BE6\u7EC6\u5EA6", desc: "high \u8FFD\u52A0\u300C\u9010\u5B57\u8F6C\u5F55\u300D\u8981\u6C42\uFF0Clow \u8FFD\u52A0\u300C2-3 \u53E5\u6982\u62EC\u300D\u3002" }, detailSelect),
+          React.createElement(
+            Row,
+            { label: "\u63CF\u8FF0\u8BE6\u7EC6\u5EA6", desc: "high \u8FFD\u52A0\u300C\u9010\u5B57\u8F6C\u5F55\u300D\u8981\u6C42\uFF0Clow \u8FFD\u52A0\u300C2-3 \u53E5\u6982\u62EC\u300D\u3002" },
+            detailSelect
+          ),
           React.createElement(Row, { label: "\u5355\u6B21\u6700\u591A\u56FE\u7247", desc: "\u8D85\u9650\u65F6\u53D6\u6700\u65B0\u7684\u82E5\u5E72\u5F20\u3002" }, maxSelect)
         )
       );
@@ -337,7 +375,11 @@
               "div",
               { className: "vb-rowText" },
               React.createElement("div", { className: "vb-title" }, "\u6BCF\u6B21\u8BC6\u522B\u8FFD\u52A0\u7684\u8981\u6C42"),
-              React.createElement("div", { className: "vb-desc" }, "\u5931\u7126\u81EA\u52A8\u4FDD\u5B58\uFF1B\u6700\u591A 2000 \u5B57\u7B26\uFF0C\u5B9E\u9645\u53D1\u7ED9\u89C6\u89C9\u6A21\u578B\u65F6\u622A\u65AD 500 \u5B57\u7B26\u3002")
+              React.createElement(
+                "div",
+                { className: "vb-desc" },
+                "\u5931\u7126\u81EA\u52A8\u4FDD\u5B58\uFF1B\u6700\u591A 2000 \u5B57\u7B26\uFF0C\u5B9E\u9645\u53D1\u7ED9\u89C6\u89C9\u6A21\u578B\u65F6\u622A\u65AD 500 \u5B57\u7B26\u3002"
+              )
             ),
             React.createElement("textarea", {
               className: "vb-textarea",
@@ -349,7 +391,14 @@
                 const v = e.target.value;
                 setConfig((prev) => {
                   if (!prev) return prev;
-                  return { enabled: prev.enabled, primary: prev.primary, fallback: prev.fallback, detail: prev.detail, maxImages: prev.maxImages, promptTemplate: v };
+                  return {
+                    enabled: prev.enabled,
+                    primary: prev.primary,
+                    fallback: prev.fallback,
+                    detail: prev.detail,
+                    maxImages: prev.maxImages,
+                    promptTemplate: v
+                  };
                 });
               },
               onBlur: (e) => {
@@ -367,8 +416,16 @@
           React.createElement(
             "div",
             { className: "vb-bar" },
-            React.createElement(P.Button, { variant: "outline", size: "sm", disabled: saving || checkBusy, onClick: load }, "\u91CD\u65B0\u8BFB\u53D6"),
-            React.createElement(P.Button, { variant: "primary", size: "sm", disabled: checkBusy, onClick: runCheck }, checkBusy ? "\u68C0\u67E5\u4E2D\u2026" : "\u68C0\u67E5\u8FDE\u901A\u6027")
+            React.createElement(
+              P.Button,
+              { variant: "outline", size: "sm", disabled: saving || checkBusy, onClick: load },
+              "\u91CD\u65B0\u8BFB\u53D6"
+            ),
+            React.createElement(
+              P.Button,
+              { variant: "primary", size: "sm", disabled: checkBusy, onClick: runCheck },
+              checkBusy ? "\u68C0\u67E5\u4E2D\u2026" : "\u68C0\u67E5\u8FDE\u901A\u6027"
+            )
           ),
           check ? React.createElement(
             "div",
@@ -379,10 +436,23 @@
               React.createElement(
                 "span",
                 { className: "vb-modelLine" },
-                React.createElement(Badge, { kind: check.primary?.ok ? "ok" : "warn", text: check.primary?.ok ? "\u53EF\u8FBE" : "\u4E0D\u53EF\u7528" }),
+                React.createElement(Badge, {
+                  kind: check.primary?.ok ? "ok" : "warn",
+                  text: check.primary?.ok ? "\u53EF\u8FBE" : "\u4E0D\u53EF\u7528"
+                }),
                 React.createElement(
                   "span",
-                  { className: "vb-hint", style: { marginLeft: 8, textAlign: "right", maxWidth: 360, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } },
+                  {
+                    className: "vb-hint",
+                    style: {
+                      marginLeft: 8,
+                      textAlign: "right",
+                      maxWidth: 360,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap"
+                    }
+                  },
                   check.primary && check.primary.message || "\u672A\u914D\u7F6E"
                 )
               )
@@ -397,10 +467,18 @@
                   kind: check.fallback?.ok ? "ok" : "muted",
                   text: check.fallback?.ok ? "\u53EF\u8FBE" : check.fallback ? "\u672A\u901A\u8FC7" : "\u672A\u914D\u7F6E"
                 }),
-                React.createElement("span", { className: "vb-hint", style: { marginLeft: 8 } }, check.fallback && check.fallback.message || "\u672A\u914D\u7F6E")
+                React.createElement(
+                  "span",
+                  { className: "vb-hint", style: { marginLeft: 8 } },
+                  check.fallback && check.fallback.message || "\u672A\u914D\u7F6E"
+                )
               )
             ),
-            React.createElement("p", { className: "vb-hint" }, "\u8FDE\u901A\u6027\u4EC5\u505A\u63D0\u4F9B\u65B9/\u6A21\u578B\u8DEF\u7531\u53EF\u89E3\u6790\u6027\u63A2\u6D3B\uFF0C\u975E\u771F\u5B9E\u63A8\u7406\u8C03\u7528\u3002")
+            React.createElement(
+              "p",
+              { className: "vb-hint" },
+              "\u8FDE\u901A\u6027\u4EC5\u505A\u63D0\u4F9B\u65B9/\u6A21\u578B\u8DEF\u7531\u53EF\u89E3\u6790\u6027\u63A2\u6D3B\uFF0C\u975E\u771F\u5B9E\u63A8\u7406\u8C03\u7528\u3002"
+            )
           ) : null
         )
       );
@@ -443,7 +521,10 @@
           const Section = VisionSection;
           slots.inject(
             "settings.section",
-            () => slots.register({ name: "settings.section", id: "dshp-vision-bridge", order: 25, label: "\u89C6\u89C9\u6A21\u578B" }, Section)
+            () => slots.register(
+              { name: "settings.section", id: "dshp-vision-bridge", order: 25, label: "\u89C6\u89C9\u6A21\u578B" },
+              Section
+            )
           );
         };
         return moduleShim.exports;

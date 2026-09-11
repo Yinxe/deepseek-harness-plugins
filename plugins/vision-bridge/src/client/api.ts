@@ -13,7 +13,9 @@ export async function fetchState(): Promise<StateResponse> {
   return (await r.json()) as StateResponse;
 }
 
-export async function saveConfig(patch: ConfigPatch): Promise<{ ok: boolean; config?: VisionConfig; error?: string }> {
+export async function saveConfig(
+  patch: ConfigPatch,
+): Promise<{ ok: boolean; config?: VisionConfig; error?: string }> {
   const r = await fetch(`${BASE}/config`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

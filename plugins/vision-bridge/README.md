@@ -13,22 +13,22 @@ DeepSeek Harness（DSH）**视觉桥接**插件：让**纯文本模型**也能�
 
 ## 功能
 
-| 部分 | 内容 |
-|---|---|
-| **Host（`src/host/` → `lib/host.js`）** | 注册 `vision_describe` 模型工具；监听 `agent/inbox/inserted` + `llm/stream` 缓存图片（最近 20 张/会话，至多 50 会话）；发现候选视觉模型（`setting.yml` 中 `input: [text, image]` 的模型 + `llm` 服务实时 provider 列表）；`vision_describe` 执行时完成 hint 过滤（sha 前缀或序号）、`maxImages` 截尾、`buildQuestion` 拼装 `detail` + `promptTemplate`、主→备 fallback；注入系统提示引导纯文本模型何时调用工具；暴露同源 JSON 路由供设置页（见下）。**通过官方 `ctx.settings` + `schemastery` 持久化到 `settings.yaml`（`dshp-vision-bridge`），使用 settings 服务的 `installSection` 方法，支持热重载与注释保留，旧文件/旧 key 自动迁移**；接管发送门禁（启用且配好主模型时纯文本模型可直接发图，关闭即恢复）。 |
-| **Client（`src/client/` → `lib/client.js`）** | 「设置 → 视觉模型」配置页：启用开关、主/备模型下拉（候选来自 Host 发现）、详细度（`auto`/`low`/`high`）、单次最多图片（`1–8`）、追加提示词（失焦保存）、重新读取、检查连通性。UI 全部使用 DSH 官方设计 token（`dsw-alias-*`），与官方设置页风格一致。无额外依赖。 |
-| **同源路由** | `GET /ext/dshp-vision-bridge/state`（模型列表 + 当前配置）、`POST /ext/dshp-vision-bridge/config`（保存补丁）、`GET /ext/dshp-vision-bridge/check`（探活主/备路由），均带同源校验（`Origin` 与 `Host` 一致或缺失才放行）。 |
-| **工具** | `vision_describe`（见参数表），输出 `{ description, model, fallback_used }`，模型侧渲染为纯文本（`description`）。 |
+| 部分                                          | 内容                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Host（`src/host/` → `lib/host.js`）**       | 注册 `vision_describe` 模型工具；监听 `agent/inbox/inserted` + `llm/stream` 缓存图片（最近 20 张/会话，至多 50 会话）；发现候选视觉模型（`setting.yml` 中 `input: [text, image]` 的模型 + `llm` 服务实时 provider 列表）；`vision_describe` 执行时完成 hint 过滤（sha 前缀或序号）、`maxImages` 截尾、`buildQuestion` 拼装 `detail` + `promptTemplate`、主→备 fallback；注入系统提示引导纯文本模型何时调用工具；暴露同源 JSON 路由供设置页（见下）。**通过官方 `ctx.settings` + `schemastery` 持久化到 `settings.yaml`（`dshp-vision-bridge`），使用 settings 服务的 `installSection` 方法，支持热重载与注释保留，旧文件/旧 key 自动迁移**；接管发送门禁（启用且配好主模型时纯文本模型可直接发图，关闭即恢复）。 |
+| **Client（`src/client/` → `lib/client.js`）** | 「设置 → 视觉模型」配置页：启用开关、主/备模型下拉（候选来自 Host 发现）、详细度（`auto`/`low`/`high`）、单次最多图片（`1–8`）、追加提示词（失焦保存）、重新读取、检查连通性。UI 全部使用 DSH 官方设计 token（`dsw-alias-*`），与官方设置页风格一致。无额外依赖。                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **同源路由**                                  | `GET /ext/dshp-vision-bridge/state`（模型列表 + 当前配置）、`POST /ext/dshp-vision-bridge/config`（保存补丁）、`GET /ext/dshp-vision-bridge/check`（探活主/备路由），均带同源校验（`Origin` 与 `Host` 一致或缺失才放行）。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **工具**                                      | `vision_describe`（见参数表），输出 `{ description, model, fallback_used }`，模型侧渲染为纯文本（`description`）。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ### 模型工具：`vision_describe`
 
 当你是**纯文本模型**且用户消息中出现 `[image omitted because this model accepts text only…]` 占位符时**必须调用**，不要猜图、不要让用户换模型。
 
-| 参数 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| `question` | `string` | ✅ | 你想从图片中知道什么，例如“描述这张截图里的报错信息”或“转录图片中的全部文字”。 |
-| `image_hint` | `string` |  | 可选：只分析某一张图。填占位符里的 sha 前缀（附件 `attachmentId` 前缀）或从 `1` 开始的序号；留空则分析本轮全部图片（受 `maxImages` 截尾）。 |
-| `detail` | `enum` |  | 可选：`auto` 常规描述，`low` 简要概括（2–3 句），`high` 逐字转录级详细。不填用设置页的默认值。 |
+| 参数         | 类型     | 必填 | 说明                                                                                                                                        |
+| ------------ | -------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `question`   | `string` | ✅   | 你想从图片中知道什么，例如“描述这张截图里的报错信息”或“转录图片中的全部文字”。                                                              |
+| `image_hint` | `string` |      | 可选：只分析某一张图。填占位符里的 sha 前缀（附件 `attachmentId` 前缀）或从 `1` 开始的序号；留空则分析本轮全部图片（受 `maxImages` 截尾）。 |
+| `detail`     | `enum`   |      | 可选：`auto` 常规描述，`low` 简要概括（2–3 句），`high` 逐字转录级详细。不填用设置页的默认值。                                              |
 
 返回（`output.schema`）：
 
@@ -44,14 +44,14 @@ DeepSeek Harness（DSH）**视觉桥接**插件：让**纯文本模型**也能�
 
 ### 配置项（Host 状态）
 
-| 字段 | 类型 | 默认 | 说明 |
-|---|---|---|---|
-| `enabled` | `boolean` | `true` | 总开关，关闭后 `vision_describe` 直接抛错提示去设置页启用。 |
-| `primary` | `{provider, model} \| null` | `null`（首次发现后自动选列表首项） | 主视觉模型。 |
-| `fallback` | `{provider, model} \| null` | `null`（自动选第二项） | 备用模型，主失败时重试一次。设为 `null` 表示不重试。 |
-| `detail` | `'auto' \| 'low' \| 'high'` | `'auto'` | 默认详细度；`high` 会追加“逐字转录”后缀，`low` 追加“简要概括”。 |
-| `maxImages` | `1–8` | `4` | 单次 `vision_describe` 最多喂给视觉模型的图片张数，超出取末尾若干张（最新）。 |
-| `promptTemplate` | `string` | `''` | 可选追加提示词，每次识别都会拼在问题末尾（截断 500 字符，存储上限 2000）。例如“重点看报错弹窗里的红字”。 |
+| 字段             | 类型                        | 默认                               | 说明                                                                                                     |
+| ---------------- | --------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `enabled`        | `boolean`                   | `true`                             | 总开关，关闭后 `vision_describe` 直接抛错提示去设置页启用。                                              |
+| `primary`        | `{provider, model} \| null` | `null`（首次发现后自动选列表首项） | 主视觉模型。                                                                                             |
+| `fallback`       | `{provider, model} \| null` | `null`（自动选第二项）             | 备用模型，主失败时重试一次。设为 `null` 表示不重试。                                                     |
+| `detail`         | `'auto' \| 'low' \| 'high'` | `'auto'`                           | 默认详细度；`high` 会追加“逐字转录”后缀，`low` 追加“简要概括”。                                          |
+| `maxImages`      | `1–8`                       | `4`                                | 单次 `vision_describe` 最多喂给视觉模型的图片张数，超出取末尾若干张（最新）。                            |
+| `promptTemplate` | `string`                    | `''`                               | 可选追加提示词，每次识别都会拼在问题末尾（截断 500 字符，存储上限 2000）。例如“重点看报错弹窗里的红字”。 |
 
 > **与动态版的区别**：动态（`cordis_define`）版本的配置只在内存中，重启进程后恢复默认；**标准包版本通过官方 `settings` API 持久化到 `settings.yaml`（`dshp-vision-bridge`）**，重启后不丢，且外部手工编辑 `settings.yaml` 可热重载。
 
@@ -65,16 +65,14 @@ git clone git@github.com:Yinxe/deepseek-harness-plugins.git
 cd deepseek-harness-plugins
 pnpm install
 
-# 2. 按你的 DSH 版本 checkout 对应 tag（版本不对装了也可能跑不起来）
-TAG=$(./scripts/resolve-tag.sh vision-bridge "$(dsh --version)")
-git checkout "$TAG"
-
-# 3. 本地安装到 profile（路径按你执行命令时的 cwd 解析）
+# 2. 本地安装到 profile（路径按你执行命令时的 cwd 解析）
 dsh plugin --profile web add ./plugins/vision-bridge
 
-# 4. 重启生效
+# 3. 重启生效
 dsh web
 ```
+
+> DSH 是最新版就到此为止。只有 DSH 停在老版本才需要先 `git checkout <历史tag>`（对照根目录 `compat.json`，现在是空的，不用管）。
 
 `dsh plugin` 会把包写进 profile 的 `dsh.profile.bundles` —— **无需手动改配置文件**。
 
@@ -124,7 +122,7 @@ llm-pi-ai:
       models:
         - id: qwen/qwen2.5-vl-32b-instruct
           name: Qwen2.5 VL 32B
-          input: [text, image]   # ← 关键：声明支持图片输入
+          input: [text, image] # ← 关键：声明支持图片输入
         - id: openai/gpt-4o-mini
           name: GPT-4o mini
           input: [text, image]
@@ -196,14 +194,14 @@ llm-pi-ai:
 
 ```yaml
 - id: dshp-vision-bridge
-  name: "@dshp/vision-bridge"
+  name: '@dshp/vision-bridge'
   config:
     enabled: true
-    primary: { provider: "openrouter", model: "qwen/qwen2.5-vl-32b-instruct" }
-    fallback: { provider: "openrouter", model: "openai/gpt-4o-mini" }
-    detail: auto        # auto | low | high
-    maxImages: 4        # 1–8
-    promptTemplate: "重点看报错弹窗"   # 可选，≤2000 字符
+    primary: { provider: 'openrouter', model: 'qwen/qwen2.5-vl-32b-instruct' }
+    fallback: { provider: 'openrouter', model: 'openai/gpt-4o-mini' }
+    detail: auto # auto | low | high
+    maxImages: 4 # 1–8
+    promptTemplate: '重点看报错弹窗' # 可选，≤2000 字符
 ```
 
 > 设置页的保存会覆盖同名字段并落盘到 `settings.yaml` 的 `dshp-vision-bridge` 分节；旧 `storages/dshp-vision-bridge.json` 已不再读写，首次启动后会备份为 `.bak`。
@@ -267,4 +265,3 @@ dsh web
 - 本插件与所有视觉模型提供方（OpenRouter、OpenAI 等）无隶属关系；模型能力与计费以提供方为准。
 - 图片仅在本地会话缓存中短暂留存（最近 20 张/会话），随进程重启清空；除转发给视觉模型外不上传至其他远端。
 - 请遵守各模型提供方的内容政策与隐私要求，勿发送敏感信息。
-

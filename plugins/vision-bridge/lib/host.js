@@ -974,7 +974,9 @@ function migrateYamlNamespaceKey() {
     if (!hit) return;
     if (newIdx >= 0) {
       try {
-        console.info(`[dshp-vision-bridge] settings.yaml \u540C\u65F6\u5B58\u5728 ${hit.key} \u4E0E dshp-vision-bridge\uFF0C\u4EE5\u65B0 key \u4E3A\u51C6\uFF0C\u8BF7\u624B\u52A8\u5220\u9664\u65E7 ${hit.key} \u6BB5\u843D`);
+        console.info(
+          `[dshp-vision-bridge] settings.yaml \u540C\u65F6\u5B58\u5728 ${hit.key} \u4E0E dshp-vision-bridge\uFF0C\u4EE5\u65B0 key \u4E3A\u51C6\uFF0C\u8BF7\u624B\u52A8\u5220\u9664\u65E7 ${hit.key} \u6BB5\u843D`
+        );
       } catch {
       }
       return;
@@ -988,7 +990,9 @@ function migrateYamlNamespaceKey() {
     }
   } catch (e) {
     try {
-      console.warn("[dshp-vision-bridge] settings.yaml \u547D\u540D\u7A7A\u95F4\u91CD\u547D\u540D\u5931\u8D25\uFF1A" + String(e?.message ?? e));
+      console.warn(
+        "[dshp-vision-bridge] settings.yaml \u547D\u540D\u7A7A\u95F4\u91CD\u547D\u540D\u5931\u8D25\uFF1A" + String(e?.message ?? e)
+      );
     } catch {
     }
   }
@@ -1143,7 +1147,11 @@ async function listVisionModels(ctx) {
             if (typeof info["id"] !== "string" || typeof info["provider"] !== "string") continue;
             const mods = info["inputModalities"];
             if (!Array.isArray(mods) || mods.indexOf("image") < 0) continue;
-            add(info["provider"], info["id"], typeof info["name"] === "string" ? info["name"] : info["id"]);
+            add(
+              info["provider"],
+              info["id"],
+              typeof info["name"] === "string" ? info["name"] : info["id"]
+            );
           }
         } catch {
         }
@@ -1217,10 +1225,14 @@ async function describeWithFallback(ctx, cfg, images, question, signal, sessionI
   if (!llm || typeof llm.stream !== "function") throw new Error("\u5F53\u524D\u73AF\u5883\u6CA1\u6709\u53EF\u7528\u7684 llm \u670D\u52A1");
   const attempts = [];
   if (cfg.primary) attempts.push({ route: cfg.primary, fallback: false });
-  if (cfg.fallback && !sameRoute(cfg.fallback, cfg.primary)) attempts.push({ route: cfg.fallback, fallback: true });
+  if (cfg.fallback && !sameRoute(cfg.fallback, cfg.primary))
+    attempts.push({ route: cfg.fallback, fallback: true });
   if (attempts.length === 0) {
     const models = await listVisionModels(ctx);
-    if (models.length === 0) throw new Error("\u6CA1\u6709\u53EF\u7528\u7684\u89C6\u89C9\u6A21\u578B\uFF1A\u8BF7\u5148\u5728\u8BBE\u7F6E \u2192 \u89C6\u89C9\u6A21\u578B \u4E2D\u9009\u62E9\uFF08\u9700\u8981\u5728 setting.yml \u91CC\u7ED9\u6A21\u578B\u52A0\u4E0A input: [text, image]\uFF09");
+    if (models.length === 0)
+      throw new Error(
+        "\u6CA1\u6709\u53EF\u7528\u7684\u89C6\u89C9\u6A21\u578B\uFF1A\u8BF7\u5148\u5728\u8BBE\u7F6E \u2192 \u89C6\u89C9\u6A21\u578B \u4E2D\u9009\u62E9\uFF08\u9700\u8981\u5728 setting.yml \u91CC\u7ED9\u6A21\u578B\u52A0\u4E0A input: [text, image]\uFF09"
+      );
     const first = models[0];
     attempts.push({ route: { provider: first.provider, model: first.model }, fallback: false });
   }
@@ -1239,7 +1251,8 @@ function buildQuestion(base, detail, promptTemplate) {
   let q = (typeof base === "string" ? base : "").trim();
   if (!q) q = "\u8BF7\u63CF\u8FF0\u8FD9\u5F20\u56FE\u7247\u7684\u5185\u5BB9\u3002";
   let suffix = "";
-  if (detail === "high") suffix = "\n\n\u8BF7\u5C3D\u53EF\u80FD\u8BE6\u7EC6\uFF1A\u4E3B\u4F53\u3001\u6587\u5B57\u3001\u6570\u5B57\u3001\u989C\u8272\u3001\u4F4D\u7F6E\u5173\u7CFB\u90FD\u4E0D\u8981\u9057\u6F0F\u3002\u5982\u6709\u6587\u5B57\u8BF7\u9010\u5B57\u8F6C\u5F55\u3002";
+  if (detail === "high")
+    suffix = "\n\n\u8BF7\u5C3D\u53EF\u80FD\u8BE6\u7EC6\uFF1A\u4E3B\u4F53\u3001\u6587\u5B57\u3001\u6570\u5B57\u3001\u989C\u8272\u3001\u4F4D\u7F6E\u5173\u7CFB\u90FD\u4E0D\u8981\u9057\u6F0F\u3002\u5982\u6709\u6587\u5B57\u8BF7\u9010\u5B57\u8F6C\u5F55\u3002";
   else if (detail === "low") suffix = "\n\n\u8BF7\u7528 2-3 \u53E5\u8BDD\u7B80\u8981\u6982\u62EC\u3002";
   const extra2 = typeof promptTemplate === "string" && promptTemplate.trim().length > 0 ? "\n\n\u8865\u5145\u8981\u6C42\uFF1A" + promptTemplate.trim().slice(0, 500) : "";
   return q + suffix + extra2;
@@ -1261,7 +1274,8 @@ function apply(ctx, rawConfig) {
     if (Object.hasOwn(patch, "fallback") && patch.fallback !== void 0) entry.fallback = patch.fallback;
     if (Object.hasOwn(patch, "detail") && patch.detail !== void 0) entry.detail = patch.detail;
     if (Object.hasOwn(patch, "maxImages") && patch.maxImages !== void 0) entry.maxImages = patch.maxImages;
-    if (Object.hasOwn(patch, "promptTemplate") && patch.promptTemplate !== void 0) entry.promptTemplate = patch.promptTemplate;
+    if (Object.hasOwn(patch, "promptTemplate") && patch.promptTemplate !== void 0)
+      entry.promptTemplate = patch.promptTemplate;
   }
   const persistedForMigration = loadPersisted();
   let current = () => entry;
@@ -1282,7 +1296,9 @@ function apply(ctx, rawConfig) {
       const desc = list.find((d) => d.ns === NS);
       if (desc && desc.user !== void 0) {
         try {
-          console.info("[dshp-vision-bridge] settings.yaml \u5DF2\u5B58\u5728 dshp-vision-bridge \u7528\u6237\u914D\u7F6E\uFF0C\u8DF3\u8FC7\u65E7\u6587\u4EF6\u81EA\u52A8\u8FC1\u79FB\uFF08\u65E7\u6587\u4EF6\u4FDD\u7559\uFF0C\u53EF\u624B\u52A8\u5220\u9664 " + persistedForMigration.source + "\uFF09");
+          console.info(
+            "[dshp-vision-bridge] settings.yaml \u5DF2\u5B58\u5728 dshp-vision-bridge \u7528\u6237\u914D\u7F6E\uFF0C\u8DF3\u8FC7\u65E7\u6587\u4EF6\u81EA\u52A8\u8FC1\u79FB\uFF08\u65E7\u6587\u4EF6\u4FDD\u7559\uFF0C\u53EF\u624B\u52A8\u5220\u9664 " + persistedForMigration.source + "\uFF09"
+          );
         } catch {
         }
         return;
@@ -1315,7 +1331,9 @@ function apply(ctx, rawConfig) {
     }
     Promise.resolve(settings.update(NS, needPatch)).then(() => {
       try {
-        console.info("[dshp-vision-bridge] \u5DF2\u81EA\u52A8\u5C06\u65E7\u7248 " + persistedForMigration.source + " \u8FC1\u79FB\u81F3 settings.yaml (dshp-vision-bridge)");
+        console.info(
+          "[dshp-vision-bridge] \u5DF2\u81EA\u52A8\u5C06\u65E7\u7248 " + persistedForMigration.source + " \u8FC1\u79FB\u81F3 settings.yaml (dshp-vision-bridge)"
+        );
       } catch {
       }
       try {
@@ -1363,7 +1381,10 @@ function apply(ctx, rawConfig) {
   }
   async function updateConfig(patchObj) {
     const settings = ctx.get("settings");
-    if (!settings) throw new Error("settings \u670D\u52A1\u4E0D\u53EF\u7528\uFF0C\u65E0\u6CD5\u6301\u4E45\u5316\u5230 settings.yaml\uFF08\u8BF7\u91CD\u542F DSH \u6216\u68C0\u67E5 FileSettingsProvider \u662F\u5426\u6302\u8F7D\uFF09");
+    if (!settings)
+      throw new Error(
+        "settings \u670D\u52A1\u4E0D\u53EF\u7528\uFF0C\u65E0\u6CD5\u6301\u4E45\u5316\u5230 settings.yaml\uFF08\u8BF7\u91CD\u542F DSH \u6216\u68C0\u67E5 FileSettingsProvider \u662F\u5426\u6302\u8F7D\uFF09"
+      );
     await settings.update(NS, patchObj);
   }
   function snapshotConfig() {
@@ -1400,7 +1421,9 @@ function apply(ctx, rawConfig) {
         await updateConfig(patchObj);
       } catch (e) {
         try {
-          console.warn("[dshp-vision-bridge] ensureDefaults \u5199\u5165 settings.yaml \u5931\u8D25\uFF1A" + String(e?.message ?? e));
+          console.warn(
+            "[dshp-vision-bridge] ensureDefaults \u5199\u5165 settings.yaml \u5931\u8D25\uFF1A" + String(e?.message ?? e)
+          );
         } catch {
         }
       }
@@ -1485,12 +1508,16 @@ function apply(ctx, rawConfig) {
         "dshp-vision-bridge: admission takeover"
       );
       try {
-        console.info("[dshp-vision-bridge] admission takeover armed (text-only models may send images while bridge is enabled with a primary vision model)");
+        console.info(
+          "[dshp-vision-bridge] admission takeover armed (text-only models may send images while bridge is enabled with a primary vision model)"
+        );
       } catch {
       }
     } else {
       try {
-        console.warn("[dshp-vision-bridge] llm service unavailable, admission takeover skipped (text-only models still cannot send images)");
+        console.warn(
+          "[dshp-vision-bridge] llm service unavailable, admission takeover skipped (text-only models still cannot send images)"
+        );
       } catch {
       }
     }
@@ -1518,9 +1545,19 @@ function apply(ctx, rawConfig) {
         type: "object",
         additionalProperties: false,
         properties: {
-          question: { type: "string", description: "\u4F60\u60F3\u4ECE\u56FE\u7247\u4E2D\u77E5\u9053\u4EC0\u4E48\uFF0C\u4F8B\u5982\u201C\u63CF\u8FF0\u8FD9\u5F20\u622A\u56FE\u91CC\u7684\u62A5\u9519\u4FE1\u606F\u201D\u6216\u201C\u8F6C\u5F55\u56FE\u7247\u4E2D\u7684\u5168\u90E8\u6587\u5B57\u201D\u3002" },
-          image_hint: { type: "string", description: "\u53EF\u9009\uFF1A\u53EA\u5206\u6790\u67D0\u4E00\u5F20\u56FE\u3002\u586B\u9644\u4EF6 sha \u524D\u7F00\uFF08\u5360\u4F4D\u7B26\u91CC\u7684\u90A3\u4E32\u5B57\u7B26\uFF09\u6216\u4ECE 1 \u5F00\u59CB\u7684\u5E8F\u53F7\uFF1B\u7559\u7A7A\u5219\u5206\u6790\u672C\u8F6E\u5168\u90E8\u56FE\u7247\u3002" },
-          detail: { type: "string", enum: ["auto", "low", "high"], description: "\u53EF\u9009\uFF1Aauto \u5E38\u89C4\u63CF\u8FF0\uFF0Clow \u7B80\u8981\u6982\u62EC\uFF0Chigh \u9010\u5B57\u8F6C\u5F55\u7EA7\u8BE6\u7EC6\u3002\u4E0D\u586B\u7528\u8BBE\u7F6E\u9875\u7684\u9ED8\u8BA4\u503C\u3002" }
+          question: {
+            type: "string",
+            description: "\u4F60\u60F3\u4ECE\u56FE\u7247\u4E2D\u77E5\u9053\u4EC0\u4E48\uFF0C\u4F8B\u5982\u201C\u63CF\u8FF0\u8FD9\u5F20\u622A\u56FE\u91CC\u7684\u62A5\u9519\u4FE1\u606F\u201D\u6216\u201C\u8F6C\u5F55\u56FE\u7247\u4E2D\u7684\u5168\u90E8\u6587\u5B57\u201D\u3002"
+          },
+          image_hint: {
+            type: "string",
+            description: "\u53EF\u9009\uFF1A\u53EA\u5206\u6790\u67D0\u4E00\u5F20\u56FE\u3002\u586B\u9644\u4EF6 sha \u524D\u7F00\uFF08\u5360\u4F4D\u7B26\u91CC\u7684\u90A3\u4E32\u5B57\u7B26\uFF09\u6216\u4ECE 1 \u5F00\u59CB\u7684\u5E8F\u53F7\uFF1B\u7559\u7A7A\u5219\u5206\u6790\u672C\u8F6E\u5168\u90E8\u56FE\u7247\u3002"
+          },
+          detail: {
+            type: "string",
+            enum: ["auto", "low", "high"],
+            description: "\u53EF\u9009\uFF1Aauto \u5E38\u89C4\u63CF\u8FF0\uFF0Clow \u7B80\u8981\u6982\u62EC\uFF0Chigh \u9010\u5B57\u8F6C\u5F55\u7EA7\u8BE6\u7EC6\u3002\u4E0D\u586B\u7528\u8BBE\u7F6E\u9875\u7684\u9ED8\u8BA4\u503C\u3002"
+          }
         },
         required: ["question"]
       },
@@ -1535,7 +1572,9 @@ function apply(ctx, rawConfig) {
           },
           required: ["description", "model", "fallback_used"]
         },
-        render: (_args, value) => [{ type: "text", text: String(value.description) }]
+        render: (_args, value) => [
+          { type: "text", text: String(value.description) }
+        ]
       },
       isConcurrencySafe: () => false,
       async execute(args, exec) {
@@ -1571,7 +1610,9 @@ function apply(ctx, rawConfig) {
         const maxN = typeof cfg.maxImages === "number" && cfg.maxImages >= 1 ? Math.min(cfg.maxImages, 8) : 4;
         if (list.length > maxN) list = list.slice(list.length - maxN);
         if (list.length === 0) {
-          throw new Error("\u672C\u8F6E\u6CA1\u6709\u627E\u5230\u53EF\u7528\u7684\u56FE\u7247\uFF1A\u8BF7\u786E\u8BA4\u56FE\u7247\u5DF2\u4F5C\u4E3A\u9644\u4EF6\u53D1\u9001\uFF08\u91CD\u8BD5\u4E00\u6B21\uFF09\uFF0C\u6216\u628A\u5360\u4F4D\u7B26\u91CC\u7684 sha \u524D\u7F00\u586B\u8FDB image_hint");
+          throw new Error(
+            "\u672C\u8F6E\u6CA1\u6709\u627E\u5230\u53EF\u7528\u7684\u56FE\u7247\uFF1A\u8BF7\u786E\u8BA4\u56FE\u7247\u5DF2\u4F5C\u4E3A\u9644\u4EF6\u53D1\u9001\uFF08\u91CD\u8BD5\u4E00\u6B21\uFF09\uFF0C\u6216\u628A\u5360\u4F4D\u7B26\u91CC\u7684 sha \u524D\u7F00\u586B\u8FDB image_hint"
+          );
         }
         const question = buildQuestion(q, detail, cfg.promptTemplate);
         const signal = exec?.signal;
@@ -1602,7 +1643,13 @@ function apply(ctx, rawConfig) {
         try {
           const models = await listVisionModels(ctx);
           await ensureDefaults(models);
-          return json(res, 200, { ok: true, models, config: snapshotConfig(), visionModelCount: models.length, admissionTakeover: bridgeTakeoverArmed() });
+          return json(res, 200, {
+            ok: true,
+            models,
+            config: snapshotConfig(),
+            visionModelCount: models.length,
+            admissionTakeover: bridgeTakeoverArmed()
+          });
         } catch (e) {
           return json(res, 200, { ok: false, error: String(e?.message ?? e) });
         }
@@ -1640,13 +1687,20 @@ function apply(ctx, rawConfig) {
             }
             const ps = llm.listProviders() ?? [];
             const has = Array.isArray(ps) && ps.some((p) => p?.id === route.provider);
-            return has ? { ok: true, message: route.provider + "/" + route.model + "\uFF08\u63D0\u4F9B\u65B9\u5DF2\u6CE8\u518C\uFF0C\u672A\u505A\u6A21\u578B\u7EA7\u6821\u9A8C\uFF09" } : { ok: false, message: "\u63D0\u4F9B\u65B9 " + route.provider + " \u672A\u6CE8\u518C" };
+            return has ? {
+              ok: true,
+              message: route.provider + "/" + route.model + "\uFF08\u63D0\u4F9B\u65B9\u5DF2\u6CE8\u518C\uFF0C\u672A\u505A\u6A21\u578B\u7EA7\u6821\u9A8C\uFF09"
+            } : { ok: false, message: "\u63D0\u4F9B\u65B9 " + route.provider + " \u672A\u6CE8\u518C" };
           } catch (e) {
             return { ok: false, message: String(e?.message ?? e).slice(0, 300) };
           }
         }
         const cfg = getConfig();
-        return json(res, 200, { ok: true, primary: await probe(cfg.primary), fallback: await probe(cfg.fallback) });
+        return json(res, 200, {
+          ok: true,
+          primary: await probe(cfg.primary),
+          fallback: await probe(cfg.fallback)
+        });
       }
     }),
     "dshp-vision-bridge: check route"
@@ -1671,7 +1725,10 @@ function apply(ctx, rawConfig) {
           const r = v;
           if (typeof r["provider"] !== "string" || typeof r["model"] !== "string") return null;
           if (!r["provider"] || !r["model"]) return null;
-          return { provider: r["provider"].slice(0, 120), model: r["model"].slice(0, 200) };
+          return {
+            provider: r["provider"].slice(0, 120),
+            model: r["model"].slice(0, 200)
+          };
         }
         try {
           const patchObj = {};
@@ -1710,7 +1767,8 @@ function apply(ctx, rawConfig) {
           }
           if (Object.hasOwn(a, "maxImages")) {
             const n = a["maxImages"];
-            if (typeof n !== "number" || !(n >= 1 && n <= 8)) throw new Error("maxImages \u975E\u6CD5\uFF0C\u5E94\u4E3A 1-8 \u7684\u6570\u5B57");
+            if (typeof n !== "number" || !(n >= 1 && n <= 8))
+              throw new Error("maxImages \u975E\u6CD5\uFF0C\u5E94\u4E3A 1-8 \u7684\u6570\u5B57");
             patchObj["maxImages"] = Math.floor(n);
             hasPatch = true;
           }

@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "ignorePatterns": ["**/lib/", "**/dist/", "pnpm-lock.yaml"],
+  "rules": {
+    "unicorn/consistent-function-scoping": "off",
+    "eslint/no-underscore-dangle": "off"
+  }
+}

@@ -4,4 +4,4 @@
 
 - insert:
     - id: dshp-vision-bridge
-      name: "@dshp/vision-bridge"
+      name: '@dshp/vision-bridge'
