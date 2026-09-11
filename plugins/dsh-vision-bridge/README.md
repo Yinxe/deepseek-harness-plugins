@@ -1,6 +1,9 @@
-> **Monorepo + TS 版**：本目录是 `deepseek-harness-plugins` monorepo 的标准子项目（`plugins/dsh-vision-bridge`），由 `~/.dsh/plugins/dsh-vision-bridge`（JS，v1.3.2）等价 TS 重写移植。Host 从单文件 `lib/index.js`（816 行）拆为 `src/{types,http,config,cache,vision,index}.ts`，行为逐行对齐；`client.js`（浏览器预打包 bundle）保持原样作为静态资源。
+> **Monorepo + TS 版**：本目录是 `deepseek-harness-plugins` monorepo 的标准子项目（`plugins/dsh-vision-bridge`），由 `~/.dsh/plugins/dsh-vision-bridge`（JS，v1.3.2）等价 TS 重写移植。
+>
+> - Host：原 `lib/index.js`（816 行）→ `src/host/{types,http,config,cache,vision,index}.ts`，tsup 打包为单文件 `lib/host.js`（ESM，schemastery 内联，运行时零依赖），导出 `{ name, inject, NS, ConfigSchema, apply }` 与原版一致。
+> - Client：原手写 `client.js`（374 行）→ `src/client/{types,styles,api,components,VisionSection,index}.ts`，tsup 打包为单文件 `lib/client.js`（IIFE，内含 `__ModuleLoader__.load`，react/primitives 运行时注入不打包）。
 
-> 构建：`pnpm --filter @dshp-inx/vision-bridge build` → `dist/`；包入口 `dist/index.js`，导出 `{ name, inject, NS, ConfigSchema, apply }` 与原版一致。
+> 构建：`pnpm --filter @dshp-inx/vision-bridge build`（tsup）→ `lib/host.js` + `lib/client.js`；包入口 `lib/host.js`，`./client` → `lib/client.js`。`lib/` 已提交（DSH `add github:` 直接从 git 安装，不跑 build，必须带构建产物）。
 
 # @dshp-inx/vision-bridge
 
@@ -12,8 +15,8 @@ DeepSeek Harness（DSH）**视觉桥接**插件：让**纯文本模型**也能�
 
 | 部分 | 内容 |
 |---|---|
-| **Host（`lib/index.js`）** | 注册 `vision_describe` 模型工具；监听 `agent/inbox/inserted` + `llm/stream` 缓存图片（最近 20 张/会话，至多 50 会话）；发现候选视觉模型（`setting.yml` 中 `input: [text, image]` 的模型 + `llm` 服务实时 provider 列表）；`vision_describe` 执行时完成 hint 过滤（sha 前缀或序号）、`maxImages` 截尾、`buildQuestion` 拼装 `detail` + `promptTemplate`、主→备 fallback；注入系统提示引导纯文本模型何时调用工具；暴露同源 JSON 路由供设置页（见下）。**通过官方 `ctx.settings` + `schemastery` 持久化到 `settings.yaml`（`dshp-inx-vision-bridge`），使用 settings 服务的 `installSection` 方法，支持热重载与注释保留，旧文件/旧 key 自动迁移**；接管发送门禁（启用且配好主模型时纯文本模型可直接发图，关闭即恢复）。 |
-| **Client（`client.js`）** | 「设置 → 视觉模型」配置页：启用开关、主/备模型下拉（候选来自 Host 发现）、详细度（`auto`/`low`/`high`）、单次最多图片（`1–8`）、追加提示词（失焦保存）、重新读取、检查连通性。UI 全部使用 DSH 官方设计 token（`dsw-alias-*`），与官方设置页风格一致。无额外依赖。 |
+| **Host（`src/host/` → `lib/host.js`）** | 注册 `vision_describe` 模型工具；监听 `agent/inbox/inserted` + `llm/stream` 缓存图片（最近 20 张/会话，至多 50 会话）；发现候选视觉模型（`setting.yml` 中 `input: [text, image]` 的模型 + `llm` 服务实时 provider 列表）；`vision_describe` 执行时完成 hint 过滤（sha 前缀或序号）、`maxImages` 截尾、`buildQuestion` 拼装 `detail` + `promptTemplate`、主→备 fallback；注入系统提示引导纯文本模型何时调用工具；暴露同源 JSON 路由供设置页（见下）。**通过官方 `ctx.settings` + `schemastery` 持久化到 `settings.yaml`（`dshp-inx-vision-bridge`），使用 settings 服务的 `installSection` 方法，支持热重载与注释保留，旧文件/旧 key 自动迁移**；接管发送门禁（启用且配好主模型时纯文本模型可直接发图，关闭即恢复）。 |
+| **Client（`src/client/` → `lib/client.js`）** | 「设置 → 视觉模型」配置页：启用开关、主/备模型下拉（候选来自 Host 发现）、详细度（`auto`/`low`/`high`）、单次最多图片（`1–8`）、追加提示词（失焦保存）、重新读取、检查连通性。UI 全部使用 DSH 官方设计 token（`dsw-alias-*`），与官方设置页风格一致。无额外依赖。 |
 | **同源路由** | `GET /ext/dshp-inx-vision-bridge/state`（模型列表 + 当前配置）、`POST /ext/dshp-inx-vision-bridge/config`（保存补丁）、`GET /ext/dshp-inx-vision-bridge/check`（探活主/备路由），均带同源校验（`Origin` 与 `Host` 一致或缺失才放行）。 |
 | **工具** | `vision_describe`（见参数表），输出 `{ description, model, fallback_used }`，模型侧渲染为纯文本（`description`）。 |
 

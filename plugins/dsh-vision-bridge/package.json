@@ -5,19 +5,15 @@
   "license": "MIT",
   "author": "Yinxe",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./lib/host.js",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./client": "./client.js",
+    ".": "./lib/host.js",
+    "./host": "./lib/host.js",
+    "./client": "./lib/client.js",
     "./package.json": "./package.json"
   },
   "files": [
-    "dist",
-    "client.js",
+    "lib",
     "cordis.patch.yml",
     "README.md",
     "LICENSE"
@@ -36,11 +32,11 @@
     "node": ">=20"
   },
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "dev": "tsup --watch",
+    "build": "tsup",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist *.tsbuildinfo",
-    "test": "node --check dist/index.js && echo \"syntax ok\"",
+    "clean": "rm -rf lib *.tsbuildinfo",
+    "test": "node --check lib/host.js && node --check lib/client.js && echo \"syntax ok\"",
     "prepublishOnly": "pnpm typecheck && pnpm build"
   },
   "repository": {
@@ -64,7 +60,10 @@
       "platform": "web"
     }
   },
-  "dependencies": {
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "tsup": "^8.5.1",
     "@deepseek-ai/schemastery": "^3.18.2"
-  }
+  },
+  "dependencies": {}
 }

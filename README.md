@@ -8,12 +8,13 @@ DeepSeek Harness（DSH）插件 Monorepo（pnpm workspaces + TypeScript ESM）�
 .
 ├── plugins/
 │   └── dsh-vision-bridge/      # @dshp-inx/vision-bridge（TS 重写，已移植）
-│       ├── src/                # Host TS：types/http/config/cache/vision/index
-│       │   └── index.ts        # apply(ctx, rawConfig)，导出 { name, inject, NS, ConfigSchema, apply }
-│       ├── dist/               # 构建产物（gitignored，publish 时包含）
-│       ├── client.js           # Client 预打包 bundle（原样保留，不重写）
-│       ├── cordis.patch.yml    # bundle patch
-│       └── package.json
+│       ├── src/host/           # Host TS：types/http/config/cache/vision/index
+│       ├── src/client/         # Client TS：types/styles/api/components/VisionSection/index
+│       ├── lib/                # 单文件构建产物（已提交，DSH git 安装必需）
+│       │   ├── host.js         # 后端 bundle（ESM，schemastery 内联）
+│       │   └── client.js       # 前端 bundle（含 __ModuleLoader__.load）
+│       ├── cordis.patch.yml
+│       └── package.json        # main ./lib/host.js，./client → ./lib/client.js
 ├── tsconfig.base.json          # 共享 TS 配置（NodeNext + strict）
 ├── tsconfig.json               # solution 引用
 ├── pnpm-workspace.yaml         # packages: plugins/* + storeDir
