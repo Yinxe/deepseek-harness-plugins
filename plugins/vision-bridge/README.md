@@ -1,59 +1,8 @@
-> **Monorepo + TS 版**：本目录是 `deepseek-harness-plugins` monorepo 的标准子项目（`plugins/vision-bridge`），由 `~/.dsh/plugins/vision-bridge`（JS，v1.3.2）等价 TS 重写移植。
->
-> - Host：原 `lib/index.js`（816 行）→ `src/host/{types,http,config,cache,vision,index}.ts`，tsup 打包为单文件 `lib/host.js`（ESM，schemastery 内联，运行时零依赖），导出 `{ name, inject, NS, ConfigSchema, apply }` 与原版一致。
-> - Client：原手写 `client.js`（374 行）→ `src/client/{types,styles,api,components,VisionSection,index}.ts`，tsup 打包为单文件 `lib/client.js`（IIFE，内含 `__ModuleLoader__.load`，react/primitives 运行时注入不打包）。
-
-> 构建：`pnpm --filter @dshp/vision-bridge build`（tsup）→ `lib/host.js` + `lib/client.js`；包入口 `lib/host.js`，`./client` → `lib/client.js`。`lib/` 已提交（DSH `add github:` 直接从 git 安装，不跑 build，必须带构建产物）。
-
 # @dshp/vision-bridge
 
 DeepSeek Harness（DSH）**视觉桥接**插件：让**纯文本模型**也能“看图”——当用户消息中出现图片占位符 ` [image omitted because this model accepts text only…]` 时，模型调用 `vision_describe` 工具，插件把**本轮图片原图引用 + 你的提问**一起转交给**多模态视觉模型**去识别，主模型失败时自动用**备用模型重试**。配置在设置页完成并**通过官方 settings API 持久化到 `$DSH_HOME/settings.yaml`（`dshp-vision-bridge` 命名空间）**，支持注释保留与热重载，重启后不丢。旧版 `storages/dshp-vision-bridge.json` / 旧 settings key `vision-bridge` 会在首次启动时自动迁移并备份为 `.bak`。
 
 > 设计原则：**对模型零侵扰、对用户零残留**。图片只取 leaf 字段的 owned copy，会话级 LRU 缓存；无密钥、无外部依赖；卸载即干净。
-
-## 功能
-
-| 部分                                          | 内容                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Host（`src/host/` → `lib/host.js`）**       | 注册 `vision_describe` 模型工具；监听 `agent/inbox/inserted` + `llm/stream` 缓存图片（最近 20 张/会话，至多 50 会话）；发现候选视觉模型（`setting.yml` 中 `input: [text, image]` 的模型 + `llm` 服务实时 provider 列表）；`vision_describe` 执行时完成 hint 过滤（sha 前缀或序号）、`maxImages` 截尾、`buildQuestion` 拼装 `detail` + `promptTemplate`、主→备 fallback；注入系统提示引导纯文本模型何时调用工具；暴露同源 JSON 路由供设置页（见下）。**通过官方 `ctx.settings` + `schemastery` 持久化到 `settings.yaml`（`dshp-vision-bridge`），使用 settings 服务的 `installSection` 方法，支持热重载与注释保留，旧文件/旧 key 自动迁移**；接管发送门禁（启用且配好主模型时纯文本模型可直接发图，关闭即恢复）。 |
-| **Client（`src/client/` → `lib/client.js`）** | 「设置 → 视觉模型」配置页：启用开关、主/备模型下拉（候选来自 Host 发现）、详细度（`auto`/`low`/`high`）、单次最多图片（`1–8`）、追加提示词（失焦保存）、重新读取、检查连通性。UI 全部使用 DSH 官方设计 token（`dsw-alias-*`），与官方设置页风格一致。无额外依赖。                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| **同源路由**                                  | `GET /ext/dshp-vision-bridge/state`（模型列表 + 当前配置）、`POST /ext/dshp-vision-bridge/config`（保存补丁）、`GET /ext/dshp-vision-bridge/check`（探活主/备路由），均带同源校验（`Origin` 与 `Host` 一致或缺失才放行）。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| **工具**                                      | `vision_describe`（见参数表），输出 `{ description, model, fallback_used }`，模型侧渲染为纯文本（`description`）。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-
-### 模型工具：`vision_describe`
-
-当你是**纯文本模型**且用户消息中出现 `[image omitted because this model accepts text only…]` 占位符时**必须调用**，不要猜图、不要让用户换模型。
-
-| 参数         | 类型     | 必填 | 说明                                                                                                                                        |
-| ------------ | -------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `question`   | `string` | ✅   | 你想从图片中知道什么，例如“描述这张截图里的报错信息”或“转录图片中的全部文字”。                                                              |
-| `image_hint` | `string` |      | 可选：只分析某一张图。填占位符里的 sha 前缀（附件 `attachmentId` 前缀）或从 `1` 开始的序号；留空则分析本轮全部图片（受 `maxImages` 截尾）。 |
-| `detail`     | `enum`   |      | 可选：`auto` 常规描述，`low` 简要概括（2–3 句），`high` 逐字转录级详细。不填用设置页的默认值。                                              |
-
-返回（`output.schema`）：
-
-```json
-{
-  "description": "视觉模型返回的中文描述（已拼装 detail 后缀与追加提示词）",
-  "model": "provider/model",
-  "fallback_used": false
-}
-```
-
-模型侧 `render` 直接展示 `description`，便于在对话流中继续推理。
-
-### 配置项（Host 状态）
-
-| 字段             | 类型                        | 默认                               | 说明                                                                                                     |
-| ---------------- | --------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `enabled`        | `boolean`                   | `true`                             | 总开关，关闭后 `vision_describe` 直接抛错提示去设置页启用。                                              |
-| `primary`        | `{provider, model} \| null` | `null`（首次发现后自动选列表首项） | 主视觉模型。                                                                                             |
-| `fallback`       | `{provider, model} \| null` | `null`（自动选第二项）             | 备用模型，主失败时重试一次。设为 `null` 表示不重试。                                                     |
-| `detail`         | `'auto' \| 'low' \| 'high'` | `'auto'`                           | 默认详细度；`high` 会追加“逐字转录”后缀，`low` 追加“简要概括”。                                          |
-| `maxImages`      | `1–8`                       | `4`                                | 单次 `vision_describe` 最多喂给视觉模型的图片张数，超出取末尾若干张（最新）。                            |
-| `promptTemplate` | `string`                    | `''`                               | 可选追加提示词，每次识别都会拼在问题末尾（截断 500 字符，存储上限 2000）。例如“重点看报错弹窗里的红字”。 |
-
-> **与动态版的区别**：动态（`cordis_define`）版本的配置只在内存中，重启进程后恢复默认；**标准包版本通过官方 `settings` API 持久化到 `settings.yaml`（`dshp-vision-bridge`）**，重启后不丢，且外部手工编辑 `settings.yaml` 可热重载。
 
 ## 安装（唯一方式：克隆 monorepo + 本地安装）
 
@@ -101,6 +50,50 @@ dsh web
 ```
 
 > ⚠️ **不要直接编辑 `node_modules/@dshp/vision-bridge/`**：pnpm store 硬链接，改坏 store。只改 monorepo 里的 `plugins/vision-bridge/src`。
+
+## 功能
+
+| 部分                                          | 内容                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Host（`src/host/` → `lib/host.js`）**       | 注册 `vision_describe` 模型工具；监听 `agent/inbox/inserted` + `llm/stream` 缓存图片（最近 20 张/会话，至多 50 会话）；发现候选视觉模型（`setting.yml` 中 `input: [text, image]` 的模型 + `llm` 服务实时 provider 列表）；`vision_describe` 执行时完成 hint 过滤（sha 前缀或序号）、`maxImages` 截尾、`buildQuestion` 拼装 `detail` + `promptTemplate`、主→备 fallback；注入系统提示引导纯文本模型何时调用工具；暴露同源 JSON 路由供设置页（见下）。**通过官方 `ctx.settings` + `schemastery` 持久化到 `settings.yaml`（`dshp-vision-bridge`），使用 settings 服务的 `installSection` 方法，支持热重载与注释保留，旧文件/旧 key 自动迁移**；接管发送门禁（启用且配好主模型时纯文本模型可直接发图，关闭即恢复）。 |
+| **Client（`src/client/` → `lib/client.js`）** | 「设置 → 视觉模型」配置页：启用开关、主/备模型下拉（候选来自 Host 发现）、详细度（`auto`/`low`/`high`）、单次最多图片（`1–8`）、追加提示词（失焦保存）、重新读取、检查连通性。UI 全部使用 DSH 官方设计 token（`dsw-alias-*`），与官方设置页风格一致。无额外依赖。                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **同源路由**                                  | `GET /ext/dshp-vision-bridge/state`（模型列表 + 当前配置）、`POST /ext/dshp-vision-bridge/config`（保存补丁）、`GET /ext/dshp-vision-bridge/check`（探活主/备路由），均带同源校验（`Origin` 与 `Host` 一致或缺失才放行）。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **工具**                                      | `vision_describe`（见参数表），输出 `{ description, model, fallback_used }`，模型侧渲染为纯文本（`description`）。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+
+### 模型工具：`vision_describe`
+
+当你是**纯文本模型**且用户消息中出现 `[image omitted because this model accepts text only…]` 占位符时**必须调用**，不要猜图、不要让用户换模型。
+
+| 参数         | 类型     | 必填 | 说明                                                                                                                                        |
+| ------------ | -------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `question`   | `string` | ✅   | 你想从图片中知道什么，例如“描述这张截图里的报错信息”或“转录图片中的全部文字”。                                                              |
+| `image_hint` | `string` |      | 可选：只分析某一张图。填占位符里的 sha 前缀（附件 `attachmentId` 前缀）或从 `1` 开始的序号；留空则分析本轮全部图片（受 `maxImages` 截尾）。 |
+| `detail`     | `enum`   |      | 可选：`auto` 常规描述，`low` 简要概括（2–3 句），`high` 逐字转录级详细。不填用设置页的默认值。                                              |
+
+返回（`output.schema`）：
+
+```json
+{
+  "description": "视觉模型返回的中文描述（已拼装 detail 后缀与追加提示词）",
+  "model": "provider/model",
+  "fallback_used": false
+}
+```
+
+模型侧 `render` 直接展示 `description`，便于在对话流中继续推理。
+
+### 配置项（Host 状态）
+
+| 字段             | 类型                        | 默认                               | 说明                                                                                                     |
+| ---------------- | --------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `enabled`        | `boolean`                   | `true`                             | 总开关，关闭后 `vision_describe` 直接抛错提示去设置页启用。                                              |
+| `primary`        | `{provider, model} \| null` | `null`（首次发现后自动选列表首项） | 主视觉模型。                                                                                             |
+| `fallback`       | `{provider, model} \| null` | `null`（自动选第二项）             | 备用模型，主失败时重试一次。设为 `null` 表示不重试。                                                     |
+| `detail`         | `'auto' \| 'low' \| 'high'` | `'auto'`                           | 默认详细度；`high` 会追加“逐字转录”后缀，`low` 追加“简要概括”。                                          |
+| `maxImages`      | `1–8`                       | `4`                                | 单次 `vision_describe` 最多喂给视觉模型的图片张数，超出取末尾若干张（最新）。                            |
+| `promptTemplate` | `string`                    | `''`                               | 可选追加提示词，每次识别都会拼在问题末尾（截断 500 字符，存储上限 2000）。例如“重点看报错弹窗里的红字”。 |
+
+> **与动态版的区别**：动态（`cordis_define`）版本的配置只在内存中，重启进程后恢复默认；**标准包版本通过官方 `settings` API 持久化到 `settings.yaml`（`dshp-vision-bridge`）**，重启后不丢，且外部手工编辑 `settings.yaml` 可热重载。
 
 ## 发布到 npm（可选，当前未发布）
 
@@ -258,6 +251,15 @@ dsh web
 - **v1.2.0**：命名空间化——cordis 行 id、`/ext/*` 路由、effect label、日志前缀、系统提示 section、设置 section id、持久化文件统一加 `dshp-vision-bridge` 前缀（旧 `vision_bridge.json` 不再读取，可手动删除；默认启用，首次发现模型后自动选中主/备并落盘新文件）；包名 `@dshp/vision-bridge` 与工具名 `vision_describe` 保持不变。
 
 - **v1.1.0**：接管发送门禁——启用且配好主模型时，纯文本模型可直接发送图片（此前被 `MODEL_DOES_NOT_SUPPORT_IMAGES` 拒收）；设置页状态卡新增“发送门禁”行；`GET /ext/dshp-vision-bridge/state` 新增 `admissionTakeover` 字段。
+
+## 移植说明
+
+> **Monorepo + TS 版**：本目录是 `deepseek-harness-plugins` monorepo 的标准子项目（`plugins/vision-bridge`），由 `~/.dsh/plugins/vision-bridge`（JS，v1.3.2）等价 TS 重写移植。
+>
+> - Host：原 `lib/index.js`（816 行）→ `src/host/{types,http,config,cache,vision,index}.ts`，tsup 打包为单文件 `lib/host.js`（ESM，schemastery 内联，运行时零依赖），导出 `{ name, inject, NS, ConfigSchema, apply }` 与原版一致。
+> - Client：原手写 `client.js`（374 行）→ `src/client/{types,styles,api,components,VisionSection,index}.ts`，tsup 打包为单文件 `lib/client.js`（IIFE，内含 `__ModuleLoader__.load`，react/primitives 运行时注入不打包）。
+
+> 构建：`pnpm --filter @dshp/vision-bridge build`（tsup）→ `lib/host.js` + `lib/client.js`；包入口 `lib/host.js`，`./client` → `lib/client.js`。`lib/` 已提交（DSH `add github:` 直接从 git 安装，不跑 build，必须带构建产物）。
 
 ## 免责声明
 

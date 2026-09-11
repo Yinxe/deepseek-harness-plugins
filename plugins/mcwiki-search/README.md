@@ -1,15 +1,56 @@
-> **Monorepo + TS 版**：本目录是 `deepseek-harness-plugins` monorepo 的标准子项目（`plugins/mcwiki-search`），由 `~/.dsh/plugins/dsh-mcwiki-search`（JS，@dshp-inx/mcwiki-search v1.0.1）等价 TS 重写移植。
->
-> - Host：原 `lib/{index,api,convert}.js`（共约 1400 行）→ `src/host/{types,http,config,api,convert,tools,routes,index}.ts`，tsup 打包为单文件 `lib/host.js`（ESM，schemastery 内联，运行时零依赖），导出 `{ name, inject, NS, ConfigSchema, apply }` 与原版一致。
-> - Client：原手写 `client.js`（326 行）→ `src/client/{types,styles,api,components,McWikiSection,index}.ts`，tsup 打包为单文件 `lib/client.js`（IIFE，内含 `__ModuleLoader__.load`，react/primitives 运行时注入不打包）。
->
-> 构建：`pnpm --filter @dshp/mcwiki-search build`（tsup）→ `lib/host.js` + `lib/client.js`；包入口 `lib/host.js`，`./client` → `lib/client.js`。`lib/` 已提交（DSH 从 git 直接安装，不跑 build，必须带构建产物）。
-
 # @dshp/mcwiki-search
 
 DeepSeek Harness（DSH）工具插件：查询**中文 Minecraft Wiki**（MediaWiki API，端点写死 `https://zh.minecraft.wiki/api.php`，不可配置），并把搜索结果与页面全文**完整转换为 AI 可直接阅读的干净文本**。
 
 > 核心承诺：模型看到的永远是清洗后的结果 —— 模板、引用、图片、跨语言链接等噪声在插件内部全部处理完毕，绝不让原始 wikitext / HTML 进入模型上下文。
+
+## 安装（唯一方式：克隆 monorepo + 本地安装）
+
+> 本包尚未发布到 npm（`@dshp/mcwiki-search` 在 npm 上 404），**不要用 `add github:` / `pnpm add`**，唯一入口就是克隆本仓库后本地 `add`。
+
+```sh
+# 1. 克隆 monorepo（lib/ 构建产物已提交，clone 下来就能用，无需 build）
+git clone git@github.com:Yinxe/deepseek-harness-plugins.git
+cd deepseek-harness-plugins
+pnpm install
+
+# 2. 本地安装到 profile（路径按你执行命令时的 cwd 解析）
+dsh plugin --profile web add ./plugins/mcwiki-search
+
+# 3. 重启生效
+dsh web
+```
+
+> DSH 是最新版就到此为止。只有 DSH 停在老版本才需要先 `git checkout <历史tag>`（对照根目录 `compat.json`，现在是空的，不用管）。
+
+`dsh plugin` 会把包写进 profile 的 `dsh.profile.bundles` —— **无需手动改配置文件**。
+
+**改源码后**：`src/host` 或 `src/client` 改完跑 `pnpm --filter @dshp/mcwiki-search build` 重新打出 `lib/host.js + lib/client.js`，然后 `dsh web` 重启（client 半强刷页面即可）。
+
+**验证**：打开 web → 设置 → Minecraft Wiki 搜索 能看到卡片；或直接对模型说「用 mcwiki_search 查一下苦力怕」。
+
+**一键 AI 安装**：把下面这段发给你的 DSH AI 即可：
+
+```text
+帮我安装 Minecraft Wiki 搜索插件（monorepo Yinxe/deepseek-harness-plugins，子目录 plugins/mcwiki-search，包名 @dshp/mcwiki-search）：
+1. git clone monorepo 并 pnpm install
+2. dsh plugin --profile web add ./plugins/mcwiki-search
+3. dsh web 重启，确认无报错，设置页出现「Minecraft Wiki 搜索」即成功
+4. 用 mcwiki_search 帮我查一下「苦力怕」，展示一条结果确认链路通畅
+```
+
+## 更新
+
+```sh
+cd deepseek-harness-plugins
+git pull
+pnpm install
+# 改过源码才需要：pnpm --filter @dshp/mcwiki-search build
+dsh plugin --profile web update "@dshp/mcwiki-search"
+dsh web
+```
+
+> ⚠️ **不要直接编辑 `node_modules/@dshp/mcwiki-search/`**：pnpm store 硬链接，改坏 store。只改 monorepo 里的 `plugins/mcwiki-search/src`。
 
 ## 功能
 
@@ -83,54 +124,6 @@ MediaWiki API JSON
        └─ 输出完整不截断（默认）；传 maxChars 正整数才设上限并标注
 ```
 
-## 安装（唯一方式：克隆 monorepo + 本地安装）
-
-> 本包尚未发布到 npm（`@dshp/mcwiki-search` 在 npm 上 404），**不要用 `add github:` / `pnpm add`**，唯一入口就是克隆本仓库后本地 `add`。
-
-```sh
-# 1. 克隆 monorepo（lib/ 构建产物已提交，clone 下来就能用，无需 build）
-git clone git@github.com:Yinxe/deepseek-harness-plugins.git
-cd deepseek-harness-plugins
-pnpm install
-
-# 2. 本地安装到 profile（路径按你执行命令时的 cwd 解析）
-dsh plugin --profile web add ./plugins/mcwiki-search
-
-# 3. 重启生效
-dsh web
-```
-
-> DSH 是最新版就到此为止。只有 DSH 停在老版本才需要先 `git checkout <历史tag>`（对照根目录 `compat.json`，现在是空的，不用管）。
-
-`dsh plugin` 会把包写进 profile 的 `dsh.profile.bundles` —— **无需手动改配置文件**。
-
-**改源码后**：`src/host` 或 `src/client` 改完跑 `pnpm --filter @dshp/mcwiki-search build` 重新打出 `lib/host.js + lib/client.js`，然后 `dsh web` 重启（client 半强刷页面即可）。
-
-**验证**：打开 web → 设置 → Minecraft Wiki 搜索 能看到卡片；或直接对模型说「用 mcwiki_search 查一下苦力怕」。
-
-**一键 AI 安装**：把下面这段发给你的 DSH AI 即可：
-
-```text
-帮我安装 Minecraft Wiki 搜索插件（monorepo Yinxe/deepseek-harness-plugins，子目录 plugins/mcwiki-search，包名 @dshp/mcwiki-search）：
-1. git clone monorepo 并 pnpm install
-2. dsh plugin --profile web add ./plugins/mcwiki-search
-3. dsh web 重启，确认无报错，设置页出现「Minecraft Wiki 搜索」即成功
-4. 用 mcwiki_search 帮我查一下「苦力怕」，展示一条结果确认链路通畅
-```
-
-## 更新
-
-```sh
-cd deepseek-harness-plugins
-git pull
-pnpm install
-# 改过源码才需要：pnpm --filter @dshp/mcwiki-search build
-dsh plugin --profile web update "@dshp/mcwiki-search"
-dsh web
-```
-
-> ⚠️ **不要直接编辑 `node_modules/@dshp/mcwiki-search/`**：pnpm store 硬链接，改坏 store。只改 monorepo 里的 `plugins/mcwiki-search/src`。
-
 ## 发布到 npm（可选，当前未发布）
 
 现在没发 npm，所以上面只能本地装。以后想 `pnpm add @dshp/mcwiki-search` 一键装，才需要发包：先建 npm 组织 `@dshp`（见根 README），再打 tag 走 CI 的 Trusted Publishing。发完这里的安装方式会同步更新。
@@ -191,6 +184,15 @@ README.md           本文件
 - **v1.1.0**：组织规范化 + TS 重写——包名由 `@dshp-inx/mcwiki-search` 改为 `@dshp/mcwiki-search`（monorepo `plugins/mcwiki-search`），cordis 行 id / settings 命名空间 / `/ext/*` 路由同步为 `dshp-mcwiki-search`。老用户不断档：`settings.yaml` 里 `dshp-inx-mcwiki-search` 自动重命名为 `dshp-mcwiki-search`（新旧并存时以新为准）。Host 由 `lib/{index,api,convert}.js` 拆为 `src/host/` 8 模块，Client 由手写 `client.js` 拆为 `src/client/` 6 模块，`lib/host.js + lib/client.js` 由 tsup 重打。另修正两处与文档不一致的默认值：`mcwiki_get_page` full 默认 `format` 由 `text` 改为 `markdown`（与工具描述一致）；`mcwiki_random` 默认条数由 `5` 改为 `3`（与参数描述一致）。
 
 - **v1.0.1**（JS 旧版）：`~/.dsh/plugins/dsh-mcwiki-search` 最终版，`mcwiki_search / mcwiki_get_page / mcwiki_random` 三工具 + 设置页 + 同源路由。
+
+## 移植说明
+
+> **Monorepo + TS 版**：本目录是 `deepseek-harness-plugins` monorepo 的标准子项目（`plugins/mcwiki-search`），由 `~/.dsh/plugins/dsh-mcwiki-search`（JS，@dshp-inx/mcwiki-search v1.0.1）等价 TS 重写移植。
+>
+> - Host：原 `lib/{index,api,convert}.js`（共约 1400 行）→ `src/host/{types,http,config,api,convert,tools,routes,index}.ts`，tsup 打包为单文件 `lib/host.js`（ESM，schemastery 内联，运行时零依赖），导出 `{ name, inject, NS, ConfigSchema, apply }` 与原版一致。
+> - Client：原手写 `client.js`（326 行）→ `src/client/{types,styles,api,components,McWikiSection,index}.ts`，tsup 打包为单文件 `lib/client.js`（IIFE，内含 `__ModuleLoader__.load`，react/primitives 运行时注入不打包）。
+>
+> 构建：`pnpm --filter @dshp/mcwiki-search build`（tsup）→ `lib/host.js` + `lib/client.js`；包入口 `lib/host.js`，`./client` → `lib/client.js`。`lib/` 已提交（DSH 从 git 直接安装，不跑 build，必须带构建产物）。
 
 ## 免责声明
 

@@ -1,59 +1,43 @@
-# search-provider
+# @dshp/search-provider
 
-**@dshp/search-provider** —— DeepSeek Harness（DSH）AI 搜索提供方中枢：用可插拔的第三方搜索 API（首个内置 **Tavily**）接管模型的 `web_search`，替换 DeepSeek 官方搜索 —— 官方搜索每次触发都消耗一轮模型调用，第三方按次计费更便宜、更快。密钥经 credentials 服务存入凭证库，保存后即时生效。
+DeepSeek Harness（DSH）AI 搜索提供方中枢：用可插拔的第三方搜索 API（首个内置 **Tavily**）接管模型的 `web_search`，替换 DeepSeek 官方搜索 —— 官方搜索每次触发都消耗一轮模型调用，第三方按次计费更便宜、更快。密钥经 credentials 服务存入凭证库，保存后即时生效。
 
 > 设计原则：**即插即用、零残留、可扩展**。插件只注册搜索提供方 + 一个设置页；提供方按模块契约注册（`src/host/providers/`），新增一家供应商不改设置页主代码；API Key 每次搜索实时从凭证库解析，不滞留在提供方实例上；卸载后除凭证库里你自己存的 Key 外无任何残留。
 
 > 本插件为 monorepo（[deepseek-harness-plugins](https://github.com/Yinxe/deepseek-harness-plugins)）成员，等同改写自独立仓库 [dsh-tavily-search](https://github.com/Yinxe/dsh-tavily-search)（`@dshp-inx/tavily-search`），并提供从旧插件迁移的路径（见下文）。
 
-## 功能
-
-| 部分                        | 内容                                                                                                                                                                                                                                                                                                                                                                                             |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Host（lib/host.js）**     | 按模块清单注册 WebSearchProvider 到 `ctx.web`（当前：`tavily`）；API Key 每次操作实时解析（`TAVILY_API_KEY`）；同源 JSON 路由（`/ext/dshp-search-provider/state`、`/config`、`/test` + 供应商专属 `/tavily/usage`，带同源校验）供设置页读写状态/搜索行为/测试连通性/用量配额；旧插件配置一次性自动采用                                                                                           |
-| **Client（lib/client.js）** | 「设置 → AI 搜索」配置页：供应商状态徽章（当前生效/已配置）、密钥写入/显示/清除（走 api 网关 `credentials` 域，引用名由状态接口下发）、搜索行为配置（默认结果数 + 供应商字段如深度，持久化到 `settings.yaml` 的 `dshp-search-provider` 命名空间）、用量与配额卡片（Key/账号分项统计+进度条+刷新/强制刷新）、连接测试（输入查询 → 返回结果列表）。UI 全部使用 DSH 官方设计 token（`dsw-alias-*`） |
-| **模型工具**                | 无：接管的是 DSH 内置 `web_search` 工具（`dsh-tool-web` → `ctx.web` seam），不注册新工具                                                                                                                                                                                                                                                                                                         |
-
-搜索请求体（Tavily）：`api_key / query / max_results(1-10，默认走配置) / search_depth（配置：basic/advanced）/ include_answer: false`；返回统一投影为 `{ sources: [{url, title?, snippet?, publishedAt?}], truncated }`。
-
-## 供应商扩展（新增一家 AI 搜索供应商）
-
-只需三步，其余文件不动（设置页状态行/密钥/配置控件自动跟随 `state.providers` 元数据）：
-
-1. 复制 `src/host/providers/tavily.ts` 为 `src/host/providers/<新 id>.ts`，实现 `SearchProviderModule`（见 `src/host/types.ts`）：id / label / title / credentialRef（如 `EXA_API_KEY`）/ fields（设置页控件元数据）/ defaultConfig / configSchema / sanitizePatch / snapshot / search / stateExtras，可选 registerRoutes（供应商专属路由，如用量接口）；
-2. `src/host/providers/index.ts` 的 `createProviderModules()` 数组加一行；
-3. 需要专属 UI 组件时，`src/client/providers/index.ts` 加一行注册；重启 `dsh web`。
-
-注册第二家供应商后，设置页自动出现「生效提供方」下拉（provider id 即 patch 固定选型时可用的取值，见安装节选型说明）；默认 provider 为清单首位，想换默认就调整 `createProviderModules()` 里的顺序。
-
-## 配置（标准 settings 存储）
-
-以下配置写入 `settings.yaml` 顶层 `dshp-search-provider` 命名空间（设置页可改，外部编辑热重载；schema 默认值 → composition base → 用户层三级继承）。密钥**不**进 settings.yaml，走 credentials 服务。
-
-| 键                   | 类型                 | 默认     | 说明                                                                                                          |
-| -------------------- | -------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
-| `provider`           | string               | `tavily` | 设置页聚焦的提供方；真正生效者由 profile patch 的 `web.searchProvider` 决定（state 接口会在不一致时给出提示） |
-| `maxResults`         | int 1–10             | `5`      | 单次搜索默认返回条数；调用方显式传 maxResults 时以调用方为准                                                  |
-| `tavily.searchDepth` | `basic` / `advanced` | `basic`  | 搜索深度；按次计费 basic 1 credit/次、advanced 2 credits/次                                                   |
-
-### 计费与用量（Tavily，对齐 [官方文档](https://docs.tavily.com/documentation/api-reference/endpoint/usage)）
-
-- **端点**：`GET https://api.tavily.com/usage`，鉴权为 `Authorization: Bearer <tvly-…>`（注意与 `/search` 的 `body.api_key` 不同）。
-- **返回**（仅透传文档声明的叶子标量）：`{ key: { usage, limit, search_usage, extract_usage, crawl_usage, map_usage, research_usage }, account: { current_plan, plan_usage, plan_limit, paygo_usage, paygo_limit, ... } }`，`limit / plan_limit` 为 `null` 表示不限量。
-- **限流与缓存**：官方限流 `10 req / 10min`；服务端做 `60 秒`缓存，`GET /ext/dshp-search-provider/tavily/usage` 默认读缓存、`?force=1` 强制刷新；`429` 时返回 `ok:false` 并附带 `stale` 旧快照，设置页会明确标注“旧数据”。
-
 ## 安装（唯一方式：克隆 monorepo + 本地安装）
 
-包尚未发布到 npm，**只能本地装**：
+> 本包尚未发布到 npm，**不要用 `add github:` / `pnpm add`**，唯一入口就是克隆本仓库后本地 `add`。
 
 ```sh
+# 1. 克隆 monorepo（lib/ 构建产物已提交，clone 下来就能用，无需 build）
 git clone git@github.com:Yinxe/deepseek-harness-plugins.git
 cd deepseek-harness-plugins
 pnpm install
+
+# 2. 本地安装到 profile（路径按你执行命令时的 cwd 解析）
 dsh plugin --profile web add ./plugins/search-provider
+
+# 3. 重启生效
+dsh web
 ```
 
-`dsh plugin` 把参数转发给 profile 目录里的 pnpm，装完自动把插件写进 profile 的挂载列表 —— 无需手动改任何配置文件。
+`dsh plugin` 会把包写进 profile 的 `dsh.profile.bundles` —— **无需手动改配置文件**。
+
+**改源码后**：`src/host` 或 `src/client` 改完跑 `pnpm --filter @dshp/search-provider build` 重新打出 `lib/host.js + lib/client.js`，然后 `dsh web` 重启（client 半强刷页面即可）。
+
+**验证**：设置 → AI 搜索，能看到「搜索引擎」行显示「Tavily · 当前生效」即安装成功。
+
+**一键 AI 安装**：把下面这段发给你的 DSH AI 即可：
+
+```text
+帮我安装 AI 搜索供应商插件（monorepo Yinxe/deepseek-harness-plugins，子目录 plugins/search-provider，包名 @dshp/search-provider）：
+1. git clone monorepo 并 pnpm install
+2. dsh plugin --profile web add ./plugins/search-provider
+3. dsh web 重启，确认无报错，设置页出现「AI 搜索」即成功
+4. 在设置页填入 Tavily API Key 并点一次「连接测试」
+```
 
 ### 选型（默认动态，无需 patch）
 
@@ -106,6 +90,42 @@ dsh web
    ```
 
 密钥无需迁移：新旧插件使用同一个凭证引用 `TAVILY_API_KEY`，凭证库里的 Key 直接继续生效；profile patch 里 `web.searchProvider: tavily` 一行也不动（provider id 保持 `tavily`）。
+
+## 功能
+
+| 部分                        | 内容                                                                                                                                                                                                                                                                                                                                                                                             |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Host（lib/host.js）**     | 按模块清单注册 WebSearchProvider 到 `ctx.web`（当前：`tavily`）；API Key 每次操作实时解析（`TAVILY_API_KEY`）；同源 JSON 路由（`/ext/dshp-search-provider/state`、`/config`、`/test` + 供应商专属 `/tavily/usage`，带同源校验）供设置页读写状态/搜索行为/测试连通性/用量配额；旧插件配置一次性自动采用                                                                                           |
+| **Client（lib/client.js）** | 「设置 → AI 搜索」配置页：供应商状态徽章（当前生效/已配置）、密钥写入/显示/清除（走 api 网关 `credentials` 域，引用名由状态接口下发）、搜索行为配置（默认结果数 + 供应商字段如深度，持久化到 `settings.yaml` 的 `dshp-search-provider` 命名空间）、用量与配额卡片（Key/账号分项统计+进度条+刷新/强制刷新）、连接测试（输入查询 → 返回结果列表）。UI 全部使用 DSH 官方设计 token（`dsw-alias-*`） |
+| **模型工具**                | 无：接管的是 DSH 内置 `web_search` 工具（`dsh-tool-web` → `ctx.web` seam），不注册新工具                                                                                                                                                                                                                                                                                                         |
+
+搜索请求体（Tavily）：`api_key / query / max_results(1-10，默认走配置) / search_depth（配置：basic/advanced）/ include_answer: false`；返回统一投影为 `{ sources: [{url, title?, snippet?, publishedAt?}], truncated }`。
+
+## 供应商扩展（新增一家 AI 搜索供应商）
+
+只需三步，其余文件不动（设置页状态行/密钥/配置控件自动跟随 `state.providers` 元数据）：
+
+1. 复制 `src/host/providers/tavily.ts` 为 `src/host/providers/<新 id>.ts`，实现 `SearchProviderModule`（见 `src/host/types.ts`）：id / label / title / credentialRef（如 `EXA_API_KEY`）/ fields（设置页控件元数据）/ defaultConfig / configSchema / sanitizePatch / snapshot / search / stateExtras，可选 registerRoutes（供应商专属路由，如用量接口）；
+2. `src/host/providers/index.ts` 的 `createProviderModules()` 数组加一行；
+3. 需要专属 UI 组件时，`src/client/providers/index.ts` 加一行注册；重启 `dsh web`。
+
+注册第二家供应商后，设置页自动出现「生效提供方」下拉（provider id 即 patch 固定选型时可用的取值，见安装节选型说明）；默认 provider 为清单首位，想换默认就调整 `createProviderModules()` 里的顺序。
+
+## 配置（标准 settings 存储）
+
+以下配置写入 `settings.yaml` 顶层 `dshp-search-provider` 命名空间（设置页可改，外部编辑热重载；schema 默认值 → composition base → 用户层三级继承）。密钥**不**进 settings.yaml，走 credentials 服务。
+
+| 键                   | 类型                 | 默认     | 说明                                                                                                          |
+| -------------------- | -------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+| `provider`           | string               | `tavily` | 设置页聚焦的提供方；真正生效者由 profile patch 的 `web.searchProvider` 决定（state 接口会在不一致时给出提示） |
+| `maxResults`         | int 1–10             | `5`      | 单次搜索默认返回条数；调用方显式传 maxResults 时以调用方为准                                                  |
+| `tavily.searchDepth` | `basic` / `advanced` | `basic`  | 搜索深度；按次计费 basic 1 credit/次、advanced 2 credits/次                                                   |
+
+### 计费与用量（Tavily，对齐 [官方文档](https://docs.tavily.com/documentation/api-reference/endpoint/usage)）
+
+- **端点**：`GET https://api.tavily.com/usage`，鉴权为 `Authorization: Bearer <tvly-…>`（注意与 `/search` 的 `body.api_key` 不同）。
+- **返回**（仅透传文档声明的叶子标量）：`{ key: { usage, limit, search_usage, extract_usage, crawl_usage, map_usage, research_usage }, account: { current_plan, plan_usage, plan_limit, paygo_usage, paygo_limit, ... } }`，`limit / plan_limit` 为 `null` 表示不限量。
+- **限流与缓存**：官方限流 `10 req / 10min`；服务端做 `60 秒`缓存，`GET /ext/dshp-search-provider/tavily/usage` 默认读缓存、`?force=1` 强制刷新；`429` 时返回 `ok:false` 并附带 `stale` 旧快照，设置页会明确标注“旧数据”。
 
 ## 配置密钥
 
