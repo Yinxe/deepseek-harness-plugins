@@ -34,13 +34,17 @@ function loadAll(): Record<string, WidgetPlacement> {
       }
       return out;
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return {};
 }
 function saveAll(open: Record<string, WidgetPlacement>): void {
   try {
     window.localStorage.setItem(LS_KEY, JSON.stringify(open));
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 function clampPos(p: WidgetPlacement): WidgetPlacement {
   try {
@@ -80,16 +84,25 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
     for (const fn of listeners) {
       try {
         fn();
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
   }
   function portal(node: any): any {
     if (node === null || node === undefined) return null;
     try {
-      if (ReactDOM && typeof ReactDOM.createPortal === 'function' && typeof document !== 'undefined' && document.body) {
+      if (
+        ReactDOM &&
+        typeof ReactDOM.createPortal === 'function' &&
+        typeof document !== 'undefined' &&
+        document.body
+      ) {
         return ReactDOM.createPortal(node, document.body);
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     return node;
   }
 
@@ -114,14 +127,19 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
         listeners.delete(fn);
       };
     }, []);
-    return Object.keys(open).map((id) => ({ id, pos: (open as Record<string, WidgetPlacement>)[id] as WidgetPlacement }));
+    return Object.keys(open).map((id) => ({
+      id,
+      pos: (open as Record<string, WidgetPlacement>)[id] as WidgetPlacement,
+    }));
   }
 
   function isOpen(id: string): boolean {
     return Object.hasOwn(open, id);
   }
   function openWidget(id: string, at?: WidgetPlacement): void {
-    const pos = clampPos(at || (open[id] as WidgetPlacement | undefined) || cascadePos(Object.keys(open).length));
+    const pos = clampPos(
+      at || (open[id] as WidgetPlacement | undefined) || cascadePos(Object.keys(open).length),
+    );
     open = Object.assign({}, open, { [id]: pos });
     order = order.filter((x) => x !== id).concat(id); // 新开/移动都置顶
     emit(true);
@@ -175,7 +193,8 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
     const sx = e.clientX;
     const sy = e.clientY;
     // 锚点偏移：指针相对原始卡片左上角（浮窗内容与卡片一致，这样拖出后抓取点不会跳）
-    let ox = -60, oy = -20;
+    let ox = -60,
+      oy = -20;
     try {
       const t = e.target;
       if (t && t.closest) {
@@ -186,7 +205,9 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
           oy = e.clientY - r.top;
         }
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     let out = false;
     function mv(ev: any): void {
       if (!out && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 8) return;
@@ -196,18 +217,26 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
     function up(): void {
       try {
         window.removeEventListener('pointermove', mv);
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       try {
         window.removeEventListener('pointerup', up);
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       if (!out) openWidget(id);
     }
     try {
       window.addEventListener('pointermove', mv);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     try {
       window.addEventListener('pointerup', up);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
   function gripProps(id: string): { onPointerDown: (e: any) => void } {
     return { onPointerDown: (e: any) => gripOut(id, e) };
@@ -217,7 +246,9 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
   function startDrag(id: string, cur: WidgetPlacement, e: any, fromGrip?: boolean): void {
     if (e.button !== undefined && e.button !== 0) return;
     if (e.target && e.target.closest) {
-      const skip = e.target.closest('button, input, select, textarea, a, .tm-seg, .tm-modelchip, .tm-switch') || (!fromGrip && e.target.closest('.tm-grip'));
+      const skip =
+        e.target.closest('button, input, select, textarea, a, .tm-seg, .tm-modelchip, .tm-switch') ||
+        (!fromGrip && e.target.closest('.tm-grip'));
       if (skip) return;
     }
     if (e.preventDefault) e.preventDefault();
@@ -229,18 +260,26 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
     function up(): void {
       try {
         window.removeEventListener('pointermove', mv);
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       try {
         window.removeEventListener('pointerup', up);
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       commitWidget();
     }
     try {
       window.addEventListener('pointermove', mv);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     try {
       window.addEventListener('pointerup', up);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   /** 通用浮窗外壳：只做定位（fixed + 坐标），不带任何边框/背景/内边距/阴影。
@@ -266,11 +305,21 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
         'div',
         {
           className: 'tm-widgetFloat tm-in',
-          style: { left: cur.pos.x + 'px', top: cur.pos.y + 'px', width: FLOAT_W + 'px', zIndex: zOf(props.id) },
+          style: {
+            left: cur.pos.x + 'px',
+            top: cur.pos.y + 'px',
+            width: FLOAT_W + 'px',
+            zIndex: zOf(props.id),
+          },
           onPointerDown: (e: any) => {
             raise(props.id); // 交互即置顶
             const t = e.target;
-            if (t && t.closest && t.closest('button, input, select, textarea, a, .tm-grip, .tm-seg, .tm-modelchip, .tm-switch')) return;
+            if (
+              t &&
+              t.closest &&
+              t.closest('button, input, select, textarea, a, .tm-grip, .tm-seg, .tm-modelchip, .tm-switch')
+            )
+              return;
             startDrag(props.id, cur.pos, e);
           },
         },
@@ -286,18 +335,50 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
   function WidgetToggle(props: { id: string }): any {
     const list = useWidgets();
     const opened = list.some((w) => w.id === props.id);
-    return h('span', { style: { display: 'inline-flex', gap: 2, alignItems: 'center', marginLeft: 6, flex: 'none' } },
-      h('span', Object.assign(
-        { className: 'tm-grip', title: opened ? '已弹出为独立浮窗（可拖动）' : '按住拖出为独立浮窗，点按直接弹出' },
-        gripProps(props.id),
-      ), '⠿'),
+    return h(
+      'span',
+      { style: { display: 'inline-flex', gap: 2, alignItems: 'center', marginLeft: 6, flex: 'none' } },
+      h(
+        'span',
+        Object.assign(
+          {
+            className: 'tm-grip',
+            title: opened ? '已弹出为独立浮窗（可拖动）' : '按住拖出为独立浮窗，点按直接弹出',
+          },
+          gripProps(props.id),
+        ),
+        '⠿',
+      ),
       opened
-        ? h('button', { className: 'tm-minibtn', title: '回归侧栏（关闭浮窗，内容仍在原位）', onClick: () => closeWidget(props.id) }, '回归')
-        : h('button', { className: 'tm-minibtn', title: '弹出为独立浮窗', onClick: () => openWidget(props.id) }, '⧉'));
+        ? h(
+            'button',
+            {
+              className: 'tm-minibtn',
+              title: '回归侧栏（关闭浮窗，内容仍在原位）',
+              onClick: () => closeWidget(props.id),
+            },
+            '回归',
+          )
+        : h(
+            'button',
+            { className: 'tm-minibtn', title: '弹出为独立浮窗', onClick: () => openWidget(props.id) },
+            '⧉',
+          ),
+    );
   }
 
   return {
-    useWidgets, isOpen, openWidget, closeWidget, moveWidget, commitWidget, gripProps,
-    WidgetFloat, WidgetToggle, raise, zOf, clampAllToViewport,
+    useWidgets,
+    isOpen,
+    openWidget,
+    closeWidget,
+    moveWidget,
+    commitWidget,
+    gripProps,
+    WidgetFloat,
+    WidgetToggle,
+    raise,
+    zOf,
+    clampAllToViewport,
   };
 }

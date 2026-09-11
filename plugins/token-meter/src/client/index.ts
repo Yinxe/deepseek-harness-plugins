@@ -38,8 +38,12 @@ function tmEnsureStyles(): HTMLStyleElement | null {
   try {
     if (tmStyleEl && tmStyleEl.isConnected) return tmStyleEl;
     try {
-      document.querySelectorAll('style[data-plugin-css="dshp-token-meter/settings.css"]').forEach((n) => n.remove());
-    } catch { /* ignore */ }
+      document
+        .querySelectorAll('style[data-plugin-css="dshp-token-meter/settings.css"]')
+        .forEach((n) => n.remove());
+    } catch {
+      /* ignore */
+    }
     const tag = document.createElement('style');
     tag.setAttribute('data-plugin-css', 'dshp-token-meter/settings.css');
     tag.textContent = CSS;
@@ -66,7 +70,11 @@ function register(): void {
       const React = require('react');
       const P = require('@deepseek-ai/dsh-client-ui-primitives');
       let ReactDOM: any = null;
-      try { ReactDOM = require('react-dom'); } catch { ReactDOM = null; }
+      try {
+        ReactDOM = require('react-dom');
+      } catch {
+        ReactDOM = null;
+      }
       const parts = createTokenMeterSection(React, P, ReactDOM);
       const TokenMeterSettings = parts.TokenMeterSettings;
       const QuotaRightPane = parts.QuotaRightPane;
@@ -81,7 +89,11 @@ function register(): void {
           return () => {
             tmStyleUsers--;
             if (tmStyleUsers <= 0 && tag) {
-              try { if (tag.isConnected) tag.remove(); } catch { /* ignore */ }
+              try {
+                if (tag.isConnected) tag.remove();
+              } catch {
+                /* ignore */
+              }
               if (tmStyleEl === tag) tmStyleEl = null;
             }
           };
@@ -97,12 +109,19 @@ function register(): void {
         if (slots === undefined) return;
 
         tmEnsureStyles();
-        ctx.effect(() => () => {
-          if (tmStyleUsers <= 0 && tmStyleEl) {
-            try { tmStyleEl.remove(); } catch { /* ignore */ }
-            tmStyleEl = null;
-          }
-        }, 'dshp-token-meter: section styles');
+        ctx.effect(
+          () => () => {
+            if (tmStyleUsers <= 0 && tmStyleEl) {
+              try {
+                tmStyleEl.remove();
+              } catch {
+                /* ignore */
+              }
+              tmStyleEl = null;
+            }
+          },
+          'dshp-token-meter: section styles',
+        );
 
         // 旧 localStorage 一次性清理：左栏开关已并入右侧栏；旧双浮窗系统已停用（widget 浮窗无外框、原位隐藏），
         // 旧键直接删掉，避免残留 floatOpen 导致幽灵浮窗。
@@ -147,84 +166,84 @@ function register(): void {
         const QUOTA_TAB = '@dshp/token-meter-quota';
         const STATS_TAB = '@dshp/token-meter-stats';
         {
-            ctx.effect(
-              () =>
-                ctx.sidebarRightTabs.register({
-                  id: QUOTA_TAB,
-                  kind: 'token-meter-quota',
-                  title: () => 'Token 额度',
-                  guide: [
-                    {
-                      order: 20,
-                      title: () => 'Token 额度',
-                      description: () => '全部供应商额度一览',
-                      icon: QuotaIcon,
-                    },
-                  ],
-                }),
-              'dshp-token-meter: right tab quota',
+          ctx.effect(
+            () =>
+              ctx.sidebarRightTabs.register({
+                id: QUOTA_TAB,
+                kind: 'token-meter-quota',
+                title: () => 'Token 额度',
+                guide: [
+                  {
+                    order: 20,
+                    title: () => 'Token 额度',
+                    description: () => '全部供应商额度一览',
+                    icon: QuotaIcon,
+                  },
+                ],
+              }),
+            'dshp-token-meter: right tab quota',
+          );
+          ctx.effect(
+            () =>
+              ctx.sidebarRightTabs.register({
+                id: STATS_TAB,
+                kind: 'token-meter-stats',
+                title: () => 'Token 用量',
+                guide: [
+                  {
+                    order: 21,
+                    title: () => 'Token 用量',
+                    description: () => '用量趋势与模型分布',
+                    icon: UsageIcon,
+                  },
+                ],
+              }),
+            'dshp-token-meter: right tab stats',
+          );
+          const QuotaPane = function QuotaPane(p: any): any {
+            useTmStyles();
+            return React.createElement(
+              'div',
+              { style: { height: '100%', minHeight: 0, overflow: 'auto', padding: '12px 14px' } },
+              React.createElement(QuotaRightPane, p),
             );
-            ctx.effect(
-              () =>
-                ctx.sidebarRightTabs.register({
-                  id: STATS_TAB,
-                  kind: 'token-meter-stats',
-                  title: () => 'Token 用量',
-                  guide: [
-                    {
-                      order: 21,
-                      title: () => 'Token 用量',
-                      description: () => '用量趋势与模型分布',
-                      icon: UsageIcon,
-                    },
-                  ],
-                }),
-              'dshp-token-meter: right tab stats',
+          };
+          const QuotaPaneTitle = function QuotaPaneTitle(): any {
+            return React.createElement(
+              'span',
+              { className: 'tm-tabChip' },
+              React.createElement(QuotaIcon, { size: 14 }),
+              React.createElement('span', null, 'Token 额度'),
             );
-            const QuotaPane = function QuotaPane(p: any): any {
-              useTmStyles();
-              return React.createElement(
-                'div',
-                { style: { height: '100%', minHeight: 0, overflow: 'auto', padding: '12px 14px' } },
-                React.createElement(QuotaRightPane, p),
-              );
-            };
-            const QuotaPaneTitle = function QuotaPaneTitle(): any {
-              return React.createElement(
-                'span',
-                { className: 'tm-tabChip' },
-                React.createElement(QuotaIcon, { size: 14 }),
-                React.createElement('span', null, 'Token 额度'),
-              );
-            };
-            const StatsPane = function StatsPane(p: any): any {
-              useTmStyles();
-              return React.createElement(
-                'div',
-                { style: { height: '100%', minHeight: 0, overflow: 'auto', padding: '12px 14px' } },
-                React.createElement(StatsRightPane, p),
-              );
-            };
-            const StatsPaneTitle = function StatsPaneTitle(): any {
-              return React.createElement(
-                'span',
-                { className: 'tm-tabChip' },
-                React.createElement(UsageIcon, { size: 14 }),
-                React.createElement('span', null, 'Token 用量'),
-              );
-            };
-            slots.inject('sidebar.right.pane.tab', () =>
-              slots.register({ name: 'sidebar.right.pane.tab', key: QUOTA_TAB }, QuotaPane),
+          };
+          const StatsPane = function StatsPane(p: any): any {
+            useTmStyles();
+            return React.createElement(
+              'div',
+              { style: { height: '100%', minHeight: 0, overflow: 'auto', padding: '12px 14px' } },
+              React.createElement(StatsRightPane, p),
             );
-            slots.inject('sidebar.right.pane.tab.title', () =>
-              slots.register({ name: 'sidebar.right.pane.tab.title', key: QUOTA_TAB }, QuotaPaneTitle),
+          };
+          const StatsPaneTitle = function StatsPaneTitle(): any {
+            return React.createElement(
+              'span',
+              { className: 'tm-tabChip' },
+              React.createElement(UsageIcon, { size: 14 }),
+              React.createElement('span', null, 'Token 用量'),
             );
-            slots.inject('sidebar.right.pane.tab', () =>
-              slots.register({ name: 'sidebar.right.pane.tab', key: STATS_TAB }, StatsPane),
-            );
-            slots.inject('sidebar.right.pane.tab.title', () =>
-              slots.register({ name: 'sidebar.right.pane.tab.title', key: STATS_TAB }, StatsPaneTitle),
-            );
+          };
+          slots.inject('sidebar.right.pane.tab', () =>
+            slots.register({ name: 'sidebar.right.pane.tab', key: QUOTA_TAB }, QuotaPane),
+          );
+          slots.inject('sidebar.right.pane.tab.title', () =>
+            slots.register({ name: 'sidebar.right.pane.tab.title', key: QUOTA_TAB }, QuotaPaneTitle),
+          );
+          slots.inject('sidebar.right.pane.tab', () =>
+            slots.register({ name: 'sidebar.right.pane.tab', key: STATS_TAB }, StatsPane),
+          );
+          slots.inject('sidebar.right.pane.tab.title', () =>
+            slots.register({ name: 'sidebar.right.pane.tab.title', key: STATS_TAB }, StatsPaneTitle),
+          );
         }
 
         // 首次自动打开双 tab（仅一次；用户关闭后不再打扰）。
@@ -233,7 +252,9 @@ function register(): void {
           let done = false;
           try {
             done = window.localStorage.getItem('tm-righttabs-autoopened') === '1';
-          } catch { /* ignore */ }
+          } catch {
+            /* ignore */
+          }
           if (!done) {
             let attempts = 0;
             const tryOpen = (): void => {
@@ -243,14 +264,18 @@ function register(): void {
                 ctx.sidebarRight.openTab('token-meter-stats');
                 try {
                   window.localStorage.setItem('tm-righttabs-autoopened', '1');
-                } catch { /* ignore */ }
+                } catch {
+                  /* ignore */
+                }
               } catch {
                 if (attempts < 5) window.setTimeout(tryOpen, attempts * 2000);
               }
             };
             window.setTimeout(tryOpen, 1500);
           }
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       };
 
       return moduleShim.exports;

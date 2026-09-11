@@ -33,18 +33,33 @@ export function createIcons(React: AnyReact): { QuotaIcon: any; UsageIcon: any }
 
   /** 额度：电池 + 已用刻度（剩余电量语义） */
   function QuotaIcon(props: any): any {
-    return h('svg', svgProps(props),
+    return h(
+      'svg',
+      svgProps(props),
       h('rect', { key: 'body', x: 2.5, y: 7, width: 16, height: 10, rx: 2.6 }),
       h('path', { key: 'cap', d: 'M21.2 10.4v3.2' }),
-      h('rect', { key: 'level', x: 5, y: 9.4, width: 6.4, height: 5.2, rx: 1.3, fill: 'currentColor', stroke: 'none' }));
+      h('rect', {
+        key: 'level',
+        x: 5,
+        y: 9.4,
+        width: 6.4,
+        height: 5.2,
+        rx: 1.3,
+        fill: 'currentColor',
+        stroke: 'none',
+      }),
+    );
   }
 
   /** 用量：三根高低不同的柱（统计/趋势语义） */
   function UsageIcon(props: any): any {
-    return h('svg', svgProps(props),
+    return h(
+      'svg',
+      svgProps(props),
       h('path', { key: 'a', d: 'M4.6 20v-6.4', strokeWidth: 2.6 }),
       h('path', { key: 'b', d: 'M12 20V5.4', strokeWidth: 2.6 }),
-      h('path', { key: 'c', d: 'M19.4 20v-9.6', strokeWidth: 2.6 }));
+      h('path', { key: 'c', d: 'M19.4 20v-9.6', strokeWidth: 2.6 }),
+    );
   }
 
   return { QuotaIcon, UsageIcon };
