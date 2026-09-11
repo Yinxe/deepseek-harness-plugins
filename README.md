@@ -1,63 +1,57 @@
 # deepseek-harness-plugins
 
-TypeScript + pnpm + Node ESM 项目模板。
+DeepSeek Harness（DSH）插件 Monorepo（pnpm workspaces + TypeScript ESM）。
 
-## 环境要求
-
-- Node.js >= 20（推荐 24，见 `.nvmrc`）
-- pnpm >= 10（当前 11.7.0，见 `package.json > devEngines`）
-- Git
-
-## 快速开始
-
-```bash
-# 安装依赖
-pnpm install
-
-# 开发（热重载）
-pnpm dev
-
-# 类型检查
-pnpm typecheck
-
-# 构建
-pnpm build
-
-# 运行构建产物
-pnpm start
-
-# 清理
-pnpm clean
-```
-
-## 目录结构
+## 结构
 
 ```
 .
-├── src/
-│   └── index.ts          # 入口
-├── dist/                 # 构建产物（gitignored）
-├── tsconfig.json         # TS 配置（NodeNext + ESM + strict）
-├── package.json          # pnpm + scripts
-├── pnpm-workspace.yaml   # pnpm 工作区 + storeDir + allowBuilds
-├── .npmrc                # npm registry 等配置
-└── .nvmrc
+├── plugins/
+│   └── dsh-vision-bridge/      # @dshp-inx/vision-bridge（TS 重写，已移植）
+│       ├── src/                # Host TS：types/http/config/cache/vision/index
+│       │   └── index.ts        # apply(ctx, rawConfig)，导出 { name, inject, NS, ConfigSchema, apply }
+│       ├── dist/               # 构建产物（gitignored，publish 时包含）
+│       ├── client.js           # Client 预打包 bundle（原样保留，不重写）
+│       ├── cordis.patch.yml    # bundle patch
+│       └── package.json
+├── tsconfig.base.json          # 共享 TS 配置（NodeNext + strict）
+├── tsconfig.json               # solution 引用
+├── pnpm-workspace.yaml         # packages: plugins/* + storeDir
+└── .github/workflows/
+    └── publish.yml             # tag v* 触发，OIDC 免 Token（pnpm -r publish）
 ```
 
-## pnpm 说明（重要）
+## 环境
 
-本沙箱全局 store（`~/.local/share/pnpm/store`）只读，已在 `pnpm-workspace.yaml` 中设置：
+- Node >= 20（推荐 24，见 `.nvmrc`）
+- pnpm 11.7.0（见 `devEngines`）
+- 本沙箱全局 store 只读，`pnpm-workspace.yaml` 已设 `storeDir: /tmp/pnpm-store`（pnpm v11 必须写这里，`.npmrc` 会被忽略）
 
-```yaml
-storeDir: /tmp/pnpm-store
+## 常用命令
+
+```bash
+pnpm install
+pnpm typecheck   # pnpm -r typecheck
+pnpm build       # pnpm -r build
+pnpm test        # pnpm -r test
+
+# 单个插件
+pnpm --filter @dshp-inx/vision-bridge build
+pnpm --filter @dshp-inx/vision-bridge typecheck
 ```
 
-- pnpm v11 项目级 `store-dir` 必须写在 `pnpm-workspace.yaml` 里（`storeDir` 驼峰），写在 `.npmrc` 里会被忽略。
-- 在你本地机器（全局 store 可写）可删除此行恢复默认。
+## 加新插件
 
-## TS 说明
+```bash
+mkdir -p plugins/<name>/src
+# 照抄 plugins/dsh-vision-bridge/{package.json,tsconfig.json}，改 name/version/description
+# tsconfig.json 里 extends 保持 ../../tsconfig.base.json
+# 根 tsconfig.json references 加一条 { "path": "./plugins/<name>" }
+pnpm install
+```
 
-- `type: module` + `module/moduleResolution: NodeNext`，原生 ESM
-- `strict` 全开 + `noUncheckedIndexedAccess` 等
-- `types: ["node"]` + `lib: ["ES2022", "DOM"]`（TS7 + pnpm 下需显式指定 types）
-- 输出 `dist/`，含 `.d.ts` + `sourceMap`
+## 发布（Trusted Publishing，免 Token）
+
+- GitHub tag `v*` 触发 `.github/workflows/publish.yml` → `pnpm -r publish --provenance`
+- npm 侧每个包需单独配 Trusted Publisher（Settings -> Trusted Publisher -> workflow `publish.yml`）
+- 发单包：`pnpm --filter @dshp-inx/vision-bridge publish --provenance --access public`

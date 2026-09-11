@@ -28,6 +28,6 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm build
 
-      # 免 Token 发布（Trusted Publisher），自带 provenance
+      # monorepo：逐包发布（root private 会自动跳过，只发 plugins/*）
       # 注意：不要设置 NODE_AUTH_TOKEN
-      - run: pnpm publish --provenance --access public --no-git-checks
+      - run: pnpm -r publish --provenance --access public --no-git-checks

@@ -1,3 +1,5 @@
+packages:
+  - 'plugins/*'
 allowBuilds:
   esbuild: true
 storeDir: /tmp/pnpm-store
