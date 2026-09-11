@@ -132,7 +132,7 @@ export type AnyLlm = any;
 
 - **Host**：`entry { host: 'src/host/index.ts' }` → `lib/host.js`；`format esm` / `platform node` / `target node20` / `bundle true` / `splitting false` / `treeshake true` / `dts false` / `sourcemap false` / `minify false` / `clean false` / `outExtension { js: '.js' }`。第三方（如 schemastery）走 `noExternal: [...]` **内联进 bundle**——运行时零依赖就靠这一行。
 - **Client**：`entry { client: 'src/client/index.ts' }` → `lib/client.js`；`format iife` / `platform browser` / `target es2020`，`external: ['react', '@deepseek-ai/dsh-client-ui-primitives']`——这两个由 DSH 运行时注入，**绝不打包**（否则体积爆炸 + 双 React）。
-- `dts: false` 是故意的：tsup 8 的 dts 与 TS 7 不兼容（与 typescript-eslint 同一个病，见根 README）。以后补类型用 api-extractor，**不要自己把 `dts` 打开**（打开即挂 build）。
+- `dts: false` 是故意的：tsup 8 的 dts 与 TS 7 不兼容（与 typescript-eslint 同一个病，见 §12）。以后补类型用 api-extractor，**不要自己把 `dts` 打开**（打开即挂 build）。
 - `clean: false` + 双 entry 分两次写同一 `outDir`：host/client 各写各的文件，`clean true` 会互相删。`minify/sourcemap false`：`lib/` 要可读可审计。
 - **`lib/` 已提交是特性不是失误**：DSH `add` 从 git 安装不跑 build。改完 `src` 必须 `pnpm --filter @dshp/<name> build` 重打并把 `lib/` 一起提交；只改 `src` 不提交 `lib/` 的 PR 直接打回。
 
@@ -330,7 +330,7 @@ pnpm test           # pnpm -r test（至少 node --check 双 bundle）
 
 ## 13. 文档规范（每个插件 README.md）
 
-照抄 vision-bridge README 章节顺序：头部的 monorepo 定位引用（等价改写说明）→ 功能表（Host/Client/路由/工具四行）→ tool 参数表（`question/image_hint/detail` 格式）→ 配置项表（含默认值）→ 安装（clone + `dsh plugin --profile web add ./plugins/<name>` + `dsh web`，注明“唯一方式：本地装”）→ 更新 → 一键 AI 安装话术块（```text 发给 DSH AI 三步）→ setting.yml 配置示例。根 README 只写结构/命令/门禁/加插件/安装/版本，不写插件细节。
+照抄 vision-bridge README 章节顺序：头部的 monorepo 定位引用（等价改写说明）→ 功能表（Host/Client/路由/工具四行）→ tool 参数表（`question/image_hint/detail` 格式）→ 配置项表（含默认值）→ 安装（clone + `dsh plugin --profile web add ./plugins/<name>` + `dsh web`，注明“唯一方式：本地装”）→ 更新 → 一键 AI 安装话术块（```text 发给 DSH AI 三步）→ setting.yml 配置示例。根 README 只写结构/环境/命令/加新插件/安装，不写插件细节（门禁以 ci.yml 为准，版本/tag 政策见 §14，发布流已下线不写）。
 
 ---
 
