@@ -65,10 +65,14 @@ git clone git@github.com:Yinxe/deepseek-harness-plugins.git
 cd deepseek-harness-plugins
 pnpm install
 
-# 2. 本地安装到 profile（路径按你执行命令时的 cwd 解析）
+# 2. 按你的 DSH 版本 checkout 对应 tag（版本不对装了也可能跑不起来）
+TAG=$(./scripts/resolve-tag.sh vision-bridge "$(dsh --version)")
+git checkout "$TAG"
+
+# 3. 本地安装到 profile（路径按你执行命令时的 cwd 解析）
 dsh plugin --profile web add ./plugins/vision-bridge
 
-# 3. 重启生效
+# 4. 重启生效
 dsh web
 ```
 

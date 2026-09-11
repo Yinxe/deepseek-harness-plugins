@@ -3,7 +3,7 @@ name: publish
 on:
   push:
     tags:
-      - "v*"
+      - "vision-bridge-v*"
 
 permissions:
   contents: read
@@ -25,6 +25,11 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - run: pnpm install --frozen-lockfile
+      - name: 校验 tag 与包版本一致
+        run: |
+          TAG="${GITHUB_REF_NAME#vision-bridge-v}"
+          PKG="$(node -p "require('./plugins/vision-bridge/package.json').version")"
+          [ "$TAG" = "$PKG" ] || { echo "tag($TAG) != package($PKG)，拒绝发布"; exit 1; }
       - run: pnpm typecheck
       - run: pnpm build
 

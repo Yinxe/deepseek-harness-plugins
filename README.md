@@ -65,6 +65,26 @@ dsh plugin --profile web add ./plugins/vision-bridge
 dsh web
 ```
 
+## 版本与 DSH 兼容（git tag）
+
+插件版本跟着 DSH 走：每个发布 tag 都钉着它验过的 DSH 版本，装之前先 checkout，装错版本不背锅。
+
+| tag | 插件 | 验过 DSH | 说明 |
+|---|---|---|---|
+| `vision-bridge-v1.4.0` | 1.4.0 | 0.1.5-rc.1 起，同 0.1.x | 首个 monorepo 版本 |
+| `vision-bridge/dsh-0.1` | （移动别名） | 0.1.x 最新验证版 | 懒人直达：`git checkout vision-bridge/dsh-0.1` |
+
+规则（加新插件照抄）：
+
+- 发布 tag：`<插件目录名>-v<插件版本>`（如 `vision-bridge-v1.4.0`），annotated，message 里写验过的 DSH 版本；CI 会校验 tag 后缀 = `package.json` 版本，不一致拒绝发布
+- 移动别名：`<插件目录名>/dsh-<大>.<小>`（如 `vision-bridge/dsh-0.1`），新版本在该 DSH 小版本上验过就 `git tag -f` 前移
+- 机器可读矩阵：`plugins/<名>/compat.json`，`./scripts/resolve-tag.sh <名> <dsh-version>` 直接吐 tag，找不到就非零退出
+
+```sh
+TAG=$(./scripts/resolve-tag.sh vision-bridge "$(dsh --version)")
+git checkout "$TAG"
+```
+
 ## 发布到 npm（可选，当前未发布）
 
 现在 `npm view @dshp/vision-bridge` 是 404，所以上面只能本地装。
