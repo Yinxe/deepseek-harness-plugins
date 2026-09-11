@@ -1,7 +1,0 @@
-# @dshp-inx/vision-bridge bundle patch: Vision bridge for DeepSeek Harness.
-# Host half: vision_describe tool + image cache + /ext/dshp-inx-vision-bridge/* routes.
-# Client half: Settings page section for vision model selection.
-
-- insert:
-    - id: dshp-inx-vision-bridge
-      name: "@dshp-inx/vision-bridge"

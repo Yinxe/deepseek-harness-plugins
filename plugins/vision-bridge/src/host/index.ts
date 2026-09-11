@@ -1,27 +1,27 @@
 /**
- * @dshp-inx/vision-bridge —— DSH Bundle 插件 Host 半（Cordis 插件，TS 重写）
+ * @dshp/vision-bridge —— DSH Bundle 插件 Host 半（Cordis 插件，TS 重写）
  *
  * 挂载：~/.dsh/profiles/<profile>/cordis.patch.yml（自动通过 bundle patch）
  *
  * 职责：
  *  - 桥接纯文本模型与多模态视觉模型：占位符出现时 vision_describe 把本轮图片 + 提问转交视觉模型，主/备自动重试
- *  - settings.yaml（dshp-inx-vision-bridge）持久化 + 旧文件/旧 key 自动迁移
+ *  - settings.yaml（dshp-vision-bridge）持久化 + 旧文件/旧 key 自动迁移
  *  - 同源 JSON 路由供 Client：GET state / POST config / GET check
  *
- * 原实现：~/.dsh/plugins/dsh-vision-bridge/lib/index.js（JS，816 行）
+ * 原实现：~/.dsh/plugins/vision-bridge/lib/index.js（JS，816 行）
  * 本文件为等价 TS 重写：逻辑逐行对齐，仅拆分为 types/http/config/cache/vision 模块，行为不变。
  *
- * @module @dshp-inx/vision-bridge
+ * @module @dshp/vision-bridge
  */
 import { existsSync, unlinkSync, renameSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { ConfigSchema, DEFAULT_CONFIG, NS, configPath, loadPersisted, migrateYamlNamespaceKey, sanitizePatchConfig } from './config.js';
+import { ConfigSchema, DEFAULT_CONFIG, NS, loadPersisted, migrateYamlNamespaceKey, sanitizePatchConfig } from './config.js';
 import { createImageCache, sessionIdOf, walkBlocks } from './cache.js';
 import { json, readBody, sameOrigin } from './http.js';
 import { buildQuestion, describeWithFallback, listVisionModels, sameRoute } from './vision.js';
 import type { AnyCtx, CandidateModel, Detail, ImageRef, PluginConfig, VisionRoute } from './types.js';
 
-export const name = '@dshp-inx/vision-bridge';
+export const name = '@dshp/vision-bridge';
 export const inject: string[] = ['tools', 'webServer', 'llm'];
 export { NS, ConfigSchema };
 
@@ -62,15 +62,15 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
       const desc = list.find((d) => d.ns === NS);
       if (desc && desc.user !== undefined) {
         try {
-          console.info('[dshp-inx-vision-bridge] settings.yaml 已存在 dshp-inx-vision-bridge 用户配置，跳过旧文件自动迁移（旧文件保留，可手动删除 storages/dshp-inx-vision-bridge.json）');
+          console.info('[dshp-vision-bridge] settings.yaml 已存在 dshp-vision-bridge 用户配置，跳过旧文件自动迁移（旧文件保留，可手动删除 ' + persistedForMigration.source + '）');
         } catch { /* ignore */ }
         return;
       }
     } catch { /* ignore */ }
     const needPatch: Record<string, unknown> = {};
     let need = false;
-    for (const k of Object.keys(persistedForMigration) as Array<keyof PluginConfig>) {
-      const pv: unknown = persistedForMigration[k];
+    for (const k of Object.keys(persistedForMigration.config) as Array<keyof PluginConfig>) {
+      const pv: unknown = persistedForMigration.config[k];
       const ev: unknown = entry[k];
       if (JSON.stringify(pv) !== JSON.stringify(ev)) {
         needPatch[k] = pv;
@@ -79,11 +79,11 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
     }
     if (!need) {
       try {
-        const p = configPath();
+        const p = persistedForMigration.source;
         if (existsSync(p)) {
           try {
             unlinkSync(p);
-            console.info('[dshp-inx-vision-bridge] 旧存储文件与默认值一致，已自动清理 ' + p);
+            console.info('[dshp-vision-bridge] 旧存储文件与默认值一致，已自动清理 ' + p);
           } catch { /* ignore */ }
         }
       } catch { /* ignore */ }
@@ -92,19 +92,19 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
     Promise.resolve(settings.update(NS, needPatch))
       .then(() => {
         try {
-          console.info('[dshp-inx-vision-bridge] 已自动将旧版 storages/dshp-inx-vision-bridge.json 迁移至 settings.yaml (dshp-inx-vision-bridge)');
+          console.info('[dshp-vision-bridge] 已自动将旧版 ' + persistedForMigration.source + ' 迁移至 settings.yaml (dshp-vision-bridge)');
         } catch { /* ignore */ }
         try {
-          const p = configPath();
+          const p = persistedForMigration.source;
           const bak = p + '.bak';
           if (existsSync(p)) {
             try {
               renameSync(p, bak);
-              console.info('[dshp-inx-vision-bridge] 旧文件已备份为 ' + bak);
+              console.info('[dshp-vision-bridge] 旧文件已备份为 ' + bak);
             } catch {
               try {
                 unlinkSync(p);
-                console.info('[dshp-inx-vision-bridge] 旧文件已清理 ' + p);
+                console.info('[dshp-vision-bridge] 旧文件已清理 ' + p);
               } catch { /* ignore */ }
             }
           }
@@ -112,7 +112,7 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
       })
       .catch((e: unknown) => {
         try {
-          console.warn('[dshp-inx-vision-bridge] 旧文件迁移失败：' + String((e as Error)?.message ?? e));
+          console.warn('[dshp-vision-bridge] 旧文件迁移失败：' + String((e as Error)?.message ?? e));
         } catch { /* ignore */ }
         hasMigrated = false;
       });
@@ -177,7 +177,7 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
         await updateConfig(patchObj);
       } catch (e) {
         try {
-          console.warn('[dshp-inx-vision-bridge] ensureDefaults 写入 settings.yaml 失败：' + String((e as Error)?.message ?? e));
+          console.warn('[dshp-vision-bridge] ensureDefaults 写入 settings.yaml 失败：' + String((e as Error)?.message ?? e));
         } catch { /* ignore */ }
       }
     }
@@ -207,7 +207,7 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
             if (found.length > 0) images.push(sid, found);
           } catch { /* ignore */ }
         }),
-      'dshp-inx-vision-bridge: cache inbox images',
+      'dshp-vision-bridge: cache inbox images',
     );
   } catch { /* ignore */ }
   try {
@@ -227,7 +227,7 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
           } catch { /* ignore */ }
           return next();
         }),
-      'dshp-inx-vision-bridge: cache llm.stream images',
+      'dshp-vision-bridge: cache llm.stream images',
     );
   } catch { /* ignore */ }
 
@@ -262,14 +262,14 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
             if (llmSvc.resolveModelInfo === patchedResolve) llmSvc.resolveModelInfo = origResolve;
           } catch { /* ignore */ }
         },
-        'dshp-inx-vision-bridge: admission takeover',
+        'dshp-vision-bridge: admission takeover',
       );
       try {
-        console.info('[dshp-inx-vision-bridge] admission takeover armed (text-only models may send images while bridge is enabled with a primary vision model)');
+        console.info('[dshp-vision-bridge] admission takeover armed (text-only models may send images while bridge is enabled with a primary vision model)');
       } catch { /* ignore */ }
     } else {
       try {
-        console.warn('[dshp-inx-vision-bridge] llm service unavailable, admission takeover skipped (text-only models still cannot send images)');
+        console.warn('[dshp-vision-bridge] llm service unavailable, admission takeover skipped (text-only models still cannot send images)');
       } catch { /* ignore */ }
     }
   } catch { /* ignore */ }
@@ -281,11 +281,11 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
       ctx.effect(
         () =>
           sys.section({
-            name: 'dshp-inx-vision-bridge',
+            name: 'dshp-vision-bridge',
             order: 80,
             text: '视觉能力说明：你是纯文本模型，无法直接看图。当用户消息中出现“[image omitted because this model accepts text only”占位符时，说明本轮附带了图片，你必须调用 vision_describe 工具来识别（不要猜测图片内容，不要让用户换模型）。参数 question 写清你需要从图片中获得什么信息；如有多个图片可用 image_hint 指定（附件 sha 前缀或从 1 开始的序号），不确定就留空分析全部图片。工具会自动选用设置 → 视觉模型 里配置的主模型，失败时用备用模型重试。',
           }),
-        'dshp-inx-vision-bridge: prompt section',
+        'dshp-vision-bridge: prompt section',
       );
     }
   } catch { /* ignore */ }
@@ -369,7 +369,7 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
     });
   } catch (e) {
     try {
-      console.error('[dshp-inx-vision-bridge] register tool failed: ' + String((e as Error)?.message ?? e));
+      console.error('[dshp-vision-bridge] register tool failed: ' + String((e as Error)?.message ?? e));
     } catch { /* ignore */ }
   }
 
@@ -379,7 +379,7 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
     () =>
       ctx.webServer.register({
         kind: 'exact',
-        path: '/ext/dshp-inx-vision-bridge/state',
+        path: '/ext/dshp-vision-bridge/state',
         handler: async (_req: IncomingMessage, res: ServerResponse) => {
           const req = _req as IncomingMessage;
           if (!sameOrigin(req)) return json(res, 403, { ok: false, error: 'forbidden' });
@@ -392,14 +392,14 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
           }
         },
       }),
-    'dshp-inx-vision-bridge: state route',
+    'dshp-vision-bridge: state route',
   );
 
   ctx.effect(
     () =>
       ctx.webServer.register({
         kind: 'exact',
-        path: '/ext/dshp-inx-vision-bridge/check',
+        path: '/ext/dshp-vision-bridge/check',
         handler: async (_req: IncomingMessage, res: ServerResponse) => {
           const req = _req as IncomingMessage;
           if (!sameOrigin(req)) return json(res, 403, { ok: false, error: 'forbidden' });
@@ -437,14 +437,14 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
           return json(res, 200, { ok: true, primary: await probe(cfg.primary), fallback: await probe(cfg.fallback) });
         },
       }),
-    'dshp-inx-vision-bridge: check route',
+    'dshp-vision-bridge: check route',
   );
 
   ctx.effect(
     () =>
       ctx.webServer.register({
         kind: 'exact',
-        path: '/ext/dshp-inx-vision-bridge/config',
+        path: '/ext/dshp-vision-bridge/config',
         handler: async (_req: IncomingMessage, res: ServerResponse) => {
           const req = _req as IncomingMessage;
           if (!sameOrigin(req)) return json(res, 403, { ok: false, error: 'forbidden' });
@@ -516,7 +516,7 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
           }
         },
       }),
-    'dshp-inx-vision-bridge: config route',
+    'dshp-vision-bridge: config route',
   );
 
   // 避免 TS `sameRoute` 未使用告警（fallback 去重在 vision.ts 内已用，此处探活也用）

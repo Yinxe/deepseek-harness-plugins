@@ -217,7 +217,7 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
 
-  plugins/dsh-vision-bridge:
+  plugins/vision-bridge:
     devDependencies:
       '@deepseek-ai/schemastery':
         specifier: ^3.18.2

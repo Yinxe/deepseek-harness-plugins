@@ -18,7 +18,7 @@ declare global {
   }
 }
 
-const PLUGIN_ID = '@dshp-inx/vision-bridge';
+const PLUGIN_ID = '@dshp/vision-bridge';
 
 function register(): void {
   const loader = (typeof window !== 'undefined' ? window.__ModuleLoader__ : undefined) as Window['__ModuleLoader__'];
@@ -41,14 +41,14 @@ function register(): void {
         if (slots === undefined) return;
 
         const style = document.createElement('style');
-        style.setAttribute('data-plugin-css', 'dshp-inx-vision-bridge/settings.css');
+        style.setAttribute('data-plugin-css', 'dshp-vision-bridge/settings.css');
         style.textContent = CSS;
         document.head.appendChild(style);
-        ctx.effect(() => () => style.remove(), 'dshp-inx-vision-bridge: section styles');
+        ctx.effect(() => () => style.remove(), 'dshp-vision-bridge: section styles');
 
         const Section = VisionSection;
         slots.inject('settings.section', () =>
-          slots.register({ name: 'settings.section', id: 'dshp-inx-vision-bridge', order: 25, label: '视觉模型' }, Section),
+          slots.register({ name: 'settings.section', id: 'dshp-vision-bridge', order: 25, label: '视觉模型' }, Section),
         );
       };
 

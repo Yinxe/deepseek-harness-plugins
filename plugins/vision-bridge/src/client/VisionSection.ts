@@ -297,7 +297,7 @@ export function createVisionSection(React: AnyReact, P: AnyPrimitives): () => an
       React.createElement(
         'p',
         { className: 'vb-hint', style: { marginTop: 4 } },
-        '工作方式：图片先缓存在本插件（最近 20 张/会话），vision_describe 把原图引用 + 你的问题一起发给主视觉模型。配置已持久化到 settings.yaml（dshp-inx-vision-bridge 命名空间），支持热重载与注释保留。',
+        '工作方式：图片先缓存在本插件（最近 20 张/会话），vision_describe 把原图引用 + 你的问题一起发给主视觉模型。配置已持久化到 settings.yaml（dshp-vision-bridge 命名空间），支持热重载与注释保留。',
       ),
     );
 

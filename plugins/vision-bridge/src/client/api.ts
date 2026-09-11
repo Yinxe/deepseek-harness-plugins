@@ -1,12 +1,12 @@
 /**
  * Host 同源路由封装
- *  - GET  /ext/dshp-inx-vision-bridge/state
- *  - POST /ext/dshp-inx-vision-bridge/config
- *  - GET  /ext/dshp-inx-vision-bridge/check
+ *  - GET  /ext/dshp-vision-bridge/state
+ *  - POST /ext/dshp-vision-bridge/config
+ *  - GET  /ext/dshp-vision-bridge/check
  */
 import type { CheckResponse, ConfigPatch, StateResponse, VisionConfig } from './types.js';
 
-const BASE = '/ext/dshp-inx-vision-bridge';
+const BASE = '/ext/dshp-vision-bridge';
 
 export async function fetchState(): Promise<StateResponse> {
   const r = await fetch(`${BASE}/state`, { cache: 'no-store' });

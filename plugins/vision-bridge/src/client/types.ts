@@ -1,6 +1,6 @@
 /**
  * Client 半共享类型（设置页）
- * 与 Host 的 /ext/dshp-inx-vision-bridge/* 路由协议对齐
+ * 与 Host 的 /ext/dshp-vision-bridge/* 路由协议对齐
  */
 
 export interface VisionRoute {

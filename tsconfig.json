@@ -4,5 +4,5 @@
     "noEmit": true
   },
   "files": [],
-  "references": [{ "path": "./plugins/dsh-vision-bridge" }]
+  "references": [{ "path": "./plugins/vision-bridge" }]
 }

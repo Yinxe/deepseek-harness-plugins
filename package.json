@@ -7,7 +7,7 @@
     "typecheck": "pnpm -r typecheck",
     "clean": "pnpm -r clean",
     "test": "pnpm -r test",
-    "dev": "pnpm --filter @dshp-inx/vision-bridge dev"
+    "dev": "pnpm --filter @dshp/vision-bridge dev"
   },
   "keywords": [],
   "author": "",

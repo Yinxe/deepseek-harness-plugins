@@ -832,7 +832,10 @@ function readBody(req, limit = 1024 * 1024) {
 }
 
 // src/host/config.ts
-var NS = settingsNamespace("dshp-inx-vision-bridge");
+var NS = settingsNamespace("dshp-vision-bridge");
+var OLD_SETTINGS_KEY = "vision-bridge";
+var PREV_SETTINGS_KEY = "dshp-inx-vision-bridge";
+var LEGACY_SETTINGS_KEYS = [PREV_SETTINGS_KEY, OLD_SETTINGS_KEY];
 var DEFAULT_CONFIG = {
   enabled: true,
   primary: null,
@@ -865,8 +868,8 @@ function dshHome() {
     return "/tmp/.dsh";
   }
 }
-function configPath() {
-  return join(dshHome(), "storages", "dshp-inx-vision-bridge.json");
+function legacyConfigPaths() {
+  return [join(dshHome(), "storages", "dshp-inx-vision-bridge.json")];
 }
 function settingsYamlPath() {
   return join(dshHome(), "settings.yaml");
@@ -911,14 +914,17 @@ function sanitizePersisted(raw) {
   return out;
 }
 function loadPersisted() {
-  try {
-    const p = configPath();
-    if (!existsSync(p)) return null;
-    const text = readFileSync(p, "utf8");
-    return sanitizePersisted(JSON.parse(text));
-  } catch {
-    return null;
+  for (const p of legacyConfigPaths()) {
+    try {
+      if (!existsSync(p)) continue;
+      const text = readFileSync(p, "utf8");
+      const cfg = sanitizePersisted(JSON.parse(text));
+      if (cfg) return { config: cfg, source: p };
+    } catch {
+      continue;
+    }
   }
+  return null;
 }
 function sanitizePatchConfig(raw) {
   if (!isRecord(raw)) return null;
@@ -956,31 +962,33 @@ function migrateYamlNamespaceKey() {
     if (!existsSync(p)) return;
     const text = readFileSync(p, "utf8");
     const lines = text.split("\n");
-    let oldIdx = -1;
-    let newIdx = -1;
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      if (/^dshp-inx-vision-bridge:\s*(#.*)?$/.test(line)) newIdx = i;
-      else if (/^vision-bridge:\s*(#.*)?$/.test(line)) oldIdx = i;
-    }
-    if (oldIdx < 0) return;
+    const at = (key) => {
+      const re = new RegExp(`^${key}:\\s*(#.*)?$`);
+      for (let i = 0; i < lines.length; i++) {
+        if (re.test(lines[i])) return i;
+      }
+      return -1;
+    };
+    const newIdx = at(NS);
+    const hit = LEGACY_SETTINGS_KEYS.map((key) => ({ key, idx: at(key) })).find((h) => h.idx >= 0);
+    if (!hit) return;
     if (newIdx >= 0) {
       try {
-        console.info("[dshp-inx-vision-bridge] settings.yaml \u540C\u65F6\u5B58\u5728 vision-bridge \u4E0E dshp-inx-vision-bridge\uFF0C\u4EE5\u65B0 key \u4E3A\u51C6\uFF0C\u8BF7\u624B\u52A8\u5220\u9664\u65E7 vision-bridge \u6BB5\u843D");
+        console.info(`[dshp-vision-bridge] settings.yaml \u540C\u65F6\u5B58\u5728 ${hit.key} \u4E0E dshp-vision-bridge\uFF0C\u4EE5\u65B0 key \u4E3A\u51C6\uFF0C\u8BF7\u624B\u52A8\u5220\u9664\u65E7 ${hit.key} \u6BB5\u843D`);
       } catch {
       }
       return;
     }
-    const m = lines[oldIdx].match(/(#.*)$/);
-    lines[oldIdx] = "dshp-inx-vision-bridge:" + (m?.[1] ? " " + m[1] : "");
+    const m = lines[hit.idx].match(/(#.*)$/);
+    lines[hit.idx] = "dshp-vision-bridge:" + (m?.[1] ? " " + m[1] : "");
     writeFileSync(p, lines.join("\n"), "utf8");
     try {
-      console.info("[dshp-inx-vision-bridge] \u5DF2\u5C06 settings.yaml \u9876\u5C42 vision-bridge \u91CD\u547D\u540D\u4E3A dshp-inx-vision-bridge");
+      console.info(`[dshp-vision-bridge] \u5DF2\u5C06 settings.yaml \u9876\u5C42 ${hit.key} \u91CD\u547D\u540D\u4E3A dshp-vision-bridge`);
     } catch {
     }
   } catch (e) {
     try {
-      console.warn("[dshp-inx-vision-bridge] settings.yaml \u547D\u540D\u7A7A\u95F4\u91CD\u547D\u540D\u5931\u8D25\uFF1A" + String(e?.message ?? e));
+      console.warn("[dshp-vision-bridge] settings.yaml \u547D\u540D\u7A7A\u95F4\u91CD\u547D\u540D\u5931\u8D25\uFF1A" + String(e?.message ?? e));
     } catch {
     }
   }
@@ -1238,7 +1246,7 @@ function buildQuestion(base, detail, promptTemplate) {
 }
 
 // src/host/index.ts
-var name = "@dshp-inx/vision-bridge";
+var name = "@dshp/vision-bridge";
 var inject = ["tools", "webServer", "llm"];
 function apply(ctx, rawConfig) {
   try {
@@ -1274,7 +1282,7 @@ function apply(ctx, rawConfig) {
       const desc = list.find((d) => d.ns === NS);
       if (desc && desc.user !== void 0) {
         try {
-          console.info("[dshp-inx-vision-bridge] settings.yaml \u5DF2\u5B58\u5728 dshp-inx-vision-bridge \u7528\u6237\u914D\u7F6E\uFF0C\u8DF3\u8FC7\u65E7\u6587\u4EF6\u81EA\u52A8\u8FC1\u79FB\uFF08\u65E7\u6587\u4EF6\u4FDD\u7559\uFF0C\u53EF\u624B\u52A8\u5220\u9664 storages/dshp-inx-vision-bridge.json\uFF09");
+          console.info("[dshp-vision-bridge] settings.yaml \u5DF2\u5B58\u5728 dshp-vision-bridge \u7528\u6237\u914D\u7F6E\uFF0C\u8DF3\u8FC7\u65E7\u6587\u4EF6\u81EA\u52A8\u8FC1\u79FB\uFF08\u65E7\u6587\u4EF6\u4FDD\u7559\uFF0C\u53EF\u624B\u52A8\u5220\u9664 " + persistedForMigration.source + "\uFF09");
         } catch {
         }
         return;
@@ -1283,8 +1291,8 @@ function apply(ctx, rawConfig) {
     }
     const needPatch = {};
     let need = false;
-    for (const k of Object.keys(persistedForMigration)) {
-      const pv = persistedForMigration[k];
+    for (const k of Object.keys(persistedForMigration.config)) {
+      const pv = persistedForMigration.config[k];
       const ev = entry[k];
       if (JSON.stringify(pv) !== JSON.stringify(ev)) {
         needPatch[k] = pv;
@@ -1293,11 +1301,11 @@ function apply(ctx, rawConfig) {
     }
     if (!need) {
       try {
-        const p = configPath();
+        const p = persistedForMigration.source;
         if (existsSync(p)) {
           try {
             unlinkSync(p);
-            console.info("[dshp-inx-vision-bridge] \u65E7\u5B58\u50A8\u6587\u4EF6\u4E0E\u9ED8\u8BA4\u503C\u4E00\u81F4\uFF0C\u5DF2\u81EA\u52A8\u6E05\u7406 " + p);
+            console.info("[dshp-vision-bridge] \u65E7\u5B58\u50A8\u6587\u4EF6\u4E0E\u9ED8\u8BA4\u503C\u4E00\u81F4\uFF0C\u5DF2\u81EA\u52A8\u6E05\u7406 " + p);
           } catch {
           }
         }
@@ -1307,20 +1315,20 @@ function apply(ctx, rawConfig) {
     }
     Promise.resolve(settings.update(NS, needPatch)).then(() => {
       try {
-        console.info("[dshp-inx-vision-bridge] \u5DF2\u81EA\u52A8\u5C06\u65E7\u7248 storages/dshp-inx-vision-bridge.json \u8FC1\u79FB\u81F3 settings.yaml (dshp-inx-vision-bridge)");
+        console.info("[dshp-vision-bridge] \u5DF2\u81EA\u52A8\u5C06\u65E7\u7248 " + persistedForMigration.source + " \u8FC1\u79FB\u81F3 settings.yaml (dshp-vision-bridge)");
       } catch {
       }
       try {
-        const p = configPath();
+        const p = persistedForMigration.source;
         const bak = p + ".bak";
         if (existsSync(p)) {
           try {
             renameSync(p, bak);
-            console.info("[dshp-inx-vision-bridge] \u65E7\u6587\u4EF6\u5DF2\u5907\u4EFD\u4E3A " + bak);
+            console.info("[dshp-vision-bridge] \u65E7\u6587\u4EF6\u5DF2\u5907\u4EFD\u4E3A " + bak);
           } catch {
             try {
               unlinkSync(p);
-              console.info("[dshp-inx-vision-bridge] \u65E7\u6587\u4EF6\u5DF2\u6E05\u7406 " + p);
+              console.info("[dshp-vision-bridge] \u65E7\u6587\u4EF6\u5DF2\u6E05\u7406 " + p);
             } catch {
             }
           }
@@ -1329,7 +1337,7 @@ function apply(ctx, rawConfig) {
       }
     }).catch((e) => {
       try {
-        console.warn("[dshp-inx-vision-bridge] \u65E7\u6587\u4EF6\u8FC1\u79FB\u5931\u8D25\uFF1A" + String(e?.message ?? e));
+        console.warn("[dshp-vision-bridge] \u65E7\u6587\u4EF6\u8FC1\u79FB\u5931\u8D25\uFF1A" + String(e?.message ?? e));
       } catch {
       }
       hasMigrated = false;
@@ -1392,7 +1400,7 @@ function apply(ctx, rawConfig) {
         await updateConfig(patchObj);
       } catch (e) {
         try {
-          console.warn("[dshp-inx-vision-bridge] ensureDefaults \u5199\u5165 settings.yaml \u5931\u8D25\uFF1A" + String(e?.message ?? e));
+          console.warn("[dshp-vision-bridge] ensureDefaults \u5199\u5165 settings.yaml \u5931\u8D25\uFF1A" + String(e?.message ?? e));
         } catch {
         }
       }
@@ -1419,7 +1427,7 @@ function apply(ctx, rawConfig) {
         } catch {
         }
       }),
-      "dshp-inx-vision-bridge: cache inbox images"
+      "dshp-vision-bridge: cache inbox images"
     );
   } catch {
   }
@@ -1440,7 +1448,7 @@ function apply(ctx, rawConfig) {
         }
         return next();
       }),
-      "dshp-inx-vision-bridge: cache llm.stream images"
+      "dshp-vision-bridge: cache llm.stream images"
     );
   } catch {
   }
@@ -1474,15 +1482,15 @@ function apply(ctx, rawConfig) {
           } catch {
           }
         },
-        "dshp-inx-vision-bridge: admission takeover"
+        "dshp-vision-bridge: admission takeover"
       );
       try {
-        console.info("[dshp-inx-vision-bridge] admission takeover armed (text-only models may send images while bridge is enabled with a primary vision model)");
+        console.info("[dshp-vision-bridge] admission takeover armed (text-only models may send images while bridge is enabled with a primary vision model)");
       } catch {
       }
     } else {
       try {
-        console.warn("[dshp-inx-vision-bridge] llm service unavailable, admission takeover skipped (text-only models still cannot send images)");
+        console.warn("[dshp-vision-bridge] llm service unavailable, admission takeover skipped (text-only models still cannot send images)");
       } catch {
       }
     }
@@ -1493,11 +1501,11 @@ function apply(ctx, rawConfig) {
     if (sys && typeof sys.section === "function") {
       ctx.effect(
         () => sys.section({
-          name: "dshp-inx-vision-bridge",
+          name: "dshp-vision-bridge",
           order: 80,
           text: "\u89C6\u89C9\u80FD\u529B\u8BF4\u660E\uFF1A\u4F60\u662F\u7EAF\u6587\u672C\u6A21\u578B\uFF0C\u65E0\u6CD5\u76F4\u63A5\u770B\u56FE\u3002\u5F53\u7528\u6237\u6D88\u606F\u4E2D\u51FA\u73B0\u201C[image omitted because this model accepts text only\u201D\u5360\u4F4D\u7B26\u65F6\uFF0C\u8BF4\u660E\u672C\u8F6E\u9644\u5E26\u4E86\u56FE\u7247\uFF0C\u4F60\u5FC5\u987B\u8C03\u7528 vision_describe \u5DE5\u5177\u6765\u8BC6\u522B\uFF08\u4E0D\u8981\u731C\u6D4B\u56FE\u7247\u5185\u5BB9\uFF0C\u4E0D\u8981\u8BA9\u7528\u6237\u6362\u6A21\u578B\uFF09\u3002\u53C2\u6570 question \u5199\u6E05\u4F60\u9700\u8981\u4ECE\u56FE\u7247\u4E2D\u83B7\u5F97\u4EC0\u4E48\u4FE1\u606F\uFF1B\u5982\u6709\u591A\u4E2A\u56FE\u7247\u53EF\u7528 image_hint \u6307\u5B9A\uFF08\u9644\u4EF6 sha \u524D\u7F00\u6216\u4ECE 1 \u5F00\u59CB\u7684\u5E8F\u53F7\uFF09\uFF0C\u4E0D\u786E\u5B9A\u5C31\u7559\u7A7A\u5206\u6790\u5168\u90E8\u56FE\u7247\u3002\u5DE5\u5177\u4F1A\u81EA\u52A8\u9009\u7528\u8BBE\u7F6E \u2192 \u89C6\u89C9\u6A21\u578B \u91CC\u914D\u7F6E\u7684\u4E3B\u6A21\u578B\uFF0C\u5931\u8D25\u65F6\u7528\u5907\u7528\u6A21\u578B\u91CD\u8BD5\u3002"
         }),
-        "dshp-inx-vision-bridge: prompt section"
+        "dshp-vision-bridge: prompt section"
       );
     }
   } catch {
@@ -1580,14 +1588,14 @@ function apply(ctx, rawConfig) {
     });
   } catch (e) {
     try {
-      console.error("[dshp-inx-vision-bridge] register tool failed: " + String(e?.message ?? e));
+      console.error("[dshp-vision-bridge] register tool failed: " + String(e?.message ?? e));
     } catch {
     }
   }
   ctx.effect(
     () => ctx.webServer.register({
       kind: "exact",
-      path: "/ext/dshp-inx-vision-bridge/state",
+      path: "/ext/dshp-vision-bridge/state",
       handler: async (_req, res) => {
         const req = _req;
         if (!sameOrigin(req)) return json(res, 403, { ok: false, error: "forbidden" });
@@ -1600,12 +1608,12 @@ function apply(ctx, rawConfig) {
         }
       }
     }),
-    "dshp-inx-vision-bridge: state route"
+    "dshp-vision-bridge: state route"
   );
   ctx.effect(
     () => ctx.webServer.register({
       kind: "exact",
-      path: "/ext/dshp-inx-vision-bridge/check",
+      path: "/ext/dshp-vision-bridge/check",
       handler: async (_req, res) => {
         const req = _req;
         if (!sameOrigin(req)) return json(res, 403, { ok: false, error: "forbidden" });
@@ -1641,12 +1649,12 @@ function apply(ctx, rawConfig) {
         return json(res, 200, { ok: true, primary: await probe(cfg.primary), fallback: await probe(cfg.fallback) });
       }
     }),
-    "dshp-inx-vision-bridge: check route"
+    "dshp-vision-bridge: check route"
   );
   ctx.effect(
     () => ctx.webServer.register({
       kind: "exact",
-      path: "/ext/dshp-inx-vision-bridge/config",
+      path: "/ext/dshp-vision-bridge/config",
       handler: async (_req, res) => {
         const req = _req;
         if (!sameOrigin(req)) return json(res, 403, { ok: false, error: "forbidden" });
@@ -1718,7 +1726,7 @@ function apply(ctx, rawConfig) {
         }
       }
     }),
-    "dshp-inx-vision-bridge: config route"
+    "dshp-vision-bridge: config route"
   );
 }
 

@@ -1,6 +1,6 @@
 {
-  "name": "@dshp-inx/vision-bridge",
-  "version": "1.3.2",
+  "name": "@dshp/vision-bridge",
+  "version": "1.4.0",
   "description": "DeepSeek Harness (DSH) vision bridge: let text-only models delegate image understanding to multimodal vision models via vision_describe tool, with persistent settings UI and primary/fallback auto-retry.",
   "license": "MIT",
   "author": "Yinxe",
@@ -41,12 +41,12 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Yinxe/deepseek-harness-plugins.git",
-    "directory": "plugins/dsh-vision-bridge"
+    "directory": "plugins/vision-bridge"
   },
   "bugs": {
     "url": "https://github.com/Yinxe/deepseek-harness-plugins/issues"
   },
-  "homepage": "https://github.com/Yinxe/deepseek-harness-plugins/tree/main/plugins/dsh-vision-bridge#readme",
+  "homepage": "https://github.com/Yinxe/deepseek-harness-plugins/tree/main/plugins/vision-bridge#readme",
   "publishConfig": {
     "access": "public",
     "provenance": true

@@ -1,13 +1,13 @@
-> **Monorepo + TS 版**：本目录是 `deepseek-harness-plugins` monorepo 的标准子项目（`plugins/dsh-vision-bridge`），由 `~/.dsh/plugins/dsh-vision-bridge`（JS，v1.3.2）等价 TS 重写移植。
+> **Monorepo + TS 版**：本目录是 `deepseek-harness-plugins` monorepo 的标准子项目（`plugins/vision-bridge`），由 `~/.dsh/plugins/vision-bridge`（JS，v1.3.2）等价 TS 重写移植。
 >
 > - Host：原 `lib/index.js`（816 行）→ `src/host/{types,http,config,cache,vision,index}.ts`，tsup 打包为单文件 `lib/host.js`（ESM，schemastery 内联，运行时零依赖），导出 `{ name, inject, NS, ConfigSchema, apply }` 与原版一致。
 > - Client：原手写 `client.js`（374 行）→ `src/client/{types,styles,api,components,VisionSection,index}.ts`，tsup 打包为单文件 `lib/client.js`（IIFE，内含 `__ModuleLoader__.load`，react/primitives 运行时注入不打包）。
 
-> 构建：`pnpm --filter @dshp-inx/vision-bridge build`（tsup）→ `lib/host.js` + `lib/client.js`；包入口 `lib/host.js`，`./client` → `lib/client.js`。`lib/` 已提交（DSH `add github:` 直接从 git 安装，不跑 build，必须带构建产物）。
+> 构建：`pnpm --filter @dshp/vision-bridge build`（tsup）→ `lib/host.js` + `lib/client.js`；包入口 `lib/host.js`，`./client` → `lib/client.js`。`lib/` 已提交（DSH `add github:` 直接从 git 安装，不跑 build，必须带构建产物）。
 
-# @dshp-inx/vision-bridge
+# @dshp/vision-bridge
 
-DeepSeek Harness（DSH）**视觉桥接**插件：让**纯文本模型**也能“看图”——当用户消息中出现图片占位符 ` [image omitted because this model accepts text only…]` 时，模型调用 `vision_describe` 工具，插件把**本轮图片原图引用 + 你的提问**一起转交给**多模态视觉模型**去识别，主模型失败时自动用**备用模型重试**。配置在设置页完成并**通过官方 settings API 持久化到 `$DSH_HOME/settings.yaml`（`dshp-inx-vision-bridge` 命名空间）**，支持注释保留与热重载，重启后不丢。旧版 `storages/dshp-inx-vision-bridge.json` / 旧 settings key `vision-bridge` 会在首次启动时自动迁移并备份为 `.bak`。
+DeepSeek Harness（DSH）**视觉桥接**插件：让**纯文本模型**也能“看图”——当用户消息中出现图片占位符 ` [image omitted because this model accepts text only…]` 时，模型调用 `vision_describe` 工具，插件把**本轮图片原图引用 + 你的提问**一起转交给**多模态视觉模型**去识别，主模型失败时自动用**备用模型重试**。配置在设置页完成并**通过官方 settings API 持久化到 `$DSH_HOME/settings.yaml`（`dshp-vision-bridge` 命名空间）**，支持注释保留与热重载，重启后不丢。旧版 `storages/dshp-vision-bridge.json` / 旧 settings key `vision-bridge` 会在首次启动时自动迁移并备份为 `.bak`。
 
 > 设计原则：**对模型零侵扰、对用户零残留**。图片只取 leaf 字段的 owned copy，会话级 LRU 缓存；无密钥、无外部依赖；卸载即干净。
 
@@ -15,9 +15,9 @@ DeepSeek Harness（DSH）**视觉桥接**插件：让**纯文本模型**也能�
 
 | 部分 | 内容 |
 |---|---|
-| **Host（`src/host/` → `lib/host.js`）** | 注册 `vision_describe` 模型工具；监听 `agent/inbox/inserted` + `llm/stream` 缓存图片（最近 20 张/会话，至多 50 会话）；发现候选视觉模型（`setting.yml` 中 `input: [text, image]` 的模型 + `llm` 服务实时 provider 列表）；`vision_describe` 执行时完成 hint 过滤（sha 前缀或序号）、`maxImages` 截尾、`buildQuestion` 拼装 `detail` + `promptTemplate`、主→备 fallback；注入系统提示引导纯文本模型何时调用工具；暴露同源 JSON 路由供设置页（见下）。**通过官方 `ctx.settings` + `schemastery` 持久化到 `settings.yaml`（`dshp-inx-vision-bridge`），使用 settings 服务的 `installSection` 方法，支持热重载与注释保留，旧文件/旧 key 自动迁移**；接管发送门禁（启用且配好主模型时纯文本模型可直接发图，关闭即恢复）。 |
+| **Host（`src/host/` → `lib/host.js`）** | 注册 `vision_describe` 模型工具；监听 `agent/inbox/inserted` + `llm/stream` 缓存图片（最近 20 张/会话，至多 50 会话）；发现候选视觉模型（`setting.yml` 中 `input: [text, image]` 的模型 + `llm` 服务实时 provider 列表）；`vision_describe` 执行时完成 hint 过滤（sha 前缀或序号）、`maxImages` 截尾、`buildQuestion` 拼装 `detail` + `promptTemplate`、主→备 fallback；注入系统提示引导纯文本模型何时调用工具；暴露同源 JSON 路由供设置页（见下）。**通过官方 `ctx.settings` + `schemastery` 持久化到 `settings.yaml`（`dshp-vision-bridge`），使用 settings 服务的 `installSection` 方法，支持热重载与注释保留，旧文件/旧 key 自动迁移**；接管发送门禁（启用且配好主模型时纯文本模型可直接发图，关闭即恢复）。 |
 | **Client（`src/client/` → `lib/client.js`）** | 「设置 → 视觉模型」配置页：启用开关、主/备模型下拉（候选来自 Host 发现）、详细度（`auto`/`low`/`high`）、单次最多图片（`1–8`）、追加提示词（失焦保存）、重新读取、检查连通性。UI 全部使用 DSH 官方设计 token（`dsw-alias-*`），与官方设置页风格一致。无额外依赖。 |
-| **同源路由** | `GET /ext/dshp-inx-vision-bridge/state`（模型列表 + 当前配置）、`POST /ext/dshp-inx-vision-bridge/config`（保存补丁）、`GET /ext/dshp-inx-vision-bridge/check`（探活主/备路由），均带同源校验（`Origin` 与 `Host` 一致或缺失才放行）。 |
+| **同源路由** | `GET /ext/dshp-vision-bridge/state`（模型列表 + 当前配置）、`POST /ext/dshp-vision-bridge/config`（保存补丁）、`GET /ext/dshp-vision-bridge/check`（探活主/备路由），均带同源校验（`Origin` 与 `Host` 一致或缺失才放行）。 |
 | **工具** | `vision_describe`（见参数表），输出 `{ description, model, fallback_used }`，模型侧渲染为纯文本（`description`）。 |
 
 ### 模型工具：`vision_describe`
@@ -53,11 +53,11 @@ DeepSeek Harness（DSH）**视觉桥接**插件：让**纯文本模型**也能�
 | `maxImages` | `1–8` | `4` | 单次 `vision_describe` 最多喂给视觉模型的图片张数，超出取末尾若干张（最新）。 |
 | `promptTemplate` | `string` | `''` | 可选追加提示词，每次识别都会拼在问题末尾（截断 500 字符，存储上限 2000）。例如“重点看报错弹窗里的红字”。 |
 
-> **与动态版的区别**：动态（`cordis_define`）版本的配置只在内存中，重启进程后恢复默认；**标准包版本通过官方 `settings` API 持久化到 `settings.yaml`（`dshp-inx-vision-bridge`）**，重启后不丢，且外部手工编辑 `settings.yaml` 可热重载。
+> **与动态版的区别**：动态（`cordis_define`）版本的配置只在内存中，重启进程后恢复默认；**标准包版本通过官方 `settings` API 持久化到 `settings.yaml`（`dshp-vision-bridge`）**，重启后不丢，且外部手工编辑 `settings.yaml` 可热重载。
 
 ## 安装（唯一方式：克隆 monorepo + 本地安装）
 
-> 本包尚未发布到 npm（`@dshp-inx/vision-bridge` 在 npm 上 404），**不要用 `add github:` / `pnpm add`**，唯一入口就是克隆本仓库后本地 `add`。
+> 本包尚未发布到 npm（`@dshp/vision-bridge` 在 npm 上 404），**不要用 `add github:` / `pnpm add`**，唯一入口就是克隆本仓库后本地 `add`。
 
 ```sh
 # 1. 克隆 monorepo（lib/ 构建产物已提交，clone 下来就能用，无需 build）
@@ -66,7 +66,7 @@ cd deepseek-harness-plugins
 pnpm install
 
 # 2. 本地安装到 profile（路径按你执行命令时的 cwd 解析）
-dsh plugin --profile web add ./plugins/dsh-vision-bridge
+dsh plugin --profile web add ./plugins/vision-bridge
 
 # 3. 重启生效
 dsh web
@@ -74,16 +74,16 @@ dsh web
 
 `dsh plugin` 会把包写进 profile 的 `dsh.profile.bundles` —— **无需手动改配置文件**。
 
-**改源码后**：`src/host` 或 `src/client` 改完跑 `pnpm --filter @dshp-inx/vision-bridge build` 重新打出 `lib/host.js + lib/client.js`，然后 `dsh web` 重启（client 半强刷页面即可）。
+**改源码后**：`src/host` 或 `src/client` 改完跑 `pnpm --filter @dshp/vision-bridge build` 重新打出 `lib/host.js + lib/client.js`，然后 `dsh web` 重启（client 半强刷页面即可）。
 
 **验证**：打开 web → 设置 → 视觉模型 能看到卡片；或先发一张图再问“这张图里有什么？”（纯文本模型应自动调 `vision_describe`）。
 
 **一键 AI 安装**：把下面这段发给你的 DSH AI 即可：
 
 ```text
-帮我安装视觉桥接插件（monorepo Yinxe/deepseek-harness-plugins，子目录 plugins/dsh-vision-bridge，包名 @dshp-inx/vision-bridge）：
+帮我安装视觉桥接插件（monorepo Yinxe/deepseek-harness-plugins，子目录 plugins/vision-bridge，包名 @dshp/vision-bridge）：
 1. git clone monorepo 并 pnpm install
-2. dsh plugin --profile web add ./plugins/dsh-vision-bridge
+2. dsh plugin --profile web add ./plugins/vision-bridge
 3. dsh web 重启，确认无报错，设置页出现「视觉模型」即成功
 ```
 
@@ -93,16 +93,16 @@ dsh web
 cd deepseek-harness-plugins
 git pull
 pnpm install
-# 改过源码才需要：pnpm --filter @dshp-inx/vision-bridge build
-dsh plugin --profile web update "@dshp-inx/vision-bridge"
+# 改过源码才需要：pnpm --filter @dshp/vision-bridge build
+dsh plugin --profile web update "@dshp/vision-bridge"
 dsh web
 ```
 
-> ⚠️ **不要直接编辑 `node_modules/@dshp-inx/vision-bridge/`**：pnpm store 硬链接，改坏 store。只改 monorepo 里的 `plugins/dsh-vision-bridge/src`。
+> ⚠️ **不要直接编辑 `node_modules/@dshp/vision-bridge/`**：pnpm store 硬链接，改坏 store。只改 monorepo 里的 `plugins/vision-bridge/src`。
 
 ## 发布到 npm（可选，当前未发布）
 
-现在没发 npm，所以上面只能本地装。以后想 `pnpm add @dshp-inx/vision-bridge` 一键装，才需要发包：先建 npm 组织 `@dshp-inx`（见根 README），再打 tag 走 CI 的 Trusted Publishing。发完这里的安装方式会同步更新。
+现在没发 npm，所以上面只能本地装。以后想 `pnpm add @dshp/vision-bridge` 一键装，才需要发包：先建 npm 组织 `@dshp`（见根 README），再打 tag 走 CI 的 Trusted Publishing。发完这里的安装方式会同步更新。
 
 ## 配置视觉模型（`setting.yml`）
 
@@ -147,8 +147,8 @@ llm-pi-ai:
 - **语法自检**：
 
   ```sh
-  pnpm --filter @dshp-inx/vision-bridge test   # node --check lib/host.js + lib/client.js
-  # 或直接：node --check plugins/dsh-vision-bridge/lib/host.js && node --check plugins/dsh-vision-bridge/lib/client.js
+  pnpm --filter @dshp/vision-bridge test   # node --check lib/host.js + lib/client.js
+  # 或直接：node --check plugins/vision-bridge/lib/host.js && node --check plugins/vision-bridge/lib/client.js
   ```
 
 - **设置页自检**：打开 `http://127.0.0.1:3080`（或你的 `dsh web` 端口）→ 设置 → 视觉模型，查看：
@@ -181,18 +181,18 @@ llm-pi-ai:
 
 关键细节：
 
-- **系统提示**：`systemPrompt.section('dshp-inx-vision-bridge', order: 80)` 注入视觉能力说明，模型无需用户提醒即可知道何时调用工具。
+- **系统提示**：`systemPrompt.section('dshp-vision-bridge', order: 80)` 注入视觉能力说明，模型无需用户提醒即可知道何时调用工具。
 - **图片引用**：`vision_describe` 内部把缓存的 `attachment` 原样作为 `content: [{type:'image', attachment}]` 发给视觉模型，复用 DSH 附件管线，无需 base64 重编码。
 - **流式归一**：兼容 `text-delta` 增量与 `block-end` 全量，并在 `finish` 中处理 `error`/`aborted`，空返回视为失败以触发 fallback。
-- **持久化（官方推荐）**：`POST /ext/dshp-inx-vision-bridge/config` 每次保存后通过 `ctx.settings.update('dshp-inx-vision-bridge', patch)` 写入 `settings.yaml`（`FileSettingsProvider` 以 `leaf-level diff` 保留注释与格式），启动时通过 settings 服务的 `installSection` + `schemastery` 注册 `dshp-inx-vision-bridge` 命名空间并自动合并 `settings.yaml` 用户层、`cordis.patch.yml` 的 `config`（`base`）与 `schema` 默认值；旧版 `storages/dshp-inx-vision-bridge.json` / 旧 key `vision-bridge` 首次启动时自动迁移并备份为 `.bak`，此后不再读写。
+- **持久化（官方推荐）**：`POST /ext/dshp-vision-bridge/config` 每次保存后通过 `ctx.settings.update('dshp-vision-bridge', patch)` 写入 `settings.yaml`（`FileSettingsProvider` 以 `leaf-level diff` 保留注释与格式），启动时通过 settings 服务的 `installSection` + `schemastery` 注册 `dshp-vision-bridge` 命名空间并自动合并 `settings.yaml` 用户层、`cordis.patch.yml` 的 `config`（`base`）与 `schema` 默认值；旧版 `storages/dshp-vision-bridge.json` / 旧 key `vision-bridge` 首次启动时自动迁移并备份为 `.bak`，此后不再读写。
 
 ## 配置（`cordis.patch.yml` 覆盖）
 
 `patch` 层可覆盖默认值（可选，设置页保存后持久化会覆盖此处）：
 
 ```yaml
-- id: dshp-inx-vision-bridge
-  name: "@dshp-inx/vision-bridge"
+- id: dshp-vision-bridge
+  name: "@dshp/vision-bridge"
   config:
     enabled: true
     primary: { provider: "openrouter", model: "qwen/qwen2.5-vl-32b-instruct" }
@@ -202,7 +202,7 @@ llm-pi-ai:
     promptTemplate: "重点看报错弹窗"   # 可选，≤2000 字符
 ```
 
-> 设置页的保存会覆盖同名字段并落盘到 `settings.yaml` 的 `dshp-inx-vision-bridge` 分节；旧 `storages/dshp-inx-vision-bridge.json` 已不再读写，首次启动后会备份为 `.bak`。
+> 设置页的保存会覆盖同名字段并落盘到 `settings.yaml` 的 `dshp-vision-bridge` 分节；旧 `storages/dshp-vision-bridge.json` 已不再读写，首次启动后会备份为 `.bak`。
 
 ## 代码结构
 
@@ -218,13 +218,13 @@ LICENSE             MIT
 ## 常见问题
 
 - **纯文本模型下发不出图片（“当前模型不支持图片”）**：拦的是服务端发送门禁（`MODEL_DOES_NOT_SUPPORT_IMAGES`），不是输入框禁用粘贴。本插件 v1.1.0+ 在“启用且配好主视觉模型”时自动接管该门禁（状态卡“发送门禁”显示“桥接接管中”），纯文本模型可直接发图；若显示“未接管”，请先启用桥接并选择主模型。接管只负责放行，真实请求仍按文本模型投影为占位符，再由 `vision_describe` 桥接。
-- **设置页没有“视觉模型”卡片**：确认 profile `package.json` 的 `dsh.profile.bundles` 含 `@dshp-inx/vision-bridge`，且依赖已装上；重启 `dsh web` 后硬刷新浏览器。
+- **设置页没有“视觉模型”卡片**：确认 profile `package.json` 的 `dsh.profile.bundles` 含 `@dshp/vision-bridge`，且依赖已装上；重启 `dsh web` 后硬刷新浏览器。
 - **报“本轮没有找到可用的图片”**：图片未作为附件发送（重试一次），或模型连续调用时会话 `sessionId` 未正确传递。确认图片是“上传/粘贴”而非“图片 URL 文本”，并让模型把占位符里的 sha 前缀填进 `image_hint` 重试。
 - **报“视觉桥接已在设置页关闭”**：设置页把“启用视觉桥接”勾上并保存。
 - **报“没有可用的视觉模型”**：见“配置视觉模型”一节，给视觉模型加 `input: [text, image]`，然后点“重新读取”。
 - **“检查连通性”报“提供方未注册”**：`provider` 拼写错误或该 provider 未在 `setting.yml` 中配置。
-- **图片识别总是走 fallback**：主模型名/路由错误或余额不足，查看 `dsh web` 日志中 `[dshp-inx-vision-bridge]` 相关错误；保存后主模型会在 `settings.yaml` 的 `dshp-inx-vision-bridge` 下持久化，改对后重新检查。
-- **`WEB_DUPLICATE_PROVIDER` / 工具重复**：同一插件同时存在动态（`cordis_define` 的 `dshp-inx-vision-bridge`）与静态（本包）两份，请 `cordis_undefine` 掉动态版本，再重启 `dsh web`。
+- **图片识别总是走 fallback**：主模型名/路由错误或余额不足，查看 `dsh web` 日志中 `[dshp-vision-bridge]` 相关错误；保存后主模型会在 `settings.yaml` 的 `dshp-vision-bridge` 下持久化，改对后重新检查。
+- **`WEB_DUPLICATE_PROVIDER` / 工具重复**：同一插件同时存在动态（`cordis_define` 的 `dshp-vision-bridge`）与静态（本包）两份，请 `cordis_undefine` 掉动态版本，再重启 `dsh web`。
 - **报 `MissingSessionID`（`x-opencode-session` 缺失）**：opencode 系（go/zen）自 2026-09-06 起强制要求会话头。v1.3.1+ 已把会话 ID 透传给 `llm.stream`；但 `openai-completions` 协议的提供方还需在 `settings.yaml` 里为 `opencode-go` / `opencode-zen` 打开会话亲和头，否则透传的 ID 不会被发到网关：
   ```yaml
   llm-pi-ai:
@@ -242,19 +242,21 @@ LICENSE             MIT
 ## 卸载
 
 ```sh
-dsh plugin --profile web remove "@dshp-inx/vision-bridge"
+dsh plugin --profile web remove "@dshp/vision-bridge"
 dsh web
 ```
 
-`remove` 会自动从 `dsh.profile.bundles` 撤下挂载（monorepo 本体不用删）。设置页配置已落盘到 `settings.yaml` 的 `dshp-inx-vision-bridge` 分节，按需手动清理；旧 `storages/dshp-inx-vision-bridge.json` 已迁移为 `.bak`。
+`remove` 会自动从 `dsh.profile.bundles` 撤下挂载（monorepo 本体不用删）。设置页配置已落盘到 `settings.yaml` 的 `dshp-vision-bridge` 分节，按需手动清理；旧 `storages/dshp-vision-bridge.json` 已迁移为 `.bak`。
 
 ## 更新日志
 
-- **v1.3.0**：settings 命名空间跟上插件前缀——`settings.yaml` key 由 `vision-bridge` 改为 `dshp-inx-vision-bridge`，与包名 `@dshp-inx/vision-bridge` / 路由 `/ext/dshp-inx-vision-bridge/*` / cordis 行 id / 日志前缀保持一致；启动时自动把旧 `vision-bridge` 顶层 key 重命名（新旧并存时以新为准），旧 `storages/dshp-inx-vision-bridge.json` 迁移逻辑不变。
+- **v1.4.0**：组织规范化——包名由 `@dshp-inx/vision-bridge` 改为 `@dshp/vision-bridge`（monorepo `plugins/vision-bridge`），cordis 行 id / settings 命名空间 / `/ext/*` 路由同步为 `dshp-vision-bridge`。老用户不断档：`settings.yaml` 里 `vision-bridge` / `dshp-inx-vision-bridge` 自动重命名，`storages/dshp-inx-vision-bridge.json` 自动迁移并备份 `.bak`。升级后请把 profile 的 `cordis.patch.yml` 里旧 id 换成 `dshp-vision-bridge`（见“安装”节重装一次最省事）。
 
-- **v1.2.0**：命名空间化——cordis 行 id、`/ext/*` 路由、effect label、日志前缀、系统提示 section、设置 section id、持久化文件统一加 `dshp-inx-vision-bridge` 前缀（旧 `vision_bridge.json` 不再读取，可手动删除；默认启用，首次发现模型后自动选中主/备并落盘新文件）；包名 `@dshp-inx/vision-bridge` 与工具名 `vision_describe` 保持不变。
+- **v1.3.0**：settings 命名空间跟上插件前缀——`settings.yaml` key 由 `vision-bridge` 改为 `dshp-vision-bridge`，与包名 `@dshp/vision-bridge` / 路由 `/ext/dshp-vision-bridge/*` / cordis 行 id / 日志前缀保持一致；启动时自动把旧 `vision-bridge` 顶层 key 重命名（新旧并存时以新为准），旧 `storages/dshp-vision-bridge.json` 迁移逻辑不变。
 
-- **v1.1.0**：接管发送门禁——启用且配好主模型时，纯文本模型可直接发送图片（此前被 `MODEL_DOES_NOT_SUPPORT_IMAGES` 拒收）；设置页状态卡新增“发送门禁”行；`GET /ext/dshp-inx-vision-bridge/state` 新增 `admissionTakeover` 字段。
+- **v1.2.0**：命名空间化——cordis 行 id、`/ext/*` 路由、effect label、日志前缀、系统提示 section、设置 section id、持久化文件统一加 `dshp-vision-bridge` 前缀（旧 `vision_bridge.json` 不再读取，可手动删除；默认启用，首次发现模型后自动选中主/备并落盘新文件）；包名 `@dshp/vision-bridge` 与工具名 `vision_describe` 保持不变。
+
+- **v1.1.0**：接管发送门禁——启用且配好主模型时，纯文本模型可直接发送图片（此前被 `MODEL_DOES_NOT_SUPPORT_IMAGES` 拒收）；设置页状态卡新增“发送门禁”行；`GET /ext/dshp-vision-bridge/state` 新增 `admissionTakeover` 字段。
 
 ## 免责声明
 

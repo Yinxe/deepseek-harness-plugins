@@ -1,5 +1,5 @@
 /**
- * @dshp-inx/vision-bridge —— 共享类型定义
+ * @dshp/vision-bridge —— 共享类型定义
  *
  * DSH 运行时（Cordis ctx / tools / llm / settings / webServer）暂无官方 npm 类型包，
  * Host 侧统一用 `AnyCtx`（= any 的别名）透传，仅对本插件自有的数据结构做严格建模。

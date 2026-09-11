@@ -61,7 +61,7 @@
 `;
 
   // src/client/api.ts
-  var BASE = "/ext/dshp-inx-vision-bridge";
+  var BASE = "/ext/dshp-vision-bridge";
   async function fetchState() {
     const r = await fetch(`${BASE}/state`, { cache: "no-store" });
     return await r.json();
@@ -408,7 +408,7 @@
         React.createElement(
           "p",
           { className: "vb-hint", style: { marginTop: 4 } },
-          "\u5DE5\u4F5C\u65B9\u5F0F\uFF1A\u56FE\u7247\u5148\u7F13\u5B58\u5728\u672C\u63D2\u4EF6\uFF08\u6700\u8FD1 20 \u5F20/\u4F1A\u8BDD\uFF09\uFF0Cvision_describe \u628A\u539F\u56FE\u5F15\u7528 + \u4F60\u7684\u95EE\u9898\u4E00\u8D77\u53D1\u7ED9\u4E3B\u89C6\u89C9\u6A21\u578B\u3002\u914D\u7F6E\u5DF2\u6301\u4E45\u5316\u5230 settings.yaml\uFF08dshp-inx-vision-bridge \u547D\u540D\u7A7A\u95F4\uFF09\uFF0C\u652F\u6301\u70ED\u91CD\u8F7D\u4E0E\u6CE8\u91CA\u4FDD\u7559\u3002"
+          "\u5DE5\u4F5C\u65B9\u5F0F\uFF1A\u56FE\u7247\u5148\u7F13\u5B58\u5728\u672C\u63D2\u4EF6\uFF08\u6700\u8FD1 20 \u5F20/\u4F1A\u8BDD\uFF09\uFF0Cvision_describe \u628A\u539F\u56FE\u5F15\u7528 + \u4F60\u7684\u95EE\u9898\u4E00\u8D77\u53D1\u7ED9\u4E3B\u89C6\u89C9\u6A21\u578B\u3002\u914D\u7F6E\u5DF2\u6301\u4E45\u5316\u5230 settings.yaml\uFF08dshp-vision-bridge \u547D\u540D\u7A7A\u95F4\uFF09\uFF0C\u652F\u6301\u70ED\u91CD\u8F7D\u4E0E\u6CE8\u91CA\u4FDD\u7559\u3002"
         )
       );
       return React.createElement("div", { className: "vb-page" }, children);
@@ -417,7 +417,7 @@
   }
 
   // src/client/index.ts
-  var PLUGIN_ID = "@dshp-inx/vision-bridge";
+  var PLUGIN_ID = "@dshp/vision-bridge";
   function register() {
     const loader = typeof window !== "undefined" ? window.__ModuleLoader__ : void 0;
     if (!loader || typeof loader.load !== "function") return;
@@ -436,14 +436,14 @@
           const slots = ctx.get("slots");
           if (slots === void 0) return;
           const style = document.createElement("style");
-          style.setAttribute("data-plugin-css", "dshp-inx-vision-bridge/settings.css");
+          style.setAttribute("data-plugin-css", "dshp-vision-bridge/settings.css");
           style.textContent = CSS;
           document.head.appendChild(style);
-          ctx.effect(() => () => style.remove(), "dshp-inx-vision-bridge: section styles");
+          ctx.effect(() => () => style.remove(), "dshp-vision-bridge: section styles");
           const Section = VisionSection;
           slots.inject(
             "settings.section",
-            () => slots.register({ name: "settings.section", id: "dshp-inx-vision-bridge", order: 25, label: "\u89C6\u89C9\u6A21\u578B" }, Section)
+            () => slots.register({ name: "settings.section", id: "dshp-vision-bridge", order: 25, label: "\u89C6\u89C9\u6A21\u578B" }, Section)
           );
         };
         return moduleShim.exports;
