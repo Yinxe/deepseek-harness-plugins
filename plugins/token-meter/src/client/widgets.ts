@@ -71,6 +71,8 @@ function cascadePos(count: number): WidgetPlacement {
 export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<string, any> {
   const h = React.createElement;
   let open: Record<string, WidgetPlacement> = typeof window !== 'undefined' ? loadAll() : {};
+  // 置顶次序：数组尾部 = 最新交互/新开（z-index 随之递增），点击/拖动自动置顶
+  let order: string[] = Object.keys(open);
   const listeners = new Set<() => void>();
 
   function emit(save: boolean): void {
@@ -91,6 +93,18 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
     return node;
   }
 
+  /** 点击/交互浮窗时置顶（最新者 z 最高） */
+  function raise(id: string): void {
+    const i = order.indexOf(id);
+    if (i < 0 || i === order.length - 1) return;
+    order = order.filter((x) => x !== id).concat(id);
+    emit(false);
+  }
+  function zOf(id: string): number {
+    const i = order.indexOf(id);
+    return 300 + (i < 0 ? 0 : i);
+  }
+
   function useWidgets(): OpenWidget[] {
     const [, force] = (React.useReducer as any)((x: number) => x + 1, 0);
     React.useEffect(() => {
@@ -109,6 +123,7 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
   function openWidget(id: string, at?: WidgetPlacement): void {
     const pos = clampPos(at || (open[id] as WidgetPlacement | undefined) || cascadePos(Object.keys(open).length));
     open = Object.assign({}, open, { [id]: pos });
+    order = order.filter((x) => x !== id).concat(id); // 新开/移动都置顶
     emit(true);
   }
   function closeWidget(id: string): void {
@@ -116,6 +131,7 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
     const next = Object.assign({}, open);
     delete next[id];
     open = next;
+    order = order.filter((x) => x !== id);
     emit(true);
   }
   function moveWidget(id: string, pos: WidgetPlacement): void {
@@ -125,6 +141,23 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
   }
   function commitWidget(): void {
     emit(true);
+  }
+
+  /** 窗口缩放后钳制回视口（浮窗不丢失） */
+  function clampAllToViewport(): void {
+    let changed = false;
+    const next = Object.assign({}, open);
+    for (const id of Object.keys(next)) {
+      const c = clampPos(next[id] as WidgetPlacement);
+      if (c.x !== (next[id] as WidgetPlacement).x || c.y !== (next[id] as WidgetPlacement).y) {
+        next[id] = c;
+        changed = true;
+      }
+    }
+    if (changed) {
+      open = next;
+      emit(true);
+    }
   }
 
   /** 抓手：点按=弹出浮窗；按住拖动超 8px=直接拖出并跟随鼠标。
@@ -216,14 +249,26 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
   function WidgetFloat(props: { id: string; children?: any }): any {
     const list = useWidgets();
     const cur = list.filter((w) => w.id === props.id)[0];
+    // 窗口缩放时把坐标钳制回视口（hook 必须在早退前声明）
+    React.useEffect(() => {
+      const onR = (): void => {
+        const p = (open as Record<string, WidgetPlacement>)[props.id];
+        if (!p) return;
+        const c = clampPos(p);
+        if (c.x !== p.x || c.y !== p.y) moveWidget(props.id, c);
+      };
+      window.addEventListener('resize', onR);
+      return () => window.removeEventListener('resize', onR);
+    }, [props.id]);
     if (!cur) return null;
     return portal(
       h(
         'div',
         {
           className: 'tm-widgetFloat tm-in',
-          style: { left: cur.pos.x + 'px', top: cur.pos.y + 'px', width: FLOAT_W + 'px' },
+          style: { left: cur.pos.x + 'px', top: cur.pos.y + 'px', width: FLOAT_W + 'px', zIndex: zOf(props.id) },
           onPointerDown: (e: any) => {
+            raise(props.id); // 交互即置顶
             const t = e.target;
             if (t && t.closest && t.closest('button, input, select, textarea, a, .tm-grip, .tm-seg, .tm-modelchip, .tm-switch')) return;
             startDrag(props.id, cur.pos, e);
@@ -251,5 +296,8 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
         : h('button', { className: 'tm-minibtn', title: '弹出为独立浮窗', onClick: () => openWidget(props.id) }, '⧉'));
   }
 
-  return { useWidgets, isOpen, openWidget, closeWidget, moveWidget, commitWidget, gripProps, WidgetFloat, WidgetToggle };
+  return {
+    useWidgets, isOpen, openWidget, closeWidget, moveWidget, commitWidget, gripProps,
+    WidgetFloat, WidgetToggle, raise, zOf, clampAllToViewport,
+  };
 }

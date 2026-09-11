@@ -271,6 +271,10 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
         const prefix = sep >= 0 ? w.id.slice(0, sep) : '';
         const rest = sep >= 0 ? w.id.slice(sep + 1) : w.id;
         // 统一规格：所有小组件浮窗同一宽度（widgets 常量 FLOAT_W），CSS 统一限高 60vh
+        if (w.id === 'peak') {
+          return h(widgets.WidgetFloat, { key: w.id, id: w.id },
+            h(quota.PeakIndicator, { widgets, widgetId: w.id }));
+        }
         if (prefix === 'quota') {
           return h(widgets.WidgetFloat, { key: w.id, id: w.id },
             h(quota.QuotaVendorWidget, { vendorId: rest }));

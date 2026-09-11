@@ -78,6 +78,20 @@
 .tm-legend{display:flex;align-items:center;gap:4px;margin-top:8px;flex-wrap:wrap}
 .tm-cacheRow{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:11px;color:var(--dsw-alias-label-secondary);flex-wrap:wrap;line-height:16px}
 .tm-cacheSep{color:var(--dsw-alias-label-tertiary)}
+/* \u2500\u2500 \u5CF0\u8C37\u663E\u793A\u5668\uFF08\u989D\u5EA6\u9762\u677F\u7F6E\u9876\uFF09\uFF1A\u5DE5\u4F5C\u65F6\u95F4=\u5CF0\uFF0C\u5176\u4F59=\u8C37 \u2500\u2500 */
+.tm-peak{display:flex;flex-direction:column;gap:6px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);border-radius:var(--tm-r-card);padding:10px 12px;margin:0 0 8px}
+.tm-peakHead{display:flex;align-items:center;gap:6px;min-width:0}
+.tm-peakDot{width:8px;height:8px;border-radius:50%;flex:none}
+.tm-peakDot.peak{background:var(--dsw-alias-state-warn-primary);box-shadow:0 0 6px var(--dsw-alias-state-warn-primary)}
+.tm-peakDot.valley{background:var(--dsw-alias-state-success-primary)}
+.tm-peakTitle{font-size:12px;font-weight:600;color:var(--dsw-alias-label-primary);white-space:nowrap}
+.tm-peakTime{flex:1;min-width:0;text-align:right;font-size:11px;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tm-peakBand{display:flex;gap:1.5px;height:10px}
+.tm-peakCell{flex:1 1 0;min-width:0;border-radius:2px;background:var(--dsw-alias-interactive-bg-hover)}
+.tm-peakCell.on{background:var(--dsw-alias-state-warn-primary);opacity:.85}
+.tm-peakCell.now{outline:1.5px solid var(--dsw-alias-label-primary);outline-offset:-1px}
+.tm-peakHint{font-size:10.5px;line-height:15px;color:var(--dsw-alias-label-tertiary)}
+.tm-peakHint b{color:var(--dsw-alias-label-secondary);font-weight:600}
 .tm-modelchip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--dsw-alias-border-l1);border-radius:999px;padding:2px 9px;font-size:11.5px;cursor:pointer;color:var(--dsw-alias-label-secondary);background:transparent;font-family:inherit;line-height:18px;max-width:180px;position:relative}
 .tm-modelchip:hover{border-color:var(--dsw-alias-state-business-primary)}
 .tm-modelchip[data-off="1"]{opacity:.38}
@@ -1812,6 +1826,17 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       React.useEffect(() => {
         void ensureLoad();
       }, []);
+      const rawSec = s.cfg ? s.cfg.refreshSec : void 0;
+      const numSec = rawSec === void 0 || rawSec === null || rawSec === "" ? 60 : Number(rawSec);
+      const effSec2 = numSec === 0 ? 0 : isFinite(numSec) ? Math.min(3600, Math.max(10, numSec || 60)) : 60;
+      React.useEffect(() => {
+        if (!(effSec2 > 0)) return void 0;
+        const id = window.setInterval(() => {
+          if (store.get().loading) return;
+          void refreshVendor(props.vendorId);
+        }, effSec2 * 1e3);
+        return () => window.clearInterval(id);
+      }, [effSec2, props.vendorId]);
       const v = (s.cfg && s.cfg.vendors || []).filter((x) => x.id === props.vendorId)[0];
       if (!s.cfg) return h("div", { className: "tm-card" }, h("div", { className: "tm-hint" }, s.loading ? "\u989D\u5EA6\u52A0\u8F7D\u4E2D\u2026" : s.error || "\u989D\u5EA6\u52A0\u8F7D\u5931\u8D25"));
       if (!v) return h("div", { className: "tm-card" }, h("div", { className: "tm-hint" }, "\u4F9B\u5E94\u5546\u5DF2\u5220\u9664\uFF0C\u5173\u95ED\u672C\u6D6E\u7A97\u5373\u53EF\u3002"));
@@ -1853,26 +1878,77 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         ) : h(ErrBox, { msg: snap.error || "\u62C9\u53D6\u5931\u8D25", meta: v.name + " \xB7 \u5931\u8D25\u4E8E" + timeAgo(snap.at) }) : h("div", { className: "tm-hint", style: { marginTop: 6 } }, "\u5C1A\u672A\u62C9\u53D6\uFF0C\u70B9\u51FB\u62C9\u53D6\u83B7\u53D6\u6700\u65B0\u989D\u5EA6\u3002")
       );
     }
+    const PEAK_RULE = { weekdays: [1, 2, 3, 4, 5], startHour: 9, endHour: 18 };
+    function isPeakHour(t) {
+      const w = t.getDay();
+      if (!PEAK_RULE.weekdays.includes(w)) return false;
+      const hr = t.getHours();
+      return hr >= PEAK_RULE.startHour && hr < PEAK_RULE.endHour;
+    }
+    function nextPeakSwitch(nowMs, peak) {
+      const step = 6e4;
+      for (let i = 1; i < 7 * 24 * 60; i++) {
+        const t = new Date(nowMs + i * step);
+        if (isPeakHour(t) !== peak) return { ms: i * step, toPeak: !peak };
+      }
+      return { ms: 7 * 24 * 36e5, toPeak: peak };
+    }
+    function fmtDur(ms) {
+      const m = Math.round(ms / 6e4);
+      const hh = Math.floor(m / 60);
+      const mm = m % 60;
+      if (hh >= 24) return Math.floor(hh / 24) + " \u5929 " + hh % 24 + " \u5C0F\u65F6";
+      if (hh > 0) return hh + " \u5C0F\u65F6 " + mm + " \u5206";
+      return mm + " \u5206";
+    }
+    function PeakIndicator(props) {
+      const now = useNow(6e4);
+      const d = new Date(now);
+      const peak = isPeakHour(d);
+      const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+      const ns = nextPeakSwitch(now, peak);
+      const cells = [];
+      for (let hr = 0; hr < 24; hr++) {
+        const on = !isWeekend && hr >= PEAK_RULE.startHour && hr < PEAK_RULE.endHour;
+        cells.push(h("span", {
+          key: hr,
+          className: "tm-peakCell" + (on ? " on" : "") + (hr === d.getHours() ? " now" : ""),
+          title: String(hr).padStart(2, "0") + ":00" + (on ? " \u5CF0" : " \u8C37")
+        }));
+      }
+      const bandLabel = isWeekend ? "\u5468\u672B\u5168\u5929\u4E3A\u8C37" : PEAK_RULE.startHour + ":00\u2013" + PEAK_RULE.endHour + ":00 \u4E3A\u5CF0";
+      const curTxt = peak ? "\u5CF0\u65F6\u6BB5" : "\u8C37\u65F6\u6BB5";
+      const nextTxt = ns.toPeak ? "\u7EA6 " + fmtDur(ns.ms) + " \u540E\u8FDB\u5165\u5CF0" : "\u7EA6 " + fmtDur(ns.ms) + " \u540E\u8FDB\u5165\u8C37";
+      return h(
+        "div",
+        { className: "tm-peak" },
+        h(
+          "div",
+          { className: "tm-peakHead" },
+          h("span", { className: "tm-peakDot " + (peak ? "peak" : "valley") }),
+          h("span", { className: "tm-peakTitle" }, "\u5CF0\u8C37\u63D0\u9192 \xB7 " + curTxt),
+          h("span", { className: "tm-peakTime" }, nextTxt),
+          props.widgets && props.widgetId ? h(props.widgets.WidgetToggle, { id: props.widgetId }) : null
+        ),
+        h("div", { className: "tm-peakBand" }, cells),
+        h(
+          "div",
+          { className: "tm-peakHint" },
+          "\u90E8\u5206\u4F9B\u5E94\u5546\u91C7\u7528\u5CF0\u8C37\u5B9A\u4EF7\uFF1A" + bandLabel + "\uFF0C",
+          h("b", null, peak ? "\u5F53\u524D\u4E3A\u5CF0\uFF0C\u7528\u91CF\u6D88\u8017\u52A0\u901F\uFF0C\u8BF7\u7559\u610F\u989D\u5EA6\u3002" : "\u5F53\u524D\u4E3A\u8C37\uFF0C\u8D39\u7387\u76F8\u5BF9\u4F4E\u3002")
+        )
+      );
+    }
     function QuotaRightPane() {
       const s = useStore();
       React.useEffect(() => {
         void ensureLoad();
       }, []);
       const floats = WG && typeof WG.useWidgets === "function" ? WG.useWidgets() : [];
-      const rawSec = s.cfg ? s.cfg.refreshSec : void 0;
-      const numSec = rawSec === void 0 || rawSec === null || rawSec === "" ? 60 : Number(rawSec);
-      const effSec = numSec === 0 ? 0 : isFinite(numSec) ? Math.min(3600, Math.max(10, numSec || 60)) : 60;
-      const effId = s.cfg ? s.cfg.activeVendor || "" : "";
-      React.useEffect(() => {
-        if (!effId || !(effSec > 0)) return void 0;
-        const id = window.setInterval(() => {
-          if (store.get().loading) return;
-          const curA = activeOf(store.get());
-          if (curA && curA.id === effId) void refreshVendor(effId);
-        }, effSec * 1e3);
-        return () => window.clearInterval(id);
-      }, [effId, effSec]);
       const kids = [];
+      if (!floats.some((w) => w.id === "peak")) {
+        kids.push(h(PeakIndicator, { key: "peak", widgets: WG || void 0, widgetId: "peak" }));
+      }
       kids.push(h("p", { key: "d", className: "tm-intro" }, "\u5168\u90E8\u4F9B\u5E94\u5546\u989D\u5EA6\u4E00\u89C8\uFF08\u53F3\u4FA7\u680F\u7A7A\u95F4\u66F4\u5BBD\uFF0C\u56FE\u8868\u5B8C\u6574\u5C55\u5F00\uFF09\u3002\u589E\u5220\u6539\u8BF7\u5230 \u8BBE\u7F6E \u2192 Token \u8BA1\u91CF\u3002"));
       if (s.error) kids.push(h("p", { key: "err", className: "tm-notice tm-notice-err" }, s.error));
       if (!s.cfg) {
@@ -1903,6 +1979,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       QuotaFloatEntry,
       QuotaRightPane,
       QuotaVendorWidget,
+      PeakIndicator,
       quotaStore: {
         useStore,
         useNow,
@@ -3792,6 +3869,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
   function createWidgetSystem(React, ReactDOM) {
     const h = React.createElement;
     let open = typeof window !== "undefined" ? loadAll() : {};
+    let order = Object.keys(open);
     const listeners = /* @__PURE__ */ new Set();
     function emit(save) {
       if (save) saveAll(open);
@@ -3812,6 +3890,16 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       }
       return node;
     }
+    function raise(id) {
+      const i = order.indexOf(id);
+      if (i < 0 || i === order.length - 1) return;
+      order = order.filter((x) => x !== id).concat(id);
+      emit(false);
+    }
+    function zOf(id) {
+      const i = order.indexOf(id);
+      return 300 + (i < 0 ? 0 : i);
+    }
     function useWidgets() {
       const [, force] = React.useReducer((x) => x + 1, 0);
       React.useEffect(() => {
@@ -3829,6 +3917,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     function openWidget(id, at) {
       const pos = clampPos(at || open[id] || cascadePos(Object.keys(open).length));
       open = Object.assign({}, open, { [id]: pos });
+      order = order.filter((x) => x !== id).concat(id);
       emit(true);
     }
     function closeWidget(id) {
@@ -3836,6 +3925,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const next = Object.assign({}, open);
       delete next[id];
       open = next;
+      order = order.filter((x) => x !== id);
       emit(true);
     }
     function moveWidget(id, pos) {
@@ -3845,6 +3935,21 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     }
     function commitWidget() {
       emit(true);
+    }
+    function clampAllToViewport() {
+      let changed = false;
+      const next = Object.assign({}, open);
+      for (const id of Object.keys(next)) {
+        const c = clampPos(next[id]);
+        if (c.x !== next[id].x || c.y !== next[id].y) {
+          next[id] = c;
+          changed = true;
+        }
+      }
+      if (changed) {
+        open = next;
+        emit(true);
+      }
     }
     function gripOut(id, e) {
       if (e.button !== void 0 && e.button !== 0) return;
@@ -3933,14 +4038,25 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     function WidgetFloat(props) {
       const list = useWidgets();
       const cur = list.filter((w) => w.id === props.id)[0];
+      React.useEffect(() => {
+        const onR = () => {
+          const p = open[props.id];
+          if (!p) return;
+          const c = clampPos(p);
+          if (c.x !== p.x || c.y !== p.y) moveWidget(props.id, c);
+        };
+        window.addEventListener("resize", onR);
+        return () => window.removeEventListener("resize", onR);
+      }, [props.id]);
       if (!cur) return null;
       return portal(
         h(
           "div",
           {
             className: "tm-widgetFloat tm-in",
-            style: { left: cur.pos.x + "px", top: cur.pos.y + "px", width: FLOAT_W + "px" },
+            style: { left: cur.pos.x + "px", top: cur.pos.y + "px", width: FLOAT_W + "px", zIndex: zOf(props.id) },
             onPointerDown: (e) => {
+              raise(props.id);
               const t = e.target;
               if (t && t.closest && t.closest("button, input, select, textarea, a, .tm-grip, .tm-seg, .tm-modelchip, .tm-switch")) return;
               startDrag(props.id, cur.pos, e);
@@ -3963,7 +4079,20 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         opened ? h("button", { className: "tm-minibtn", title: "\u56DE\u5F52\u4FA7\u680F\uFF08\u5173\u95ED\u6D6E\u7A97\uFF0C\u5185\u5BB9\u4ECD\u5728\u539F\u4F4D\uFF09", onClick: () => closeWidget(props.id) }, "\u56DE\u5F52") : h("button", { className: "tm-minibtn", title: "\u5F39\u51FA\u4E3A\u72EC\u7ACB\u6D6E\u7A97", onClick: () => openWidget(props.id) }, "\u29C9")
       );
     }
-    return { useWidgets, isOpen, openWidget, closeWidget, moveWidget, commitWidget, gripProps, WidgetFloat, WidgetToggle };
+    return {
+      useWidgets,
+      isOpen,
+      openWidget,
+      closeWidget,
+      moveWidget,
+      commitWidget,
+      gripProps,
+      WidgetFloat,
+      WidgetToggle,
+      raise,
+      zOf,
+      clampAllToViewport
+    };
   }
 
   // src/client/TokenMeterSection.ts
@@ -4296,6 +4425,13 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           const sep = w.id.indexOf(":");
           const prefix = sep >= 0 ? w.id.slice(0, sep) : "";
           const rest = sep >= 0 ? w.id.slice(sep + 1) : w.id;
+          if (w.id === "peak") {
+            return h(
+              widgets.WidgetFloat,
+              { key: w.id, id: w.id },
+              h(quota.PeakIndicator, { widgets, widgetId: w.id })
+            );
+          }
           if (prefix === "quota") {
             return h(
               widgets.WidgetFloat,

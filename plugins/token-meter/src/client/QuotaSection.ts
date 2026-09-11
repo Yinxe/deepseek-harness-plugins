@@ -1087,6 +1087,19 @@ export function createQuotaSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     const s = useStore();
     const now = useNow(1000);
     React.useEffect(() => { void ensureLoad(); }, []);
+    // 自动刷新（小组件/右栏卡片统一）：按 refreshSec 定时刷新本供应商自己的数据。
+    // 浮窗状态、右栏状态都生效；0=关闭；并发请求由 store.loading 互斥。
+    const rawSec = s.cfg ? s.cfg.refreshSec : undefined;
+    const numSec = rawSec === undefined || rawSec === null || rawSec === '' ? 60 : Number(rawSec);
+    const effSec2 = numSec === 0 ? 0 : (isFinite(numSec) ? Math.min(3600, Math.max(10, numSec || 60)) : 60);
+    React.useEffect(() => {
+      if (!(effSec2 > 0)) return undefined;
+      const id = window.setInterval(() => {
+        if (store.get().loading) return;
+        void refreshVendor(props.vendorId);
+      }, effSec2 * 1000);
+      return () => window.clearInterval(id);
+    }, [effSec2, props.vendorId]);
     const v = ((s.cfg && s.cfg.vendors) || []).filter((x: Vendor) => x.id === props.vendorId)[0];
     if (!s.cfg) return h('div', { className: 'tm-card' }, h('div', { className: 'tm-hint' }, s.loading ? '额度加载中…' : s.error || '额度加载失败'));
     if (!v) return h('div', { className: 'tm-card' }, h('div', { className: 'tm-hint' }, '供应商已删除，关闭本浮窗即可。'));
@@ -1118,27 +1131,75 @@ export function createQuotaSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
         : h('div', { className: 'tm-hint', style: { marginTop: 6 } }, '尚未拉取，点击拉取获取最新额度。'));
   }
 
+  /**
+   * 峰谷显示器：部分供应商按峰谷定价，峰值时段用量/计费加速。
+   * 规则（可按需调整）：工作日 9:00–18:00 为「峰」，其余时段与周末为「谷」。
+   */
+  const PEAK_RULE = { weekdays: [1, 2, 3, 4, 5], startHour: 9, endHour: 18 };
+  function isPeakHour(t: Date): boolean {
+    const w = t.getDay(); // 0=周日
+    if (!PEAK_RULE.weekdays.includes(w)) return false;
+    const hr = t.getHours();
+    return hr >= PEAK_RULE.startHour && hr < PEAK_RULE.endHour;
+  }
+  function nextPeakSwitch(nowMs: number, peak: boolean): { ms: number; toPeak: boolean } {
+    const step = 60000;
+    for (let i = 1; i < 7 * 24 * 60; i++) {
+      const t = new Date(nowMs + i * step);
+      if (isPeakHour(t) !== peak) return { ms: i * step, toPeak: !peak };
+    }
+    return { ms: 7 * 24 * 3600000, toPeak: peak };
+  }
+  function fmtDur(ms: number): string {
+    const m = Math.round(ms / 60000);
+    const hh = Math.floor(m / 60);
+    const mm = m % 60;
+    if (hh >= 24) return Math.floor(hh / 24) + ' 天 ' + (hh % 24) + ' 小时';
+    if (hh > 0) return hh + ' 小时 ' + mm + ' 分';
+    return mm + ' 分';
+  }
+  function PeakIndicator(props: { widgets?: any; widgetId?: string }): any {
+    const now = useNow(60000); // 每分钟刷新状态与倒计时
+    const d = new Date(now);
+    const peak = isPeakHour(d);
+    const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+    const ns = nextPeakSwitch(now, peak);
+    const cells: any[] = [];
+    for (let hr = 0; hr < 24; hr++) {
+      const on = !isWeekend && hr >= PEAK_RULE.startHour && hr < PEAK_RULE.endHour;
+      cells.push(h('span', {
+        key: hr,
+        className: 'tm-peakCell' + (on ? ' on' : '') + (hr === d.getHours() ? ' now' : ''),
+        title: String(hr).padStart(2, '0') + ':00' + (on ? ' 峰' : ' 谷'),
+      }));
+    }
+    const bandLabel = isWeekend ? '周末全天为谷' : PEAK_RULE.startHour + ':00–' + PEAK_RULE.endHour + ':00 为峰';
+    const curTxt = peak ? '峰时段' : '谷时段';
+    const nextTxt = ns.toPeak ? '约 ' + fmtDur(ns.ms) + ' 后进入峰' : '约 ' + fmtDur(ns.ms) + ' 后进入谷';
+    return h('div', { className: 'tm-peak' },
+      h('div', { className: 'tm-peakHead' },
+        h('span', { className: 'tm-peakDot ' + (peak ? 'peak' : 'valley') }),
+        h('span', { className: 'tm-peakTitle' }, '峰谷提醒 · ' + curTxt),
+        h('span', { className: 'tm-peakTime' }, nextTxt),
+        props.widgets && props.widgetId ? h(props.widgets.WidgetToggle, { id: props.widgetId }) : null),
+      h('div', { className: 'tm-peakBand' }, cells),
+      h('div', { className: 'tm-peakHint' },
+        '部分供应商采用峰谷定价：' + bandLabel + '，',
+        h('b', null, peak ? '当前为峰，用量消耗加速，请留意额度。' : '当前为谷，费率相对低。')));
+  }
+
   function QuotaRightPane(): any {
     const s = useStore();
     React.useEffect(() => { void ensureLoad(); }, []);
     // 已浮出的供应商卡片原位不渲染（浮窗内自带「回归」）。
     // ⚠ Hooks 规则：任何早退（return）之前必须调用完所有 hooks —— useWidgets 放最前面。
     const floats = WG && typeof WG.useWidgets === 'function' ? (WG.useWidgets() as Array<{ id: string }>) : [];
-    // 自动刷新（设置页 refreshSec）：右栏挂载时生效，按间隔刷新当前供应商；0=关闭
-    const rawSec = s.cfg ? s.cfg.refreshSec : undefined;
-    const numSec = rawSec === undefined || rawSec === null || rawSec === '' ? 60 : Number(rawSec);
-    const effSec = numSec === 0 ? 0 : (isFinite(numSec) ? Math.min(3600, Math.max(10, numSec || 60)) : 60);
-    const effId = s.cfg ? s.cfg.activeVendor || '' : '';
-    React.useEffect(() => {
-      if (!effId || !(effSec > 0)) return undefined;
-      const id = window.setInterval(() => {
-        if (store.get().loading) return;
-        const curA = activeOf(store.get());
-        if (curA && curA.id === effId) void refreshVendor(effId);
-      }, effSec * 1000);
-      return () => window.clearInterval(id);
-    }, [effId, effSec]);
+    // 自动刷新已下沉到每个 QuotaVendorWidget（右栏卡片与小组件浮窗统一按 refreshSec 自刷），此处不再重复。
     const kids: any[] = [];
+    // 置顶峰谷显示器：工作时间为峰、其余为谷，提醒峰时消耗加速；已浮出为小组件时原位隐藏
+    if (!floats.some((w) => w.id === 'peak')) {
+      kids.push(h(PeakIndicator, { key: 'peak', widgets: WG || undefined, widgetId: 'peak' }));
+    }
     kids.push(h('p', { key: 'd', className: 'tm-intro' }, '全部供应商额度一览（右侧栏空间更宽，图表完整展开）。增删改请到 设置 → Token 计量。'));
     if (s.error) kids.push(h('p', { key: 'err', className: 'tm-notice tm-notice-err' }, s.error));
     if (!s.cfg) {
@@ -1168,6 +1229,7 @@ export function createQuotaSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     QuotaFloatEntry,
     QuotaRightPane,
     QuotaVendorWidget,
+    PeakIndicator,
     quotaStore: {
       useStore, useNow, ensureLoad, reload, refreshVendor,
       setActive, setEnabled, setRefresh, setFloatOpen, openMenu, savePrefs,

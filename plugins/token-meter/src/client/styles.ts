@@ -75,6 +75,20 @@ export const CSS: string = `
 .tm-legend{display:flex;align-items:center;gap:4px;margin-top:8px;flex-wrap:wrap}
 .tm-cacheRow{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:11px;color:var(--dsw-alias-label-secondary);flex-wrap:wrap;line-height:16px}
 .tm-cacheSep{color:var(--dsw-alias-label-tertiary)}
+/* ── 峰谷显示器（额度面板置顶）：工作时间=峰，其余=谷 ── */
+.tm-peak{display:flex;flex-direction:column;gap:6px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);border-radius:var(--tm-r-card);padding:10px 12px;margin:0 0 8px}
+.tm-peakHead{display:flex;align-items:center;gap:6px;min-width:0}
+.tm-peakDot{width:8px;height:8px;border-radius:50%;flex:none}
+.tm-peakDot.peak{background:var(--dsw-alias-state-warn-primary);box-shadow:0 0 6px var(--dsw-alias-state-warn-primary)}
+.tm-peakDot.valley{background:var(--dsw-alias-state-success-primary)}
+.tm-peakTitle{font-size:12px;font-weight:600;color:var(--dsw-alias-label-primary);white-space:nowrap}
+.tm-peakTime{flex:1;min-width:0;text-align:right;font-size:11px;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tm-peakBand{display:flex;gap:1.5px;height:10px}
+.tm-peakCell{flex:1 1 0;min-width:0;border-radius:2px;background:var(--dsw-alias-interactive-bg-hover)}
+.tm-peakCell.on{background:var(--dsw-alias-state-warn-primary);opacity:.85}
+.tm-peakCell.now{outline:1.5px solid var(--dsw-alias-label-primary);outline-offset:-1px}
+.tm-peakHint{font-size:10.5px;line-height:15px;color:var(--dsw-alias-label-tertiary)}
+.tm-peakHint b{color:var(--dsw-alias-label-secondary);font-weight:600}
 .tm-modelchip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--dsw-alias-border-l1);border-radius:999px;padding:2px 9px;font-size:11.5px;cursor:pointer;color:var(--dsw-alias-label-secondary);background:transparent;font-family:inherit;line-height:18px;max-width:180px;position:relative}
 .tm-modelchip:hover{border-color:var(--dsw-alias-state-business-primary)}
 .tm-modelchip[data-off="1"]{opacity:.38}
