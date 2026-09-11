@@ -55,56 +55,54 @@ DeepSeek Harness（DSH）**视觉桥接**插件：让**纯文本模型**也能�
 
 > **与动态版的区别**：动态（`cordis_define`）版本的配置只在内存中，重启进程后恢复默认；**标准包版本通过官方 `settings` API 持久化到 `settings.yaml`（`dshp-inx-vision-bridge`）**，重启后不丢，且外部手工编辑 `settings.yaml` 可热重载。
 
-## 安装（推荐：GitHub）
+## 安装（唯一方式：克隆 monorepo + 本地安装）
+
+> 本包尚未发布到 npm（`@dshp-inx/vision-bridge` 在 npm 上 404），**不要用 `add github:` / `pnpm add`**，唯一入口就是克隆本仓库后本地 `add`。
 
 ```sh
-dsh plugin --profile web add github:Yinxe/dsh-vision-bridge
-```
+# 1. 克隆 monorepo（lib/ 构建产物已提交，clone 下来就能用，无需 build）
+git clone git@github.com:Yinxe/deepseek-harness-plugins.git
+cd deepseek-harness-plugins
+pnpm install
 
-`dsh plugin` 把参数转发给 profile 目录里的 `pnpm`，装完自动把插件写进 profile 的 `dsh.profile.bundles` 挂载列表 —— **无需手动改任何配置文件**。
+# 2. 本地安装到 profile（路径按你执行命令时的 cwd 解析）
+dsh plugin --profile web add ./plugins/dsh-vision-bridge
 
-**一键 AI 安装**：把下面这段直接发给你的 DSH AI（复制即用，无需修改）：
-
-```text
-帮我安装视觉桥接插件（GitHub 仓库 Yinxe/dsh-vision-bridge，包名 @dshp-inx/vision-bridge）：
-1. 执行 dsh plugin --profile web add github:Yinxe/dsh-vision-bridge
-2. 重启 web 服务（dsh web），确认重启无报错
-3. 验证插件已生效（设置页出现「视觉模型」卡片，或注册出 vision_describe 工具）
-4. 告诉我如何在 setting.yml 里给视觉模型加上 input: [text, image]，并用 vision_test.png 做一次端到端测试（我会发一张图，你用 vision_describe 识别）
-```
-
-重启生效：
-
-```sh
+# 3. 重启生效
 dsh web
 ```
 
-**验证**：打开 web 页面 → 设置 → 视觉模型 能看到「视觉模型」卡片；或直接对模型说「这张图里有什么？」（先发一张图，文本模型应自动调用 `vision_describe`）。
+`dsh plugin` 会把包写进 profile 的 `dsh.profile.bundles` —— **无需手动改配置文件**。
+
+**改源码后**：`src/host` 或 `src/client` 改完跑 `pnpm --filter @dshp-inx/vision-bridge build` 重新打出 `lib/host.js + lib/client.js`，然后 `dsh web` 重启（client 半强刷页面即可）。
+
+**验证**：打开 web → 设置 → 视觉模型 能看到卡片；或先发一张图再问“这张图里有什么？”（纯文本模型应自动调 `vision_describe`）。
+
+**一键 AI 安装**：把下面这段发给你的 DSH AI 即可：
+
+```text
+帮我安装视觉桥接插件（monorepo Yinxe/deepseek-harness-plugins，子目录 plugins/dsh-vision-bridge，包名 @dshp-inx/vision-bridge）：
+1. git clone monorepo 并 pnpm install
+2. dsh plugin --profile web add ./plugins/dsh-vision-bridge
+3. dsh web 重启，确认无报错，设置页出现「视觉模型」即成功
+```
 
 ## 更新
 
 ```sh
-dsh plugin --profile web update "@dshp-inx/vision-bridge" --latest
+cd deepseek-harness-plugins
+git pull
+pnpm install
+# 改过源码才需要：pnpm --filter @dshp-inx/vision-bridge build
+dsh plugin --profile web update "@dshp-inx/vision-bridge"
 dsh web
 ```
 
-`update --latest` 会让 `pnpm` 重新解析 GitHub 仓库的最新 commit 并更新 lockfile；重启后生效。
+> ⚠️ **不要直接编辑 `node_modules/@dshp-inx/vision-bridge/`**：pnpm store 硬链接，改坏 store。只改 monorepo 里的 `plugins/dsh-vision-bridge/src`。
 
-## 安装（备选：clone 源码 + 本地 link）
+## 发布到 npm（可选，当前未发布）
 
-适合想改源码、或 GitHub 不可达的场景。`clone` 后用 `add ./<目录>` 安装 —— **依赖按插件真实包名（`@dshp-inx/vision-bridge`）登记**，后续 `update` / `remove` 与 GitHub 安装完全一致。`link` 安装的源码改动**即时生效**（`client` 半刷新页面即可，`host` 半需重启 `dsh web`）：
-
-```sh
-git clone git@github.com:Yinxe/dsh-vision-bridge.git ~/.dsh/plugins/dsh-vision-bridge
-cd ~/.dsh/plugins
-dsh plugin --profile web add ./dsh-vision-bridge
-dsh web
-```
-
-> `add ./<目录>` 的相对路径按**你执行命令时所在的目录**解析，先 `cd` 到插件目录的父级再执行。
-> ⚠️ **不要直接编辑 `node_modules/@dshp-inx/vision-bridge/` 里的文件**：`pnpm` 的安装文件与内容寻址 store 硬链接，直接覆盖会连带改坏 store。改源码请改 `clone` 出来的源码目录。
-
-`link` 方式的更新就是 `git pull`（源码目录）+ 刷新页面/重启。
+现在没发 npm，所以上面只能本地装。以后想 `pnpm add @dshp-inx/vision-bridge` 一键装，才需要发包：先建 npm 组织 `@dshp-inx`（见根 README），再打 tag 走 CI 的 Trusted Publishing。发完这里的安装方式会同步更新。
 
 ## 配置视觉模型（`setting.yml`）
 
@@ -149,8 +147,8 @@ llm-pi-ai:
 - **语法自检**：
 
   ```sh
-  node --check ~/.dsh/plugins/dsh-vision-bridge/lib/index.js && echo "host syntax ok"
-  node --check ~/.dsh/plugins/dsh-vision-bridge/client.js && echo "client syntax ok"
+  pnpm --filter @dshp-inx/vision-bridge test   # node --check lib/host.js + lib/client.js
+  # 或直接：node --check plugins/dsh-vision-bridge/lib/host.js && node --check plugins/dsh-vision-bridge/lib/client.js
   ```
 
 - **设置页自检**：打开 `http://127.0.0.1:3080`（或你的 `dsh web` 端口）→ 设置 → 视觉模型，查看：
@@ -248,7 +246,7 @@ dsh plugin --profile web remove "@dshp-inx/vision-bridge"
 dsh web
 ```
 
-`remove` 会自动从 `dsh.profile.bundles` 撤下挂载；`clone` 安装的再删掉 `~/.dsh/plugins/dsh-vision-bridge` 目录即可。设置页配置已落盘到 `settings.yaml` 的 `dshp-inx-vision-bridge` 分节，按需手动清理；旧 `storages/dshp-inx-vision-bridge.json` 已迁移为 `.bak`。
+`remove` 会自动从 `dsh.profile.bundles` 撤下挂载（monorepo 本体不用删）。设置页配置已落盘到 `settings.yaml` 的 `dshp-inx-vision-bridge` 分节，按需手动清理；旧 `storages/dshp-inx-vision-bridge.json` 已迁移为 `.bak`。
 
 ## 更新日志
 
