@@ -58,10 +58,6 @@ export function dshHome(): string {
   }
 }
 
-export function configPath(): string {
-  return join(dshHome(), 'storages', 'dshp-vision-bridge.json');
-}
-
 /** 历史存储文件（仅迁移时读取/清理，新版不再写入任何文件） */
 export function legacyConfigPaths(): string[] {
   return [join(dshHome(), 'storages', 'dshp-inx-vision-bridge.json')];

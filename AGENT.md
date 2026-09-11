@@ -30,8 +30,7 @@ plugins/<name>/
 │   └── client/           # 浏览器侧：index.ts（__ModuleLoader__）+ types.ts + api/styles/components/Section
 │       └── index.ts / types.ts / api.ts / styles.ts / components.ts / <X>Section.ts ……
 ├── lib/                  # 构建产物，必须提交：host.js + client.js
-├── README.md             # §13
-└── LICENSE               # MIT（新插件必须带）
+└── README.md             # §13
 ```
 
 ### 1.2 加新插件（5 步）
@@ -115,7 +114,7 @@ export type AnyLlm = any;
 | `type`                 | 必须是 `"module"`。                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `main`                 | `"./lib/host.js"`（DSH 加载后端 bundle 的入口）。                                                                                                                                                                                                                                                                                                                                                                                |
 | `exports`              | 三项固定：`"."` → `./lib/host.js`，`"./client"` → `./lib/client.js`，`"./package.json"` → `./package.json`。                                                                                                                                                                                                                                                                                                                     |
-| `files`                | `["lib", "cordis.patch.yml", "README.md", "LICENSE"]`，不多不少。                                                                                                                                                                                                                                                                                                                                                                |
+| `files`                | `["lib", "cordis.patch.yml", "README.md"]`，不多不少。LICENSE 全仓只在仓库根保留一份（MIT），不进子包也不进 `files`。                                                                                                                                                                                                                                                                                                            |
 | `engines`              | `"node": ">=20"`。                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `scripts`              | 六件套照抄：`dev: tsup --watch` / `build: tsup` / `typecheck: tsc --noEmit` / `clean: rm -rf lib *.tsbuildinfo` / `test: node --check lib/host.js && node --check lib/client.js && echo "syntax ok"` / `prepublishOnly: pnpm typecheck && pnpm build`，外加 `lint: oxlint --deny-warnings --config ../../.oxlintrc.json src tsup.config.ts`。test 有真实逻辑时可追加，但 `node --check` 两行不许删（lib 提交完整性的最后防线）。 |
 | `dependencies`         | **永远 `{}`**。运行时零依赖是架构红线，见 §5。                                                                                                                                                                                                                                                                                                                                                                                   |
@@ -206,10 +205,11 @@ ctx.effect(() => slotsOrServerRegister(...), 'dshp-<name>: state route');
 
 ## 7. 配置与 settings 持久化规范
 
-### 7.1 命名空间
+### 7.1 命名空间（配置键名唯一范式）
 
-- NS = `dshp-<name>`（kebab-case，`^[a-z][a-z0-9-]*$`，`http.ts` 的 `settingsNamespace()` 做运行时校验）。
-- NS 三处同名：settings 命名空间 / 路由前缀 `/ext/dshp-<name>/*` / `cordis.patch.yml` id。这是定位插件状态的唯一钥匙，改名即 breaking。
+- 配置键名 = NS = `dshp-<name>`（kebab-case，`^[a-z][a-z0-9-]*$`，`http.ts` 的 `settingsNamespace()` 做运行时校验）。
+- NS 四处同名：settings 命名空间 / 路由前缀 `/ext/dshp-<name>/*` / `cordis.patch.yml` id / settings.section id。这是定位插件状态的唯一钥匙，改名即 breaking。
+- **读写一律以新键名为准**：`installSection(ctx, NS, ...)` 注册、`settings.update(NS, patch)` 写入、`describe()` 里只认 `d.ns === NS`、`getConfig()` 只读 `setSource` 存下的 getter。除 `NS` 定义处与 `LEGACY_SETTINGS_KEYS` 外，**禁止硬编码任何键名字符串**；稳态禁止读写自有文件存配置（`storages/*.json` 只允许一次性迁移读，见 §7.3）。
 
 ### 7.2 Schema（schemastery）
 
@@ -226,6 +226,7 @@ export const ConfigSchema: any = z.object({
 - 每个字段都要 `.default(...)`（与 `DEFAULT_CONFIG` 同值），`installSection(ctx, NS, ConfigSchema, entry, ...)` 四件套照抄。
 - 约束进 schema（`min/max/step`、enum 用 `z.const` 联合），不要只在路由里判——settings 页和外部编辑 settings.yaml 都走 schema。
 - `setSource` 回调里保存最新 getter（`current = src`），业务永远经 `getConfig()` 读，不直接持有对象（热重载靠它）。
+- **固定不变的东西不进 settings**：外部端点、版本号、魔法数字一律写死为具名常量（如 mcwiki-search 的 `API_BASE = 'https://zh.minecraft.wiki/api.php'`，注释写“不可配置，换站改这里重 build”）。settings 只放用户真的会改的东西——每多一个配置项，就是多一份文档、多一个设置页控件、多一处校验。
 
 ### 7.3 迁移（一次性，只删不写）
 
@@ -355,3 +356,5 @@ pnpm test           # pnpm -r test（至少 node --check 双 bundle）
 8. 直接改 `node_modules`、改 `storeDir`/`.npmrc`、用 npm/yarn 安装。
 9. 不跑门禁就 push；`pnpm-lock.yaml` 没提交。
 10. 在代码里放密钥；新增自有配置文件（配置只进 settings.yaml NS）。
+11. 子包自带 LICENSE / `files` 含 LICENSE（LICENSE 只在仓库根保留一份，全仓 MIT 共用）。
+12. 稳态读写用旧配置键名、硬编码键名字符串、写自有文件存配置（读写一律 `NS` 常量 + settings.yaml 新键，见 §7.1）。

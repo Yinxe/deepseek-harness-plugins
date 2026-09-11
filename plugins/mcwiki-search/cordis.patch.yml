@@ -1,0 +1,7 @@
+# @dshp/mcwiki-search bundle patch: Minecraft Wiki query tools for DeepSeek Harness.
+# Host half: mcwiki_search / mcwiki_get_page / mcwiki_random tools + /ext/dshp-mcwiki-search/* routes.
+# Client half: Settings page section for Minecraft Wiki search.
+
+- insert:
+    - id: dshp-mcwiki-search
+      name: '@dshp/mcwiki-search'

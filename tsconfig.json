@@ -4,5 +4,5 @@
     "noEmit": true
   },
   "files": [],
-  "references": [{ "path": "./plugins/vision-bridge" }]
+  "references": [{ "path": "./plugins/vision-bridge" }, { "path": "./plugins/mcwiki-search" }]
 }

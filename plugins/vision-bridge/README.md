@@ -214,7 +214,6 @@ client.js           Client 半：__ModuleLoader__ bundle，设置页 UI（DSH to
 cordis.patch.yml    bundle 层 patch：仅 insert 挂载行
 package.json        包描述 + DSH bundle 声明（dsh.bundle.patch / dsh.client.platform）
 README.md           本文件
-LICENSE             MIT
 ```
 
 ## 常见问题

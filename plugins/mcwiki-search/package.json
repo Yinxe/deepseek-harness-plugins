@@ -1,7 +1,7 @@
 {
-  "name": "@dshp/vision-bridge",
-  "version": "1.4.0",
-  "description": "DeepSeek Harness (DSH) vision bridge: let text-only models delegate image understanding to multimodal vision models via vision_describe tool, with persistent settings UI and primary/fallback auto-retry.",
+  "name": "@dshp/mcwiki-search",
+  "version": "1.1.0",
+  "description": "DeepSeek Harness (DSH) tool plugin: query Minecraft Wiki (MediaWiki API) and convert raw wiki data into clean AI-readable text. 查询 Minecraft Wiki（中文/英文）并把搜索结果与页面全文转换成可直接投喂给 AI 的干净文本（搜索/引言/全文 Markdown/随机条目）。",
   "license": "MIT",
   "author": "Yinxe",
   "type": "module",
@@ -17,14 +17,16 @@
     "README.md"
   ],
   "keywords": [
+    "minecraft",
+    "minecraft-wiki",
+    "mediawiki",
     "dsh",
     "deepseek-harness",
     "cordis",
     "plugin",
-    "vision",
-    "multimodal",
-    "image",
-    "llm"
+    "tool",
+    "搜索",
+    "维基"
   ],
   "engines": {
     "node": ">=20"
@@ -41,12 +43,12 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Yinxe/deepseek-harness-plugins.git",
-    "directory": "plugins/vision-bridge"
+    "directory": "plugins/mcwiki-search"
   },
   "bugs": {
     "url": "https://github.com/Yinxe/deepseek-harness-plugins/issues"
   },
-  "homepage": "https://github.com/Yinxe/deepseek-harness-plugins/tree/main/plugins/vision-bridge#readme",
+  "homepage": "https://github.com/Yinxe/deepseek-harness-plugins/tree/main/plugins/mcwiki-search#readme",
   "publishConfig": {
     "access": "public",
     "provenance": true
