@@ -4,3 +4,5 @@ pnpm-lock.yaml
 **/dist/
 *.map
 coverage
+# vendored 的第三方 JSON Schema（保持与上游逐字节一致，便于日后整文件刷新）
+.vscode/schemas/

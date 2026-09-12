@@ -1,0 +1,9 @@
+{
+  "yaml.schemas": {
+    // 本地 vendored 的 GitHub Workflow schema（.vscode/schemas/github-workflow.json，
+    // 取自 SchemaStore）。映射后 YAML 插件直接读本地文件，不再访问
+    // schemastore.org（国内网络拉不到，报 Unable to load schema）。
+    // 刷新方式：从 SchemaStore 仓库 src/schemas/json/github-workflow.json 重新下载覆盖。
+    ".vscode/schemas/github-workflow.json": [".github/workflows/*.yml", ".github/workflows/*.yaml"]
+  }
+}

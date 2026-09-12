@@ -19,6 +19,9 @@ Thumbs.db
 # 编辑器
 .vscode/*
 !.vscode/extensions.json
+# 共享的编辑器配置与 vendored schema（workflow YAML 离线解析，见 .vscode/settings.json）
+!.vscode/settings.json
+!.vscode/schemas/
 .idea/
 *.swp
 *.swo
