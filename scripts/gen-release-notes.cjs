@@ -2,7 +2,8 @@
 // 生成 release notes（latest 滚动预发布 / 手动后缀预发布共用）。
 // 按 dist/*.tgz 实际产物反向定位 plugins/<name>/package.json，
 // 提取包名、版本与描述；描述按首个中文字符拆分为 EN / 中文 两行展示。
-// 环境变量：GITHUB_REPOSITORY、GITHUB_SHA、SUFFIX、NOTES_HEADER、NOTES_HINT。
+// 环境变量：GITHUB_REPOSITORY、GITHUB_SHA、SUFFIX、NOTES_HEADER、NOTES_HINT、
+//           NOTES_ROLLING、DIST_DIR（tgz 所在目录，默认 dist；滚动重建传 dist-roll）。
 'use strict';
 
 const fs = require('fs');
@@ -11,13 +12,18 @@ const repo = process.env.GITHUB_REPOSITORY || '';
 const suffix = process.env.SUFFIX || 'latest';
 const header = process.env.NOTES_HEADER || '';
 const hint = process.env.NOTES_HINT || '';
+// 滚动标记：notes 首行带此注释的 release 也跟随 main 滚动（用于让正式版手动加入滚动）
+const rolling = process.env.NOTES_ROLLING === 'true';
+const distDir = process.env.DIST_DIR || 'dist';
 
 const files = fs
-  .readdirSync('dist')
+  .readdirSync(distDir)
   .filter((f) => f.endsWith('.tgz'))
   .toSorted();
 
-const out = [header];
+const out = [];
+if (rolling) out.push('<!-- rolling: true -->');
+out.push(header);
 if (hint) out.push(hint);
 out.push('', '## 插件下载与安装（固定地址）', '');
 
@@ -54,10 +60,9 @@ for (const file of files) {
 
   out.push(`### ${name}${version ? ` \`${version}\`` : ''}`, '');
   out.push(`- 下载：[${file}](${url})`);
-  out.push(`- 安装：\`dsh --profile web add ${url}\``);
   if (en) out.push(`- EN: ${en}`);
   if (zh) out.push(`- 中文：${zh}`);
-  out.push('');
+  out.push('', '```bash', `dsh --profile web add ${url}`, '```', '');
 }
 
 fs.writeFileSync('notes.md', out.join('\n'));
