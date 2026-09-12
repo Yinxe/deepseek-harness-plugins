@@ -220,13 +220,14 @@ jobs:
           done
           rm -rf dist-roll
 
-          # 2) 最后重建 latest 并授予 Latest 徽标，保证列表置顶
+          # 2) 最后重建 latest 并授予 Latest 徽标，保证列表置顶。
+          #    latest 必须是正式 release（非预发布）：GitHub 的 Latest 徽标与置顶
+          #    只稳定授予正式 release，预发布身份拿不到这个保证
           gh release delete latest --yes --cleanup-tag || true
           NOTES_HEADER="滚动构建自 main 分支（${GITHUB_SHA::7}），每次推送自动整体替换。" \
             node scripts/gen-release-notes.cjs
           gh release create latest dist/*.tgz \
             --target "$GITHUB_SHA" \
             --title "latest (main@${GITHUB_SHA::7})" \
-            --notes-file notes.md \
-            --prerelease
+            --notes-file notes.md
           gh release edit latest --latest || true

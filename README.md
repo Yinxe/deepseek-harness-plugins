@@ -37,7 +37,7 @@ DeepSeek Harness（DSH）插件 Monorepo（pnpm workspaces + TypeScript ESM）�
 
 ### 方式一：从 GitHub Releases 直接安装（推荐，无需 clone）
 
-CI 把每个插件打包成 tgz 发布到 Releases，`latest` 预发布固定跟随 main 最新构建：
+CI 把每个插件打包成 tgz 发布到 Releases，`latest` 滚动发布固定跟随 main 最新构建（持 Latest 徽标、始终置顶）：
 
 ```bash
 # macOS / Linux
@@ -90,12 +90,12 @@ dsh web   # 重启生效
 
 ### 发布与更新约定（CI 自动执行）
 
-| 通道            | 触发          | 行为                                                  |
-| --------------- | ------------- | ----------------------------------------------------- |
-| `latest` 预发布 | 推送 `main`   | 滚动重建到最新提交，下载地址固定                      |
-| 版本 Release    | 推送 `v*` tag | 静态存档，永不随构建变化                              |
-| 分支预发布      | 推送其他分支  | 以分支名命名的预发布（`release/1.0` → `release-1.0`） |
-| 自定义后缀      | 手动触发      | 勾选 rolling = 预发布随滚动；不勾 = 静态正式版        |
+| 通道         | 触发          | 行为                                                             |
+| ------------ | ------------- | ---------------------------------------------------------------- |
+| `latest`     | 推送 `main`   | 滚动重建到最新提交（正式渠道，持 Latest 徽标置顶），下载地址固定 |
+| 版本 Release | 推送 `v*` tag | 静态存档，永不随构建变化                                         |
+| 分支预发布   | 推送其他分支  | 以分支名命名的预发布（`release/1.0` → `release-1.0`）            |
+| 自定义后缀   | 手动触发      | 勾选 rolling = 预发布随滚动；不勾 = 静态正式版                   |
 
 - **滚动约定**：所有**预发布**（以及 notes 首行带 `<!-- rolling: true -->` 标记的 release）都跟随 main——每次 main 推送成功后整体重建到最新提交；停止跟随 = 取消 Pre-release 勾选或删除标记行。`latest` 每次最后重建并授予 Latest 徽标，始终置顶 Releases 列表。
 - **数量约束**：除 `latest` 外同时最多允许 **1 个**滚动项；出现多个时 CI 立即报错终止（不动任何现有 Release），处理后再推送即可。
@@ -130,7 +130,7 @@ dsh web   # 重启生效
 ├── tsconfig.json               # solution 引用
 ├── pnpm-workspace.yaml         # packages: plugins/* + storeDir
 ├── compat.json                 # DSH 版本兼容矩阵（空 = 暂无历史包袱）
-└── .github/workflows/CICD.yml  # 门禁 + 打包发布：main→latest 预发布，v* tag→版本 Release，其他分支→同名预发布；dev 与 feature/* 仅门禁
+└── .github/workflows/CICD.yml  # 门禁 + 打包发布：main→latest 滚动发布，v* tag→版本 Release，其他分支→同名预发布；dev 与 feature/* 仅门禁
 ```
 
 每个插件内部一律是同一套布局：`src/host/`（Node 半）+ `src/client/`（浏览器半）+ `lib/`（已提交的单文件产物）+ `cordis.patch.yml`。
