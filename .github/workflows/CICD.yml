@@ -146,6 +146,14 @@ jobs:
           SUFFIX: ${{ needs.check.outputs.suffix }}
           ROLLING: ${{ inputs.rolling }}
         run: |
+          # 校验：除 latest 与本次要重建的 $SUFFIX 外，不允许已存在其他滚动预发布
+          mapfile -t other_pre < <(gh release list --json tagName,isPrerelease --limit 100 \
+            --jq '.[] | select(.isPrerelease and .tagName != "latest") | .tagName' \
+            | grep -Fvx -- "$SUFFIX" || true)
+          if [ "${#other_pre[@]}" -ge 1 ]; then
+            echo "::error::除 latest 外已存在滚动预发布 ${other_pre[*]}，同时最多允许 1 个（本次 $SUFFIX 除外）；请先取消多余的 Pre-release 勾选或删除后重试"
+            exit 1
+          fi
           # 分支推送固定为预发布（随滚动）；手动触发由 rolling 决定：勾选=预发布，不勾=静态正式版
           if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
             pre="$ROLLING"
@@ -172,6 +180,23 @@ jobs:
       - name: Refresh rolling "latest" prerelease
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.suffix == 'latest')
         run: |
+          # 校验：滚动集合（除 latest 外的预发布 + notes 首行带 <!-- rolling: true --> 标记的
+          # release）最多 1 个；超过则立即报错终止，不动任何现有 Release
+          mapfile -t rolling < <(gh release list --json tagName,isPrerelease --limit 100 \
+            --jq '.[] | select(.tagName != "latest") | [.tagName, .isPrerelease] | @tsv' \
+            | while IFS=$'\t' read -r t pre; do
+                marked=$(gh release view "$t" --json body -q '.body | contains("<!-- rolling: true -->")')
+                if [ "$pre" = "true" ] || [ "$marked" = "true" ]; then
+                  printf '%s|%s|%s\n' "$t" "$pre" "$marked"
+                fi
+              done)
+          if [ "${#rolling[@]}" -gt 1 ]; then
+            names=""
+            for r in "${rolling[@]}"; do names="$names ${r%%|*}"; done
+            echo "::error::除 latest 外检测到 ${#rolling[@]} 个滚动 release（$names ）；同时最多允许 1 个，请取消多余项的 Pre-release 勾选、删除标记行或删除 Release 后重试"
+            exit 1
+          fi
+
           gh release delete latest --yes --cleanup-tag || true
           NOTES_HEADER="滚动构建自 main 分支（${GITHUB_SHA::7}），每次推送自动整体替换。" \
             node scripts/gen-release-notes.cjs
@@ -181,10 +206,10 @@ jobs:
             --notes-file notes.md \
             --prerelease
 
-          # 滚动集合 = 所有预发布 + notes 首行带 <!-- rolling: true --> 标记的 release；
-          # 停止跟随：取消 Pre-release 勾选，或删掉 notes 中的标记行（latest 自身除外）
-          while IFS='|' read -r tag pre marked; do
-            [ -z "$tag" ] && continue
+          # 重建唯一的滚动项（若存在）
+          for r in "${rolling[@]}"; do
+            IFS='|' read -r tag pre marked <<< "$r"
+            if [ -z "$tag" ]; then continue; fi
             echo "重建滚动 release: $tag (pre=$pre)"
             gh release delete "$tag" --yes --cleanup-tag || true
             SUFFIX="$tag" \
@@ -194,11 +219,4 @@ jobs:
             create_args=(dist/*.tgz --target "$GITHUB_SHA" --title "$tag" --notes-file notes.md)
             if [ "$pre" = "true" ]; then create_args+=(--prerelease); fi
             gh release create "$tag" "${create_args[@]}"
-          done < <(gh release list --json tagName,isPrerelease --limit 100 \
-            --jq '.[] | select(.tagName != "latest") | [.tagName, .isPrerelease] | @tsv' \
-            | while IFS=$'\t' read -r t pre; do
-                marked=$(gh release view "$t" --json body -q '.body | contains("<!-- rolling: true -->")')
-                if [ "$pre" = "true" ] || [ "$marked" = "true" ]; then
-                  printf '%s|%s|%s\n' "$t" "$pre" "$marked"
-                fi
-              done)
+          done
