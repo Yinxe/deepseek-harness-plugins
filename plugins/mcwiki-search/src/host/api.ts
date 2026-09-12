@@ -204,21 +204,25 @@ export interface PageIntroOpts {
   title?: unknown;
   pageid?: unknown;
   maxChars?: unknown;
+  /** 真 = 取整页纯文本（省略 exintro，正文分节都在）；缺省 = 只取引言段 */
+  wholePage?: unknown;
   signal?: AbortSignal | undefined;
   timeoutMs?: unknown;
 }
 
 /**
- * 获取页面「引言」纯文本（经 MediaWiki extracts explaintext 清洗）。
+ * 获取页面纯文本（经 MediaWiki extracts explaintext 清洗）。
+ * 缺省只取「引言」段（exintro，wiki 的引言通常只有一两句）；
+ * wholePage=true 取整页（正文分节都在），配合 maxChars 设上限。
  */
 export async function fetchPageIntro(opts: PageIntroOpts): Promise<PageIntroResult> {
   const params: Record<string, string> = {
     prop: 'extracts',
     explaintext: '1',
-    exintro: '1',
     exlimit: '1',
     redirects: '1',
   };
+  if (!opts.wholePage) params['exintro'] = '1';
   if (opts.pageid !== undefined) params['pageids'] = String(opts.pageid);
   else if (opts.title !== undefined) params['titles'] = String(opts.title);
   else throw new Error('必须提供 title 或 pageid');
@@ -237,7 +241,7 @@ export async function fetchPageIntro(opts: PageIntroOpts): Promise<PageIntroResu
     title: cleanTitle(effectiveTitle),
     pageid: Number(page['pageid']) || 0,
     url: pageUrl(effectiveTitle),
-    section: 'intro',
+    section: opts.wholePage ? 'page' : 'intro',
     format: 'text',
     text: cleaned.text,
     truncated: cleaned.truncated,

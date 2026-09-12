@@ -1318,10 +1318,10 @@ async function fetchPageIntro(opts) {
   const params = {
     prop: "extracts",
     explaintext: "1",
-    exintro: "1",
     exlimit: "1",
     redirects: "1"
   };
+  if (!opts.wholePage) params["exintro"] = "1";
   if (opts.pageid !== void 0) params["pageids"] = String(opts.pageid);
   else if (opts.title !== void 0) params["titles"] = String(opts.title);
   else throw new Error("\u5FC5\u987B\u63D0\u4F9B title \u6216 pageid");
@@ -1338,7 +1338,7 @@ async function fetchPageIntro(opts) {
     title: cleanTitle(effectiveTitle),
     pageid: Number(page["pageid"]) || 0,
     url: pageUrl(effectiveTitle),
-    section: "intro",
+    section: opts.wholePage ? "page" : "intro",
     format: "text",
     text: cleaned.text,
     truncated: cleaned.truncated
@@ -1480,24 +1480,59 @@ function sanitizePatchConfig(raw) {
 }
 
 // src/host/command.ts
-var USAGE = [
-  "\u7528\u6CD5\uFF1A/mcwiki <\u641C\u7D22\u8BCD>",
-  "\u3000\u3000\u3000/mcwiki read <\u6761\u76EE\u6807\u9898>\u3000\u67E5\u770B\u6761\u76EE\u5F15\u8A00",
-  "\u3000\u3000\u3000/mcwiki random\u3000\u3000\u3000\u3000\u3000\u968F\u673A\u6761\u76EE"
-].join("\n");
+function shortDate(v) {
+  return /^\d{4}-\d{2}-\d{2}T/.test(v) ? v.slice(0, 10) : v;
+}
 function ok(text) {
   return { kind: "success", text };
 }
 function fail(text) {
   return { kind: "error", text };
 }
-function shortDate(v) {
-  return /^\d{4}-\d{2}-\d{2}T/.test(v) ? v.slice(0, 10) : v;
+function renderIntro(title, text, url) {
+  return [`${title}`, "", text, "", `\u6765\u6E90\uFF1A${url || pageUrl(title)}`].join("\n");
 }
-function renderSearch(r) {
+async function executeMcwikiCommand(getConfig, invocation) {
+  const cfg = getConfig();
+  const raw = typeof invocation?.rawInput === "string" ? invocation.rawInput.trim() : "";
+  if (raw.length === 0) return ok("\u7528\u6CD5\uFF1A/mcwiki <\u641C\u7D22\u8BCD\u6216\u6761\u76EE\u540D>\u2014\u2014\u56DE\u663E\u641C\u7D22\u5217\u8868\u4E0E\u7B2C\u4E00\u6761\u8BE6\u60C5");
+  const signal = invocation?.signal instanceof AbortSignal ? invocation.signal : void 0;
+  const r = await searchWiki({
+    query: raw,
+    limit: cfg.searchMaxResults,
+    signal,
+    timeoutMs: cfg.timeoutMs
+  });
   if (r.results.length === 0) {
-    return `\u300C${r.query}\u300D\u6CA1\u6709\u547D\u4E2D\u4EFB\u4F55\u6761\u76EE\uFF1B\u6362\u4E2A\u66F4\u77ED\u7684\u5173\u952E\u8BCD\u8BD5\u8BD5\u3002
-${USAGE}`;
+    return ok(`\u300C${r.query}\u300D\u6CA1\u6709\u547D\u4E2D\u4EFB\u4F55\u6761\u76EE\uFF1B\u6362\u4E2A\u66F4\u77ED\u7684\u5173\u952E\u8BCD\u8BD5\u8BD5\u3002`);
+  }
+  const first = r.results[0];
+  if (first === void 0) return ok(`\u300C${r.query}\u300D\u6CA1\u6709\u547D\u4E2D\u4EFB\u4F55\u6761\u76EE\u3002`);
+  let detail;
+  try {
+    const intro = await fetchPageIntro({
+      pageid: first.pageid,
+      wholePage: true,
+      maxChars: 6e3,
+      signal,
+      timeoutMs: cfg.timeoutMs
+    });
+    detail = renderIntro(intro.title, intro.text, intro.url);
+  } catch (e) {
+    detail = "\u2014\u2014 \u8BE6\u60C5\u83B7\u53D6\u5931\u8D25\uFF08" + String(e?.message ?? e).slice(0, 120) + "\uFF09\uFF0C\u53EF\u518D\u8BD5\u4E00\u6B21 /mcwiki " + first.title + " \u2014\u2014";
+  }
+  return ok([
+    renderList(r),
+    "",
+    "\u2014\u2014 \u7B2C\u4E00\u6761\u300C" + first.title + "\u300D\u8BE6\u60C5 \u2014\u2014",
+    detail,
+    "",
+    "\uFF08\u8BE6\u60C5\u4E3A\u6761\u76EE\u5168\u6587\u524D 6000 \u5B57\uFF1B\u9700\u8981\u5B8C\u6574\u5185\u5BB9\u5C31\u8BA9\u6A21\u578B\u8C03\u7528 mcwiki_get_page\uFF0Csection=full \u8BFB Markdown \u5168\u6587\uFF09"
+  ].join("\n"));
+}
+function renderList(r) {
+  if (r.results.length === 0) {
+    return `\u300C${r.query}\u300D\u6CA1\u6709\u547D\u4E2D\u4EFB\u4F55\u6761\u76EE\uFF1B\u6362\u4E2A\u66F4\u77ED\u7684\u5173\u952E\u8BCD\u8BD5\u8BD5\u3002`;
   }
   const head = `\u300C${r.query}\u300D\u5171 ${r.totalHits} \u6761\u547D\u4E2D\uFF08\u663E\u793A\u524D ${r.results.length} \u6761${r.truncated ? "\uFF0C\u5DF2\u6309\u8BBE\u7F6E\u622A\u65AD" : ""}\uFF09\uFF0C\u7B2C\u4E00\u6761\u8BE6\u60C5\u9644\u540E\uFF1A`;
   const items = r.results.map(
@@ -1505,69 +1540,7 @@ ${USAGE}`;
    ${item.snippet}
    ${item.url}${item.updated ? `\uFF08\u66F4\u65B0\u4E8E ${shortDate(item.updated)}\uFF09` : ""}`
   );
-  return [head, ...items, "", "\u770B\u5176\u4ED6\u6761\u76EE\uFF1A/mcwiki read <\u6807\u9898>\uFF1B\u9700\u8981\u5168\u6587\u5C31\u8BA9\u6A21\u578B\u8C03\u7528 mcwiki_get_page\u3002"].join(
-    "\n"
-  );
-}
-function renderIntro(title, text, url, truncated) {
-  return [
-    `${title}${truncated ? "\uFF08\u5F15\u8A00\u5DF2\u6309\u8BBE\u7F6E\u622A\u65AD\uFF09" : ""}`,
-    "",
-    text,
-    "",
-    `\u6765\u6E90\uFF1A${url || pageUrl(title)}`
-  ].join("\n");
-}
-async function executeMcwikiCommand(getConfig, invocation) {
-  const cfg = getConfig();
-  const raw = typeof invocation?.rawInput === "string" ? invocation.rawInput.trim() : "";
-  if (raw.length === 0) return ok(USAGE);
-  const signal = invocation?.signal instanceof AbortSignal ? invocation.signal : void 0;
-  const lower = raw.toLowerCase();
-  if (lower === "random" || lower === "\u968F\u673A") {
-    const r2 = await fetchRandomPages({
-      limit: 1,
-      maxIntroChars: cfg.introMaxChars,
-      signal,
-      timeoutMs: cfg.timeoutMs
-    });
-    const first2 = r2.results[0];
-    if (!first2) return fail("Wiki \u6CA1\u6709\u8FD4\u56DE\u968F\u673A\u6761\u76EE\uFF0C\u8BF7\u91CD\u8BD5");
-    return ok(renderIntro(first2.title, first2.text, first2.url, false));
-  }
-  if (lower === "read" || lower.startsWith("read ") || lower.startsWith("\u5F15\u8A00 ")) {
-    const title = lower === "read" ? "" : raw.slice(raw.indexOf(" ") + 1).trim();
-    if (title.length === 0) return fail("read \u9700\u8981\u6761\u76EE\u6807\u9898\uFF1A/mcwiki read <\u6761\u76EE\u6807\u9898>");
-    const r2 = await fetchPageIntro({
-      title,
-      maxChars: cfg.introMaxChars,
-      signal,
-      timeoutMs: cfg.timeoutMs
-    });
-    return ok(renderIntro(r2.title, r2.text, r2.url, r2.truncated));
-  }
-  const r = await searchWiki({
-    query: raw,
-    limit: cfg.searchMaxResults,
-    signal,
-    timeoutMs: cfg.timeoutMs
-  });
-  if (r.results.length === 0) return ok(renderSearch(r));
-  const first = r.results[0];
-  if (first === void 0) return ok(renderSearch(r));
-  let detail;
-  try {
-    const intro = await fetchPageIntro({
-      pageid: first.pageid,
-      maxChars: cfg.introMaxChars,
-      signal,
-      timeoutMs: cfg.timeoutMs
-    });
-    detail = renderIntro(intro.title, intro.text, intro.url, intro.truncated);
-  } catch (e) {
-    detail = "\u2014\u2014 \u7B2C\u4E00\u6761\u8BE6\u60C5\u83B7\u53D6\u5931\u8D25\uFF08" + String(e?.message ?? e).slice(0, 120) + "\uFF09\uFF0C\u53EF\u7528 /mcwiki read " + first.title + " \u91CD\u8BD5 \u2014\u2014";
-  }
-  return ok([renderSearch(r), "", "\u2014\u2014 \u7B2C\u4E00\u6761\u300C" + first.title + "\u300D\u8BE6\u60C5 \u2014\u2014", detail].join("\n"));
+  return [head, ...items].join("\n");
 }
 function registerCommand(ctx, getConfig) {
   const commands = ctx.get("commands");
@@ -1583,8 +1556,8 @@ function registerCommand(ctx, getConfig) {
       // definitionId 为品牌字符串（官方包用包名）；AnyCtx 体系下直接传同值
       definitionId: "@dshp/mcwiki-search",
       name: "mcwiki",
-      description: "\u76F4\u63A5\u67E5\u8BE2\u4E2D\u6587 Minecraft Wiki\uFF08\u641C\u7D22 / \u6761\u76EE\u5F15\u8A00 / \u968F\u673A\u6761\u76EE\uFF09\uFF0C\u7ED3\u679C\u56DE\u663E\u5230\u4F1A\u8BDD",
-      input: { hint: "<\u641C\u7D22\u8BCD> | read <\u6761\u76EE\u6807\u9898> | random" },
+      description: "\u67E5\u8BE2\u4E2D\u6587 Minecraft Wiki\uFF1A\u56DE\u663E\u641C\u7D22\u5217\u8868\u4E0E\u7B2C\u4E00\u6761\u6761\u76EE\u7684\u5B8C\u6574\u5F15\u8A00",
+      input: { hint: "<\u641C\u7D22\u8BCD\u6216\u6761\u76EE\u540D>" },
       handler: (invocation) => executeMcwikiCommand(getConfig, invocation).catch(
         (e) => fail("Minecraft Wiki \u67E5\u8BE2\u5931\u8D25\uFF1A" + String(e?.message ?? e).slice(0, 300))
       )
