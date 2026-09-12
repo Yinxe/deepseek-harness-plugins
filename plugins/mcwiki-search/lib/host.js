@@ -1479,6 +1479,97 @@ function sanitizePatchConfig(raw) {
   return out;
 }
 
+// src/host/command.ts
+var USAGE = [
+  "\u7528\u6CD5\uFF1A/mcwiki <\u641C\u7D22\u8BCD>",
+  "\u3000\u3000\u3000/mcwiki read <\u6761\u76EE\u6807\u9898>\u3000\u67E5\u770B\u6761\u76EE\u5F15\u8A00",
+  "\u3000\u3000\u3000/mcwiki random\u3000\u3000\u3000\u3000\u3000\u968F\u673A\u6761\u76EE"
+].join("\n");
+function ok(text) {
+  return { kind: "success", text };
+}
+function fail(text) {
+  return { kind: "error", text };
+}
+function shortDate(v) {
+  return /^\d{4}-\d{2}-\d{2}T/.test(v) ? v.slice(0, 10) : v;
+}
+function renderSearch(r) {
+  if (r.results.length === 0) {
+    return `\u300C${r.query}\u300D\u6CA1\u6709\u547D\u4E2D\u4EFB\u4F55\u6761\u76EE\uFF1B\u6362\u4E2A\u66F4\u77ED\u7684\u5173\u952E\u8BCD\u8BD5\u8BD5\u3002
+${USAGE}`;
+  }
+  const head = `\u300C${r.query}\u300D\u5171 ${r.totalHits} \u6761\u547D\u4E2D\uFF08\u663E\u793A\u524D ${r.results.length} \u6761${r.truncated ? "\uFF0C\u5DF2\u6309\u8BBE\u7F6E\u622A\u65AD" : ""}\uFF09\uFF1A`;
+  const items = r.results.map(
+    (item, i) => `${i + 1}. ${item.title}
+   ${item.snippet}
+   ${item.url}${item.updated ? `\uFF08\u66F4\u65B0\u4E8E ${shortDate(item.updated)}\uFF09` : ""}`
+  );
+  return [head, ...items, "", "\u63D0\u793A\uFF1A/mcwiki read <\u6807\u9898> \u770B\u5F15\u8A00\uFF1B\u9700\u8981\u5168\u6587\u5C31\u8BA9\u6A21\u578B\u8C03\u7528 mcwiki_get_page\u3002"].join("\n");
+}
+function renderIntro(title, text, url, truncated) {
+  return [`${title}${truncated ? "\uFF08\u5F15\u8A00\u5DF2\u6309\u8BBE\u7F6E\u622A\u65AD\uFF09" : ""}`, "", text, "", `\u6765\u6E90\uFF1A${url || pageUrl(title)}`].join("\n");
+}
+async function executeMcwikiCommand(getConfig, invocation) {
+  const cfg = getConfig();
+  const raw = typeof invocation?.rawInput === "string" ? invocation.rawInput.trim() : "";
+  if (raw.length === 0) return ok(USAGE);
+  const signal = invocation?.signal instanceof AbortSignal ? invocation.signal : void 0;
+  const lower = raw.toLowerCase();
+  if (lower === "random" || lower === "\u968F\u673A") {
+    const r2 = await fetchRandomPages({
+      limit: 1,
+      maxIntroChars: cfg.introMaxChars,
+      signal,
+      timeoutMs: cfg.timeoutMs
+    });
+    const first = r2.results[0];
+    if (!first) return fail("Wiki \u6CA1\u6709\u8FD4\u56DE\u968F\u673A\u6761\u76EE\uFF0C\u8BF7\u91CD\u8BD5");
+    return ok(renderIntro(first.title, first.text, first.url, false));
+  }
+  if (lower === "read" || lower.startsWith("read ") || lower.startsWith("\u5F15\u8A00 ")) {
+    const title = lower === "read" ? "" : raw.slice(raw.indexOf(" ") + 1).trim();
+    if (title.length === 0) return fail("read \u9700\u8981\u6761\u76EE\u6807\u9898\uFF1A/mcwiki read <\u6761\u76EE\u6807\u9898>");
+    const r2 = await fetchPageIntro({
+      title,
+      maxChars: cfg.introMaxChars,
+      signal,
+      timeoutMs: cfg.timeoutMs
+    });
+    return ok(renderIntro(r2.title, r2.text, r2.url, r2.truncated));
+  }
+  const r = await searchWiki({
+    query: raw,
+    limit: cfg.searchMaxResults,
+    signal,
+    timeoutMs: cfg.timeoutMs
+  });
+  return ok(renderSearch(r));
+}
+function registerCommand(ctx, getConfig) {
+  const commands = ctx.get("commands");
+  if (!commands || typeof commands.register !== "function") {
+    try {
+      console.info("[dshp-mcwiki-search] commands \u670D\u52A1\u672A\u6302\u8F7D\uFF0C\u8DF3\u8FC7 /mcwiki \u547D\u4EE4\u6CE8\u518C");
+    } catch {
+    }
+    return;
+  }
+  ctx.effect(
+    () => commands.register({
+      // definitionId 为品牌字符串（官方包用包名）；AnyCtx 体系下直接传同值
+      definitionId: "@dshp/mcwiki-search",
+      name: "mcwiki",
+      description: "\u76F4\u63A5\u67E5\u8BE2\u4E2D\u6587 Minecraft Wiki\uFF08\u641C\u7D22 / \u6761\u76EE\u5F15\u8A00 / \u968F\u673A\u6761\u76EE\uFF09\uFF0C\u7ED3\u679C\u56DE\u663E\u5230\u4F1A\u8BDD",
+      input: { hint: "<\u641C\u7D22\u8BCD> | read <\u6761\u76EE\u6807\u9898> | random" },
+      handler: (invocation) => executeMcwikiCommand(getConfig, invocation).catch(
+        (e) => fail("Minecraft Wiki \u67E5\u8BE2\u5931\u8D25\uFF1A" + String(e?.message ?? e).slice(0, 300))
+      )
+    }),
+    "dshp-mcwiki-search: /mcwiki command"
+  );
+}
+
 // src/host/routes.ts
 function isRecord3(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
@@ -2026,6 +2117,14 @@ function apply(ctx, rawConfig) {
   }
   registerTools(ctx, getConfig);
   registerRoutes(ctx, getConfig, updateConfig);
+  try {
+    registerCommand(ctx, getConfig);
+  } catch (e) {
+    try {
+      console.error("[dshp-mcwiki-search] register /mcwiki command failed: " + String(e?.message ?? e));
+    } catch {
+    }
+  }
   try {
     const systemPrompt = ctx.get("systemPrompt");
     if (systemPrompt !== void 0 && typeof systemPrompt.section === "function") {

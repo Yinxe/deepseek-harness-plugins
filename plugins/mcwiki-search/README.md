@@ -60,8 +60,22 @@ dsh web
 | **Client（`src/client/` → `lib/client.js`）** | 「设置 → Minecraft Wiki 搜索」配置页：数据源状态、**配置卡**（超时 / 搜索条数 / 全文与引言上限，直接保存到 `settings.yaml` 即时生效）、搜索测试、页面转换测试（直接看转换后的文本）。UI 全部使用 DSH 官方设计 token（`dsw-alias-*`），与官方设置页风格一致。无额外依赖。                                                                                                                                                                                                                                                       |
 | **同源路由**                                  | `GET /ext/dshp-mcwiki-search/state`（数据源状态 + 当前生效配置快照）、`POST /ext/dshp-mcwiki-search/config`（保存配置补丁）、`POST /ext/dshp-mcwiki-search/test`（连接测试：搜索 + 页面抓取），均带同源校验（`Origin` 与 `Host` 一致或缺失才放行）。                                                                                                                                                                                                                                                                           |
 | **工具**                                      | `mcwiki_search`（全文搜索）、`mcwiki_get_page`（抓取页面：引言/全文）、`mcwiki_random`（随机条目），见参数表。输出全部为清洗后的 AI 可读文本，默认**完整输出、不截断**。                                                                                                                                                                                                                                                                                                                                                       |
+| **斜杠命令**                                  | `/mcwiki`（人用，不经模型）：搜索 / 看引言 / 随机条目，结果直接回显到会话。commands 为可选服务，未挂载自动跳过。                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 > **完整性承诺**：搜索摘要、引言、全文（含表格）默认**完整输出、绝不截断** —— 所有信息与细节都保留给 AI。只有显式传 `maxChars`（正整数）或部署配置设限时才会截断，且输出末尾会明确标注。设置页中的转换测试为 UI 预览（最多 6000 字符），与模型工具无关。
+
+### 斜杠命令 `/mcwiki`
+
+在会话输入框直接调用，结果以文本回显（注册形态对齐官方 `@deepseek-ai/dsh-command-goal`；走 `ctx.commands`，**不经模型、不占工具轮次**）：
+
+| 写法                      | 作用                                                 |
+| ------------------------- | ---------------------------------------------------- |
+| `/mcwiki <搜索词>`        | 全文搜索，回显编号结果列表（标题/摘要/URL/更新日期） |
+| `/mcwiki read <条目标题>` | 抓取条目引言（长度取设置的引言上限）                 |
+| `/mcwiki random`          | 随机条目引言                                         |
+| `/mcwiki`                 | 显示用法                                             |
+
+搜索与抓取的条数/上限沿用设置页配置（`searchMaxResults` / `introMaxChars` / `timeoutMs`）；请求跟随命令的取消信号。
 
 ### 模型工具
 
