@@ -138,9 +138,10 @@ jobs:
             echo
             for f in dist/*.tgz; do
               base=$(basename "$f")
-              echo "- [$base](https://github.com/$GITHUB_REPOSITORY/releases/download/$SUFFIX/$base)"
+              url="https://github.com/$GITHUB_REPOSITORY/releases/download/$SUFFIX/$base"
+              echo "- [$base]($url)"
               echo '  ```bash'
-              echo "  dsh --profile web add $base"
+              echo "  dsh --profile web add $url"
               echo '  ```'
               echo
             done
@@ -162,9 +163,10 @@ jobs:
             echo
             for f in dist/*.tgz; do
               base=$(basename "$f")
-              echo "- [$base](https://github.com/$GITHUB_REPOSITORY/releases/download/latest/$base)"
+              url="https://github.com/$GITHUB_REPOSITORY/releases/download/latest/$base"
+              echo "- [$base]($url)"
               echo '  ```bash'
-              echo "  dsh --profile web add $base"
+              echo "  dsh --profile web add $url"
               echo '  ```'
               echo
             done
