@@ -55,7 +55,6 @@ jobs:
             echo "::error::suffix 仅允许字母数字与 . _ -（不得以 . - 开头或含 ..，需可作为 git tag），实际收到：$suffix"
             exit 1
           fi
-          echo "suffix=$suffix" >> "$GITHUB_OUTPUT"
 
           # 打包与发布范围：v* tag / main / 手动触发，以及 dev、feature/* 之外的分支推送；
           # PR、dev、feature/* 推送只做门禁
