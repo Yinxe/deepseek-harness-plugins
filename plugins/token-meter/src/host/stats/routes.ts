@@ -39,4 +39,24 @@ export function registerStatsRoutes(ctx: AnyCtx, engine: Engine | null): void {
     () => ctx.webServer.register({ kind: 'exact', path: `${BASE}/data`, handler }),
     'dshp-token-meter: stats alias route',
   );
+
+  // 统计来源与缓存运维：清除派生缓存（下次快照全量重算）
+  ctx.effect(
+    () =>
+      ctx.webServer.register({
+        kind: 'exact',
+        path: `${BASE}/clear-cache`,
+        handler: async (req: IncomingMessage, res: ServerResponse) => {
+          if (!sameOrigin(req)) return json(res, 403, { ok: false, error: 'forbidden' });
+          try {
+            if (!engine) return json(res, 200, { ok: false, error: '统计引擎不可用' });
+            const removed = await engine.clearCache();
+            return json(res, 200, { ok: true, removed });
+          } catch (error) {
+            return json(res, 200, { ok: false, error: String((error as Error)?.message ?? error) });
+          }
+        },
+      }),
+    'dshp-token-meter: clear cache route',
+  );
 }

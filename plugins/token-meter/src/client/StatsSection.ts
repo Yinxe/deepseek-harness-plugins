@@ -1563,10 +1563,15 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     shared.inflight = p;
     return p;
   }
-  function useSharedStats(): { data: StatsSnapshot | null; err: string; loading: boolean } {
-    const [, force] = (React.useReducer as any)((x: number) => x + 1, 0);
+  function useSharedStats(): {
+    data: StatsSnapshot | null;
+    err: string;
+    loading: boolean;
+    reload: (force?: boolean) => void;
+  } {
+    const [, forceUpdate] = (React.useReducer as any)((x: number) => x + 1, 0);
     React.useEffect(() => {
-      const fn = (): void => force();
+      const fn = (): void => forceUpdate();
       shared.subs.add(fn);
       if (!shared.data && !shared.inflight) void ensureSharedStats();
       const id = window.setInterval(() => {
@@ -1577,7 +1582,12 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
         window.clearInterval(id);
       };
     }, []);
-    return { data: shared.data, err: shared.err, loading: !shared.data && !!shared.inflight };
+    return {
+      data: shared.data,
+      err: shared.err,
+      loading: !shared.data && !!shared.inflight,
+      reload: (force?: boolean) => void ensureSharedStats(force),
+    };
   }
 
   /** 小组件开关按钮：widgets 系统存在且传入 widgetId 时渲染。
@@ -2297,12 +2307,12 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     const [data, setData] = useState<StatsSnapshot | null>(null);
     const [err, setErr] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    const [range, setRange] = useState(props.defaultRange || '30');
+    const [range, setRange] = useState(props.defaultRange || 'all');
     const [todayOn, setTodayOn] = useState(false);
     const fl = useTmTodayFloat();
 
     React.useEffect(() => {
-      setRange(props.defaultRange || '30');
+      setRange(props.defaultRange || 'all');
     }, [props.defaultRange]);
     React.useEffect(() => {
       setTodayOn(props.showToday === true);
@@ -2998,5 +3008,7 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     HeatSection,
     DonutSection,
     HiddenWhenFloated,
+    /** 共享统计快照（60s 可见即刷）：在线时长面板复用它，避免两套轮询各打一次 /stats */
+    useSharedStats,
   };
 }

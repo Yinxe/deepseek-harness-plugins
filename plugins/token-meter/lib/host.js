@@ -1,6 +1,7 @@
 import { homedir } from 'os';
 import { join } from 'path';
-import { readdirSync, statSync } from 'fs';
+import { readdirSync, statSync, openSync, fstatSync, readSync, closeSync, readFileSync } from 'fs';
+import zlib from 'zlib';
 
 // src/host/index.ts
 
@@ -2852,6 +2853,159 @@ registerAlias("opencode-zen", "opencode");
 registerAlias("deepseek-api", "deepseek");
 registerAlias("deepseek-web", "deepseek");
 
+// src/host/stats/online.ts
+var PRESET_GAPS_MIN = [1, 5, 15, 30, 60];
+var BASE_GAP_MS = 6e4;
+function normGapMin(raw) {
+  const n = Math.floor(Number(raw));
+  if (!Number.isFinite(n) || n < 1) return 5;
+  let best = PRESET_GAPS_MIN[0];
+  for (const g of PRESET_GAPS_MIN) if (Math.abs(g - n) < Math.abs(best - n)) best = g;
+  return best;
+}
+function asc(arr, cmp) {
+  const out = [...arr];
+  return out.sort(cmp);
+}
+function dayKey(t) {
+  const d = new Date(t);
+  const M = String(d.getMonth() + 1);
+  const D = String(d.getDate());
+  return d.getFullYear() + "-" + (M.length < 2 ? "0" + M : M) + "-" + (D.length < 2 ? "0" + D : D);
+}
+function nextDay(t) {
+  const d = new Date(t);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 1);
+  return d.getTime();
+}
+function mergePoints(times, gapMs) {
+  if (times.length === 0) return [];
+  const s = asc(times, (a, b) => a - b);
+  const out = [];
+  let start = s[0];
+  let end = start;
+  for (let i = 1; i < s.length; i++) {
+    const t = s[i];
+    if (t - end <= gapMs) {
+      if (t > end) end = t;
+    } else {
+      out.push([start, end]);
+      start = t;
+      end = t;
+    }
+  }
+  out.push([start, end]);
+  return out;
+}
+function mergeIntervals(input, gapMs) {
+  if (input.length === 0) return [];
+  const s = asc(input, (a, b) => a[0] - b[0] || a[1] - b[1]);
+  const out = [];
+  let start = s[0][0];
+  let end = s[0][1];
+  for (let i = 1; i < s.length; i++) {
+    const iv = s[i];
+    if (iv[0] - end <= gapMs) {
+      if (iv[1] > end) end = iv[1];
+    } else {
+      out.push([start, end]);
+      start = iv[0];
+      end = iv[1];
+    }
+  }
+  out.push([start, end]);
+  return out;
+}
+function countByDay(intervals) {
+  const out = /* @__PURE__ */ new Map();
+  for (const [a] of intervals) {
+    const k = dayKey(a);
+    out.set(k, (out.get(k) ?? 0) + 1);
+  }
+  return out;
+}
+function totalMs(intervals) {
+  let sum = 0;
+  for (const [a, b] of intervals) if (b > a) sum += b - a;
+  return sum;
+}
+function splitByDay(intervals) {
+  const byDay = /* @__PURE__ */ new Map();
+  for (const [a, b] of intervals) {
+    if (b <= a) continue;
+    let cur = a;
+    while (cur < b) {
+      const dayEnd = nextDay(cur);
+      const segEnd = Math.min(b, dayEnd);
+      if (segEnd <= cur) break;
+      const k = dayKey(cur);
+      byDay.set(k, (byDay.get(k) ?? 0) + (segEnd - cur));
+      cur = segEnd;
+    }
+  }
+  return byDay;
+}
+function buildOnline(active, turns, dayMeta, defaultGapMin) {
+  const gaps = PRESET_GAPS_MIN;
+  const totals = {};
+  const segments = {};
+  const perGapDays = [];
+  const perGapSegs = [];
+  const daySet = /* @__PURE__ */ new Set();
+  for (const g of gaps) {
+    const merged = mergeIntervals(active, g * 6e4);
+    totals[String(g)] = totalMs(merged);
+    segments[String(g)] = merged.length;
+    const days2 = splitByDay(merged);
+    perGapDays.push(days2);
+    perGapSegs.push(countByDay(merged));
+    for (const k of days2.keys()) daySet.add(k);
+  }
+  for (const k of Object.keys(dayMeta.sessions)) daySet.add(k);
+  for (const k of Object.keys(dayMeta.llmMs)) daySet.add(k);
+  const turnMerged = mergeIntervals(turns, 0);
+  const turnTotal = totalMs(turnMerged);
+  const turnDays = splitByDay(turnMerged);
+  const days = [];
+  for (const d of asc([...daySet], (a, b) => a < b ? -1 : a > b ? 1 : 0)) {
+    const byGap = {};
+    const segByGap = {};
+    for (let i = 0; i < gaps.length; i++) {
+      const g = String(gaps[i]);
+      byGap[g] = perGapDays[i].get(d) ?? 0;
+      segByGap[g] = perGapSegs[i].get(d) ?? 0;
+    }
+    days.push({
+      d,
+      sessions: dayMeta.sessions[d] ?? 0,
+      tokens: dayMeta.tokens[d] ?? 0,
+      turnMs: turnDays.get(d) ?? 0,
+      byGap,
+      segByGap,
+      llmMs: dayMeta.llmMs[d] ?? 0,
+      toolMs: dayMeta.toolMs[d] ?? 0
+    });
+  }
+  let llmTotal = 0;
+  let toolTotal = 0;
+  for (const v of Object.values(dayMeta.llmMs)) llmTotal += v;
+  for (const v of Object.values(dayMeta.toolMs)) toolTotal += v;
+  return {
+    defaultGapMin: normGapMin(defaultGapMin),
+    gaps,
+    totalMs: totals,
+    segments,
+    turnMs: turnTotal,
+    llmMs: llmTotal,
+    toolMs: toolTotal,
+    activeDays: days.length,
+    firstDay: days.length > 0 ? days[0].d : null,
+    lastDay: days.length > 0 ? days[days.length - 1].d : null,
+    days
+  };
+}
+
 // src/host/config.ts
 var NS = settingsNamespace("dshp-token-meter");
 var DEFAULT_CONFIG = {
@@ -2861,7 +3015,10 @@ var DEFAULT_CONFIG = {
   enabled: true,
   vendors: [],
   showToday: false,
-  defaultRange: "30"
+  // token 统计默认「全部」；热力图另有自己的 6 个月默认（客户端）
+  defaultRange: "all",
+  // 在线时长空闲阈值（分钟）：1/5/15/30/60，缺省 5
+  onlineGapMin: 5
 };
 var VendorSchema = Schema.object({
   id: Schema.string().required(),
@@ -2878,7 +3035,8 @@ var ConfigSchema = Schema.object({
   enabled: Schema.boolean().default(true),
   vendors: Schema.array(VendorSchema).default([]),
   showToday: Schema.boolean().default(false),
-  defaultRange: Schema.union([Schema.const("7"), Schema.const("30"), Schema.const("90"), Schema.const("all")]).default("30")
+  defaultRange: Schema.union([Schema.const("7"), Schema.const("30"), Schema.const("90"), Schema.const("all")]).default("all"),
+  onlineGapMin: Schema.number().step(1).min(1).max(60).default(5)
 });
 function isRecord5(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
@@ -2925,6 +3083,8 @@ function sanitizePatchConfig(raw) {
   if (Object.hasOwn(raw, "showToday")) out.showToday = raw["showToday"] === true;
   if (Object.hasOwn(raw, "defaultRange") && isDefaultRange(raw["defaultRange"]))
     out.defaultRange = raw["defaultRange"];
+  if (Object.hasOwn(raw, "onlineGapMin") && raw["onlineGapMin"] !== void 0 && raw["onlineGapMin"] !== null)
+    out.onlineGapMin = normGapMin(raw["onlineGapMin"]);
   return out;
 }
 
@@ -3136,7 +3296,8 @@ function registerQuotaRoutes(ctx, deps) {
             config: {
               ...sanitizeCfg(cfg),
               showToday: cfg.showToday === true,
-              defaultRange: cfg.defaultRange
+              defaultRange: cfg.defaultRange,
+              onlineGapMin: cfg.onlineGapMin
             },
             snaps: st.snaps,
             providers: describeProviders(),
@@ -3486,6 +3647,12 @@ function registerQuotaRoutes(ctx, deps) {
             patchObj["defaultRange"] = dr;
             hasPatch = true;
           }
+          if (Object.hasOwn(a, "onlineGapMin")) {
+            const g = Number(a["onlineGapMin"]);
+            if (!Number.isFinite(g)) throw new Error("onlineGapMin \u975E\u6CD5\uFF0C\u5E94\u4E3A 1/5/15/30/60");
+            patchObj["onlineGapMin"] = normGapMin(g);
+            hasPatch = true;
+          }
           if (Object.hasOwn(a, "refreshSec")) {
             const raw = a["refreshSec"];
             if (raw === void 0 || raw === null || raw === "")
@@ -3518,21 +3685,28 @@ function registerQuotaRoutes(ctx, deps) {
 function modelKey(provider, model) {
   return String(provider || "unknown") + "/" + String(model || "unknown");
 }
-function dayKey(t) {
-  const d = new Date(t);
-  const M = String(d.getMonth() + 1);
-  const D = String(d.getDate());
-  return d.getFullYear() + "-" + (M.length < 2 ? "0" + M : M) + "-" + (D.length < 2 ? "0" + D : D);
-}
 var BUCKETS = ["i", "o", "cr", "cw"];
 function emptyResult() {
-  return { records: /* @__PURE__ */ new Map(), peak: null, first: null, last: null, used: false };
+  return {
+    records: /* @__PURE__ */ new Map(),
+    peak: null,
+    first: null,
+    last: null,
+    used: false,
+    active: [],
+    turns: [],
+    llmMs: 0,
+    toolMs: 0,
+    dayLlm: /* @__PURE__ */ new Map(),
+    dayTool: /* @__PURE__ */ new Map(),
+    outcome: "no-request"
+  };
 }
 function numOf(v) {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 }
-function foldSession(events, skipCount) {
+function createFolder(skipCount) {
   const state = emptyResult();
   let routeProvider = "unknown";
   let routeModel = "unknown";
@@ -3572,19 +3746,67 @@ function foldSession(events, skipCount) {
     pending = null;
   };
   const limit = skipCount > 0 ? skipCount : 0;
-  for (let idx = 0; idx < events.length; idx++) {
-    if (idx < limit) continue;
-    const ev = events[idx];
+  const times = [];
+  const turns = [];
+  let openTurn = null;
+  let llmMs = 0;
+  let toolMs = 0;
+  let sawRequest = false;
+  let sawMessage = false;
+  let sawUsageMessage = false;
+  let openStep = null;
+  const pendingCalls = /* @__PURE__ */ new Map();
+  let processed = 0;
+  function push2(ev) {
+    if (processed++ < limit) return;
+    const t = Number(ev && ev.time);
+    const hasTime = Number.isFinite(t) && t > 0;
+    if (hasTime) times.push(t);
+    if (hasTime && ev.type === "turn/start") {
+      openTurn = t;
+    } else if (hasTime && ev.type === "turn/end") {
+      if (openTurn !== null && t > openTurn) turns.push([openTurn, t]);
+      openTurn = null;
+      pendingCalls.clear();
+    }
     const data = ev && ev.data;
-    if (data === null || typeof data !== "object") continue;
+    if (data === null || typeof data !== "object") return;
     switch (ev.type) {
+      case "step/start": {
+        openStep = hasTime ? { turn: data["turn"], step: data["step"], start: t } : null;
+        break;
+      }
+      case "tool/call": {
+        if (hasTime) {
+          const callId = data["callId"];
+          if (typeof callId === "string") pendingCalls.set(callId, t);
+        }
+        break;
+      }
+      case "tool/result": {
+        if (!hasTime) break;
+        const message = data["message"];
+        const source = message && message["source"];
+        const callId = source ? source["callId"] : void 0;
+        if (typeof callId !== "string") break;
+        const dispatched = pendingCalls.get(callId);
+        if (dispatched === void 0) break;
+        pendingCalls.delete(callId);
+        const span = Math.max(0, t - dispatched);
+        toolMs += span;
+        const dk = dayKey(t);
+        state.dayTool.set(dk, (state.dayTool.get(dk) ?? 0) + span);
+        break;
+      }
       case "request/header": {
+        sawRequest = true;
         const header = data["header"];
         const cfg = header && header["config"];
         if (cfg) setRoute(cfg["provider"], cfg["model"]);
         break;
       }
       case "request/context": {
+        sawRequest = true;
         setRoute(data["provider"], data["model"]);
         break;
       }
@@ -3603,10 +3825,19 @@ function foldSession(events, skipCount) {
         break;
       }
       case "assistant/message": {
+        sawMessage = true;
+        if (data["usage"]) sawUsageMessage = true;
         const key = String(data["turn"]) + ":" + String(data["step"]);
         const msg = data["message"];
         const src = msg && msg["source"];
         const srcModel = src && src["kind"] === "model" ? modelKey(src["provider"], src["model"]) : null;
+        if (openStep !== null && openStep.turn === data["turn"] && openStep.step === data["step"] && hasTime) {
+          const span = Math.max(0, t - openStep.start);
+          llmMs += span;
+          const dk = dayKey(t);
+          state.dayLlm.set(dk, (state.dayLlm.get(dk) ?? 0) + span);
+          openStep = null;
+        }
         if (data["usage"]) {
           if (pending !== null && pending.key !== key) flush();
           pending = {
@@ -3622,23 +3853,89 @@ function foldSession(events, skipCount) {
       }
     }
   }
-  flush();
-  return state;
+  function finish() {
+    flush();
+    state.active = mergePoints(times, BASE_GAP_MS);
+    state.turns = mergeIntervals(turns, 0);
+    state.llmMs = llmMs;
+    state.toolMs = toolMs;
+    const ownCount = processed - limit;
+    state.outcome = state.records.size > 0 ? "usage" : !sawRequest && (times.length === 0 || ownCount <= 4) ? "fork-empty" : !sawRequest ? "no-request" : !sawMessage ? "failed" : sawUsageMessage ? "usage" : "no-usage";
+    return state;
+  }
+  return { push: push2, finish, result: () => state, count: () => processed };
 }
+function foldSession(events, skipCount) {
+  const folder = createFolder(skipCount);
+  for (const ev of events) folder.push(ev);
+  return folder.finish();
+}
+var flat = (iv) => {
+  const out = [];
+  for (const [a, b] of iv) out.push(a, b);
+  return out;
+};
+var unflat = (nums) => {
+  if (!Array.isArray(nums)) return [];
+  const out = [];
+  for (let i = 0; i + 1 < nums.length; i += 2) {
+    const a = Number(nums[i]);
+    const b = Number(nums[i + 1]);
+    if (Number.isFinite(a) && Number.isFinite(b) && b >= a) out.push([a, b]);
+  }
+  return out;
+};
+var nonNeg = (v) => {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+};
 var compactAgg = (agg) => ({
   r: Array.from(agg.records.entries()),
   p: agg.peak,
   f: agg.first,
   l: agg.last,
-  u: agg.used
+  u: agg.used,
+  on: flat(agg.active),
+  tn: flat(agg.turns),
+  lm: Math.round(agg.llmMs),
+  tm: Math.round(agg.toolMs),
+  dm: dmCompact(agg),
+  oc: agg.outcome
 });
-var reviveAgg = (c) => ({
-  records: new Map(c.r),
-  peak: c.p,
-  first: c.f,
-  last: c.l,
-  used: c.u
-});
+function dmCompact(agg) {
+  const days = /* @__PURE__ */ new Set([...agg.dayLlm.keys(), ...agg.dayTool.keys()]);
+  const out = [];
+  for (const d of days)
+    out.push([d, Math.round(agg.dayLlm.get(d) ?? 0), Math.round(agg.dayTool.get(d) ?? 0)]);
+  return out;
+}
+var reviveAgg = (c) => {
+  const dayLlm = /* @__PURE__ */ new Map();
+  const dayTool = /* @__PURE__ */ new Map();
+  if (Array.isArray(c.dm)) {
+    for (const row of c.dm) {
+      if (!Array.isArray(row) || row.length < 3) continue;
+      const d = String(row[0]);
+      dayLlm.set(d, nonNeg(row[1]));
+      dayTool.set(d, nonNeg(row[2]));
+    }
+  }
+  return {
+    records: new Map(c.r),
+    peak: c.p,
+    first: c.f,
+    last: c.l,
+    used: c.u,
+    active: unflat(c.on),
+    turns: unflat(c.tn),
+    llmMs: nonNeg(c.lm),
+    toolMs: nonNeg(c.tm),
+    dayLlm,
+    dayTool,
+    outcome: c.oc ?? "failed"
+  };
+};
+var LOG_FILE_NAMES = ["session.v3.jsonl.zstd", "session.jsonl.zstd"];
 function buildFileIndex(sessionsDir) {
   const idx = /* @__PURE__ */ new Map();
   try {
@@ -3651,14 +3948,34 @@ function buildFileIndex(sessionsDir) {
         continue;
       }
       if (!st.isDirectory()) continue;
-      for (const sess of readdirSync(full)) {
-        if (!sess.startsWith("session-")) continue;
-        const file = join(full, sess, "session.jsonl.zstd");
+      let sessDirs;
+      try {
+        sessDirs = readdirSync(full);
+      } catch {
+        continue;
+      }
+      for (const sess of sessDirs) {
+        const dir = join(full, sess);
         try {
-          const s = statSync(file);
-          if (s.isFile()) idx.set(sess, { file, size: s.size, mtimeMs: s.mtimeMs });
+          if (!statSync(dir).isDirectory()) continue;
         } catch {
+          continue;
         }
+        const parts = [];
+        let newest = null;
+        for (const name2 of LOG_FILE_NAMES) {
+          const file = join(dir, name2);
+          try {
+            const s = statSync(file);
+            if (!s.isFile()) continue;
+            parts.push(name2 + ":" + s.size + ":" + Math.floor(s.mtimeMs));
+            if (newest === null || s.mtimeMs > newest.mtimeMs)
+              newest = { file, size: s.size, mtimeMs: s.mtimeMs };
+          } catch {
+          }
+        }
+        if (newest === null) continue;
+        idx.set(sess, { ...newest, fp: parts.join("|") });
       }
     }
   } catch {
@@ -3667,8 +3984,195 @@ function buildFileIndex(sessionsDir) {
 }
 function fileFingerprint(index, id) {
   const e = index.get(id);
-  if (e === void 0) return null;
-  return e.size + ":" + Math.floor(e.mtimeMs);
+  return e === void 0 ? null : e.fp;
+}
+var ZSTD_MAGIC = Buffer.from([40, 181, 47, 253]);
+function hasZstd() {
+  const z = zlib;
+  return typeof z.zstdDecompressSync === "function";
+}
+function* zstdFrames(buf) {
+  const z = zlib;
+  const inflate = z.zstdDecompressSync;
+  if (typeof inflate !== "function") throw new Error("zstd unsupported");
+  let offset = 0;
+  let frames = 0;
+  while (offset < buf.length && frames < 2e5) {
+    frames++;
+    let cut = buf.indexOf(ZSTD_MAGIC, offset + 4);
+    for (; ; ) {
+      const end = cut < 0 ? buf.length : cut;
+      try {
+        const data = inflate.call(zlib, buf.subarray(offset, end));
+        offset = end;
+        yield { data, end };
+        break;
+      } catch {
+        if (cut < 0) return;
+        cut = buf.indexOf(ZSTD_MAGIC, cut + 4);
+      }
+    }
+  }
+}
+function asRecord(v) {
+  return v !== null && typeof v === "object" && !Array.isArray(v) ? v : null;
+}
+function consumeLogTail(file, from2, onEvent) {
+  if (!hasZstd()) return null;
+  let fd = null;
+  try {
+    fd = openSync(file, "r");
+    const size = fstatSync(fd).size;
+    if (from2 > size) return { offset: 0, reset: true };
+    if (from2 === size) return { offset: from2, reset: false };
+    if (from2 > 0) {
+      const probe = Buffer.alloc(4);
+      const got = readSync(fd, probe, 0, 4, from2);
+      if (got < 4 || !probe.equals(ZSTD_MAGIC)) return { offset: 0, reset: true };
+    }
+    const len = size - from2;
+    const buf = Buffer.alloc(len);
+    const read = readSync(fd, buf, 0, len, from2);
+    let offset = from2;
+    let carry = "";
+    for (const frame of zstdFrames(buf.subarray(0, read))) {
+      const text = carry + frame.data.toString("utf8");
+      let start = 0;
+      for (; ; ) {
+        const nl = text.indexOf("\n", start);
+        if (nl < 0) break;
+        if (nl > start) {
+          try {
+            onEvent(JSON.parse(text.slice(start, nl)));
+          } catch {
+          }
+        }
+        start = nl + 1;
+      }
+      carry = text.slice(start);
+      offset = from2 + frame.end;
+    }
+    if (carry.length > 0) {
+      try {
+        onEvent(JSON.parse(carry));
+      } catch {
+      }
+    }
+    return { offset, reset: false };
+  } catch {
+    return null;
+  } finally {
+    if (fd !== null) {
+      try {
+        closeSync(fd);
+      } catch {
+      }
+    }
+  }
+}
+function readLogDirect(file) {
+  if (!hasZstd()) return null;
+  const events = [];
+  let consumed = 0;
+  try {
+    let carry = "";
+    for (const frame of zstdFrames(readFileSync(file))) {
+      consumed = frame.end;
+      const text = carry + frame.data.toString("utf8");
+      let start = 0;
+      for (; ; ) {
+        const nl = text.indexOf("\n", start);
+        if (nl < 0) break;
+        if (nl > start) {
+          try {
+            events.push(JSON.parse(text.slice(start, nl)));
+          } catch {
+          }
+        }
+        start = nl + 1;
+      }
+      carry = text.slice(start);
+    }
+    if (carry.length > 0) {
+      try {
+        events.push(JSON.parse(carry));
+      } catch {
+      }
+    }
+  } catch {
+    return null;
+  }
+  if (events.length === 0) return null;
+  const header = asRecord(events[0]);
+  if (header === null) return null;
+  const createdAtRaw = header["createdAt"];
+  const createdAt = typeof createdAtRaw === "number" && Number.isFinite(createdAtRaw) ? createdAtRaw : 0;
+  let cut = -1;
+  let via = "marker";
+  for (let i = 0; i < events.length; i++) {
+    const rec = asRecord(events[i]);
+    if (rec === null || rec["type"] !== "session/end-seed") continue;
+    const data = asRecord(rec["data"]);
+    if (data !== null && data["inherited"] === true) cut = i;
+  }
+  if (cut < 0 && createdAt > 0) {
+    via = "createdAt";
+    cut = events.length - 1;
+    for (let i = 0; i < events.length; i++) {
+      const rec = asRecord(events[i]);
+      const t = rec ? rec["time"] : void 0;
+      if (typeof t === "number" && t >= createdAt) {
+        cut = i - 1;
+        break;
+      }
+    }
+  }
+  const kept = cut + 1;
+  if (kept <= 0) return { events: [], skip: events.length, via, offset: consumed };
+  if (kept >= events.length) return { events, skip: 0, via: "none", offset: consumed };
+  return { events: events.slice(kept), skip: kept, via, offset: consumed };
+}
+
+// src/host/stats/stream.ts
+function asRecord2(v) {
+  return v !== null && typeof v === "object" && !Array.isArray(v) ? v : null;
+}
+function isInheritedMarker(rec) {
+  if (rec === null || rec["type"] !== "session/end-seed") return false;
+  const data = asRecord2(rec["data"]);
+  return data !== null && data["inherited"] === true;
+}
+function openStream(file, size, mtimeMs) {
+  const folder = createFolder(0);
+  let createdAt = 0;
+  let decided = false;
+  let seen = 0;
+  const res = consumeLogTail(file, 0, (ev) => {
+    const rec = asRecord2(ev);
+    seen++;
+    if (!decided) {
+      if (createdAt === 0) {
+        const c = rec ? rec["createdAt"] : void 0;
+        createdAt = typeof c === "number" && Number.isFinite(c) ? c : 0;
+        return;
+      }
+      const t = rec ? rec["time"] : void 0;
+      if (typeof t === "number" && (createdAt === 0 || t >= createdAt)) decided = true;
+      else return;
+    }
+    if (isInheritedMarker(rec)) return;
+    folder.push(ev);
+  });
+  if (res === null || seen === 0) return null;
+  return { folder, file, offset: res.offset, size, mtimeMs };
+}
+function extendStream(st, size, mtimeMs) {
+  const res = consumeLogTail(st.file, st.offset, (ev) => st.folder.push(ev));
+  if (res === null || res.reset) return false;
+  st.offset = res.offset;
+  st.size = size;
+  st.mtimeMs = mtimeMs;
+  return true;
 }
 
 // src/host/stats/async.ts
@@ -3690,9 +4194,12 @@ function withTimeout(promise, ms, label) {
 }
 
 // src/host/stats/engine.ts
-var BATCH_SIZE = 8;
+var BATCH_SIZE = 3;
 var MAX_ATTEMPTS = 3;
 var READ_TIMEOUT_MS = 2e4;
+var READ_TIMEOUT_STEP_MS = 15e3;
+var READ_TIMEOUT_MAX_MS = 9e4;
+var CACHE_V = 4;
 var UNIT_NAME_RE = /^[a-z][a-z0-9_]*$/;
 function domainTable(schema) {
   return { valueSchema: schema };
@@ -3709,6 +4216,28 @@ function defineDomain(spec) {
 }
 function isNonNegInt(v) {
   return typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= Number.MAX_SAFE_INTEGER;
+}
+function parseDayMs(raw) {
+  if (raw === void 0 || raw === null) return void 0;
+  if (!Array.isArray(raw)) throw new Error("invalid-record: dm");
+  const out = [];
+  for (const row of raw) {
+    if (!Array.isArray(row) || row.length < 3) throw new Error("invalid-record: dm row");
+    const d = row[0];
+    const l = row[1];
+    const t = row[2];
+    if (typeof d !== "string" || !isNonNegInt(l) || !isNonNegInt(t))
+      throw new Error("invalid-record: dm value");
+    out.push([d, l, t]);
+  }
+  return out;
+}
+function parseFlatIntervals(raw) {
+  if (raw === void 0 || raw === null) return void 0;
+  if (!Array.isArray(raw)) throw new Error("invalid-record: intervals");
+  for (const n of raw)
+    if (typeof n !== "number" || !Number.isFinite(n)) throw new Error("invalid-record: interval value");
+  return raw;
 }
 function parseBucket(raw) {
   if (raw === null || typeof raw !== "object" || Array.isArray(raw)) throw new Error("invalid bucket");
@@ -3763,6 +4292,10 @@ var cachedSessionSchema = {
     if (f !== null && typeof f !== "string") throw new Error("invalid-record: f");
     if (l !== null && typeof l !== "string") throw new Error("invalid-record: l");
     if (typeof r["u"] !== "boolean") throw new Error("invalid-record: u");
+    const on = parseFlatIntervals(r["on"]);
+    const tn = parseFlatIntervals(r["tn"]);
+    const dm = parseDayMs(r["dm"]);
+    const oc = r["oc"];
     return {
       fp: r["fp"],
       skip: r["skip"],
@@ -3771,7 +4304,11 @@ var cachedSessionSchema = {
       p,
       f: f ?? null,
       l: l ?? null,
-      u: r["u"]
+      u: r["u"],
+      ...on !== void 0 ? { on } : {},
+      ...tn !== void 0 ? { tn } : {},
+      ...dm !== void 0 ? { dm } : {},
+      ...typeof oc === "string" ? { oc } : {}
     };
   }
 };
@@ -3786,13 +4323,17 @@ function clampSkip(inheritedEventCount, events) {
   const len = Array.isArray(events) ? events.length : 0;
   return n > len ? len : n;
 }
-function createEngine(sessionQuery, dshHome, storageDomain) {
+function createEngine(sessionQuery, dshHome, storageDomain, getGapMin) {
   const sessionsDir = join(dshHome, "sessions");
   const aggMemo = /* @__PURE__ */ new Map();
   const fpMemo = /* @__PURE__ */ new Map();
   const dirty = /* @__PURE__ */ new Set();
   const attempts = /* @__PURE__ */ new Map();
   const errored = /* @__PURE__ */ new Set();
+  const directIds = /* @__PURE__ */ new Set();
+  const errorSamples = /* @__PURE__ */ new Map();
+  const directSessions = /* @__PURE__ */ new Set();
+  const streams = /* @__PURE__ */ new Map();
   let queue = [];
   let pumping = false;
   let listedIds = /* @__PURE__ */ new Set();
@@ -3842,6 +4383,14 @@ function createEngine(sessionQuery, dshHome, storageDomain) {
       attempts.delete(sessionId);
     }
   }
+  function readViaFallback(id) {
+    const entry = currentIndex.get(id);
+    if (entry === void 0) return null;
+    const direct = readLogDirect(entry.file);
+    if (direct === null) return null;
+    directSessions.add(id);
+    return foldSession(direct.events, 0);
+  }
   async function pump() {
     if (pumping) return;
     pumping = true;
@@ -3851,17 +4400,47 @@ function createEngine(sessionQuery, dshHome, storageDomain) {
         const tbl = await tableReady;
         await Promise.all(
           batch.map(async (job) => {
+            const attempt = (attempts.get(job.id) || 0) + 1;
+            const timeoutMs = Math.min(
+              READ_TIMEOUT_MAX_MS,
+              READ_TIMEOUT_MS + (attempt - 1) * READ_TIMEOUT_STEP_MS
+            );
             try {
-              const snap = await withTimeout(
-                sessionQuery.readSession(job.id),
-                READ_TIMEOUT_MS,
-                "readSession " + job.id
-              );
-              const skip = clampSkip(
-                snap?.inheritedEventCount,
-                snap?.events
-              );
-              const agg = foldSession(snap?.events || [], skip);
+              const entry = currentIndex.get(job.id);
+              let agg = null;
+              const stream = streams.get(job.id);
+              if (entry !== void 0 && stream !== void 0 && stream.file === entry.file) {
+                if (entry.size > stream.size && extendStream(stream, entry.size, entry.mtimeMs)) {
+                  directSessions.add(job.id);
+                  agg = stream.folder.finish();
+                } else if (entry.size === stream.size) {
+                  agg = stream.folder.finish();
+                } else {
+                  streams.delete(job.id);
+                }
+              }
+              if (agg === null && entry !== void 0) {
+                const opened = openStream(entry.file, entry.size, entry.mtimeMs);
+                if (opened !== null) {
+                  streams.set(job.id, opened);
+                  directSessions.add(job.id);
+                  agg = opened.folder.finish();
+                }
+              }
+              let skip = 0;
+              if (agg === null) {
+                const snap = await withTimeout(
+                  sessionQuery.readSession(job.id),
+                  timeoutMs,
+                  "readSession " + job.id
+                );
+                skip = clampSkip(
+                  snap?.inheritedEventCount,
+                  snap?.events
+                );
+                agg = foldSession(snap?.events || [], skip);
+              }
+              if (agg === null) throw new Error("log unavailable");
               aggMemo.set(job.id, agg);
               attempts.delete(job.id);
               errored.delete(job.id);
@@ -3870,16 +4449,49 @@ function createEngine(sessionQuery, dshHome, storageDomain) {
               if (fp !== null) {
                 fpMemo.set(job.id, fp);
                 try {
-                  await tbl.table.put(job.id, { fp, skip, v: 1, ...compactAgg(agg) });
+                  await tbl.table.put(job.id, { fp, skip, v: CACHE_V, ...compactAgg(agg) });
                 } catch (error) {
                   noteStorageError("put failed", error);
                 }
               }
-            } catch {
-              const n = (attempts.get(job.id) || 0) + 1;
-              attempts.set(job.id, n);
-              if (n >= MAX_ATTEMPTS) {
-                aggMemo.set(job.id, { records: /* @__PURE__ */ new Map(), peak: null, first: null, last: null, used: false });
+            } catch (error) {
+              const viaFallback = directIds.has(job.id) ? null : readViaFallback(job.id);
+              if (viaFallback !== null) {
+                aggMemo.set(job.id, viaFallback);
+                attempts.delete(job.id);
+                errored.delete(job.id);
+                dirty.delete(job.id);
+                directIds.add(job.id);
+                const fp0 = fileFingerprint(currentIndex, job.id);
+                if (fp0 !== null) {
+                  fpMemo.set(job.id, fp0);
+                  try {
+                    const t0 = await tableReady;
+                    await t0.table.put(job.id, { fp: fp0, skip: 0, v: CACHE_V, ...compactAgg(viaFallback) });
+                  } catch (e2) {
+                    noteStorageError("put failed", e2);
+                  }
+                }
+                return;
+              }
+              if (errorSamples.size < 5)
+                errorSamples.set(job.id, String(error?.message ?? error).slice(0, 120));
+              attempts.set(job.id, attempt);
+              if (attempt >= MAX_ATTEMPTS) {
+                aggMemo.set(job.id, {
+                  records: /* @__PURE__ */ new Map(),
+                  peak: null,
+                  first: null,
+                  last: null,
+                  used: false,
+                  active: [],
+                  turns: [],
+                  llmMs: 0,
+                  toolMs: 0,
+                  dayLlm: /* @__PURE__ */ new Map(),
+                  dayTool: /* @__PURE__ */ new Map(),
+                  outcome: "unreadable"
+                });
                 errored.add(job.id);
               }
             }
@@ -3897,6 +4509,8 @@ function createEngine(sessionQuery, dshHome, storageDomain) {
     listedIds = /* @__PURE__ */ new Set();
     const jobs = [];
     let scanned = 0;
+    let cacheHits = 0;
+    let reused = 0;
     currentIndex = buildFileIndex(sessionsDir);
     for (const rec of list) {
       const header = rec && rec.header;
@@ -3911,6 +4525,7 @@ function createEngine(sessionQuery, dshHome, storageDomain) {
       const mtime = entry === void 0 ? 0 : entry.mtimeMs;
       if (live) {
         need = isDirty || !aggMemo.has(id);
+        if (!need) reused++;
       } else {
         const fp = fileFingerprint(currentIndex, id);
         if (isDirty || !aggMemo.has(id)) {
@@ -3920,7 +4535,9 @@ function createEngine(sessionQuery, dshHome, storageDomain) {
           } catch {
             hit = void 0;
           }
-          if (!isDirty && hit !== void 0 && hit.fp === fp && hit.v === 1) {
+          if (!isDirty && hit !== void 0 && hit.fp === fp && hit.v === CACHE_V) {
+            cacheHits++;
+            reused++;
             aggMemo.set(id, reviveAgg(hit));
             if (fp !== null) fpMemo.set(id, fp);
             dirty.delete(id);
@@ -3929,10 +4546,12 @@ function createEngine(sessionQuery, dshHome, storageDomain) {
           }
         } else if (fp !== null && fpMemo.get(id) !== fp) {
           need = true;
+        } else {
+          reused++;
         }
       }
       if (need && !errored.has(id)) {
-        const job = { id, mtime };
+        const job = { id, mtime, live };
         if (isDirty) job.mtime = Infinity;
         jobs.push(job);
       }
@@ -3957,6 +4576,12 @@ function createEngine(sessionQuery, dshHome, storageDomain) {
     let first = null;
     let last = null;
     let active = 0;
+    const activeIntervals = [];
+    const turnIntervals = [];
+    const dayTokens = {};
+    const dayLlm = {};
+    const dayTool = {};
+    const sessionOutcomes = {};
     for (const id of listedIds) {
       const agg = aggMemo.get(id);
       if (agg === void 0) continue;
@@ -3966,6 +4591,11 @@ function createEngine(sessionQuery, dshHome, storageDomain) {
         for (const r of agg.records.values()) days.add(r.d);
         for (const d of days) daySessions[d] = (daySessions[d] || 0) + 1;
       }
+      for (const iv of agg.active) activeIntervals.push(iv);
+      for (const iv of agg.turns) turnIntervals.push(iv);
+      sessionOutcomes[agg.outcome] = (sessionOutcomes[agg.outcome] ?? 0) + 1;
+      for (const [d, v] of agg.dayLlm) dayLlm[d] = (dayLlm[d] || 0) + v;
+      for (const [d, v] of agg.dayTool) dayTool[d] = (dayTool[d] || 0) + v;
       for (const r of agg.records.values()) {
         const k = r.d + "|" + r.h + "|" + r.m;
         let m = merged.get(k);
@@ -3978,6 +4608,7 @@ function createEngine(sessionQuery, dshHome, storageDomain) {
         m.cr += r.cr;
         m.cw += r.cw;
         m.n += r.n;
+        dayTokens[r.d] = (dayTokens[r.d] || 0) + r.i + r.o + r.cr + r.cw;
         if (models[r.m] === void 0) {
           const slash = r.m.indexOf("/");
           models[r.m] = slash > 0 ? { provider: r.m.slice(0, slash), model: r.m.slice(slash + 1) } : { provider: "unknown", model: r.m };
@@ -3990,6 +4621,7 @@ function createEngine(sessionQuery, dshHome, storageDomain) {
     for (const id of aggMemo.keys()) {
       if (listedIds.has(id)) continue;
       aggMemo.delete(id);
+      streams.delete(id);
       fpMemo.delete(id);
       attempts.delete(id);
       errored.delete(id);
@@ -4002,6 +4634,18 @@ function createEngine(sessionQuery, dshHome, storageDomain) {
     }
     const records = Array.from(merged.values());
     records.sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : a.h - b.h);
+    let gapMin = 5;
+    try {
+      gapMin = normGapMin(getGapMin ? getGapMin() : 5);
+    } catch {
+      gapMin = 5;
+    }
+    const online = buildOnline(
+      activeIntervals,
+      turnIntervals,
+      { sessions: daySessions, tokens: dayTokens, llmMs: dayLlm, toolMs: dayTool },
+      gapMin
+    );
     const total = listedIds.size;
     return {
       ready: true,
@@ -4016,8 +4660,14 @@ function createEngine(sessionQuery, dshHome, storageDomain) {
       scanned,
       total,
       errors: errored.size,
+      errorSamples: [...errorSamples.entries()].map(([id, message]) => ({ id, message })),
+      sessionOutcomes,
+      cacheHits,
+      reused,
+      directReads: directSessions.size,
       storage: storageOk ? "ok" : "disabled",
-      generatedAt: Date.now()
+      generatedAt: Date.now(),
+      online
     };
   }
   function start() {
@@ -4027,6 +4677,35 @@ function createEngine(sessionQuery, dshHome, storageDomain) {
     }, 100);
     if (typeof t.unref === "function")
       t.unref();
+  }
+  async function clearCache() {
+    let removed = 0;
+    try {
+      const t = await tableReady;
+      if (t.table !== nullTable && typeof t.table.keys === "function") {
+        const keys = [...t.table.keys()];
+        for (const k of keys) {
+          try {
+            await t.table.delete(k);
+            removed++;
+          } catch (error) {
+            noteStorageError("delete failed", error);
+          }
+        }
+      }
+    } catch (error) {
+      noteStorageError("clear failed", error);
+    }
+    aggMemo.clear();
+    streams.clear();
+    fpMemo.clear();
+    attempts.clear();
+    errored.clear();
+    dirty.clear();
+    errorSamples.clear();
+    directSessions.clear();
+    queue = [];
+    return removed;
   }
   async function drain() {
     for (; ; ) {
@@ -4050,7 +4729,7 @@ function createEngine(sessionQuery, dshHome, storageDomain) {
     const prev = await tableReady;
     if (prev.degraded === true) tableReady = openDomain();
   }
-  return { invalidate, snapshot, start, drain, dispose };
+  return { invalidate, snapshot, start, drain, dispose, clearCache };
 }
 
 // src/host/stats/routes.ts
@@ -4079,6 +4758,23 @@ function registerStatsRoutes(ctx, engine) {
     () => ctx.webServer.register({ kind: "exact", path: `${BASE2}/data`, handler }),
     "dshp-token-meter: stats alias route"
   );
+  ctx.effect(
+    () => ctx.webServer.register({
+      kind: "exact",
+      path: `${BASE2}/clear-cache`,
+      handler: async (req, res) => {
+        if (!sameOrigin(req)) return json(res, 403, { ok: false, error: "forbidden" });
+        try {
+          if (!engine) return json(res, 200, { ok: false, error: "\u7EDF\u8BA1\u5F15\u64CE\u4E0D\u53EF\u7528" });
+          const removed = await engine.clearCache();
+          return json(res, 200, { ok: true, removed });
+        } catch (error) {
+          return json(res, 200, { ok: false, error: String(error?.message ?? error) });
+        }
+      }
+    }),
+    "dshp-token-meter: clear cache route"
+  );
 }
 
 // src/host/index.ts
@@ -4100,6 +4796,8 @@ function apply(ctx, rawConfig) {
     if (Object.hasOwn(patch, "showToday") && patch.showToday !== void 0) entry.showToday = patch.showToday;
     if (Object.hasOwn(patch, "defaultRange") && patch.defaultRange !== void 0)
       entry.defaultRange = patch.defaultRange;
+    if (Object.hasOwn(patch, "onlineGapMin") && patch.onlineGapMin !== void 0)
+      entry.onlineGapMin = patch.onlineGapMin;
   }
   let current = () => entry;
   try {
@@ -4136,7 +4834,10 @@ function apply(ctx, rawConfig) {
             return vendor;
           }) : [],
           showToday: r["showToday"] === true,
-          defaultRange: r["defaultRange"] === "7" || r["defaultRange"] === "30" || r["defaultRange"] === "90" || r["defaultRange"] === "all" ? r["defaultRange"] : entry.defaultRange
+          defaultRange: r["defaultRange"] === "7" || r["defaultRange"] === "30" || r["defaultRange"] === "90" || r["defaultRange"] === "all" ? r["defaultRange"] : entry.defaultRange,
+          onlineGapMin: normGapMin(
+            typeof r["onlineGapMin"] === "number" ? r["onlineGapMin"] : entry.onlineGapMin
+          )
         };
       }
     } catch {
@@ -4177,7 +4878,7 @@ function apply(ctx, rawConfig) {
       dshHome = "/tmp/.dsh";
     }
   }
-  const engine = sessionQuery && typeof sessionQuery.listSessions === "function" && typeof sessionQuery.readSession === "function" ? createEngine(sessionQuery, dshHome, storageDomain) : null;
+  const engine = sessionQuery && typeof sessionQuery.listSessions === "function" && typeof sessionQuery.readSession === "function" ? createEngine(sessionQuery, dshHome, storageDomain, () => getConfig().onlineGapMin) : null;
   if (engine) {
     try {
       ctx.effect(

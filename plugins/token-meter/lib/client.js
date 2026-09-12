@@ -490,6 +490,35 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 .tm-peak.valley .tm-peakTitle{color:var(--dsw-alias-state-success-primary)}
 .tm-peakCell.von{background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 24%,var(--dsw-alias-interactive-bg-hover))}
 @media (prefers-reduced-motion:reduce){.tm-card.mood-peak,.tm-peak.peak{animation:none}}
+/* \u2500\u2500 \u5728\u7EBF\u65F6\u957F\u9762\u677F\uFF1A\u6863\u4F4D\u7EC4\u5B57\u6BB5\u5F0F\u5E03\u5C40 + \u51C6\u786E\u5EA6\u5FBD\u6807 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+.tm-segField{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:3px 0;border-top:.5px solid var(--dsw-alias-border-l2)}
+.tm-segField:first-child{border-top:none}
+.tm-segFieldKey{font-size:12px;color:var(--dsw-alias-label-secondary);min-width:58px;flex:none}
+.tm-segFieldCtl{display:inline-flex;flex:none}
+.tm-segFieldHint{font-size:11px;line-height:15px;color:var(--dsw-alias-label-caption);flex:1 1 190px;min-width:130px}
+.tm-acc{font-size:10px;line-height:15px;padding:0 4px;border-radius:4px;border:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-caption);flex:none;font-weight:400}
+.tm-acc.exact{color:var(--dsw-alias-state-success-primary);border-color:color-mix(in srgb,var(--dsw-alias-state-success-primary) 45%,transparent);background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 10%,transparent)}
+.tm-acc.estimate{color:var(--dsw-alias-state-warn-primary);border-color:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 45%,transparent);background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 10%,transparent)}
+.tm-acc.bound{color:var(--dsw-alias-label-tertiary);background:var(--dsw-alias-interactive-bg-hover)}
+/* \u2500\u2500 \u6BCF\u65E5\u5728\u7EBF\u6392\u884C\uFF08\u67F1\u72B6 + \u5217\u8868\u5408\u4F53\uFF09\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+.tm-rankHead{display:grid;grid-template-columns:20px minmax(84px,1fr) minmax(64px,1.7fr) 60px 54px;gap:8px;align-items:center;font-size:11px;line-height:15px;color:var(--dsw-alias-label-caption);padding:0 0 5px;border-bottom:.5px solid var(--dsw-alias-border-l2)}
+.tm-rankRow{display:grid;grid-template-columns:20px minmax(84px,1fr) minmax(64px,1.7fr) 60px 54px;gap:8px;align-items:center;padding:6px 4px;margin:0 -4px;border-radius:6px;border-bottom:.5px solid var(--dsw-alias-border-l2);cursor:default;transition:background .12s ease}
+.tm-rankRow:last-of-type{border-bottom:none}
+.tm-rankRow:hover{background:var(--dsw-alias-interactive-bg-hover)}
+.tm-rankNo{font-size:11px;line-height:16px;text-align:right;color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}
+.tm-rankRow.top3 .tm-rankNo{color:var(--dsw-alias-state-business-primary);font-weight:700}
+.tm-rankRow.top3 .tm-rankDate{font-weight:600}
+.tm-rankDate{font-size:12.5px;line-height:17px;color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums}
+.tm-rankBarTrack{display:flex;height:11px;border-radius:6px;overflow:hidden;background:var(--dsw-alias-interactive-bg-hover);box-shadow:inset 0 0 0 1px var(--dsw-alias-border-l2)}
+.tm-rankFillTurn{display:block;height:100%;background:var(--dsw-alias-state-business-primary);opacity:.85}
+.tm-rankFillIdle{display:block;height:100%;background:var(--dsw-alias-state-business-primary);opacity:.26}
+.tm-rankVal{font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:var(--dsw-alias-label-primary)}
+.tm-rankTok{font-size:11px;text-align:right;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums}
+@container tm (max-width: 420px){.tm-rankHead,.tm-rankRow{grid-template-columns:18px minmax(70px,1fr) minmax(48px,1.4fr) 54px}.tm-rankTok,.tm-rankHead>span:last-child{display:none}}
+/* \u2500\u2500 \u7EDF\u4E00\u6570\u636E\u63D0\u793A\uFF08\u66FF\u4EE3\u539F\u751F title\uFF09\uFF1A\u6807\u9898 + \u952E\u503C\u884C + \u591A\u884C\u8BF4\u660E \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+.tm-tip-title{font-weight:600;margin-bottom:3px;color:var(--dsw-alias-label-primary)}
+.tm-tip-text{white-space:normal;max-width:236px;line-height:1.5;margin-top:3px;color:var(--dsw-alias-label-secondary)}
+.tm-tipfixed .tm-tiprow+.tm-tiprow{margin-top:1px}
 `;
 
   // src/client/icons.ts
@@ -538,7 +567,15 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         h("path", { key: "c", d: "M19.4 20v-9.6", strokeWidth: 2.6 })
       );
     }
-    return { QuotaIcon, UsageIcon };
+    function OnlineIcon(props) {
+      return h(
+        "svg",
+        svgProps(props),
+        h("circle", { key: "face", cx: 12, cy: 12, r: 8.4 }),
+        h("path", { key: "hand", d: "M12 7.6V12l3.2 2" })
+      );
+    }
+    return { QuotaIcon, UsageIcon, OnlineIcon };
   }
 
   // src/client/api.ts
@@ -558,9 +595,1012 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
   async function saveConfig(patch) {
     return await post("/config", patch);
   }
+  async function clearStatsCache() {
+    return await post("/clear-cache", {});
+  }
   async function fetchStats() {
     const r = await fetch(`${BASE}/stats`, { cache: "no-store" });
     return await r.json();
+  }
+
+  // src/client/OnlineSection.ts
+  var GAP_LABELS = [
+    [1, "1 \u5206\u949F"],
+    [5, "5 \u5206\u949F"],
+    [15, "15 \u5206\u949F"],
+    [30, "30 \u5206\u949F"],
+    [60, "60 \u5206\u949F"]
+  ];
+  var RANGE_LABELS = [
+    [14, "\u8FD1 14 \u5929"],
+    [30, "\u8FD1 30 \u5929"],
+    [90, "\u8FD1 90 \u5929"],
+    [0, "\u5168\u90E8"]
+  ];
+  var OUTCOME_LABELS = {
+    usage: "\u6709\u7528\u91CF",
+    "fork-empty": "\u7EE7\u627F\u7A7A\u58F3\uFF08fork \u540E\u6CA1\u5E72\u6D3B\uFF09",
+    "no-request": "\u4ECE\u6CA1\u53D1\u8D77\u6A21\u578B\u8BF7\u6C42",
+    failed: "\u8BF7\u6C42\u5931\u8D25/\u4E2D\u65AD\uFF08\u6A21\u578B\u6CA1\u56DE\u7B54\uFF09",
+    "no-usage": "\u6709\u56DE\u7B54\u4F46\u4F9B\u5E94\u5546\u6CA1\u4E0A\u62A5 usage",
+    unreadable: "\u65E5\u5FD7\u8BFB\u4E0D\u51FA\u6765\uFF08\u5DF2\u515C\u5E95\uFF0C\u82E5\u4ECD\u6709\u5219\u4E3A\u7591\u96BE\u65E5\u5FD7\uFF09"
+  };
+  var C_MAIN = "var(--dsw-alias-state-business-primary)";
+  var C_BUSY = "#f5a623";
+  var CHART_W = 320;
+  var CHART_H = 150;
+  function fmtDur(ms) {
+    const s = Math.max(0, Math.round((ms || 0) / 1e3));
+    if (s < 60) return s + "s";
+    const m = Math.floor(s / 60);
+    if (m < 60) return m + "m";
+    const h = Math.floor(m / 60);
+    const rest = m % 60;
+    return rest === 0 ? h + "h" : h + "h" + String(rest).padStart(2, "0") + "m";
+  }
+  function fmtDurCn(ms) {
+    const m = Math.max(0, Math.round((ms || 0) / 6e4));
+    if (m < 1) return "<1 \u5206";
+    if (m < 60) return m + " \u5206";
+    const h = Math.floor(m / 60);
+    const rest = m % 60;
+    return rest === 0 ? h + " \u5C0F\u65F6" : h + " \u5C0F\u65F6 " + rest + " \u5206";
+  }
+  var fmtTok = (n) => {
+    const v = Math.round(n || 0);
+    if (v >= 1e8) return (v / 1e8).toFixed(2) + " \u4EBF";
+    if (v >= 1e4) return (v / 1e4).toFixed(1) + " \u4E07";
+    return String(v);
+  };
+  var keyOf = (t) => {
+    const d = new Date(t);
+    const M = String(d.getMonth() + 1);
+    const D = String(d.getDate());
+    return d.getFullYear() + "-" + (M.length < 2 ? "0" + M : M) + "-" + (D.length < 2 ? "0" + D : D);
+  };
+  var dispDay = (k) => k ? k.slice(5).replace("-", "/") : "";
+  var cnDate = (k) => {
+    const p = k.split("-");
+    return Number(p[0]) + "\u5E74" + Number(p[1]) + "\u6708" + Number(p[2]) + "\u65E5";
+  };
+  function lastNDays(n, now = Date.now()) {
+    const out = [];
+    const d = new Date(now);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - (n - 1));
+    for (let i = 0; i < n; i++) {
+      out.push(keyOf(d.getTime()));
+      d.setDate(d.getDate() + 1);
+    }
+    return out;
+  }
+  function tipPos(mx, my, w, h) {
+    const vw = typeof window !== "undefined" ? window.innerWidth || 1024 : 1024;
+    const vh = typeof window !== "undefined" ? window.innerHeight || 768 : 768;
+    const flipX = mx + w + 28 > vw;
+    const flipY = my + h + 28 > vh;
+    return {
+      left: flipX ? void 0 : mx + 14 + "px",
+      right: flipX ? vw - mx + 14 + "px" : void 0,
+      top: flipY ? void 0 : my + 16 + "px",
+      bottom: flipY ? vh - my + 16 + "px" : void 0
+    };
+  }
+  var WEEKDAYS = ["\u65E5", "\u4E00", "\u4E8C", "\u4E09", "\u56DB", "\u4E94", "\u516D"];
+  function weekdayOf(k) {
+    const p = k.split("-");
+    const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]), 12);
+    return "\u5468" + (WEEKDAYS[d.getDay()] ?? "");
+  }
+  function sortByMsDesc(arr) {
+    const out = arr.slice();
+    return out.sort((a, b) => b.ms - a.ms);
+  }
+  function deriveOnlineView(online, gap, rangeDays, now = Date.now()) {
+    const g = String(gap);
+    const byKey = /* @__PURE__ */ new Map();
+    for (const day of online.days) byKey.set(day.d, day);
+    const series = [];
+    const keys = rangeDays > 0 ? lastNDays(rangeDays, now) : online.days.map((x) => x.d);
+    for (const k of keys) {
+      const day = byKey.get(k);
+      const ms = day ? day.byGap[g] ?? 0 : 0;
+      const turnMs = day ? day.turnMs : 0;
+      series.push({
+        d: k,
+        ms,
+        turnMs,
+        idleMs: Math.max(0, ms - turnMs),
+        llmMs: day ? day.llmMs || 0 : 0,
+        toolMs: day ? day.toolMs || 0 : 0,
+        busyMs: day ? (day.llmMs || 0) + (day.toolMs || 0) : 0,
+        tokens: day ? day.tokens : 0,
+        sessions: day ? day.sessions : 0,
+        seg: day ? day.segByGap ? day.segByGap[g] ?? 0 : 0 : 0,
+        actual: day !== void 0
+      });
+    }
+    let peak = null;
+    const actualItems = [];
+    for (const it of series) {
+      if (!it.actual) continue;
+      if (peak === null || it.ms > peak.ms) peak = it;
+      actualItems.push(it);
+    }
+    const ranked = sortByMsDesc(actualItems);
+    const top = ranked.slice(0, 8);
+    const total = online.totalMs[g] ?? 0;
+    const turn = online.turnMs;
+    const llm = online.llmMs || 0;
+    const tool = online.toolMs || 0;
+    return {
+      gap,
+      total,
+      turn,
+      idle: Math.max(0, total - turn),
+      llm,
+      tool,
+      busy: llm + tool,
+      activeDays: online.activeDays,
+      avg: online.activeDays > 0 ? total / online.activeDays : 0,
+      today: byKey.get(keyOf(now))?.byGap[g] ?? 0,
+      segments: online.segments[g] ?? 0,
+      series,
+      peak,
+      ranked,
+      top
+    };
+  }
+  function createOnlineSection(React, ReactDOM, statsApi) {
+    const h = React.createElement;
+    function portal(node) {
+      if (node === null || node === void 0) return null;
+      try {
+        if (ReactDOM && typeof ReactDOM.createPortal === "function" && typeof document !== "undefined" && document.body)
+          return ReactDOM.createPortal(node, document.body);
+      } catch {
+      }
+      return node;
+    }
+    const tipStore = { cur: null, subs: /* @__PURE__ */ new Set() };
+    function tipEmit() {
+      for (const fn of tipStore.subs) {
+        try {
+          fn();
+        } catch {
+        }
+      }
+    }
+    function useTip() {
+      return {
+        bind: (c) => ({
+          onMouseEnter: (e) => {
+            tipStore.cur = { x: e.clientX, y: e.clientY, c };
+            tipEmit();
+          },
+          onMouseMove: (e) => {
+            const cur = tipStore.cur;
+            if (cur !== null && cur.c.k === c.k && cur.x === e.clientX && cur.y === e.clientY) return;
+            tipStore.cur = { x: e.clientX, y: e.clientY, c };
+            tipEmit();
+          },
+          onMouseLeave: () => {
+            tipStore.cur = null;
+            tipEmit();
+          }
+        })
+      };
+    }
+    function TipHost() {
+      const [, force] = React.useReducer((x) => x + 1, 0);
+      React.useEffect(() => {
+        tipStore.subs.add(force);
+        return () => {
+          tipStore.subs.delete(force);
+        };
+      }, [force]);
+      const tip = tipStore.cur;
+      if (tip === null) return null;
+      return portal(
+        h(
+          "div",
+          {
+            className: "tm-tipfixed",
+            style: tipPos(
+              tip.x,
+              tip.y,
+              250,
+              30 + (tip.c.rows ? tip.c.rows.length * 18 : 0) + (tip.c.text ? 36 : 0)
+            )
+          },
+          tip.c.title ? h("div", { className: "tm-tip-title" }, tip.c.title) : null,
+          (tip.c.rows ?? []).map(
+            ([k, v]) => h(
+              "div",
+              { key: k, className: "tm-tiprow" },
+              h("span", { className: "tm-tip-k" }, k),
+              h("span", { className: "tm-tip-v" }, v)
+            )
+          ),
+          tip.c.text ? h("div", { className: "tm-tip-text" }, tip.c.text) : null
+        )
+      );
+    }
+    function useOnlineLocal(pollMs) {
+      const [snap, setSnap] = React.useState(null);
+      const [err, setErr] = React.useState("");
+      const load = React.useCallback(() => {
+        void fetchStats().then((s) => {
+          setSnap(s);
+          setErr(s && s.error ? String(s.error) : "");
+        }).catch((e) => setErr(String(e?.message ?? e)));
+      }, []);
+      React.useEffect(() => {
+        load();
+        const id = window.setInterval(() => {
+          if (document.visibilityState !== "hidden") load();
+        }, pollMs);
+        const onVis = () => {
+          if (document.visibilityState === "visible") load();
+        };
+        document.addEventListener("visibilitychange", onVis);
+        return () => {
+          window.clearInterval(id);
+          document.removeEventListener("visibilitychange", onVis);
+        };
+      }, [load, pollMs]);
+      return { snap, err, reload: load };
+    }
+    const useShared = statsApi && typeof statsApi.useSharedStats === "function" ? statsApi.useSharedStats : null;
+    function useSnapshot() {
+      if (useShared !== null) {
+        const sharedSnap = useShared();
+        return { snap: sharedSnap.data, err: sharedSnap.err, reload: () => sharedSnap.reload(true) };
+      }
+      return useOnlineLocal(2e4);
+    }
+    function Seg(props) {
+      return h(
+        "span",
+        { className: "tm-seg" },
+        props.items.map(
+          ([v, t]) => h(
+            "button",
+            {
+              key: String(v),
+              type: "button",
+              className: "tm-seg-btn" + (v === props.value ? " tm-seg-on" : ""),
+              onClick: () => props.onPick(v)
+            },
+            t
+          )
+        )
+      );
+    }
+    function Acc(props) {
+      const map = {
+        exact: ["tm-badge-ok", "\u7CBE\u786E"],
+        estimate: ["tm-badge-warn", "\u4F30\u7B97"],
+        bound: ["tm-badge-muted", "\u4E0B\u754C"]
+      };
+      const picked = map[props.kind];
+      return h("span", { className: "tm-badge " + picked[0] }, picked[1]);
+    }
+    function Stat(props) {
+      const t = useTip();
+      return h(
+        "div",
+        {
+          className: "tm-stat",
+          ...props.tint ? { "data-tint": "1" } : {},
+          ...props.tip ? t.bind(props.tip) : {}
+        },
+        h(
+          "div",
+          { className: "tm-stat-label", style: { display: "flex", alignItems: "center", gap: 4 } },
+          props.label,
+          props.acc ? h(
+            "span",
+            { className: "tm-acc " + props.acc },
+            props.acc === "exact" ? "\u7CBE\u786E" : props.acc === "estimate" ? "\u4F30\u7B97" : "\u4E0B\u754C"
+          ) : null
+        ),
+        h("div", { className: "tm-stat-value" }, props.value),
+        props.sub ? h("div", { className: "tm-stat-sub" }, props.sub) : null
+      );
+    }
+    function Dot(props) {
+      return h("span", {
+        className: "tm-dot",
+        style: { background: props.color, opacity: props.faint ? 0.35 : 1, marginTop: 0 }
+      });
+    }
+    function Legend() {
+      return h(
+        "div",
+        { className: "tm-legend" },
+        h(Dot, { color: C_MAIN }),
+        h("span", { className: "tm-hint" }, "\u5BF9\u8BDD\u8FDB\u884C\u4E2D"),
+        h(Dot, { color: C_MAIN, faint: true }),
+        h("span", { className: "tm-hint" }, "\u7A7A\u6863\uFF08\u2264 \u9608\u503C\u7684\u8FFD\u95EE/\u6536\u5C3E\uFF0C\u7B97\u5728\u7EBF\u4E0D\u7B97\u5BF9\u8BDD\uFF09"),
+        h(Dot, { color: C_BUSY }),
+        h("span", { className: "tm-hint" }, "\u6A21\u578B + \u5DE5\u5177\uFF08\u5E76\u884C\u76F8\u52A0\uFF0C\u53EF\u9AD8\u4E8E\u67F1\u9AD8\uFF09")
+      );
+    }
+    function Chart(props) {
+      const items = props.items;
+      const W = CHART_W;
+      const H = CHART_H;
+      const padT = 12;
+      const padB = 18;
+      const innerH = H - padT - padB;
+      const [hover, setHover] = React.useState(null);
+      if (items.length === 0) return h("div", { className: "tm-empty" }, "\u6682\u65E0\u6570\u636E");
+      let max = 0;
+      for (const it of items) {
+        if (it.ms > max) max = it.ms;
+        if (it.busyMs > max) max = it.busyMs;
+      }
+      if (max <= 0) max = 1;
+      const bw = W / items.length;
+      const barW = Math.max(1.4, Math.min(20, bw * 0.6));
+      const yOf = (v) => padT + innerH * (1 - v / max);
+      const step = Math.max(1, Math.ceil(items.length / 6));
+      const today = keyOf(Date.now());
+      const children = [];
+      children.push(
+        h("line", { key: "ax", x1: 0, y1: padT + innerH, x2: W, y2: padT + innerH, className: "tm-gridln" })
+      );
+      children.push(
+        h("line", {
+          key: "mid",
+          x1: 0,
+          y1: padT + innerH / 2,
+          x2: W,
+          y2: padT + innerH / 2,
+          className: "tm-gridln",
+          strokeDasharray: "3 3"
+        })
+      );
+      children.push(
+        h("text", { key: "ymax", x: 0, y: padT - 3, className: "tm-axislbl" }, (max / 36e5).toFixed(1) + "h")
+      );
+      items.forEach((it, i) => {
+        const x = i * bw + (bw - barW) / 2;
+        const turnH = it.turnMs > 0 ? Math.max(1, it.turnMs / max * innerH) : 0;
+        const idleH = it.idleMs > 0 ? Math.max(1, it.idleMs / max * innerH) : 0;
+        const yTurn = padT + innerH - turnH;
+        const yIdle = yTurn - idleH;
+        if (turnH > 0)
+          children.push(
+            h("rect", {
+              key: "t" + it.d,
+              x,
+              y: yTurn,
+              width: barW,
+              height: turnH,
+              rx: 2,
+              fill: C_MAIN,
+              opacity: it.d === today ? 0.95 : 0.72
+            })
+          );
+        if (idleH > 0)
+          children.push(
+            h("rect", {
+              key: "i" + it.d,
+              x,
+              y: yIdle,
+              width: barW,
+              height: idleH,
+              rx: 2,
+              fill: C_MAIN,
+              opacity: 0.26
+            })
+          );
+        if (i % step === 0)
+          children.push(
+            h(
+              "text",
+              { key: "l" + it.d, x: x + barW / 2, y: H - 5, textAnchor: "middle", className: "tm-axislbl" },
+              dispDay(it.d)
+            )
+          );
+      });
+      if (items.some((it) => it.busyMs > 0))
+        children.push(
+          h("polyline", {
+            key: "busy",
+            points: items.map((it, i) => (i * bw + bw / 2).toFixed(1) + "," + yOf(it.busyMs).toFixed(1)).join(" "),
+            fill: "none",
+            stroke: C_BUSY,
+            strokeWidth: 1.6,
+            strokeDasharray: "4 3",
+            strokeLinejoin: "round"
+          })
+        );
+      const hovered = hover !== null ? items[hover.i] : void 0;
+      if (hover !== null && hovered)
+        children.push(
+          h("rect", {
+            key: "hv",
+            x: hover.i * bw,
+            y: padT,
+            width: bw,
+            height: innerH,
+            fill: "currentColor",
+            opacity: 0.08,
+            pointerEvents: "none"
+          })
+        );
+      items.forEach((it, i) => {
+        children.push(
+          h("rect", {
+            key: "hit" + it.d,
+            x: i * bw,
+            y: padT,
+            width: bw,
+            height: innerH,
+            fill: "transparent",
+            style: { pointerEvents: "all", cursor: "crosshair" },
+            onMouseEnter: (e) => setHover({ i, mx: e.clientX, my: e.clientY })
+          })
+        );
+      });
+      const rows = [];
+      if (hovered) {
+        const line = (k, v) => h(
+          "div",
+          { key: k, className: "tm-tiprow" },
+          h("span", { className: "tm-tip-k" }, k),
+          h("span", { className: "tm-tip-v" }, v)
+        );
+        rows.push(line("\u5728\u7EBF", fmtDur(hovered.ms)));
+        rows.push(line("\u5BF9\u8BDD\u8FDB\u884C\u4E2D", fmtDur(hovered.turnMs)));
+        rows.push(line("\u7A7A\u6863", fmtDur(hovered.idleMs)));
+        rows.push(line("\u6A21\u578B + \u5DE5\u5177", fmtDur(hovered.busyMs)));
+        rows.push(line("\u6D3B\u52A8\u6BB5\u6570", String(hovered.seg)));
+        rows.push(line("\u4F1A\u8BDD\u6570", String(hovered.sessions)));
+        rows.push(line("Token", fmtTok(hovered.tokens)));
+      }
+      const pop = hover !== null && hovered ? portal(
+        h(
+          "div",
+          { className: "tm-tipfixed", style: tipPos(hover.mx, hover.my, 200, 40 + rows.length * 18) },
+          h("div", { style: { fontWeight: 600, marginBottom: 3 } }, cnDate(hovered.d)),
+          rows
+        )
+      ) : null;
+      return h(
+        "div",
+        { className: "tm-svgwrap" },
+        h(
+          "div",
+          { style: { cursor: "crosshair" } },
+          h(
+            "svg",
+            {
+              viewBox: "0 0 " + W + " " + H,
+              width: "100%",
+              height: H,
+              role: "img",
+              // 下标由每根柱的透明命中区给出（DOM 决定，不做坐标换算 → 不会因留边/缩放偏移）；
+              // 容器这里只负责让浮层跟随鼠标。
+              onMouseMove: (e) => {
+                setHover(
+                  (prev) => prev === null || prev.mx === e.clientX && prev.my === e.clientY ? prev : { i: prev.i, mx: e.clientX, my: e.clientY }
+                );
+              },
+              onMouseLeave: () => setHover(null)
+            },
+            children
+          )
+        ),
+        pop
+      );
+    }
+    function ProportionBars(props) {
+      const v = props.view;
+      const tip = useTip();
+      const max = Math.max(v.total, v.busy, 1);
+      const bar = (label, ms, color, note, faint) => h(
+        "div",
+        { key: label, className: "tm-bar", style: { padding: "7px 0" } },
+        h(
+          "div",
+          { style: { flex: "1 1 118px", minWidth: 118 } },
+          h("div", { className: "tm-title" }, label),
+          h("div", { className: "tm-desc" }, note)
+        ),
+        h(
+          "div",
+          Object.assign(
+            { className: "tm-bartrack" },
+            tip.bind({
+              k: label,
+              title: label,
+              rows: [
+                ["\u65F6\u957F", fmtDur(ms)],
+                ["\u5360\u5728\u7EBF", v.total > 0 ? Math.round(ms / v.total * 100) + "%" : "\u2014"]
+              ],
+              text: note
+            })
+          ),
+          h("span", {
+            className: "tm-barfill",
+            style: {
+              width: Math.round(ms / max * 100) + "%",
+              background: color,
+              opacity: faint ? 0.42 : 1
+            }
+          })
+        ),
+        h(
+          "div",
+          { className: "tm-mono", style: { fontSize: 12.5, minWidth: 62, textAlign: "right" } },
+          fmtDur(ms)
+        )
+      );
+      return h(
+        "div",
+        null,
+        bar("\u5728\u7EBF\uFF08\u4F60 + DSH\uFF09", v.total, C_MAIN, "\u542B\u4F60\u81EA\u5DF1\u7684\u8FFD\u95EE/\u9605\u8BFB\u7A7A\u6863", true),
+        bar("\u5BF9\u8BDD\u8FDB\u884C\u4E2D\uFF08DSH \u7684\u949F\uFF09", v.turn, C_MAIN, "turn \u533A\u95F4\u5E76\u96C6\uFF0C\u5899\u949F\u53BB\u91CD"),
+        bar("\u6A21\u578B + \u5DE5\u5177\uFF08DSH \u7684\u6D3B\uFF09", v.busy, C_BUSY, "\u5E76\u884C\u4F1A\u8BDD\u76F8\u52A0\uFF0C\u53EF\u9AD8\u4E8E\u5899\u949F", true)
+      );
+    }
+    function Accuracy(props) {
+      const tip = useTip();
+      const v = props.view;
+      const snap = props.snap;
+      const windowTokens = v.series.reduce((a, b) => a + b.tokens, 0);
+      const row = (name, val, kind, note) => h(
+        "tr",
+        { key: name },
+        h("td", { style: { padding: "6px 8px 6px 0", whiteSpace: "nowrap" } }, name),
+        h("td", { style: { padding: "6px 8px 6px 0", whiteSpace: "nowrap" } }, h(Acc, { kind })),
+        h(
+          "td",
+          { style: { padding: "6px 8px 6px 0", whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" } },
+          val
+        ),
+        h("td", { style: { padding: "6px 0", color: "var(--dsw-alias-label-secondary)" } }, note)
+      );
+      return h(
+        "div",
+        { className: "tm-card" },
+        h("div", { className: "tm-title" }, "\u53E3\u5F84\u4E0E\u51C6\u786E\u6027"),
+        h(ProportionBars, { view: v }),
+        h(
+          "div",
+          { style: { overflowX: "auto" } },
+          h(
+            "table",
+            { style: { width: "100%", borderCollapse: "collapse", fontSize: 12, marginTop: 4 } },
+            h(
+              "thead",
+              null,
+              h(
+                "tr",
+                { style: { color: "var(--dsw-alias-label-caption)", textAlign: "left" } },
+                h("th", { style: { padding: "0 8px 4px 0", fontWeight: 500 } }, "\u6307\u6807"),
+                h("th", { style: { padding: "0 8px 4px 0", fontWeight: 500 } }, "\u6027\u8D28"),
+                h("th", { style: { padding: "0 8px 4px 0", fontWeight: 500 } }, "\u5F53\u524D\u503C"),
+                h("th", { style: { padding: "0 0 4px", fontWeight: 500 } }, "\u8BF4\u660E")
+              )
+            ),
+            h(
+              "tbody",
+              null,
+              row(
+                "\u5728\u7EBF\u65F6\u957F",
+                fmtDur(v.total),
+                "bound",
+                "\u65E5\u5FD7\u53EA\u5728\u6709\u4E8B\u4EF6\u65F6\u6253\u70B9\uFF1A\u7A97\u53E3\u5F00\u7740\u4F46\u6CA1\u4E8B\u4EF6\u7684\u65F6\u95F4\u4E0D\u53EF\u89C1\uFF0C\u6240\u4EE5\u662F\u4E0B\u754C\uFF1B\u9608\u503C\uFF08\u5F53\u524D " + v.gap + " \u5206\u949F\uFF09\u76F4\u63A5\u51B3\u5B9A\u7ED3\u679C"
+              ),
+              row(
+                "\u5BF9\u8BDD\u8FDB\u884C\u4E2D",
+                fmtDur(v.turn),
+                "estimate",
+                "turn/start\u2192turn/end \u5E76\u96C6\uFF08\u5899\u949F\u53BB\u91CD\uFF09\uFF1B\u542B\u5C11\u91CF\u7B49\u4F60\u64CD\u4F5C\u7684\u65F6\u95F4\uFF08\u5B9E\u6D4B\u5BA1\u6279\u7B49\u5F85\u7EA6 0.7h\uFF09"
+              ),
+              row(
+                "\u6A21\u578B\u751F\u6210",
+                fmtDur(v.llm),
+                "exact",
+                "step/start\u2192assistant/message\uFF1B\u5DF2\u4E0E DSH \u81EA\u5E26 sessionStats \u6295\u5F71\u9010\u4F1A\u8BDD\u5BF9\u8D26\u4E00\u81F4"
+              ),
+              row("\u5DE5\u5177\u6267\u884C", fmtDur(v.tool), "exact", "tool/call\u2192tool/result \u6309 callId \u914D\u5BF9"),
+              row(
+                "\u5F15\u64CE\u5408\u8BA1",
+                fmtDur(v.busy),
+                "exact",
+                "\u4E0A\u4E24\u8005\u76F8\u52A0\uFF1B\u540C\u65F6\u5F00\u591A\u4E2A\u4F1A\u8BDD/\u5B50\u4EE3\u7406\u4F1A\u91CD\u590D\u8BA1\uFF0C\u6240\u4EE5\u53EF\u80FD\u5927\u4E8E\u5899\u949F"
+              ),
+              row("\u6D3B\u8DC3\u5929\u6570", String(v.activeDays), "exact", "\u6709\u4E8B\u4EF6\u6216\u6709\u7528\u91CF\u7684\u81EA\u7136\u65E5\u6570"),
+              row(
+                "Token \u7528\u91CF",
+                fmtTok(windowTokens),
+                "exact",
+                "\u5F53\u524D\u533A\u95F4\u7684\u4E0A\u62A5\u503C\uFF1B\u53EA\u7EDF\u8BA1\u4F9B\u5E94\u5546\u7ED9\u4E86 usage \u7684\u6B65\u9AA4\uFF0C\u672A\u4E0A\u62A5\u7684\u7B97\u4E0D\u5230\uFF0C\u56E0\u6B64\u7565\u4F4E"
+              ),
+              row(
+                "\u4F1A\u8BDD\u53E3\u5F84",
+                snap ? (snap.sessionOutcomes?.["usage"] ?? 0) + " / " + snap.total : String(v.activeDays),
+                "exact",
+                snap ? "\u5171 " + snap.total + " \u4E2A\u4F1A\u8BDD\uFF1A" + Object.entries(snap.sessionOutcomes ?? {}).map(([k, n]) => (OUTCOME_LABELS[k] ?? k) + " " + n + " \u4E2A").join(" \xB7 ") : "\u4F1A\u8BDD\u5217\u8868\u6765\u81EA sessionQuery"
+              )
+            )
+          )
+        ),
+        snap ? h(
+          "div",
+          { className: "tm-cacheRow" },
+          h("span", { className: "tm-muted" }, "\u6570\u636E\u6E90"),
+          h(
+            "span",
+            null,
+            snap.scanned + "/" + snap.total + " \u4E2A\u4F1A\u8BDD\u5DF2\u626B\u63CF" + (snap.partial ? "\uFF08\u540E\u53F0\u8865\u626B\u4E2D\uFF09" : "")
+          ),
+          (snap.directReads ?? 0) > 0 ? h(
+            "span",
+            Object.assign(
+              {},
+              tip.bind({
+                k: "direct",
+                title: "\u76F4\u8BFB\u65E5\u5FD7",
+                rows: [["\u4F1A\u8BDD\u6570", String(snap.directReads)]],
+                text: "\u975E live \u4F1A\u8BDD\u9ED8\u8BA4\u76F4\u63A5\u8BFB\u65E5\u5FD7\u6587\u4EF6\uFF08\u9010\u5E27\u89E3\u538B + \u5207\u6389 fork \u7EE7\u627F\u524D\u7F00\uFF09\uFF0C\u6BD4\u5B98\u65B9 reader \u5FEB\u4E00\u5230\u4E24\u4E2A\u6570\u91CF\u7EA7\uFF1Blive \u4F1A\u8BDD\u4ECD\u8D70\u5B98\u65B9 reader\u3002"
+              })
+            ),
+            "\u76F4\u8BFB " + snap.directReads + " \u4E2A"
+          ) : null,
+          snap.errors > 0 ? h(
+            "span",
+            Object.assign(
+              {},
+              tip.bind({
+                k: "errors",
+                title: "\u626B\u63CF\u5931\u8D25 " + snap.errors + " \u4E2A",
+                text: (snap.errorSamples ?? []).length > 0 ? (snap.errorSamples ?? []).map((x) => x.id + "\uFF1A" + x.message).join("\uFF1B") : "\u6CA1\u6709\u53EF\u7528\u7684\u539F\u56E0\u6837\u672C"
+              })
+            ),
+            "\u626B\u63CF\u5931\u8D25 " + snap.errors + " \u4E2A"
+          ) : null,
+          h("span", null, "\u7F13\u5B58 " + snap.storage),
+          h("span", null, "fork/\u7EED\u63A5\u7684\u7EE7\u627F\u524D\u7F00\u4E0D\u91CD\u590D\u8BA1\u65F6")
+        ) : null
+      );
+    }
+    function tipLine(k, v, key) {
+      return h(
+        "div",
+        { key: key ?? k, className: "tm-tiprow" },
+        h("span", { className: "tm-tip-k" }, k),
+        h("span", { className: "tm-tip-v" }, v)
+      );
+    }
+    function RankingList(props) {
+      const [showAll, setShowAll] = React.useState(false);
+      const [hover, setHover] = React.useState(null);
+      const ranked = props.ranked;
+      if (ranked.length === 0) return h("div", { className: "tm-empty" }, "\u6682\u65E0\u6570\u636E");
+      const items = showAll ? ranked : ranked.slice(0, 8);
+      let max = 1;
+      for (const it of items) if (it.ms > max) max = it.ms;
+      const rows = items.map((it, i) => {
+        const wTurn = Math.round(it.turnMs / max * 100);
+        const wIdle = Math.round(it.idleMs / max * 100);
+        return h(
+          "div",
+          {
+            key: it.d,
+            className: "tm-rankRow" + (i < 3 ? " top3" : ""),
+            onMouseMove: (e) => setHover({ i, mx: e.clientX, my: e.clientY }),
+            onMouseLeave: () => setHover(null)
+          },
+          h("span", { className: "tm-rankNo" }, String(i + 1)),
+          h(
+            "div",
+            { style: { minWidth: 0 } },
+            h("div", { className: "tm-rankDate" }, dispDay(it.d) + " " + weekdayOf(it.d)),
+            h(
+              "div",
+              { className: "tm-desc", style: { margin: 0, fontSize: 11, whiteSpace: "nowrap" } },
+              it.sessions + " \u4F1A\u8BDD \xB7 \u6BB5 " + it.seg
+            )
+          ),
+          h(
+            "div",
+            { className: "tm-rankBarTrack" },
+            h("span", { className: "tm-rankFillTurn", style: { width: wTurn + "%" } }),
+            h("span", { className: "tm-rankFillIdle", style: { width: wIdle + "%" } })
+          ),
+          h("span", { className: "tm-rankVal" }, fmtDur(it.ms)),
+          h("span", { className: "tm-rankTok" }, fmtTok(it.tokens))
+        );
+      });
+      const hovered = hover !== null ? items[hover.i] : void 0;
+      const pop = hover !== null && hovered ? portal(
+        h(
+          "div",
+          { className: "tm-tipfixed", style: tipPos(hover.mx, hover.my, 220, 190) },
+          h(
+            "div",
+            { style: { fontWeight: 600, marginBottom: 3 } },
+            cnDate(hovered.d) + "\uFF08\u7B2C " + (hover.i + 1) + " \u540D\uFF09"
+          ),
+          tipLine("\u5728\u7EBF", fmtDur(hovered.ms), "a"),
+          tipLine("\u5BF9\u8BDD\u8FDB\u884C\u4E2D", fmtDur(hovered.turnMs), "b"),
+          tipLine("\u7A7A\u6863", fmtDur(hovered.idleMs), "c"),
+          tipLine("\u6A21\u578B + \u5DE5\u5177", fmtDur(hovered.busyMs), "d"),
+          tipLine("\u6D3B\u52A8\u6BB5\u6570", String(hovered.seg), "e"),
+          tipLine("\u4F1A\u8BDD\u6570", String(hovered.sessions), "f"),
+          tipLine("Token", fmtTok(hovered.tokens), "g")
+        )
+      ) : null;
+      return h(
+        "div",
+        null,
+        h(
+          "div",
+          { className: "tm-rankHead" },
+          h("span", null, "#"),
+          h("span", null, "\u65E5\u671F"),
+          h("span", null, "\u5728\u7EBF\u6784\u6210 \xB7 \u5B9E\u8272 \u5BF9\u8BDD\u4E2D / \u6D45\u8272 \u7A7A\u6863"),
+          h("span", { style: { textAlign: "right" } }, "\u5728\u7EBF"),
+          h("span", { style: { textAlign: "right" } }, "Token")
+        ),
+        rows,
+        pop,
+        ranked.length > 8 ? h(
+          "div",
+          { className: "tm-toolbar", style: { margin: "8px 0 0", justifyContent: "center" } },
+          h(
+            "button",
+            {
+              type: "button",
+              className: "tm-mini",
+              onClick: () => setShowAll((v) => !v)
+            },
+            showAll ? "\u53EA\u770B\u524D 8 \u540D" : "\u5C55\u5F00\u5168\u90E8 " + ranked.length + " \u5929"
+          )
+        ) : null
+      );
+    }
+    function Body(props) {
+      const tip = useTip();
+      const data = props.data;
+      const online = data && data.ready && data.online ? data.online : null;
+      if (!online) {
+        return h(
+          "div",
+          { className: "tm-card" },
+          h("div", { className: "tm-title" }, "\u5728\u7EBF\u65F6\u957F"),
+          h(
+            "div",
+            { className: "tm-desc" },
+            props.err ? "\u8BFB\u53D6\u5931\u8D25\uFF1A" + props.err : data && data.ready ? "\u5F53\u524D Host \u672A\u63D0\u4F9B\u5728\u7EBF\u65F6\u957F\u6570\u636E\uFF08\u63D2\u4EF6\u9700\u91CD\u542F\u4EE5\u52A0\u8F7D\u65B0\u7248 Host \u534A\uFF09\u3002" : "\u7EDF\u8BA1\u5C1A\u672A\u5C31\u7EEA\uFF0C\u6B63\u5728\u626B\u63CF\u4F1A\u8BDD\u65E5\u5FD7\u2026"
+          ),
+          h(
+            "div",
+            { className: "tm-toolbar", style: { marginTop: 8 } },
+            h("button", { type: "button", className: "tm-mini", onClick: props.onReload }, "\u91CD\u8BD5")
+          )
+        );
+      }
+      const view = deriveOnlineView(online, props.gap, props.rangeDays);
+      const gapSeg = h(Seg, {
+        items: GAP_LABELS.filter(([v]) => online.gaps.indexOf(v) >= 0),
+        value: online.gaps.indexOf(props.gap) >= 0 ? props.gap : online.gaps[0],
+        onPick: props.onGap
+      });
+      const segRow = (label, hint, control, rows) => h(
+        "div",
+        { className: "tm-segField" },
+        h(
+          "div",
+          Object.assign(
+            { className: "tm-segFieldKey" },
+            tip.bind({ k: label, title: label, text: hint, ...rows ? { rows } : {} })
+          ),
+          label
+        ),
+        h("div", { className: "tm-segFieldCtl" }, control),
+        h("div", { className: "tm-segFieldHint" }, hint)
+      );
+      return h(
+        "div",
+        null,
+        h(TipHost, null),
+        h(
+          "div",
+          { className: "tm-card", style: { padding: "10px 12px" } },
+          segRow(
+            "\u7A7A\u95F2\u9608\u503C",
+            "\u76F8\u90BB\u4E8B\u4EF6\u95F4\u9694\u8D85\u8FC7\u5B83\u5C31\u7B97\u300C\u79BB\u5F00\u300D\u3002\u5B83\u662F\u53E3\u5F84\u4E0D\u662F\u7CBE\u5EA6\uFF1A\u8C03\u5927\u5728\u7EBF\u65F6\u957F\u53D8\u591A\uFF0860 \u5206\u949F\u6863\u6BD4 1 \u5206\u949F\u6863\u591A\u7EA6 90h\uFF09\u3002",
+            gapSeg,
+            [
+              ["\u5F53\u524D", props.gap + " \u5206\u949F"],
+              ["\u6D3B\u8DC3\u6BB5\u6570", String(view.segments)]
+            ]
+          ),
+          segRow(
+            "\u65F6\u95F4\u8303\u56F4",
+            "\u300C\u6BCF\u65E5\u5728\u7EBF\u300D\u56FE\u8868\u4E0E\u4E0B\u65B9\u300C\u5728\u7EBF\u6700\u591A\u7684\u65E5\u5B50\u300D\u660E\u7EC6\u7684\u7EDF\u8BA1\u7A97\u53E3\uFF1B\u4E0A\u9762\u7684\u7D2F\u8BA1/\u65E5\u5747\u59CB\u7EC8\u6309\u5168\u90E8\u6D3B\u8DC3\u65E5\u8BA1\u7B97\u3002",
+            h(Seg, { items: RANGE_LABELS, value: props.rangeDays, onPick: props.onRange }),
+            [["\u5F53\u524D\u533A\u95F4", props.rangeDays === 0 ? "\u5168\u90E8\u6D3B\u8DC3\u65E5" : "\u8FD1 " + props.rangeDays + " \u5929"]]
+          ),
+          h(
+            "div",
+            { className: "tm-toolbar", style: { margin: "2px 0 0" } },
+            h("span", { className: "tm-hint" }, online.activeDays + " \u4E2A\u6D3B\u8DC3\u65E5 \xB7 \u9ED8\u8BA4\u6309\u5168\u90E8\u663E\u793A")
+          )
+        ),
+        h(
+          "div",
+          { className: "tm-statGrid" },
+          h(Stat, {
+            label: "\u4ECA\u65E5\u5728\u7EBF",
+            value: fmtDurCn(view.today),
+            tint: true,
+            sub: "\u622A\u81F3\u6B64\u523B",
+            acc: "bound",
+            tip: {
+              k: "today",
+              title: "\u4ECA\u65E5\u5728\u7EBF \xB7 \u4E0B\u754C",
+              text: "\u6709\u4E8B\u4EF6\u8986\u76D6\u3001\u4E14\u7A7A\u6863 \u2264 " + view.gap + " \u5206\u949F\u7684\u65F6\u95F4\u3002\u65E5\u5FD7\u53EA\u5728\u6709\u4E8B\u4EF6\u65F6\u6253\u70B9\uFF0C\u6240\u4EE5\u662F\u4E0B\u754C\u3002"
+            }
+          }),
+          h(Stat, {
+            label: "\u7D2F\u8BA1\u5728\u7EBF",
+            value: fmtDurCn(view.total),
+            sub: (online.firstDay ? dispDay(online.firstDay) + " \u8D77" : "") + " \xB7 \u5171 " + view.activeDays + " \u4E2A\u6D3B\u8DC3\u65E5",
+            acc: "bound",
+            tip: {
+              k: "total",
+              title: "\u7D2F\u8BA1\u5728\u7EBF \xB7 \u4E0B\u754C",
+              rows: [
+                ["\u6D3B\u8DC3\u65E5", String(view.activeDays)],
+                ["\u65E5\u5747", fmtDur(view.avg)],
+                ["\u5F53\u524D\u53E3\u5F84", view.gap + " \u5206\u949F"]
+              ],
+              text: "\u53E3\u5F84\u4F9D\u8D56\u9608\u503C\uFF1A60 \u5206\u949F\u6863\u6BD4 1 \u5206\u949F\u6863\u7EA6\u591A 90 \u5C0F\u65F6\u3002"
+            }
+          }),
+          h(Stat, {
+            label: "\u6D3B\u8DC3\u65E5\u5747",
+            value: fmtDurCn(view.avg),
+            sub: "\u4EC5\u6309\u6709\u6D3B\u52A8\u7684\u65E5\u5B50\u5E73\u5747",
+            tip: {
+              k: "avg",
+              title: "\u6D3B\u8DC3\u65E5\u5747",
+              rows: [
+                ["\u7D2F\u8BA1", fmtDur(view.total)],
+                ["\u6D3B\u8DC3\u65E5", String(view.activeDays)]
+              ],
+              text: "\u53EA\u6309\u6709\u6D3B\u52A8\u7684\u65E5\u5B50\u5E73\u5747\uFF0C\u4E0D\u542B\u7A7A\u767D\u5929\u3002"
+            }
+          }),
+          h(Stat, {
+            label: "\u5BF9\u8BDD\u8FDB\u884C\u4E2D",
+            value: fmtDurCn(view.turn),
+            sub: "\u5360\u5728\u7EBF " + (view.total > 0 ? Math.round(view.turn / view.total * 100) : 0) + "%",
+            acc: "estimate",
+            tip: {
+              k: "turn",
+              title: "\u5BF9\u8BDD\u8FDB\u884C\u4E2D \xB7 \u4F30\u7B97",
+              rows: [
+                ["\u65F6\u957F", fmtDur(view.turn)],
+                ["\u5360\u5728\u7EBF", (view.total > 0 ? Math.round(view.turn / view.total * 100) : 0) + "%"]
+              ],
+              text: "turn/start\u2192turn/end \u7684\u5E76\u96C6\uFF08\u5899\u949F\u53BB\u91CD\uFF09\uFF1ADSH \u5728\u4E3A\u4F60\u5E72\u6D3B\u7684\u949F\uFF0C\u542B\u5C11\u91CF\u7B49\u4F60\u64CD\u4F5C\u7684\u65F6\u95F4\u3002"
+            }
+          })
+        ),
+        h(
+          "div",
+          { className: "tm-statGrid" },
+          h(Stat, {
+            label: "\u6A21\u578B\u751F\u6210",
+            value: fmtDurCn(view.llm),
+            sub: "\u5DF2\u4E0E\u5B98\u65B9\u6295\u5F71\u5BF9\u8D26",
+            acc: "exact",
+            tip: {
+              k: "llm",
+              title: "\u6A21\u578B\u751F\u6210 \xB7 \u7CBE\u786E",
+              text: "step/start\u2192assistant/message\uFF1B\u5DF2\u4E0E DSH \u81EA\u5E26 sessionStats \u6295\u5F71\u9010\u4F1A\u8BDD\u5BF9\u8D26\uFF08126/126 \u4E00\u81F4\uFF09\u3002"
+            }
+          }),
+          h(Stat, {
+            label: "\u5DE5\u5177\u6267\u884C",
+            value: fmtDurCn(view.tool),
+            sub: "call\u2192result",
+            acc: "exact",
+            tip: {
+              k: "tool",
+              title: "\u5DE5\u5177\u6267\u884C \xB7 \u7CBE\u786E",
+              text: "tool/call\u2192tool/result \u6309 callId \u914D\u5BF9\uFF1Bturn/end \u65F6\u4E22\u5F03\u672A\u843D\u5730\u7684\u8C03\u7528\u3002"
+            }
+          }),
+          h(Stat, {
+            label: "\u5F15\u64CE\u5408\u8BA1",
+            value: fmtDurCn(view.busy),
+            sub: "\u5E76\u884C\u76F8\u52A0\uFF0C\u53EF\u9AD8\u4E8E\u5899\u949F",
+            acc: "exact",
+            tip: {
+              k: "busy",
+              title: "\u5F15\u64CE\u5408\u8BA1 \xB7 \u7CBE\u786E",
+              rows: [
+                ["\u6A21\u578B\u751F\u6210", fmtDur(view.llm)],
+                ["\u5DE5\u5177\u6267\u884C", fmtDur(view.tool)]
+              ],
+              text: "\u4E24\u8005\u76F8\u52A0\uFF1B\u540C\u65F6\u5F00\u591A\u4E2A\u4F1A\u8BDD/\u5B50\u4EE3\u7406\u4F1A\u91CD\u590D\u8BA1\uFF0C\u6240\u4EE5\u53EF\u80FD\u5927\u4E8E\u5899\u949F\u7684\u300C\u5BF9\u8BDD\u8FDB\u884C\u4E2D\u300D\u3002"
+            }
+          })
+        ),
+        h(
+          "div",
+          { className: "tm-card" },
+          h(
+            "div",
+            { className: "tm-toolbar" },
+            h("span", { className: "tm-title" }, "\u6BCF\u65E5\u5728\u7EBF"),
+            h(
+              "span",
+              { className: "tm-hint" },
+              view.peak ? "\u5CF0\u503C " + cnDate(view.peak.d) + " " + fmtDur(view.peak.ms) : ""
+            )
+          ),
+          h(Chart, { items: view.series, gap: view.gap }),
+          h(Legend, null)
+        ),
+        h(Accuracy, { view, snap: data }),
+        h(
+          "div",
+          { className: "tm-card" },
+          h(
+            "div",
+            { className: "tm-toolbar", style: { margin: "0 0 2px" } },
+            h("span", { className: "tm-title", style: { margin: 0 } }, "\u6BCF\u65E5\u5728\u7EBF\u6392\u884C"),
+            h(
+              "span",
+              { className: "tm-hint" },
+              "\u5F53\u524D\u533A\u95F4 " + view.ranked.length + " \u4E2A\u6D3B\u8DC3\u65E5 \xB7 \u6309\u5728\u7EBF\u65F6\u957F\u6392\u5E8F \xB7 \u9F20\u6807\u60AC\u6D6E\u770B\u5F53\u65E5\u660E\u7EC6"
+            )
+          ),
+          h(RankingList, { ranked: view.ranked, gap: view.gap })
+        )
+      );
+    }
+    function OnlineRightPane() {
+      const [gapState, setGapState] = React.useState(null);
+      const [rangeDays, setRangeDays] = React.useState(0);
+      const { snap, err, reload } = useSnapshot();
+      const online = snap && snap.ready && snap.online ? snap.online : null;
+      const gap = gapState !== null ? gapState : online ? online.defaultGapMin : 5;
+      const onGap = React.useCallback(
+        (g) => {
+          setGapState(g);
+          void saveConfig({ onlineGapMin: g }).catch(() => {
+          });
+          try {
+            window.dispatchEvent(new Event("tm-prefs-changed"));
+          } catch {
+          }
+        },
+        [setGapState]
+      );
+      return h(Body, {
+        data: snap,
+        err,
+        gap,
+        rangeDays,
+        onGap,
+        onRange: setRangeDays,
+        onReload: reload
+      });
+    }
+    return { OnlineRightPane };
   }
 
   // src/client/ErrorBox.ts
@@ -3236,7 +4276,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       }
       return { ms: 7 * 24 * 36e5, toPeak: peak };
     }
-    function fmtDur(ms) {
+    function fmtDur2(ms) {
       const m = Math.round(ms / 6e4);
       const hh = Math.floor(m / 60);
       const mm = m % 60;
@@ -3300,7 +4340,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           "div",
           { className: "tm-tiprow" },
           h("span", { className: "tm-tip-k" }, "\u5012\u8BA1\u65F6"),
-          h("span", { className: "tm-tip-v" }, fmtDur(ns.ms))
+          h("span", { className: "tm-tip-v" }, fmtDur2(ns.ms))
         ),
         h("div", { className: "tm-peakPopFoot" }, "\u6298\u7B97\u81EA 01-04 & 06-10 UTC, Mon-Fri \xB7 \u6BCF\u65E5 7h \u5CF0 / 17h \u8C37")
       );
@@ -3495,7 +4535,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     for (const r of RANGES) if (r.v === rv) return r.t;
     return "";
   };
-  var keyOf = (t) => {
+  var keyOf2 = (t) => {
     const d = new Date(t);
     const M = String(d.getMonth() + 1);
     const D = String(d.getDate());
@@ -3505,8 +4545,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     const p = k.split("-");
     return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]), 12).getTime();
   };
-  var dispDay = (k) => k ? k.slice(5).replace("-", "/") : "";
-  var cnDate = (k) => {
+  var dispDay2 = (k) => k ? k.slice(5).replace("-", "/") : "";
+  var cnDate2 = (k) => {
     const p = k.split("-");
     return Number(p[0]) + "\u5E74" + Number(p[1]) + "\u6708" + Number(p[2]) + "\u65E5";
   };
@@ -3604,18 +4644,18 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
   }
   function streaks(byDay) {
     const set = new Set(byDay.keys());
-    const today = keyOf(Date.now());
-    const yKey = keyOf(fromKey(today) - 864e5);
+    const today = keyOf2(Date.now());
+    const yKey = keyOf2(fromKey(today) - 864e5);
     let cur = 0;
     let cursor = set.has(today) ? today : set.has(yKey) ? yKey : null;
     while (cursor !== null && set.has(cursor)) {
       cur++;
-      cursor = keyOf(fromKey(cursor) - 864e5);
+      cursor = keyOf2(fromKey(cursor) - 864e5);
     }
     const keys = sorted(Array.from(set));
     let longest = 0, run = 0, prev = null;
     for (const k of keys) {
-      run = prev !== null && keyOf(fromKey(prev) + 864e5) === k ? run + 1 : 1;
+      run = prev !== null && keyOf2(fromKey(prev) + 864e5) === k ? run + 1 : 1;
       if (run > longest) longest = run;
       prev = k;
     }
@@ -3627,7 +4667,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     let guard = 0;
     while (c <= endKey && guard < 3e3) {
       out.push(c);
-      c = keyOf(fromKey(c) + 864e5);
+      c = keyOf2(fromKey(c) + 864e5);
       guard++;
     }
     return out;
@@ -3639,7 +4679,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     MODEL_COLORS = map;
   }
   var modelColor = (mk) => MODEL_COLORS.get(mk) || "#8a94a6";
-  function tipPos(mx, my, w, h) {
+  function tipPos2(mx, my, w, h) {
     const vw = typeof window !== "undefined" ? window.innerWidth || 1024 : 1024;
     const vh = typeof window !== "undefined" ? window.innerHeight || 768 : 768;
     const flipX = mx + w + 28 > vw;
@@ -4032,7 +5072,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       for (let m = firstT; m <= lastT; m += 864e5) {
         const b = Math.min(NB - 1, Math.floor((m - firstT) / (lastT - firstT || 1) * NB));
         buckets[b].total++;
-        if (byDay.has(keyOf(m))) buckets[b].active++;
+        if (byDay.has(keyOf2(m))) buckets[b].active++;
       }
       return h(
         "div",
@@ -4208,7 +5248,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         );
         const comp = props.comp ? props.comp[hover.i] : void 0;
         const compTotal = comp ? comp.i + comp.o + comp.cr + comp.cw : 0;
-        const pos = tipPos(hover.mx, hover.my, 270, (comp ? 98 : 44) + rows.length * 18);
+        const pos = tipPos2(hover.mx, hover.my, 270, (comp ? 98 : 44) + rows.length * 18);
         return tmPortal(
           h(
             "div",
@@ -4281,7 +5321,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const byDay = props.byDay;
       const daySessions = props.daySessions || {};
       const months = props.months || 6;
-      const today = keyOf(Date.now());
+      const today = keyOf2(Date.now());
       const todayT = fromKey(today);
       let startW = todayT - Math.max(1, months) * 31 * 864e5;
       const dow0 = new Date(startW).getDay();
@@ -4292,7 +5332,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       for (let w = 0; w < weeks; w++) {
         const col = [];
         for (let r = 0; r < 7; r++) {
-          const k = keyOf(startW + w * 6048e5 + r * 864e5);
+          const k = keyOf2(startW + w * 6048e5 + r * 864e5);
           if (k > today) {
             col.push(null);
             continue;
@@ -4363,7 +5403,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const monthLabels = [];
       let prevM = null;
       for (let w = 0; w < weeks; w++) {
-        const mo = Number(keyOf(startW + w * 6048e5).slice(5, 7));
+        const mo = Number(keyOf2(startW + w * 6048e5).slice(5, 7));
         if (mo !== prevM) {
           monthLabels.push({ w, mo });
           prevM = mo;
@@ -4402,12 +5442,12 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         const tot = d.t;
         const cache = (d.cr || 0) + (d.cw || 0);
         const cachePct = tot > 0 ? cache / tot * 100 : 0;
-        const pos = tipPos(hover.mx, hover.my, 300, 134 + Math.min(entries.length, 8) * 18);
+        const pos = tipPos2(hover.mx, hover.my, 300, 134 + Math.min(entries.length, 8) * 18);
         pop = tmPortal(
           h(
             "div",
             { className: "tm-pop" + (props.above ? " tm-tip-above" : ""), style: pos },
-            h("div", { className: "tm-pop-title" }, cnDate(hover.k)),
+            h("div", { className: "tm-pop-title" }, cnDate2(hover.k)),
             h(
               "div",
               { className: "tm-pop-row", style: { marginBottom: 2 } },
@@ -4643,7 +5683,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       );
       const tip = hover !== null ? (() => {
         const active = seriesList.filter((s) => (s.values[hover.i] || 0) > 0);
-        const pos = tipPos(hover.mx, hover.my, 170, 34 + active.length * 16);
+        const pos = tipPos2(hover.mx, hover.my, 170, 34 + active.length * 16);
         return tmPortal(
           h(
             "div",
@@ -4737,7 +5777,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       notifyShared();
     }
     function ensureSharedStats(force) {
-      if (shared.data && Date.now() - shared.at < 45e3) return Promise.resolve(shared.data);
+      if (!force && shared.data && Date.now() - shared.at < 45e3) return Promise.resolve(shared.data);
       if (shared.inflight) return shared.inflight;
       const p = fetchStats().then((v) => {
         shared.inflight = null;
@@ -4757,9 +5797,9 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       return p;
     }
     function useSharedStats() {
-      const [, force] = React.useReducer((x) => x + 1, 0);
+      const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
       React.useEffect(() => {
-        const fn = () => force();
+        const fn = () => forceUpdate();
         shared.subs.add(fn);
         if (!shared.data && !shared.inflight) void ensureSharedStats();
         const id = window.setInterval(() => {
@@ -4770,7 +5810,12 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           window.clearInterval(id);
         };
       }, []);
-      return { data: shared.data, err: shared.err, loading: !shared.data && !!shared.inflight };
+      return {
+        data: shared.data,
+        err: shared.err,
+        loading: !shared.data && !!shared.inflight,
+        reload: (force) => void ensureSharedStats(force)
+      };
     }
     function widgetBtns(widgets, widgetId) {
       if (!widgets || !widgetId || !widgets.WidgetToggle) return null;
@@ -4792,7 +5837,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const open = useWidgetOpen(props.widgets, props.widgetId);
       if (props.inPlace && open) return null;
       const leave = () => setPop(null);
-      const todayK = keyOf(Date.now());
+      const todayK = keyOf2(Date.now());
       const st = streaks(aggAll.byDay);
       let peakDay = null;
       for (const day of aggAll.byDay.values()) {
@@ -4882,7 +5927,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         data.peakStep ? h(StatCard, {
           label: "\u5CF0\u503C\u5355\u6B21\u8BF7\u6C42",
           count: data.peakStep.tokens,
-          sub: data.peakStep.model + " \xB7 " + dispDay(data.peakStep.d),
+          sub: data.peakStep.model + " \xB7 " + dispDay2(data.peakStep.d),
           delay: cards.length * 45
         }) : null
       );
@@ -4890,7 +5935,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         peakDay ? h(StatCard, {
           label: "\u5CF0\u503C\u5355\u65E5",
           count: peakDay.t,
-          sub: dispDay(peakDay.d),
+          sub: dispDay2(peakDay.d),
           delay: cards.length * 45,
           onHover: (e) => setPop({
             mx: e.clientX,
@@ -4969,8 +6014,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           delay: cards.length * 45
         })
       );
-      cards.push(h(StatCard, { label: "\u9996\u6B21\u4F7F\u7528", value: dispDay(aggAll.first), sub: aggAll.first }));
-      cards.push(h(StatCard, { label: "\u6700\u8FD1\u4F7F\u7528", value: dispDay(aggAll.last), sub: aggAll.last }));
+      cards.push(h(StatCard, { label: "\u9996\u6B21\u4F7F\u7528", value: dispDay2(aggAll.first), sub: aggAll.first }));
+      cards.push(h(StatCard, { label: "\u6700\u8FD1\u4F7F\u7528", value: dispDay2(aggAll.last), sub: aggAll.last }));
       const toolbar = props.widgets && props.widgetId ? h(
         "div",
         { style: { display: "flex", justifyContent: "flex-end", marginBottom: 6 } },
@@ -4986,7 +6031,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             "div",
             {
               className: "tm-pop" + (props.inFloat ? " tm-tip-above" : ""),
-              style: tipPos(pop.mx, pop.my, 280, 60)
+              style: tipPos2(pop.mx, pop.my, 280, 60)
             },
             pop.content
           )
@@ -5001,7 +6046,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const [showTotal, setShowTotal] = useState(false);
       const open = useWidgetOpen(props.widgets, props.widgetId);
       if (props.inPlace && open) return null;
-      const todayK = keyOf(Date.now());
+      const todayK = keyOf2(Date.now());
       const newComp = () => ({ i: 0, o: 0, cr: 0, cw: 0 });
       let trendLabels, trendTitles, trendEmpty;
       let slotComp;
@@ -5012,10 +6057,10 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         const slots = [];
         for (let k = 23; k >= 0; k--) {
           const t = endH.getTime() - k * 36e5;
-          slots.push({ d: keyOf(t), h: new Date(t).getHours() });
+          slots.push({ d: keyOf2(t), h: new Date(t).getHours() });
         }
         trendLabels = slots.map((s) => s.d === todayK ? s.h + ":00" : "\u6628\u65E5" + s.h + ":00");
-        trendTitles = slots.map((s) => cnDate(s.d) + " " + s.h + ":00\u2013" + (s.h + 1) + ":00");
+        trendTitles = slots.map((s) => cnDate2(s.d) + " " + s.h + ":00\u2013" + (s.h + 1) + ":00");
         trendEmpty = "\u8BE5\u5C0F\u65F6\u65E0\u6D88\u8017";
         const slotIdx = /* @__PURE__ */ new Map();
         for (let i = 0; i < slots.length; i++)
@@ -5064,9 +6109,9 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         });
       } else {
         const N = trendRange === "7d" ? 7 : 30;
-        const dayList = buildDayList(keyOf(fromKey(todayK) - (N - 1) * 864e5), todayK);
-        trendLabels = dayList.map(dispDay);
-        trendTitles = dayList.map(cnDate);
+        const dayList = buildDayList(keyOf2(fromKey(todayK) - (N - 1) * 864e5), todayK);
+        trendLabels = dayList.map(dispDay2);
+        trendTitles = dayList.map(cnDate2);
         trendEmpty = "\u5F53\u65E5\u65E0\u6D88\u8017";
         const dayIdx = /* @__PURE__ */ new Map();
         for (let i = 0; i < dayList.length; i++) dayIdx.set(dayList[i], i);
@@ -5314,7 +6359,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             "div",
             {
               className: "tm-pop" + (props.inFloat ? " tm-tip-above" : ""),
-              style: tipPos(pop.mx, pop.my, 280, 60)
+              style: tipPos2(pop.mx, pop.my, 280, 60)
             },
             pop.content
           )
@@ -5341,8 +6386,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       if (props.kind === "trend") return h(TrendSection, { data, aggAll: aa, inFloat: true, ...w });
       if (props.kind === "heat") return h(HeatSection, { data, aggAll: aa, inFloat: true, ...w });
       if (props.kind === "donut") {
-        const tk = keyOf(Date.now());
-        const cut = range === "all" ? null : keyOf(fromKey(tk) - (Number(range) - 1) * 864e5);
+        const tk = keyOf2(Date.now());
+        const cut = range === "all" ? null : keyOf2(fromKey(tk) - (Number(range) - 1) * 864e5);
         const scoped = cut === null ? null : aggregate(data.records || [], cut);
         return h(DonutSection, {
           data,
@@ -5376,11 +6421,11 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const [data, setData] = useState(null);
       const [err, setErr] = useState(null);
       const [loading, setLoading] = useState(true);
-      const [range, setRange] = useState(props.defaultRange || "30");
+      const [range, setRange] = useState(props.defaultRange || "all");
       const [todayOn, setTodayOn] = useState(false);
       const fl = useTmTodayFloat();
       React.useEffect(() => {
-        setRange(props.defaultRange || "30");
+        setRange(props.defaultRange || "all");
       }, [props.defaultRange]);
       React.useEffect(() => {
         setTodayOn(props.showToday === true);
@@ -5476,8 +6521,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const derived = React.useMemo(() => {
         if (data === null) return null;
         buildModelColors(data.models || {});
-        const tk = keyOf(Date.now());
-        const c = range === "all" ? null : keyOf(fromKey(tk) - (Number(range) - 1) * 864e5);
+        const tk = keyOf2(Date.now());
+        const c = range === "all" ? null : keyOf2(fromKey(tk) - (Number(range) - 1) * 864e5);
         return {
           todayK: tk,
           cut: c,
@@ -5767,8 +6812,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         );
       }
       buildModelColors(data.models || {});
-      const todayK = keyOf(Date.now());
-      const yK = keyOf(fromKey(todayK) - 864e5);
+      const todayK = keyOf2(Date.now());
+      const yK = keyOf2(fromKey(todayK) - 864e5);
       const both = aggregate(data.records || [], yK);
       const dayTotal = (k) => {
         const d = both.byDay.get(k);
@@ -5793,7 +6838,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           h(AnimatedNumber, { className: "tm-todayval", value: todayTotal, format: fmtRail }),
           h(DualBars, { className: "tm-dualbars", a: todayTotal, b: yTotal }),
           tip === null ? null : (() => {
-            const pos = tipPos(tip.mx, tip.my, 190, 82);
+            const pos = tipPos2(tip.mx, tip.my, 190, 82);
             return tmPortal(
               h(
                 "div",
@@ -5831,7 +6876,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const hourSlots = [];
       for (let k = 23; k >= 0; k--) {
         const t = endH.getTime() - k * 36e5;
-        hourSlots.push({ d: keyOf(t), h: new Date(t).getHours() });
+        hourSlots.push({ d: keyOf2(t), h: new Date(t).getHours() });
       }
       const hourLabels = hourSlots.map((s) => s.d === todayK ? s.h + ":00" : "\u6628\u65E5" + s.h + ":00");
       const hourIdx = /* @__PURE__ */ new Map();
@@ -5968,7 +7013,9 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       TrendSection,
       HeatSection,
       DonutSection,
-      HiddenWhenFloated
+      HiddenWhenFloated,
+      /** 共享统计快照（60s 可见即刷）：在线时长面板复用它，避免两套轮询各打一次 /stats */
+      useSharedStats
     };
   }
 
@@ -6080,6 +7127,19 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       );
       open = Object.assign({}, open, { [id]: pos });
       order = order.filter((x) => x !== id).concat(id);
+      emit(true);
+    }
+    function forget(prefix) {
+      const next = Object.assign({}, open);
+      let changed = false;
+      for (const id of Object.keys(next)) {
+        if (!id.startsWith(prefix)) continue;
+        delete next[id];
+        order = order.filter((x) => x !== id);
+        changed = true;
+      }
+      if (!changed) return;
+      open = next;
       emit(true);
     }
     function closeWidget(id) {
@@ -6237,6 +7297,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     function WidgetToggle(props) {
       const list = useWidgets();
       const opened = list.some((w) => w.id === props.id);
+      const what = props.name ? "\u300C" + props.name + "\u300D" : "\u672C\u5361\u7247";
       return h(
         "span",
         { style: { display: "inline-flex", gap: 2, alignItems: "center", marginLeft: 6, flex: "none" } },
@@ -6245,7 +7306,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           Object.assign(
             {
               className: "tm-grip",
-              title: opened ? "\u5DF2\u5F39\u51FA\u4E3A\u72EC\u7ACB\u6D6E\u7A97\uFF08\u53EF\u62D6\u52A8\uFF09" : "\u6309\u4F4F\u62D6\u51FA\u4E3A\u72EC\u7ACB\u6D6E\u7A97\uFF0C\u70B9\u6309\u76F4\u63A5\u5F39\u51FA"
+              title: opened ? what + " \u5DF2\u5F39\u51FA\u4E3A\u72EC\u7ACB\u6D6E\u7A97\uFF08\u53EF\u62D6\u52A8\uFF09" : "\u6309\u4F4F\u62D6\u51FA " + what + " \u4E3A\u72EC\u7ACB\u6D6E\u7A97\uFF0C\u70B9\u6309\u76F4\u63A5\u5F39\u51FA",
+              "aria-label": "\u62D6\u52A8\u6216\u5F39\u51FA " + what
             },
             gripProps(props.id)
           ),
@@ -6255,13 +7317,17 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           "button",
           {
             className: "tm-minibtn",
-            title: "\u56DE\u5F52\u4FA7\u680F\uFF08\u5173\u95ED\u6D6E\u7A97\uFF0C\u5185\u5BB9\u4ECD\u5728\u539F\u4F4D\uFF09",
+            title: "\u628A " + what + " \u6536\u56DE\u539F\u4F4D\uFF08\u5173\u95ED\u6D6E\u7A97\uFF09",
             onClick: () => closeWidget(props.id)
           },
           "\u56DE\u5F52"
         ) : h(
           "button",
-          { className: "tm-minibtn", title: "\u5F39\u51FA\u4E3A\u72EC\u7ACB\u6D6E\u7A97", onClick: () => openWidget(props.id) },
+          {
+            className: "tm-minibtn",
+            title: "\u5F39\u51FA " + what + " \u4E3A\u72EC\u7ACB\u6D6E\u7A97",
+            onClick: () => openWidget(props.id)
+          },
           "\u29C9"
         )
       );
@@ -6271,6 +7337,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       isOpen,
       openWidget,
       closeWidget,
+      forget,
       moveWidget,
       commitWidget,
       gripProps,
@@ -6371,20 +7438,32 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         if (!r.ok) setOpErr(String(r.error || "\u4FDD\u5B58\u5931\u8D25"));
         else notifyPrefs({ defaultRange: v });
       });
-      const kids = [];
-      kids.push(
-        h(
-          "p",
-          { key: "d", className: "tm-intro" },
-          "\u989D\u5EA6\u4F9B\u5E94\u5546\u4E0E\u504F\u597D\u3002\u8BE6\u7EC6\u989D\u5EA6\u4E0E\u7528\u91CF\u56FE\u8868\u8BF7\u5230\u53F3\u4FA7\u680F\u300C\u989D\u5EA6 / \u7528\u91CF\u300D\u9762\u677F\u67E5\u770B\uFF08\u7A7A\u95F4\u66F4\u5BBD\uFF09\u3002\u914D\u7F6E\u6301\u4E45\u5316\u5728 settings.yaml\uFF08",
-          h("code", { className: "tm-mono" }, s.namespace || "dshp-token-meter"),
-          " \u547D\u540D\u7A7A\u95F4\uFF09\uFF0C\u5916\u90E8\u7F16\u8F91\u70ED\u91CD\u8F7D\u3002"
-        )
-      );
-      if (s.error) kids.push(h("p", { key: "err", className: "tm-notice tm-notice-err" }, s.error));
-      if (opErr) kids.push(h("p", { key: "operr", className: "tm-notice tm-notice-err" }, opErr));
+      const [tab, setTab] = useState("stats");
+      const [statsSnap, setStatsSnap] = useState(null);
+      const [clearArmed, setClearArmed] = useState(false);
+      const [clearMsg, setClearMsg] = useState("");
+      React.useEffect(() => {
+        let alive = true;
+        const tick = () => {
+          void fetchStats().then((v) => {
+            if (alive) setStatsSnap(v);
+          }).catch(() => {
+          });
+        };
+        tick();
+        const id = window.setInterval(tick, 5e3);
+        return () => {
+          alive = false;
+          window.clearInterval(id);
+        };
+      }, [clearMsg]);
+      const commonKids = [];
+      const statsKids = [];
+      const quotaKids = [];
+      if (s.error) commonKids.push(h("p", { key: "err", className: "tm-notice tm-notice-err" }, s.error));
+      if (opErr) commonKids.push(h("p", { key: "operr", className: "tm-notice tm-notice-err" }, opErr));
       if (!s.cfg) {
-        kids.push(
+        commonKids.push(
           h(
             "div",
             { key: "loading", className: "tm-loading" },
@@ -6392,15 +7471,15 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             h("span", { className: "tm-loadingText" }, s.loading ? "\u6B63\u5728\u8BFB\u53D6\u914D\u7F6E\u2026" : "\u914D\u7F6E\u52A0\u8F7D\u5931\u8D25")
           )
         );
-        return h("div", { className: "tm-page" }, kids);
+        return h("div", { className: "tm-page" }, commonKids);
       }
       const vendors = s.cfg.vendors || [];
       const activeId = s.cfg.activeVendor || "";
       const a0 = store.activeOf(s);
       const rawSec = s.cfg.refreshSec;
       const curSec = rawSec === void 0 || rawSec === null || rawSec === "" ? 60 : Number(rawSec) === 0 ? 0 : isFinite(Number(rawSec)) ? Math.min(3600, Math.max(10, Number(rawSec) || 60)) : 60;
-      const defRange = String(s.cfg.defaultRange || "30");
-      kids.push(
+      const defRange = String(s.cfg.defaultRange || "all");
+      quotaKids.push(
         h(
           "div",
           { key: "display", className: "tm-section" },
@@ -6421,7 +7500,136 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
               ),
               onSelect: (id) => void withBusy(() => store.setRefresh(Number(id)))
             })
+          )
+        )
+      );
+      const snapTotal = statsSnap && typeof statsSnap.total === "number" ? statsSnap.total : null;
+      const snapScanned = statsSnap && typeof statsSnap.scanned === "number" ? statsSnap.scanned : null;
+      const snapErrors = statsSnap && typeof statsSnap.errors === "number" ? statsSnap.errors : null;
+      const snapHits = statsSnap && typeof statsSnap.cacheHits === "number" ? statsSnap.cacheHits : null;
+      const snapReused = statsSnap && typeof statsSnap.reused === "number" ? statsSnap.reused : null;
+      const gapNow = String(s.cfg.onlineGapMin ?? 5);
+      statsKids.push(
+        h(
+          "div",
+          { key: "source", className: "tm-card" },
+          h("div", { className: "tm-title" }, "\u6570\u636E\u6765\u6E90\uFF1A\u4F1A\u8BDD\u8BB0\u5F55\uFF08\u552F\u4E00\u771F\u76F8\u6E90\uFF09"),
+          h(
+            "p",
+            { className: "tm-desc", style: { margin: "4px 0 0" } },
+            "\u6240\u6709\u7EDF\u8BA1\uFF08Token \u7528\u91CF\u3001\u5728\u7EBF\u65F6\u957F\u3001\u6A21\u578B\u5206\u5E03\u3001\u70ED\u529B\u56FE\u2026\uFF09\u90FD\u7531 ",
+            h("code", { className: "tm-mono" }, "$DSH_HOME/sessions/"),
+            " \u4E0B\u7684\u4F1A\u8BDD\u65E5\u5FD7\u805A\u5408\u800C\u6765\u3002\u4E0B\u9762\u7684\u7F13\u5B58\u53EA\u662F**\u53EF\u4E22\u7684\u6D3E\u751F\u6570\u636E**\uFF1A\u5220\u6389\u540E\u4F1A\u81EA\u52A8\u51ED\u4F1A\u8BDD\u65E5\u5FD7\u91CD\u7B97\uFF0C\u4F46**\u4F1A\u8BDD\u8BB0\u5F55\u672C\u8EAB\u4E22\u4E86\u5C31\u518D\u4E5F\u7B97\u4E0D\u56DE\u6765**\u3002"
           ),
+          h(
+            "p",
+            { className: "tm-desc", style: { margin: "4px 0 0" } },
+            "\u8FC1\u79FB / \u5907\u4EFD / \u6362\u673A\u65F6\uFF1A**\u4FDD\u7559 `sessions/` \u76EE\u5F55**\uFF08\u4F53\u79EF\u4EE5\u672C\u673A\u4E3A\u4F8B\u7EA6 250MB\uFF09\uFF1B",
+            h("code", { className: "tm-mono" }, "storages/token_stats.json"),
+            " \u4E0D\u5FC5\u5907\u4EFD\uFF08\u91CD\u5EFA\u5373\u53EF\uFF09\u3002"
+          ),
+          h(
+            "div",
+            { className: "tm-toolbar", style: { marginTop: 8 } },
+            h(
+              Btn,
+              {
+                variant: "outline",
+                size: "sm",
+                onClick: () => {
+                  try {
+                    void navigator.clipboard.writeText("$DSH_HOME/sessions/");
+                    setClearMsg("\u5DF2\u590D\u5236\u4F1A\u8BDD\u76EE\u5F55\u8DEF\u5F84");
+                  } catch {
+                    setClearMsg("\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u590D\u5236 $DSH_HOME/sessions/");
+                  }
+                }
+              },
+              "\u590D\u5236\u4F1A\u8BDD\u76EE\u5F55\u8DEF\u5F84"
+            )
+          )
+        )
+      );
+      statsKids.push(
+        h(
+          "div",
+          { key: "cache", className: "tm-section" },
+          h("div", { className: "tm-sectionHead" }, "\u7F13\u5B58\u4E0E\u626B\u63CF\u72B6\u6001"),
+          h(
+            "div",
+            { className: "tm-card" },
+            h(
+              "div",
+              { className: "tm-chart-title", style: { marginBottom: 4 } },
+              h("span", { className: "tm-chart-name" }, "\u6D3E\u751F\u7F13\u5B58"),
+              h(
+                "span",
+                { className: "tm-hint" },
+                statsSnap && statsSnap.generatedAt ? "\u66F4\u65B0\u4E8E " + new Date(statsSnap.generatedAt).toLocaleTimeString() : "\u8BFB\u53D6\u4E2D\u2026"
+              )
+            ),
+            h(
+              "div",
+              { className: "tm-cacheRow", style: { marginTop: 0 } },
+              h("span", null, "\u4F1A\u8BDD " + (snapScanned ?? "\u2014") + "/" + (snapTotal ?? "\u2014") + " \u5DF2\u626B\u63CF"),
+              h(
+                "span",
+                null,
+                "\u590D\u7528 " + (snapReused ?? "\u2014") + (snapHits != null ? "\uFF08\u7F13\u5B58 " + snapHits + "\uFF09" : "")
+              ),
+              h("span", null, "\u626B\u63CF\u5931\u8D25 " + (snapErrors ?? "\u2014")),
+              h(
+                "span",
+                null,
+                "\u76F4\u8BFB " + (statsSnap && statsSnap.directReads != null ? statsSnap.directReads : "\u2014")
+              ),
+              h("span", null, "\u5B58\u50A8 " + (statsSnap && statsSnap.storage ? statsSnap.storage : "\u2014"))
+            ),
+            h(
+              "p",
+              { className: "tm-desc", style: { margin: "6px 0 0" } },
+              "\u300C\u590D\u7528\u300D= \u8BE5\u4F1A\u8BDD\u65E5\u5FD7\u6CA1\u53D8\uFF0C\u76F4\u63A5\u6CBF\u7528\u4E0A\u6B21\u7ED3\u679C\uFF08\u91CD\u542F\u540E\u6765\u81EA\u6301\u4E45\u5316\u7F13\u5B58\uFF0C\u8FD0\u884C\u4E2D\u6765\u81EA\u5185\u5B58\uFF09\uFF1B\u65E5\u5FD7\u53D8\u5927\u65F6\u53EA\u8BFB\u65B0\u589E\u90E8\u5206\u3002"
+            ),
+            h(
+              "div",
+              { className: "tm-toolbar", style: { marginTop: 8 } },
+              clearArmed ? h(
+                Btn,
+                {
+                  variant: "outline",
+                  size: "sm",
+                  disabled: busy,
+                  onClick: () => void withBusy(async () => {
+                    setClearMsg("");
+                    const r = await clearStatsCache();
+                    setClearMsg(
+                      r.ok ? "\u5DF2\u6E05\u9664 " + (r.removed ?? 0) + " \u884C\u7F13\u5B58\uFF0C\u6B63\u5728\u91CD\u7B97\u2026" : String(r.error || "\u6E05\u9664\u5931\u8D25")
+                    );
+                    setClearArmed(false);
+                  })
+                },
+                "\u786E\u8BA4\u6E05\u9664\u5E76\u91CD\u7B97"
+              ) : h(
+                Btn,
+                { variant: "outline", size: "sm", disabled: busy, onClick: () => setClearArmed(true) },
+                "\u6E05\u9664\u7EDF\u8BA1\u7F13\u5B58"
+              ),
+              clearArmed ? h(Btn, { variant: "outline", size: "sm", onClick: () => setClearArmed(false) }, "\u53D6\u6D88") : null,
+              clearMsg ? h("span", { className: "tm-hint" }, clearMsg) : null
+            ),
+            h(
+              "p",
+              { className: "tm-desc", style: { margin: "6px 0 0" } },
+              "\u6E05\u9664\u540E\u4E0B\u4E00\u6B21\u626B\u63CF\u4F1A\u91CD\u65B0\u8BFB\u53D6\u5168\u90E8\u4F1A\u8BDD\u65E5\u5FD7\uFF08\u672C\u673A\u7EA6 6 \u79D2\uFF09\uFF0C\u671F\u95F4\u9762\u677F\u663E\u793A\u300C\u540E\u53F0\u8865\u626B\u4E2D\u300D\u3002"
+            )
+          )
+        )
+      );
+      statsKids.push(
+        h(
+          "div",
+          { key: "statpref", className: "tm-section" },
+          h("div", { className: "tm-sectionHead" }, "\u504F\u597D"),
           h(
             UI.SecRow,
             { key: "range", label: "\u9ED8\u8BA4\u8303\u56F4", desc: "\u53F3\u4FA7\u680F\u300C\u7528\u91CF\u300D\u9762\u677F\u6253\u5F00\u65F6\u9ED8\u8BA4\u7EDF\u8BA1\u591A\u5C11\u5929\u7684\u6570\u636E\u3002" },
@@ -6436,6 +7644,25 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
                 { id: "all", label: "\u5168\u90E8" }
               ],
               onSelect: (id) => void pickRange(id)
+            })
+          ),
+          h(
+            UI.SecRow,
+            {
+              key: "gap",
+              label: "\u5728\u7EBF\u65F6\u957F\u7A7A\u95F2\u9608\u503C",
+              desc: "\u300C\u5728\u7EBF\u65F6\u957F\u300D\u9762\u677F\u9ED8\u8BA4\u53E3\u5F84\uFF1A\u76F8\u90BB\u4E8B\u4EF6\u95F4\u9694\u8D85\u8FC7\u5B83\u5C31\u7B97\u300C\u79BB\u5F00\u300D\u3002\u5B83\u662F\u53E3\u5F84\u4E0D\u662F\u7CBE\u5EA6\uFF0C\u8C03\u5927\u5728\u7EBF\u65F6\u957F\u53D8\u591A\u3002"
+            },
+            h(UI.PillSelect, {
+              disabled: busy,
+              value: gapNow,
+              selectedLabel: gapNow + " \u5206\u949F",
+              options: [1, 5, 15, 30, 60].map((n) => ({ id: String(n), label: n + " \u5206\u949F" })),
+              onSelect: (id) => void withBusy(async () => {
+                const r = await store.savePrefs({ onlineGapMin: Number(id) });
+                if (!r.ok) setOpErr(String(r.error || "\u4FDD\u5B58\u5931\u8D25"));
+                else notifyPrefs({ onlineGapMin: Number(id) });
+              })
             })
           )
         )
@@ -6551,7 +7778,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           )
         );
       });
-      kids.push(
+      quotaKids.push(
         h(
           "div",
           { key: "vendors", className: "tm-section" },
@@ -6565,7 +7792,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         )
       );
       if (editing)
-        kids.push(
+        quotaKids.push(
           h(
             "div",
             { key: "edit", className: "tm-section" },
@@ -6586,7 +7813,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             })
           )
         );
-      kids.push(
+      quotaKids.push(
         h(
           "div",
           { key: "add", className: "tm-section" },
@@ -6603,7 +7830,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       if (confirmDel) {
         const target = confirmDel;
         if (P.RiskConfirmation) {
-          kids.push(
+          quotaKids.push(
             h(P.RiskConfirmation, {
               key: "confirm-del",
               open: true,
@@ -6623,7 +7850,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             })
           );
         } else {
-          kids.push(
+          quotaKids.push(
             h(
               "div",
               { key: "confirm-del", className: "tm-errbox" },
@@ -6665,12 +7892,35 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           );
         }
       }
-      return h("div", { className: "tm-page" }, kids);
+      const tabBtn = (id, label) => h(
+        "button",
+        {
+          key: id,
+          type: "button",
+          className: "tm-tab" + (tab === id ? " tm-tabOn" : ""),
+          onClick: () => setTab(id)
+        },
+        label
+      );
+      return h(
+        "div",
+        { className: "tm-page" },
+        commonKids,
+        h("div", { className: "tm-tabs" }, tabBtn("stats", "\u7EDF\u8BA1\u8BBE\u7F6E"), tabBtn("quota", "\u989D\u5EA6\u914D\u7F6E")),
+        h(
+          "p",
+          { className: "tm-intro" },
+          tab === "stats" ? "\u7EDF\u8BA1\u8BBE\u7F6E\uFF1A\u6570\u636E\u6765\u6E90\u3001\u6D3E\u751F\u7F13\u5B58\u4E0E\u9ED8\u8BA4\u53E3\u5F84\u3002\u8BE6\u7EC6\u56FE\u8868\u5728\u53F3\u4FA7\u680F\u300C\u7528\u91CF / \u5728\u7EBF\u65F6\u957F\u300D\u9762\u677F\u3002" : "\u989D\u5EA6\u914D\u7F6E\uFF1A\u4F9B\u5E94\u5546\u4E0E\u62C9\u53D6\u504F\u597D\u3002\u8BE6\u7EC6\u989D\u5EA6\u5361\u5728\u53F3\u4FA7\u680F\u300C\u989D\u5EA6\u300D\u9762\u677F\u3002\u914D\u7F6E\u6301\u4E45\u5316\u5728 settings.yaml\uFF08",
+          tab === "stats" ? null : h("code", { className: "tm-mono" }, s.namespace || "dshp-token-meter"),
+          tab === "stats" ? null : " \u547D\u540D\u7A7A\u95F4\uFF09\uFF0C\u5916\u90E8\u7F16\u8F91\u70ED\u91CD\u8F7D\u3002"
+        ),
+        tab === "stats" ? statsKids : quotaKids
+      );
     }
     function StatsRightPane() {
       const [prefs, setPrefs] = useState({
         showToday: false,
-        defaultRange: "30"
+        defaultRange: "all"
       });
       const loadPrefs = async () => {
         try {
@@ -6678,7 +7928,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           if (s.ok && s.config) {
             setPrefs({
               showToday: s.config.showToday === true,
-              defaultRange: String(s.config.defaultRange || "30")
+              defaultRange: String(s.config.defaultRange || "all")
             });
           }
         } catch {
@@ -6762,7 +8012,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       QuotaRightPane: quota.QuotaRightPane,
       StatsRightPane,
       WidgetFloatLayer,
-      widgetsApi: widgets
+      widgetsApi: widgets,
+      statsApi: stats
     };
   }
 
@@ -6805,11 +8056,14 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           ReactDOM = null;
         }
         const parts = createTokenMeterSection(React, P, ReactDOM);
+        const onlineParts = createOnlineSection(React, ReactDOM, parts.statsApi);
         const TokenMeterSettings = parts.TokenMeterSettings;
         const QuotaRightPane = parts.QuotaRightPane;
         const StatsRightPane = parts.StatsRightPane;
         const WidgetFloatLayer = parts.WidgetFloatLayer;
-        const { QuotaIcon, UsageIcon } = createIcons(React);
+        const WidgetsApi = parts.widgetsApi;
+        const OnlineRightPane = onlineParts.OnlineRightPane;
+        const { QuotaIcon, UsageIcon, OnlineIcon } = createIcons(React);
         function useTmStyles() {
           React.useEffect(() => {
             const tag = tmEnsureStyles();
@@ -6845,6 +8099,10 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             "dshp-token-meter: section styles"
           );
           try {
+            if (WidgetsApi && typeof WidgetsApi.forget === "function") WidgetsApi.forget("online:");
+          } catch {
+          }
+          try {
             window.localStorage.removeItem("token-stats.sidebar-today");
             window.localStorage.removeItem("tquota.float.open");
             window.localStorage.removeItem("tquota.float.pos");
@@ -6863,7 +8121,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           slots.inject(
             "settings.section",
             () => slots.register(
-              { name: "settings.section", id: "dshp-token-meter", order: 27, label: "Token \u8BA1\u91CF" },
+              { name: "settings.section", id: "dshp-token-meter", order: 27, label: "Token \u7EDF\u8BA1\u4E0E\u989D\u5EA6" },
               SettingsEntry
             )
           );
@@ -6877,6 +8135,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           );
           const QUOTA_TAB = "@dshp/token-meter-quota";
           const STATS_TAB = "@dshp/token-meter-stats";
+          const ONLINE_TAB = "@dshp/token-meter-online";
           {
             ctx.effect(
               () => ctx.sidebarRightTabs.register({
@@ -6910,6 +8169,22 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
               }),
               "dshp-token-meter: right tab stats"
             );
+            ctx.effect(
+              () => ctx.sidebarRightTabs.register({
+                id: ONLINE_TAB,
+                kind: "token-meter-online",
+                title: () => "\u5728\u7EBF\u65F6\u957F",
+                guide: [
+                  {
+                    order: 22,
+                    title: () => "\u5728\u7EBF\u65F6\u957F",
+                    description: () => "\u6BCF\u65E5/\u7D2F\u8BA1\u5728\u7EBF\u65F6\u957F\u4F30\u7B97",
+                    icon: OnlineIcon
+                  }
+                ]
+              }),
+              "dshp-token-meter: right tab online"
+            );
             const QuotaPane = function QuotaPane2(p) {
               useTmStyles();
               return React.createElement(
@@ -6942,6 +8217,22 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
                 React.createElement("span", null, "Token \u7528\u91CF")
               );
             };
+            const OnlinePane = function OnlinePane2(p) {
+              useTmStyles();
+              return React.createElement(
+                "div",
+                { style: { height: "100%", minHeight: 0, overflow: "auto", padding: "12px 14px" } },
+                React.createElement(OnlineRightPane, p)
+              );
+            };
+            const OnlinePaneTitle = function OnlinePaneTitle2() {
+              return React.createElement(
+                "span",
+                { className: "tm-tabChip" },
+                React.createElement(OnlineIcon, { size: 14 }),
+                React.createElement("span", null, "\u5728\u7EBF\u65F6\u957F")
+              );
+            };
             slots.inject(
               "sidebar.right.pane.tab",
               () => slots.register({ name: "sidebar.right.pane.tab", key: QUOTA_TAB }, QuotaPane)
@@ -6957,6 +8248,14 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             slots.inject(
               "sidebar.right.pane.tab.title",
               () => slots.register({ name: "sidebar.right.pane.tab.title", key: STATS_TAB }, StatsPaneTitle)
+            );
+            slots.inject(
+              "sidebar.right.pane.tab",
+              () => slots.register({ name: "sidebar.right.pane.tab", key: ONLINE_TAB }, OnlinePane)
+            );
+            slots.inject(
+              "sidebar.right.pane.tab.title",
+              () => slots.register({ name: "sidebar.right.pane.tab.title", key: ONLINE_TAB }, OnlinePaneTitle)
             );
           }
           try {

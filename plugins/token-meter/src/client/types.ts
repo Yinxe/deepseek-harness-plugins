@@ -152,6 +152,8 @@ export interface TokenMeterConfig {
   vendors: Vendor[];
   showToday: boolean;
   defaultRange: DefaultRange;
+  /** 在线时长空闲阈值（分钟，1/5/15/30/60；缺省 5） */
+  onlineGapMin: number;
 }
 
 export interface QuotaStateResponse {
@@ -176,6 +178,31 @@ export interface StatsRecord {
   n: number;
 }
 
+export interface StatsOnlineDay {
+  d: string;
+  sessions: number;
+  tokens: number;
+  turnMs: number;
+  byGap: Record<string, number>;
+  segByGap: Record<string, number>;
+  llmMs: number;
+  toolMs: number;
+}
+
+export interface StatsOnline {
+  defaultGapMin: number;
+  gaps: number[];
+  totalMs: Record<string, number>;
+  segments: Record<string, number>;
+  turnMs: number;
+  llmMs: number;
+  toolMs: number;
+  activeDays: number;
+  firstDay: string | null;
+  lastDay: string | null;
+  days: StatsOnlineDay[];
+}
+
 export interface StatsSnapshot {
   ready: boolean;
   records: StatsRecord[];
@@ -189,13 +216,28 @@ export interface StatsSnapshot {
   scanned: number;
   total: number;
   errors: number;
+  /** 扫描失败原因样本（最多 5 条） */
+  errorSamples?: Array<{ id: string; message: string }>;
+  /** 靠直读日志兜底拿到的会话数 */
+  directReads?: number;
+  /** 会话结局分类计数 */
+  sessionOutcomes?: Record<string, number>;
+  /** 命中持久化缓存（未读日志）的会话数 */
+  cacheHits?: number;
+  /** 完全没读日志的会话数（缓存 + 进程内复用） */
+  reused?: number;
   storage: string;
   generatedAt: number;
+  /** 在线时长估算（老 Host 无此字段 → 面板自行降级提示） */
+  online?: StatsOnline;
   error?: string;
 }
 
 export type ConfigPatch = Partial<
-  Pick<TokenMeterConfig, 'enabled' | 'showToday' | 'defaultRange' | 'refreshSec' | 'activeVendor'>
+  Pick<
+    TokenMeterConfig,
+    'enabled' | 'showToday' | 'defaultRange' | 'refreshSec' | 'activeVendor' | 'onlineGapMin'
+  >
 >;
 
 /** DSH __ModuleLoader__ 的 require（运行时提供 react / primitives） */

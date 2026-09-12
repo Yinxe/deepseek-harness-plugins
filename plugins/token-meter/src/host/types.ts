@@ -221,6 +221,51 @@ export interface StatsPeak {
   model: string;
 }
 
+/** 每日在线时长（毫秒；`byGap` 按预设阈值分别给出） */
+export interface StatsOnlineDay {
+  d: string;
+  /** 当天有 token 记录的会话数 */
+  sessions: number;
+  /** 当天 token 合计（i+o+cr+cw） */
+  tokens: number;
+  /** 当天「对话进行中」时长（turn 区间并集） */
+  turnMs: number;
+  /** 每个预设阈值（分钟，字符串键）下的在线毫秒 */
+  byGap: Record<string, number>;
+  /** 每个预设阈值下的活动段数（「来了又走」的次数） */
+  segByGap: Record<string, number>;
+  /** 当天模型生成墙钟（并行相加） */
+  llmMs: number;
+  /** 当天工具执行墙钟（并行相加） */
+  toolMs: number;
+}
+
+/**
+ * 在线时长估算（见 stats/online.ts 的口径说明）。
+ * 任何阈值下都是**下界**：日志只在有事件时打点，窗口开着但无事件的时间不可见。
+ */
+export interface StatsOnline {
+  /** 客户端默认选中的阈值（分钟，取自 gaps） */
+  defaultGapMin: number;
+  /** 可切换的预设阈值（分钟） */
+  gaps: number[];
+  /** 每个阈值的累计在线毫秒 */
+  totalMs: Record<string, number>;
+  /** 每个阈值下的活动段数（判断阈值是否把整段对话切碎） */
+  segments: Record<string, number>;
+  /** 「对话进行中」累计毫秒（turn/start → turn/end 区间并集，不做空闲合并） */
+  turnMs: number;
+  /** 模型生成墙钟合计（step/start → assistant/message，跨会话相加，可大于墙钟） */
+  llmMs: number;
+  /** 工具执行墙钟合计（tool/call → tool/result，跨会话相加） */
+  toolMs: number;
+  activeDays: number;
+  firstDay: string | null;
+  lastDay: string | null;
+  /** 仅活跃日，升序 */
+  days: StatsOnlineDay[];
+}
+
 export interface StatsSnapshot {
   ready: boolean;
   records: StatsRecord[];
@@ -234,8 +279,20 @@ export interface StatsSnapshot {
   scanned: number;
   total: number;
   errors: number;
+  /** 扫描失败的原因样本（最多 5 条，诊断用） */
+  errorSamples?: Array<{ id: string; message: string }>;
+  /** 本次统计里有多少会话靠「直读日志」兜底拿到 */
+  directReads?: number;
+  /** 会话结局分类计数（usage / fork-empty / no-request / failed / no-usage） */
+  sessionOutcomes?: Record<string, number>;
+  /** 本次快照命中持久化缓存的会话数（重启后才会发生） */
+  cacheHits?: number;
+  /** 本次快照完全没读日志的会话数（持久化缓存 + 进程内复用） */
+  reused?: number;
   storage: string;
   generatedAt: number;
+  /** 在线时长估算（老 Host 无此字段时客户端自行降级隐藏面板） */
+  online?: StatsOnline;
   error?: string;
 }
 
@@ -251,6 +308,8 @@ export interface PluginConfig {
   vendors: Vendor[];
   showToday: boolean;
   defaultRange: DefaultRange;
+  /** 在线时长空闲阈值（分钟，1/5/15/30/60；缺省 5） */
+  onlineGapMin: number;
 }
 
 /** settings.patch / cordis.patch.yml 里允许的部分覆盖（全部可选） */
@@ -262,6 +321,7 @@ export interface PluginConfigPatch {
   vendors?: Vendor[];
   showToday?: boolean;
   defaultRange?: DefaultRange;
+  onlineGapMin?: number;
 }
 
 // ── 同源路由协议（host ↔ client/types.ts 对齐）─────────────────────────────
@@ -282,7 +342,11 @@ export interface StateResponse {
   ok: boolean;
   namespace?: string;
   docPath?: string;
-  config?: SanitizedQuotaConfig & { showToday: boolean; defaultRange: DefaultRange };
+  config?: SanitizedQuotaConfig & {
+    showToday: boolean;
+    defaultRange: DefaultRange;
+    onlineGapMin: number;
+  };
   snaps?: Record<string, VendorSnapshot>;
   providers?: ProviderMeta[];
   providerTypes?: string[];

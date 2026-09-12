@@ -6,15 +6,15 @@ DeepSeek Harness（DSH）插件 Monorepo（pnpm workspaces + TypeScript ESM）�
 
 ## 插件一览
 
-| 插件                                                           | 一句话                                                                                                                            | 文档                                        |
-| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| **[@dshp/token-meter](plugins/token-meter/README.md)**         | Token 额度 + 用量统计：多供应商额度卡（opencode / DeepSeek / Command Code / 手动） + 本机会话日志聚合（趋势 / 热力图 / 模型分布） | [README](plugins/token-meter/README.md)     |
-| **[@dshp/vision-bridge](plugins/vision-bridge/README.md)**     | 视觉桥接：让纯文本模型也能“看图”（`vision_describe` 工具 + 主/备模型自动降级）                                                    | [README](plugins/vision-bridge/README.md)   |
-| **[@dshp/mcwiki-search](plugins/mcwiki-search/README.md)**     | Minecraft Wiki 查询工具（搜索 / 引言 / 全文，含模板清理的 AI 可读转换）                                                           | [README](plugins/mcwiki-search/README.md)   |
-| **[@dshp/search-provider](plugins/search-provider/README.md)** | `web_search` 供应商中枢：Tavily 等可插拔接入，动态选型                                                                            | [README](plugins/search-provider/README.md) |
-| **[@dshp/web-style](plugins/web-style/README.md)**             | Web 外观定制：23 套主题画廊一键切换并持久化 + 壁纸取色（Material You）+ 全局圆角                                                  | [README](plugins/web-style/README.md)       |
-| **[@dshp/skill-manager](plugins/skill-manager/README.md)**     | 技能管理：设置页统一管理全局（`~/.dsh/skills`、`~/.agents/skills`）与工作区技能——新建/编辑/启停/复制移动/删除                     | [README](plugins/skill-manager/README.md)   |
-| **[@dshp/mcp-manager](plugins/mcp-manager/README.md)**         | MCP 服务器管理：设置页管理 cordis.patch.yml 里的官方 dsh-mcp-client 实例——新建/编辑/启停/删除/探活，表单+JSON 双模式，回写保注释  | [README](plugins/mcp-manager/README.md)     |
+| 插件                                                           | 一句话                                                                                                                                                                                | 文档                                        |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| **[@dshp/token-meter](plugins/token-meter/README.md)**         | Token 额度 + 用量统计 + 在线时长：多供应商额度卡（opencode / DeepSeek / Command Code / 手动） + 本机会话日志聚合（趋势 / 热力图 / 模型分布 / 在线时长与每日排行，增量重算、口径分级） | [README](plugins/token-meter/README.md)     |
+| **[@dshp/vision-bridge](plugins/vision-bridge/README.md)**     | 视觉桥接：让纯文本模型也能“看图”（`vision_describe` 工具 + 主/备模型自动降级）                                                                                                        | [README](plugins/vision-bridge/README.md)   |
+| **[@dshp/mcwiki-search](plugins/mcwiki-search/README.md)**     | Minecraft Wiki 查询工具（搜索 / 引言 / 全文，含模板清理的 AI 可读转换）                                                                                                               | [README](plugins/mcwiki-search/README.md)   |
+| **[@dshp/search-provider](plugins/search-provider/README.md)** | `web_search` 供应商中枢：Tavily 等可插拔接入，动态选型                                                                                                                                | [README](plugins/search-provider/README.md) |
+| **[@dshp/web-style](plugins/web-style/README.md)**             | Web 外观定制：23 套主题画廊一键切换并持久化 + 壁纸取色（Material You）+ 全局圆角                                                                                                      | [README](plugins/web-style/README.md)       |
+| **[@dshp/skill-manager](plugins/skill-manager/README.md)**     | 技能管理：设置页统一管理全局（`~/.dsh/skills`、`~/.agents/skills`）与工作区技能——新建/编辑/启停/复制移动/删除                                                                         | [README](plugins/skill-manager/README.md)   |
+| **[@dshp/mcp-manager](plugins/mcp-manager/README.md)**         | MCP 服务器管理：设置页管理 cordis.patch.yml 里的官方 dsh-mcp-client 实例——新建/编辑/启停/删除/探活，表单+JSON 双模式，回写保注释                                                      | [README](plugins/mcp-manager/README.md)     |
 
 ## 截图预览
 
@@ -24,11 +24,15 @@ DeepSeek Harness（DSH）插件 Monorepo（pnpm workspaces + TypeScript ESM）�
 
 **右侧栏「用量」Tab**：指标卡 + Token 趋势折线 + 活力热力图 + 模型用量分布环形图。
 
+**设置页「Token 统计与额度」**：分两个 Tab —— 「统计设置」给出数据来源与缓存运维（会话日志路径 + 迁移备份提示 + 缓存与扫描状态 + **一键清除统计缓存并重算** + 默认范围 / 在线空闲阈值），「额度配置」管供应商与自动刷新。**所有统计都由 `$DSH_HOME/sessions/` 的会话日志重算，迁移/备份请保留该目录**（统计缓存可丢，会话记录不能丢）。
+
+**右侧栏「在线时长」Tab**：在线（你 + DSH）/ 对话进行中（DSH 的钟）/ 模型 + 工具（DSH 的活，精确）三口径并列；柱线混合图（柱 = 对话中 + 空档、虚线 = 引擎合计）与「每日在线排行」都带悬浮明细；「口径与准确性」表用 精确 / 估算 / 下界 徽标标出每个数字能不能信，并给出会话口径分解（有用量 / 请求失败 / fork 空壳 / 未上报）。
+
 | 额度 Tab                                                               | 用量 Tab                                                               |
 | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | ![额度 Tab](<plugins/token-meter/images/截图 2026-09-11 17-08-15.png>) | ![用量 Tab](<plugins/token-meter/images/截图 2026-09-11 17-09-40.png>) |
 
-**宽屏布局**：今日消耗面板 + 指标卡网格；任意图表可 `⠿` 拖拽或 `⧉` 弹出为独立浮窗。
+**宽屏布局**：今日消耗面板 + 指标卡网格；额度卡与用量图表可 `⠿` 拖拽或 `⧉` 弹出为独立浮窗（在线时长面板不支持浮窗，保持单一面板）。
 
 ![宽屏：今日消耗 + 指标卡网格](<plugins/token-meter/images/截图 2026-09-11 17-10-48.png>)
 
@@ -116,7 +120,13 @@ dsh web   # 重启生效
 注意：
 
 - `latest` tag 在门禁**通过后**才移动到 main HEAD，所以 update 拿到的永远是过了门禁的构建；
-- git 解析在你网络慢时可能要 2–4 分钟（`github:` 简写走 HTTPS，慢可换 `git+ssh://git@github.com/…` 形态，前提是配好 GitHub SSH key）；一次 clone 后 pnpm 有本地缓存，重复 update 会快一些；
+- git 解析在你网络慢时可能要 2–4 分钟；一次 clone 后 pnpm 有本地缓存，重复 update 会快一些；
+- **协议取决于你本机的 pnpm 版本，而不是 spec 本身**：pnpm ≥ 11.21.0 的 `github:` 简写走 HTTPS，开箱即用；更早的版本（如 11.7.0）会解析成 `git+ssh://git@github.com/…`，**需先配好 GitHub SSH key**，否则报 `Permission denied (publickey)`。旧版又不想配 key 时，升级 pnpm，或让 Git 把 ssh 重写成 HTTPS（pnpm 只是 shell out 到 `git`，重写自动生效）：
+
+  ```sh
+  git config --global url."https://github.com/".insteadOf "git@github.com:"
+  ```
+
 - 对比：tarball URL 直装（`…latest.tgz`）的 spec 是精确 URL，`update` 永远 no-op——这正是 git 依赖方案存在的理由。
 
 **多插件统一更新**：`update` 支持一条命令带多个包名（git 与 tarball 混装亦可）：

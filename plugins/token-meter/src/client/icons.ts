@@ -10,7 +10,7 @@
  */
 import type { AnyReact } from './types.js';
 
-export function createIcons(React: AnyReact): { QuotaIcon: any; UsageIcon: any } {
+export function createIcons(React: AnyReact): { QuotaIcon: any; UsageIcon: any; OnlineIcon: any } {
   const h = React.createElement;
 
   /** 基础 svg 属性（尺寸随 size 缩放，颜色继承） */
@@ -62,5 +62,15 @@ export function createIcons(React: AnyReact): { QuotaIcon: any; UsageIcon: any }
     );
   }
 
-  return { QuotaIcon, UsageIcon };
+  /** 在线时长：时钟 + 指针（时长/在场语义） */
+  function OnlineIcon(props: any): any {
+    return h(
+      'svg',
+      svgProps(props),
+      h('circle', { key: 'face', cx: 12, cy: 12, r: 8.4 }),
+      h('path', { key: 'hand', d: 'M12 7.6V12l3.2 2' }),
+    );
+  }
+
+  return { QuotaIcon, UsageIcon, OnlineIcon };
 }

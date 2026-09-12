@@ -35,6 +35,7 @@ import { canonicalType } from './providers/index.js';
 import { registerQuotaRoutes, refreshOne } from './quota.js';
 import type { QuotaState } from './quota.js';
 import { createEngine } from './stats/engine.js';
+import { normGapMin } from './stats/online.js';
 import { registerStatsRoutes } from './stats/routes.js';
 import type { AnyCtx, PluginConfig, Vendor } from './types.js';
 
@@ -58,6 +59,8 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
     if (Object.hasOwn(patch, 'showToday') && patch.showToday !== undefined) entry.showToday = patch.showToday;
     if (Object.hasOwn(patch, 'defaultRange') && patch.defaultRange !== undefined)
       entry.defaultRange = patch.defaultRange;
+    if (Object.hasOwn(patch, 'onlineGapMin') && patch.onlineGapMin !== undefined)
+      entry.onlineGapMin = patch.onlineGapMin;
   }
 
   let current: () => PluginConfig = () => entry;
@@ -111,6 +114,9 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
             r['defaultRange'] === 'all'
               ? (r['defaultRange'] as PluginConfig['defaultRange'])
               : entry.defaultRange,
+          onlineGapMin: normGapMin(
+            typeof r['onlineGapMin'] === 'number' ? (r['onlineGapMin'] as number) : entry.onlineGapMin,
+          ),
         };
       }
     } catch {
@@ -163,7 +169,7 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
     sessionQuery &&
     typeof sessionQuery.listSessions === 'function' &&
     typeof sessionQuery.readSession === 'function'
-      ? createEngine(sessionQuery, dshHome, storageDomain)
+      ? createEngine(sessionQuery, dshHome, storageDomain, () => getConfig().onlineGapMin)
       : null;
 
   if (engine) {

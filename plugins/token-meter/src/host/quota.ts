@@ -11,6 +11,7 @@ import { NS } from './config.js';
 import { DOLLAR_REF_RE, ENV_REF_RE, CRED_REF_RE } from './secrets.js';
 import { defaultView } from './providers/view.js';
 import { toErrorInfo } from './errors.js';
+import { normGapMin } from './stats/online.js';
 import {
   canonicalType,
   describeProviders,
@@ -305,6 +306,7 @@ export function registerQuotaRoutes(ctx: AnyCtx, deps: QuotaDeps): void {
                 ...sanitizeCfg(cfg),
                 showToday: cfg.showToday === true,
                 defaultRange: cfg.defaultRange,
+                onlineGapMin: cfg.onlineGapMin,
               },
               snaps: st.snaps,
               providers: describeProviders(),
@@ -690,6 +692,13 @@ export function registerQuotaRoutes(ctx: AnyCtx, deps: QuotaDeps): void {
               if (dr !== '7' && dr !== '30' && dr !== '90' && dr !== 'all')
                 throw new Error("defaultRange 非法，应为 '7' / '30' / '90' / 'all'");
               patchObj['defaultRange'] = dr;
+              hasPatch = true;
+            }
+            if (Object.hasOwn(a, 'onlineGapMin')) {
+              const g = Number(a['onlineGapMin']);
+              if (!Number.isFinite(g)) throw new Error('onlineGapMin 非法，应为 1/5/15/30/60');
+              // 归一吸附到最近预设值：面板只提供预设档，非法输入不落盘
+              patchObj['onlineGapMin'] = normGapMin(g);
               hasPatch = true;
             }
             if (Object.hasOwn(a, 'refreshSec')) {
