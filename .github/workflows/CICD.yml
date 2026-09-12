@@ -206,11 +206,19 @@ jobs:
             --notes-file notes.md \
             --prerelease
 
-          # 重建唯一的滚动项（若存在）
+          # 重建唯一的滚动项（若存在）。
+          # 注意：dist 里的包按 check 阶段后缀（main 推送为 latest）命名，
+          # 滚到其他 tag 时必须重命名为 -<tag>.tgz，否则包名与发布身份不一致、
+          # notes 生成器也无法反解出插件元数据
+          cur_suffix="${{ needs.check.outputs.suffix }}"
           for r in "${rolling[@]}"; do
             IFS='|' read -r tag pre marked <<< "$r"
             if [ -z "$tag" ]; then continue; fi
             echo "重建滚动 release: $tag (pre=$pre)"
+            for f in dist/*.tgz; do
+              base=$(basename "$f")
+              mv "$f" "dist/${base%-$cur_suffix.tgz}-$tag.tgz"
+            done
             gh release delete "$tag" --yes --cleanup-tag || true
             SUFFIX="$tag" \
             NOTES_HEADER="滚动构建自 main 分支（${GITHUB_SHA::7}），每次推送自动整体替换。" \
