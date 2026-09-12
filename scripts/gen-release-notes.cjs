@@ -15,7 +15,7 @@ const hint = process.env.NOTES_HINT || '';
 const files = fs
   .readdirSync('dist')
   .filter((f) => f.endsWith('.tgz'))
-  .sort();
+  .toSorted();
 
 const out = [header];
 if (hint) out.push(hint);
