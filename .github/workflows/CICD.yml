@@ -51,15 +51,28 @@ jobs:
             echo "::error::suffix 仅允许字母数字与 . _ -（不得以 . - 开头或含 ..，需可作为 git tag），实际收到：$suffix"
             exit 1
           fi
-          echo "suffix=$suffix" >> "$GITHUB_OUTPUT"
 
-          # 仅 main 分支 / v* tag 推送、以及手动触发时打包；PR 与普通分支只做门禁
+          # 打包与发布范围：v* tag / main / 手动触发，以及 dev、feature/* 之外的分支推送；
+          # PR、dev、feature/* 推送只做门禁
           pack=false
           if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
             pack=true
-          elif [[ "$GITHUB_REF" == "refs/heads/main" || "$GITHUB_REF" == refs/tags/v* ]]; then
-            pack=true
+          elif [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            if [[ "$GITHUB_REF" == refs/tags/v* || "$GITHUB_REF" == "refs/heads/main" ]]; then
+              pack=true
+            elif [[ "$GITHUB_REF" == refs/heads/* ]]; then
+              branch="${GITHUB_REF#refs/heads/}"
+              if [[ "$branch" != "dev" && "$branch" != feature/* ]]; then
+                pack=true
+                branch_tag=$(printf '%s' "$branch" | tr '/' '-')
+                if [[ "$branch_tag" == "latest" || ! "$branch_tag" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ || "$branch_tag" == *..* ]]; then
+                  branch_tag="branch-${GITHUB_SHA::7}"
+                fi
+                suffix="$branch_tag"
+              fi
+            fi
           fi
+          echo "suffix=$suffix" >> "$GITHUB_OUTPUT"
           echo "pack=$pack" >> "$GITHUB_OUTPUT"
 
       - run: pnpm install --frozen-lockfile
@@ -123,8 +136,8 @@ jobs:
             gh release create "$GITHUB_REF_NAME" dist/*.tgz --generate-notes
           fi
 
-      - name: Create suffix prerelease (manual dispatch with custom suffix)
-        if: github.event_name == 'workflow_dispatch' && inputs.suffix != 'latest'
+      - name: Create suffix/branch prerelease
+        if: (github.event_name == 'workflow_dispatch' && inputs.suffix != 'latest') || (github.event_name == 'push' && github.ref_type == 'branch' && github.ref_name != 'main')
         env:
           SUFFIX: ${{ needs.check.outputs.suffix }}
         run: |
@@ -136,7 +149,12 @@ jobs:
             fi
             gh release delete "$SUFFIX" --yes --cleanup-tag
           fi
-          NOTES_HEADER="手动触发的测试构建（${GITHUB_SHA::7}）。同名 tag 为 workflow 自动创建。" \
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            header="手动触发的测试构建（${GITHUB_SHA::7}）。同名 tag 为 workflow 自动创建。"
+          else
+            header="分支 $GITHUB_REF_NAME 的测试构建（${GITHUB_SHA::7}），每次推送自动整体重建。"
+          fi
+          NOTES_HEADER="$header" \
           NOTES_HINT="正式发版前请先删除：\`gh release delete $SUFFIX --cleanup-tag --yes\`" \
             node scripts/gen-release-notes.cjs
           gh release create "$SUFFIX" dist/*.tgz \

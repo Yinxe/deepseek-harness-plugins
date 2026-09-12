@@ -13,6 +13,7 @@ DeepSeek Harness（DSH）插件 Monorepo（pnpm workspaces + TypeScript ESM）�
 | **[@dshp/mcwiki-search](plugins/mcwiki-search/README.md)**     | Minecraft Wiki 查询工具（搜索 / 引言 / 全文，含模板清理的 AI 可读转换）                                                           | [README](plugins/mcwiki-search/README.md)   |
 | **[@dshp/search-provider](plugins/search-provider/README.md)** | `web_search` 供应商中枢：Tavily 等可插拔接入，动态选型                                                                            | [README](plugins/search-provider/README.md) |
 | **[@dshp/web-style](plugins/web-style/README.md)**             | Web 外观定制：23 套主题画廊一键切换并持久化 + 壁纸取色（Material You）+ 全局圆角                                                  | [README](plugins/web-style/README.md)       |
+| **[@dshp/skill-manager](plugins/skill-manager/README.md)**     | 技能管理：设置页统一管理全局（`~/.dsh/skills`、`~/.agents/skills`）与工作区技能——新建/编辑/启停/复制移动/删除                     | [README](plugins/skill-manager/README.md)   |
 
 ## 截图预览
 
@@ -48,6 +49,7 @@ dsh plugin --profile web add ./plugins/vision-bridge
 dsh plugin --profile web add ./plugins/mcwiki-search
 dsh plugin --profile web add ./plugins/search-provider
 dsh plugin --profile web add ./plugins/web-style
+dsh plugin --profile web add ./plugins/skill-manager
 
 dsh web   # 重启生效
 ```
@@ -83,6 +85,7 @@ dsh web   # 重启生效
 │   │   └── lib/                #   单文件构建产物（已提交）
 │   ├── mcwiki-search/          # @dshp/mcwiki-search（Minecraft Wiki 查询）
 │   ├── search-provider/        # @dshp/search-provider（web_search 供应商中枢）
+│   ├── skill-manager/          # @dshp/skill-manager（全局 + 工作区技能管理）
 │   └── web-style/              # @dshp/web-style（23 套主题画廊 + 壁纸取色 + 全局圆角）
 │       ├── src/host/           #   Host TS：types/http/config + themes/（token 单源，21 个主题模块）
 │       ├── src/client/         #   Client TS：GallerySection/apply-theme/md3/official/radius/themes/api/state
@@ -93,7 +96,7 @@ dsh web   # 重启生效
 ├── tsconfig.json               # solution 引用
 ├── pnpm-workspace.yaml         # packages: plugins/* + storeDir
 ├── compat.json                 # DSH 版本兼容矩阵（空 = 暂无历史包袱）
-└── .github/workflows/ci.yml    # format → lint → typecheck → build → test
+└── .github/workflows/CICD.yml  # 门禁 + 打包发布：main→latest 预发布，v* tag→版本 Release，其他分支→同名预发布；dev 与 feature/* 仅门禁
 ```
 
 每个插件内部一律是同一套布局：`src/host/`（Node 半）+ `src/client/`（浏览器半）+ `lib/`（已提交的单文件产物）+ `cordis.patch.yml`。
@@ -121,6 +124,7 @@ dsh web   # 重启生效
 
 ```bash
 pnpm install
+pnpm check         # 一条流程：build → typecheck → lint → format（提交前跑这个）
 pnpm format        # prettier 全仓写盘
 pnpm format:check  # CI 用，只检查不写
 pnpm lint          # oxlint 全仓（--deny-warnings，警告也算挂）
@@ -133,7 +137,7 @@ pnpm --filter @dshp/token-meter build
 pnpm --filter @dshp/token-meter typecheck
 ```
 
-提交前跑齐上面 5 条门禁（与 `ci.yml` 同序）；改了 `src/` 必须重新 build 并把 `lib/` 一起提交。
+提交前跑 `pnpm check`（构建 → 类型检查 → 质量检查 → 格式化一步完成）；CI 仍按严格检查序把关；改了 `src/` 必须重新 build 并把 `lib/` 一起提交。
 
 ## 加新插件
 
