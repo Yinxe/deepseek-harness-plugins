@@ -11,12 +11,14 @@
  *    settings.section + tool.view.cordis(self)
  *  - stats：settings.section(order 27) + sidebar.footer.action(today) + shell.overlay(今日浮窗)
  * 新插件收敛为：settings.section(dshp-token-meter, order 27，精简开关+供应商管理) +
- * shell.overlay(额度浮窗+今日浮窗+widget 浮层) + sidebar.right.pane.tab 双 tab
- * （kind token-meter-quota 额度富卡片 / token-meter-stats 完整图表，官方 inject 模式注册，
- * 首次自动打开）。左栏 sidebar.footer.action 已移除，全部搬到右栏。
+ * shell.overlay(额度浮窗+今日浮窗+widget 浮层) + sidebar.right.pane.tab 三个 tab
+ * （kind token-meter-quota 额度富卡片 / token-meter-stats 完整图表 /
+ * token-meter-online 在线时长估算，官方 inject 模式注册，前两个首次自动打开）。
+ * 左栏 sidebar.footer.action 已移除，全部搬到右栏。
  */
 import { CSS } from './styles.js';
 import { createIcons } from './icons.js';
+import { createOnlineSection } from './OnlineSection.js';
 import { createTokenMeterSection } from './TokenMeterSection.js';
 import type { DshRequire } from './types.js';
 
@@ -76,11 +78,14 @@ function register(): void {
         ReactDOM = null;
       }
       const parts = createTokenMeterSection(React, P, ReactDOM);
+      const onlineParts = createOnlineSection(React, ReactDOM, parts.statsApi);
       const TokenMeterSettings = parts.TokenMeterSettings;
       const QuotaRightPane = parts.QuotaRightPane;
       const StatsRightPane = parts.StatsRightPane;
       const WidgetFloatLayer = parts.WidgetFloatLayer;
-      const { QuotaIcon, UsageIcon } = createIcons(React);
+      const WidgetsApi = parts.widgetsApi;
+      const OnlineRightPane = onlineParts.OnlineRightPane;
+      const { QuotaIcon, UsageIcon, OnlineIcon } = createIcons(React);
 
       function useTmStyles(): void {
         React.useEffect(() => {
@@ -122,6 +127,14 @@ function register(): void {
           },
           'dshp-token-meter: section styles',
         );
+
+        // 在线时长面板已不再支持弹出为浮窗（2026-09 简化）：清掉遗留的 online:* 浮窗记录，
+        // 否则 localStorage 里那条会让浮层渲染一个已经不存在的组件。
+        try {
+          if (WidgetsApi && typeof WidgetsApi.forget === 'function') WidgetsApi.forget('online:');
+        } catch {
+          /* ignore */
+        }
 
         // 旧 localStorage 一次性清理：左栏开关已并入右侧栏；旧双浮窗系统已停用（widget 浮窗无外框、原位隐藏），
         // 旧键直接删掉，避免残留 floatOpen 导致幽灵浮窗。
@@ -165,6 +178,7 @@ function register(): void {
         // 「额度」：全部供应商展开富卡片；「用量」：完整统计图表。左栏入口已移除，全部搬到右栏。
         const QUOTA_TAB = '@dshp/token-meter-quota';
         const STATS_TAB = '@dshp/token-meter-stats';
+        const ONLINE_TAB = '@dshp/token-meter-online';
         {
           ctx.effect(
             () =>
@@ -200,6 +214,23 @@ function register(): void {
               }),
             'dshp-token-meter: right tab stats',
           );
+          ctx.effect(
+            () =>
+              ctx.sidebarRightTabs.register({
+                id: ONLINE_TAB,
+                kind: 'token-meter-online',
+                title: () => '在线时长',
+                guide: [
+                  {
+                    order: 22,
+                    title: () => '在线时长',
+                    description: () => '每日/累计在线时长估算',
+                    icon: OnlineIcon,
+                  },
+                ],
+              }),
+            'dshp-token-meter: right tab online',
+          );
           const QuotaPane = function QuotaPane(p: any): any {
             useTmStyles();
             return React.createElement(
@@ -232,6 +263,22 @@ function register(): void {
               React.createElement('span', null, 'Token 用量'),
             );
           };
+          const OnlinePane = function OnlinePane(p: any): any {
+            useTmStyles();
+            return React.createElement(
+              'div',
+              { style: { height: '100%', minHeight: 0, overflow: 'auto', padding: '12px 14px' } },
+              React.createElement(OnlineRightPane, p),
+            );
+          };
+          const OnlinePaneTitle = function OnlinePaneTitle(): any {
+            return React.createElement(
+              'span',
+              { className: 'tm-tabChip' },
+              React.createElement(OnlineIcon, { size: 14 }),
+              React.createElement('span', null, '在线时长'),
+            );
+          };
           slots.inject('sidebar.right.pane.tab', () =>
             slots.register({ name: 'sidebar.right.pane.tab', key: QUOTA_TAB }, QuotaPane),
           );
@@ -243,6 +290,12 @@ function register(): void {
           );
           slots.inject('sidebar.right.pane.tab.title', () =>
             slots.register({ name: 'sidebar.right.pane.tab.title', key: STATS_TAB }, StatsPaneTitle),
+          );
+          slots.inject('sidebar.right.pane.tab', () =>
+            slots.register({ name: 'sidebar.right.pane.tab', key: ONLINE_TAB }, OnlinePane),
+          );
+          slots.inject('sidebar.right.pane.tab.title', () =>
+            slots.register({ name: 'sidebar.right.pane.tab.title', key: ONLINE_TAB }, OnlinePaneTitle),
           );
         }
 

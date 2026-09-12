@@ -487,4 +487,33 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 .tm-peak.valley .tm-peakTitle{color:var(--dsw-alias-state-success-primary)}
 .tm-peakCell.von{background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 24%,var(--dsw-alias-interactive-bg-hover))}
 @media (prefers-reduced-motion:reduce){.tm-card.mood-peak,.tm-peak.peak{animation:none}}
+/* ── 在线时长面板：档位组字段式布局 + 准确度徽标 ────────────────────── */
+.tm-segField{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:3px 0;border-top:.5px solid var(--dsw-alias-border-l2)}
+.tm-segField:first-child{border-top:none}
+.tm-segFieldKey{font-size:12px;color:var(--dsw-alias-label-secondary);min-width:58px;flex:none}
+.tm-segFieldCtl{display:inline-flex;flex:none}
+.tm-segFieldHint{font-size:11px;line-height:15px;color:var(--dsw-alias-label-caption);flex:1 1 190px;min-width:130px}
+.tm-acc{font-size:10px;line-height:15px;padding:0 4px;border-radius:4px;border:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-caption);flex:none;font-weight:400}
+.tm-acc.exact{color:var(--dsw-alias-state-success-primary);border-color:color-mix(in srgb,var(--dsw-alias-state-success-primary) 45%,transparent);background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 10%,transparent)}
+.tm-acc.estimate{color:var(--dsw-alias-state-warn-primary);border-color:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 45%,transparent);background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 10%,transparent)}
+.tm-acc.bound{color:var(--dsw-alias-label-tertiary);background:var(--dsw-alias-interactive-bg-hover)}
+/* ── 每日在线排行（柱状 + 列表合体）────────────────────────────────── */
+.tm-rankHead{display:grid;grid-template-columns:20px minmax(84px,1fr) minmax(64px,1.7fr) 60px 54px;gap:8px;align-items:center;font-size:11px;line-height:15px;color:var(--dsw-alias-label-caption);padding:0 0 5px;border-bottom:.5px solid var(--dsw-alias-border-l2)}
+.tm-rankRow{display:grid;grid-template-columns:20px minmax(84px,1fr) minmax(64px,1.7fr) 60px 54px;gap:8px;align-items:center;padding:6px 4px;margin:0 -4px;border-radius:6px;border-bottom:.5px solid var(--dsw-alias-border-l2);cursor:default;transition:background .12s ease}
+.tm-rankRow:last-of-type{border-bottom:none}
+.tm-rankRow:hover{background:var(--dsw-alias-interactive-bg-hover)}
+.tm-rankNo{font-size:11px;line-height:16px;text-align:right;color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums}
+.tm-rankRow.top3 .tm-rankNo{color:var(--dsw-alias-state-business-primary);font-weight:700}
+.tm-rankRow.top3 .tm-rankDate{font-weight:600}
+.tm-rankDate{font-size:12.5px;line-height:17px;color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums}
+.tm-rankBarTrack{display:flex;height:11px;border-radius:6px;overflow:hidden;background:var(--dsw-alias-interactive-bg-hover);box-shadow:inset 0 0 0 1px var(--dsw-alias-border-l2)}
+.tm-rankFillTurn{display:block;height:100%;background:var(--dsw-alias-state-business-primary);opacity:.85}
+.tm-rankFillIdle{display:block;height:100%;background:var(--dsw-alias-state-business-primary);opacity:.26}
+.tm-rankVal{font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600;color:var(--dsw-alias-label-primary)}
+.tm-rankTok{font-size:11px;text-align:right;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums}
+@container tm (max-width: 420px){.tm-rankHead,.tm-rankRow{grid-template-columns:18px minmax(70px,1fr) minmax(48px,1.4fr) 54px}.tm-rankTok,.tm-rankHead>span:last-child{display:none}}
+/* ── 统一数据提示（替代原生 title）：标题 + 键值行 + 多行说明 ───────────── */
+.tm-tip-title{font-weight:600;margin-bottom:3px;color:var(--dsw-alias-label-primary)}
+.tm-tip-text{white-space:normal;max-width:236px;line-height:1.5;margin-top:3px;color:var(--dsw-alias-label-secondary)}
+.tm-tipfixed .tm-tiprow+.tm-tiprow{margin-top:1px}
 `;

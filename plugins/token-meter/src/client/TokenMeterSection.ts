@@ -152,7 +152,7 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
           : isFinite(Number(rawSec))
             ? Math.min(3600, Math.max(10, Number(rawSec) || 60))
             : 60;
-    const defRange = String(s.cfg.defaultRange || '30');
+    const defRange = String(s.cfg.defaultRange || 'all');
 
     // 偏好（右栏常驻展示，无需显示开关；失效的侧边栏开关已移除）
     kids.push(
@@ -444,7 +444,7 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
   function StatsRightPane(): any {
     const [prefs, setPrefs] = useState<{ showToday: boolean; defaultRange: string }>({
       showToday: false,
-      defaultRange: '30',
+      defaultRange: 'all',
     });
     const loadPrefs = async (): Promise<void> => {
       try {
@@ -452,7 +452,7 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
         if (s.ok && s.config) {
           setPrefs({
             showToday: s.config.showToday === true,
-            defaultRange: String(s.config.defaultRange || '30'),
+            defaultRange: String(s.config.defaultRange || 'all'),
           });
         }
       } catch {
@@ -543,5 +543,6 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
     StatsRightPane,
     WidgetFloatLayer,
     widgetsApi: widgets,
+    statsApi: stats,
   };
 }

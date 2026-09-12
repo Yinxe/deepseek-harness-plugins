@@ -144,6 +144,20 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
     order = order.filter((x) => x !== id).concat(id); // 新开/移动都置顶
     emit(true);
   }
+  /** 按前缀丢弃浮窗记录（组件被移除后用它清理 localStorage 里的遗留项） */
+  function forget(prefix: string): void {
+    const next = Object.assign({}, open as Record<string, WidgetPlacement>);
+    let changed = false;
+    for (const id of Object.keys(next)) {
+      if (!id.startsWith(prefix)) continue;
+      delete next[id];
+      order = order.filter((x) => x !== id);
+      changed = true;
+    }
+    if (!changed) return;
+    open = next;
+    emit(true);
+  }
   function closeWidget(id: string): void {
     if (!Object.hasOwn(open, id)) return;
     const next = Object.assign({}, open);
@@ -332,9 +346,11 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
    * 小组件开关按钮（抓手 + 状态按钮）：侧栏中显示 ⧉弹出，浮出后同一位置显示 回归侧栏。
    * 放在卡片/图表标题栏使用，浮窗内外渲染一致。
    */
-  function WidgetToggle(props: { id: string }): any {
+  function WidgetToggle(props: { id: string; name?: string }): any {
     const list = useWidgets();
     const opened = list.some((w) => w.id === props.id);
+    /** 抓手/按钮的文案里带上目标卡片名 —— 避免"抓手挂在这张卡上、弹出的却是另一张"的困惑 */
+    const what = props.name ? '「' + props.name + '」' : '本卡片';
     return h(
       'span',
       { style: { display: 'inline-flex', gap: 2, alignItems: 'center', marginLeft: 6, flex: 'none' } },
@@ -343,7 +359,10 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
         Object.assign(
           {
             className: 'tm-grip',
-            title: opened ? '已弹出为独立浮窗（可拖动）' : '按住拖出为独立浮窗，点按直接弹出',
+            title: opened
+              ? what + ' 已弹出为独立浮窗（可拖动）'
+              : '按住拖出 ' + what + ' 为独立浮窗，点按直接弹出',
+            'aria-label': '拖动或弹出 ' + what,
           },
           gripProps(props.id),
         ),
@@ -354,14 +373,18 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
             'button',
             {
               className: 'tm-minibtn',
-              title: '回归侧栏（关闭浮窗，内容仍在原位）',
+              title: '把 ' + what + ' 收回原位（关闭浮窗）',
               onClick: () => closeWidget(props.id),
             },
             '回归',
           )
         : h(
             'button',
-            { className: 'tm-minibtn', title: '弹出为独立浮窗', onClick: () => openWidget(props.id) },
+            {
+              className: 'tm-minibtn',
+              title: '弹出 ' + what + ' 为独立浮窗',
+              onClick: () => openWidget(props.id),
+            },
             '⧉',
           ),
     );
@@ -372,6 +395,7 @@ export function createWidgetSystem(React: AnyReact, ReactDOM: any): Record<strin
     isOpen,
     openWidget,
     closeWidget,
+    forget,
     moveWidget,
     commitWidget,
     gripProps,

@@ -20,15 +20,36 @@ import { join } from 'node:path';
 import { compactAgg, foldSession, reviveAgg } from './fold.js';
 import type { CompactAgg, FoldBucket, FoldPeak } from './fold.js';
 import { buildFileIndex, fileFingerprint } from './fsindex.js';
+import { readLogDirect } from './logread.js';
+import { extendStream, openStream } from './stream.js';
+import type { SessionStream } from './stream.js';
+import { buildOnline, normGapMin } from './online.js';
+import type { Interval } from './online.js';
 import { withTimeout } from './async.js';
 import type { AnyCtx, StatsRecord, StatsSnapshot } from '../types.js';
 
-/** 后台每批扫描的会话数。 */
-const BATCH_SIZE = 8;
+/**
+ * 后台每批扫描的会话数。
+ *
+ * 取值是**内存**约束而非吞吐：直读一个大会话时，解析后的事件数组会驻留
+ * （本机最大的会话 9.5 万条事件 ≈ 140MB heap），批内并发越高峰值越高。
+ * 3 路并发下最坏峰值约 200MB，冷启动全量仍只要十几秒。
+ */
+const BATCH_SIZE = 3;
 /** 单会话读取失败的最大重试次数，超过则跳过并计入 errors。 */
 const MAX_ATTEMPTS = 3;
-/** 单会话读取超时（防个别会话卡住钉死后台泵 → partial 永真 → 前端空转）。 */
+/** 单会话读取基础超时（防个别会话卡住钉死后台泵 → partial 永真 → 前端空转）。 */
 const READ_TIMEOUT_MS = 20000;
+/** 每次重试追加的超时（大日志首读常因冷缓存超时，退避重试比直接放弃更省事）。 */
+const READ_TIMEOUT_STEP_MS = 15000;
+/** 单会话读取超时上限。 */
+const READ_TIMEOUT_MAX_MS = 90000;
+
+/**
+ * 聚合缓存记录版本：改动 FoldResult 形状（如新增活动区间）时必须递增，
+ * 旧行因版本不匹配触发一次全量重扫（缓存是纯派生数据，重扫无损）。
+ */
+const CACHE_V = 4;
 
 // ── domain 垫片（零依赖版 defineDomain/domainTable，形状与官方一致）────────
 // 官方实现见 @deepseek-ai/dsh-storage-domain：defineDomain 仅校验名/版本/表名，
@@ -68,6 +89,32 @@ interface CachedSession extends CompactAgg {
 
 function isNonNegInt(v: unknown): v is number {
   return typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= Number.MAX_SAFE_INTEGER;
+}
+
+/** 可选的每日引擎时长数组（[day, llmMs, toolMs]）；非法即抛，触发 invalid-record 降级。 */
+function parseDayMs(raw: unknown): Array<[string, number, number]> | undefined {
+  if (raw === undefined || raw === null) return undefined;
+  if (!Array.isArray(raw)) throw new Error('invalid-record: dm');
+  const out: Array<[string, number, number]> = [];
+  for (const row of raw as unknown[]) {
+    if (!Array.isArray(row) || row.length < 3) throw new Error('invalid-record: dm row');
+    const d = row[0];
+    const l = row[1];
+    const t = row[2];
+    if (typeof d !== 'string' || !isNonNegInt(l) || !isNonNegInt(t))
+      throw new Error('invalid-record: dm value');
+    out.push([d, l, t]);
+  }
+  return out;
+}
+
+/** 可选的扁平区间数组（[s0,e0,…]）；非法值一律当空数组（宁可重扫也不信脏数据）。 */
+function parseFlatIntervals(raw: unknown): number[] | undefined {
+  if (raw === undefined || raw === null) return undefined;
+  if (!Array.isArray(raw)) throw new Error('invalid-record: intervals');
+  for (const n of raw)
+    if (typeof n !== 'number' || !Number.isFinite(n)) throw new Error('invalid-record: interval value');
+  return raw as number[];
 }
 
 function parseBucket(raw: unknown): FoldBucket {
@@ -124,6 +171,10 @@ const cachedSessionSchema: ValueSchema = {
     if (f !== null && typeof f !== 'string') throw new Error('invalid-record: f');
     if (l !== null && typeof l !== 'string') throw new Error('invalid-record: l');
     if (typeof r['u'] !== 'boolean') throw new Error('invalid-record: u');
+    const on = parseFlatIntervals(r['on']);
+    const tn = parseFlatIntervals(r['tn']);
+    const dm = parseDayMs(r['dm']);
+    const oc = r['oc'];
     return {
       fp: r['fp'] as string,
       skip: r['skip'] as number,
@@ -133,6 +184,10 @@ const cachedSessionSchema: ValueSchema = {
       f: (f as string | null) ?? null,
       l: (l as string | null) ?? null,
       u: r['u'] as boolean,
+      ...(on !== undefined ? { on } : {}),
+      ...(tn !== undefined ? { tn } : {}),
+      ...(dm !== undefined ? { dm } : {}),
+      ...(typeof oc === 'string' ? { oc } : {}),
     };
   },
 };
@@ -171,11 +226,13 @@ export interface Engine {
 
 /**
  * 创建统计引擎。
+ * @param getGapMin 读取当前配置的在线时长阈值（分钟）；缺省 5 分钟
  */
 export function createEngine(
   sessionQuery: SessionQueryLike,
   dshHome: string,
   storageDomain: AnyCtx | null,
+  getGapMin?: () => number,
 ): Engine {
   const sessionsDir = join(dshHome, 'sessions');
 
@@ -184,7 +241,15 @@ export function createEngine(
   const dirty = new Set<string>();
   const attempts = new Map<string, number>();
   const errored = new Set<string>();
-  let queue: Array<{ id: string; mtime: number }> = [];
+  /** 官方 reader 读不动的会话：后续快照直接走直读兜底，避免反复超时 */
+  const directIds = new Set<string>();
+  /** 最近几次失败原因（诊断用，快照里带出去） */
+  const errorSamples = new Map<string, string>();
+  /** 靠「直读日志」拿到的会话集合（按会话去重，重扫不重复计） */
+  const directSessions = new Set<string>();
+  /** 会话级增量流：日志增长时只读新增帧（见 stats/stream.ts） */
+  const streams = new Map<string, SessionStream>();
+  let queue: Array<{ id: string; mtime: number; live: boolean }> = [];
   let pumping = false;
   let listedIds = new Set<string>();
   let currentIndex = buildFileIndex(sessionsDir);
@@ -243,6 +308,20 @@ export function createEngine(
     }
   }
 
+  /**
+   * 直读兜底：官方 reader 超时/抛错时直接从日志文件整份读（多帧 zstd + 切掉继承前缀）。
+   * 正常路径走 `openStream`/`extendStream` 的增量流，这里只处理"流建不起来"的边角。
+   * @returns 折叠结果；不可用时 null
+   */
+  function readViaFallback(id: string): ReturnType<typeof foldSession> | null {
+    const entry = currentIndex.get(id);
+    if (entry === undefined) return null;
+    const direct = readLogDirect(entry.file);
+    if (direct === null) return null;
+    directSessions.add(id);
+    return foldSession(direct.events as never[], 0);
+  }
+
   /** 后台泵：分批扫描队列，批间让出事件循环。 */
   async function pump(): Promise<void> {
     if (pumping) return;
@@ -253,17 +332,53 @@ export function createEngine(
         const tbl = await tableReady;
         await Promise.all(
           batch.map(async (job) => {
+            // 大日志冷读经常超过基础超时：按尝试次数退避放宽，仍失败才计入 errors
+            const attempt = (attempts.get(job.id) || 0) + 1;
+            const timeoutMs = Math.min(
+              READ_TIMEOUT_MAX_MS,
+              READ_TIMEOUT_MS + (attempt - 1) * READ_TIMEOUT_STEP_MS,
+            );
             try {
-              const snap = await withTimeout(
-                sessionQuery.readSession(job.id),
-                READ_TIMEOUT_MS,
-                'readSession ' + job.id,
-              );
-              const skip = clampSkip(
-                (snap as { inheritedEventCount?: unknown })?.inheritedEventCount,
-                (snap as { events?: unknown })?.events,
-              );
-              const agg = foldSession(((snap as { events?: [] })?.events as []) || [], skip);
+              // 读取策略（按代价从低到高，目的是**最小化重算**）：
+              //  ① 该会话已有增量流且日志只是变长 → 只读新增的那几帧；
+              //  ② 否则整份直读日志文件（多帧 zstd + 切掉 fork 继承前缀）并建立增量流；
+              //  ③ 都没有（无日志文件 / 读不动）→ 官方 reader。
+              // 日志会一直长（本机最大 9.5 万条事件），所以 ① 是常态，② 只在首读发生。
+              const entry = currentIndex.get(job.id);
+              let agg: ReturnType<typeof foldSession> | null = null;
+              const stream = streams.get(job.id);
+              if (entry !== undefined && stream !== undefined && stream.file === entry.file) {
+                if (entry.size > stream.size && extendStream(stream, entry.size, entry.mtimeMs)) {
+                  directSessions.add(job.id);
+                  agg = stream.folder.finish();
+                } else if (entry.size === stream.size) {
+                  agg = stream.folder.finish(); // 没有新字节
+                } else {
+                  streams.delete(job.id); // 文件被重写 → 下一轮整份重建
+                }
+              }
+              if (agg === null && entry !== undefined) {
+                const opened = openStream(entry.file, entry.size, entry.mtimeMs);
+                if (opened !== null) {
+                  streams.set(job.id, opened);
+                  directSessions.add(job.id);
+                  agg = opened.folder.finish();
+                }
+              }
+              let skip = 0;
+              if (agg === null) {
+                const snap = await withTimeout(
+                  sessionQuery.readSession(job.id),
+                  timeoutMs,
+                  'readSession ' + job.id,
+                );
+                skip = clampSkip(
+                  (snap as { inheritedEventCount?: unknown })?.inheritedEventCount,
+                  (snap as { events?: unknown })?.events,
+                );
+                agg = foldSession(((snap as { events?: [] })?.events as []) || [], skip);
+              }
+              if (agg === null) throw new Error('log unavailable');
               aggMemo.set(job.id, agg);
               attempts.delete(job.id);
               errored.delete(job.id);
@@ -272,16 +387,50 @@ export function createEngine(
               if (fp !== null) {
                 fpMemo.set(job.id, fp);
                 try {
-                  await tbl.table.put(job.id, { fp, skip, v: 1, ...compactAgg(agg) });
+                  await tbl.table.put(job.id, { fp, skip, v: CACHE_V, ...compactAgg(agg) });
                 } catch (error) {
                   noteStorageError('put failed', error);
                 }
               }
-            } catch {
-              const n = (attempts.get(job.id) || 0) + 1;
-              attempts.set(job.id, n);
-              if (n >= MAX_ATTEMPTS) {
-                aggMemo.set(job.id, { records: new Map(), peak: null, first: null, last: null, used: false });
+            } catch (error) {
+              // reader 失败 → 先试直读兜底（Node ≥ 22.15 才有 zstd）
+              const viaFallback = directIds.has(job.id) ? null : readViaFallback(job.id);
+              if (viaFallback !== null) {
+                aggMemo.set(job.id, viaFallback);
+                attempts.delete(job.id);
+                errored.delete(job.id);
+                dirty.delete(job.id);
+                directIds.add(job.id);
+                const fp0 = fileFingerprint(currentIndex, job.id);
+                if (fp0 !== null) {
+                  fpMemo.set(job.id, fp0);
+                  try {
+                    const t0 = await tableReady;
+                    await t0.table.put(job.id, { fp: fp0, skip: 0, v: CACHE_V, ...compactAgg(viaFallback) });
+                  } catch (e2) {
+                    noteStorageError('put failed', e2);
+                  }
+                }
+                return;
+              }
+              if (errorSamples.size < 5)
+                errorSamples.set(job.id, String((error as Error)?.message ?? error).slice(0, 120));
+              attempts.set(job.id, attempt);
+              if (attempt >= MAX_ATTEMPTS) {
+                aggMemo.set(job.id, {
+                  records: new Map(),
+                  peak: null,
+                  first: null,
+                  last: null,
+                  used: false,
+                  active: [],
+                  turns: [],
+                  llmMs: 0,
+                  toolMs: 0,
+                  dayLlm: new Map(),
+                  dayTool: new Map(),
+                  outcome: 'unreadable',
+                });
                 errored.add(job.id);
               }
             }
@@ -302,7 +451,7 @@ export function createEngine(
     await maybeReopenStorage();
     const list = await sessionQuery.listSessions();
     listedIds = new Set<string>();
-    const jobs: Array<{ id: string; mtime: number }> = [];
+    const jobs: Array<{ id: string; mtime: number; live: boolean }> = [];
     let scanned = 0;
 
     currentIndex = buildFileIndex(sessionsDir);
@@ -333,7 +482,7 @@ export function createEngine(
           } catch {
             hit = undefined;
           }
-          if (!isDirty && hit !== undefined && hit.fp === fp && hit.v === 1) {
+          if (!isDirty && hit !== undefined && hit.fp === fp && hit.v === CACHE_V) {
             aggMemo.set(id, reviveAgg(hit));
             if (fp !== null) fpMemo.set(id, fp);
             dirty.delete(id);
@@ -346,7 +495,7 @@ export function createEngine(
       }
 
       if (need && !errored.has(id)) {
-        const job = { id, mtime };
+        const job = { id, mtime, live };
         if (isDirty) job.mtime = Infinity;
         jobs.push(job);
       }
@@ -373,6 +522,13 @@ export function createEngine(
     let first: string | null = null;
     let last: string | null = null;
     let active = 0;
+    // 在线时长原料：跨会话汇总的活动区间 / 对话进行中区间（并集在 buildOnline 内做）
+    const activeIntervals: Interval[] = [];
+    const turnIntervals: Interval[] = [];
+    const dayTokens: Record<string, number> = {};
+    const dayLlm: Record<string, number> = {};
+    const dayTool: Record<string, number> = {};
+    const sessionOutcomes: Record<string, number> = {};
 
     for (const id of listedIds) {
       const agg = aggMemo.get(id);
@@ -383,6 +539,11 @@ export function createEngine(
         for (const r of agg.records.values()) days.add(r.d);
         for (const d of days) daySessions[d] = (daySessions[d] || 0) + 1;
       }
+      for (const iv of agg.active) activeIntervals.push(iv);
+      for (const iv of agg.turns) turnIntervals.push(iv);
+      sessionOutcomes[agg.outcome] = (sessionOutcomes[agg.outcome] ?? 0) + 1;
+      for (const [d, v] of agg.dayLlm) dayLlm[d] = (dayLlm[d] || 0) + v;
+      for (const [d, v] of agg.dayTool) dayTool[d] = (dayTool[d] || 0) + v;
       for (const r of agg.records.values()) {
         const k = r.d + '|' + r.h + '|' + r.m;
         let m = merged.get(k);
@@ -395,6 +556,7 @@ export function createEngine(
         m.cr += r.cr;
         m.cw += r.cw;
         m.n += r.n;
+        dayTokens[r.d] = (dayTokens[r.d] || 0) + r.i + r.o + r.cr + r.cw;
         if (models[r.m] === undefined) {
           const slash = r.m.indexOf('/');
           models[r.m] =
@@ -411,6 +573,7 @@ export function createEngine(
     for (const id of aggMemo.keys()) {
       if (listedIds.has(id)) continue;
       aggMemo.delete(id);
+      streams.delete(id);
       fpMemo.delete(id);
       attempts.delete(id);
       errored.delete(id);
@@ -426,6 +589,20 @@ export function createEngine(
     const records = Array.from(merged.values());
     records.sort((a, b) => (a.d < b.d ? -1 : a.d > b.d ? 1 : a.h - b.h));
 
+    // 在线时长：阈值只影响快照阶段的合并，不影响缓存（见 online.ts 的两级合并）
+    let gapMin = 5;
+    try {
+      gapMin = normGapMin(getGapMin ? getGapMin() : 5);
+    } catch {
+      gapMin = 5;
+    }
+    const online = buildOnline(
+      activeIntervals,
+      turnIntervals,
+      { sessions: daySessions, tokens: dayTokens, llmMs: dayLlm, toolMs: dayTool },
+      gapMin,
+    );
+
     const total = listedIds.size;
     return {
       ready: true,
@@ -440,8 +617,12 @@ export function createEngine(
       scanned,
       total,
       errors: errored.size,
+      errorSamples: [...errorSamples.entries()].map(([id, message]) => ({ id, message })),
+      sessionOutcomes,
+      directReads: directSessions.size,
       storage: storageOk ? 'ok' : 'disabled',
       generatedAt: Date.now(),
+      online,
     };
   }
 
