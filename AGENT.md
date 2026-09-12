@@ -442,7 +442,9 @@ pnpm test           # pnpm -r test（至少 node --check 双 bundle）
 
 - main 永远跟最新 DSH。`compat.json` 为空是正常态（暂无历史包袱）。
 - DSH 发新版且有 breaking：当前 main 打 annotated tag `v<根版本>`（message 写 DSH 版本）→ `compat.json` 追加一行 → 再在 main 上适配。平时不打 tag。老 DSH 用户按 `compat.json` `git checkout <tag>`。
-- 发 npm（已下线，暂不做）：发布流在 `de6ab3c` 下线，当前 `.github/workflows/` 只有 `CICD.yml`（门禁 + tgz 打包发 GitHub Releases：main 推送滚动更新 `latest` 预发布、`v*` tag 发版本 Release、其他分支推送发同名预发布；dev 与 `feature/*` 分支仅跑门禁不发布；手动触发可带自定义后缀；所有预发布均随 main 滚动重建，取消 Pre-release 勾选即停止跟随；npm 发包仍下线），README 安装节写的是“只能本地装”。将来要重新启用：重建 `.github/workflows/publish.yml`（tag `v*` 触发 → `pnpm -r publish --provenance`，Trusted Publishing 免 Token），npm 建组织 `dshp`（公有包免费）或改名到个人 scope，每个包配 Trusted Publisher。未重建前不要写“打 tag 即发布”。
+- 发布流水线（唯一 workflow `.github/workflows/CICD.yml`）：五条门禁（install→format→lint→typecheck→build→test）全过后按触发发布——推送 `main` 滚动重建 `latest` 预发布；推送 `v*` tag 发版本 Release（静态存档，永不随构建变化）；推送其他分支发分支同名预发布（`/`→`-`；与 `latest` 或非法 tag 名冲突时自动降级 `branch-<sha>`）；`dev`、`feature/*` 分支与 PR 只跑门禁；手动触发可带 `suffix` + `rolling` 勾选（勾选=预发布随滚动，不勾=静态正式版）。分支名与 `v+数字` 形态正式 release 重名时拒绝覆盖。打包用 `pnpm pack`（遵循各包 `files`，根 LICENSE 自动附带）；notes 由 `scripts/gen-release-notes.cjs` 生成（包名/版本/双语描述/下载与安装命令）。
+- 滚动约定：所有**预发布** + notes 首行带 `<!-- rolling: true -->` 标记的 release 都随 main 重建；停止跟随 = 取消 Pre-release 勾选或删除标记行；tag 版本 Release 永不滚动。
+- 发 npm（已下线，暂不做）：发布流在 `de6ab3c` 下线，README 安装节已含 Releases 直装方式。将来要重新启用：重建 `.github/workflows/publish.yml`（tag `v*` 触发 → `pnpm -r publish --provenance`，Trusted Publishing 免 Token），npm 建组织 `dshp`（公有包免费）或改名到个人 scope，每个包配 Trusted Publisher。未重建前不要写“打 tag 即发布”。
 - 发版 checklist：`format/lint/typecheck/build/test` 全绿 → `lib/` 已重打并提交 → 插件 README 安装/更新节已同步 → 版本号已升 →（发包时）tag 已打。
 
 ---

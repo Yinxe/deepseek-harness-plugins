@@ -11,6 +11,10 @@ on:
         description: '包名后缀（如 latest 或 v0.1.5-rc1）；latest 且构建自 main 时滚动更新 latest 预发布，其他后缀自动创建同名 tag 与预发布'
         required: false
         default: 'latest'
+      rolling:
+        description: '勾选=创建预发布并随 main 滚动更新（默认）；不勾=静态正式版，不随构建变化'
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -137,32 +141,34 @@ jobs:
             gh release create "$GITHUB_REF_NAME" dist/*.tgz --generate-notes
           fi
 
-      - name: Create suffix/branch prerelease
+      - name: Create suffix/branch release
         if: (github.event_name == 'workflow_dispatch' && inputs.suffix != 'latest') || (github.event_name == 'push' && github.ref_type == 'branch' && github.ref_name != 'main')
         env:
           SUFFIX: ${{ needs.check.outputs.suffix }}
+          ROLLING: ${{ inputs.rolling }}
         run: |
-          # 已存在的同名预发布（含自动 tag）整体重建；同名正式 release 拒绝覆盖
+          # 分支推送固定为预发布（随滚动）；手动触发由 rolling 决定：勾选=预发布，不勾=静态正式版
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            pre="$ROLLING"
+            header="手动触发的测试构建（${GITHUB_SHA::7}）。同名 tag 为 workflow 自动创建。"
+          else
+            pre=true
+            header="分支 $GITHUB_REF_NAME 的测试构建（${GITHUB_SHA::7}），每次推送自动整体重建。"
+          fi
+          # 同名预发布/普通正式 release 整体重建；版本号形态（v+数字）的正式 release 拒绝覆盖
           if gh release view "$SUFFIX" >/dev/null 2>&1; then
-            if ! gh release view "$SUFFIX" --json isPrerelease -q '.isPrerelease' | grep -q true; then
-              echo "::error::已存在同名正式 release，拒绝覆盖（suffix=$SUFFIX）"
+            if [ "$(gh release view "$SUFFIX" --json isPrerelease -q .isPrerelease)" != "true" ] && [[ "$SUFFIX" =~ ^v[0-9] ]]; then
+              echo "::error::已存在同名正式版本 release，拒绝覆盖（suffix=$SUFFIX）"
               exit 1
             fi
             gh release delete "$SUFFIX" --yes --cleanup-tag
           fi
-          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
-            header="手动触发的测试构建（${GITHUB_SHA::7}）。同名 tag 为 workflow 自动创建。"
-          else
-            header="分支 $GITHUB_REF_NAME 的测试构建（${GITHUB_SHA::7}），每次推送自动整体重建。"
-          fi
           NOTES_HEADER="$header" \
           NOTES_HINT="正式发版前请先删除：\`gh release delete $SUFFIX --cleanup-tag --yes\`" \
             node scripts/gen-release-notes.cjs
-          gh release create "$SUFFIX" dist/*.tgz \
-            --target "$GITHUB_SHA" \
-            --title "$SUFFIX" \
-            --notes-file notes.md \
-            --prerelease
+          create_args=(dist/*.tgz --target "$GITHUB_SHA" --title "$SUFFIX" --notes-file notes.md)
+          if [ "$pre" = "true" ]; then create_args+=(--prerelease); fi
+          gh release create "$SUFFIX" "${create_args[@]}"
 
       - name: Refresh rolling "latest" prerelease
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.suffix == 'latest')
@@ -176,19 +182,24 @@ jobs:
             --notes-file notes.md \
             --prerelease
 
-          # 约定：所有预发布（latest 除外）都跟随 main 滚动重建；
-          # 想停止跟随某预发布，取消其 Pre-release 勾选即可（正式 release 不会被触碰）
-          rolling_tags=$(gh release list --json tagName,isPrerelease --limit 100 \
-            --jq '.[] | select(.isPrerelease and .tagName != "latest") | .tagName')
-          for tag in $rolling_tags; do
-            echo "重建滚动预发布: $tag"
+          # 滚动集合 = 所有预发布 + notes 首行带 <!-- rolling: true --> 标记的 release；
+          # 停止跟随：取消 Pre-release 勾选，或删掉 notes 中的标记行（latest 自身除外）
+          while IFS='|' read -r tag pre marked; do
+            [ -z "$tag" ] && continue
+            echo "重建滚动 release: $tag (pre=$pre)"
             gh release delete "$tag" --yes --cleanup-tag || true
             SUFFIX="$tag" \
             NOTES_HEADER="滚动构建自 main 分支（${GITHUB_SHA::7}），每次推送自动整体替换。" \
+            NOTES_ROLLING="$marked" \
               node scripts/gen-release-notes.cjs
-            gh release create "$tag" dist/*.tgz \
-              --target "$GITHUB_SHA" \
-              --title "$tag" \
-              --notes-file notes.md \
-              --prerelease
-          done
+            create_args=(dist/*.tgz --target "$GITHUB_SHA" --title "$tag" --notes-file notes.md)
+            if [ "$pre" = "true" ]; then create_args+=(--prerelease); fi
+            gh release create "$tag" "${create_args[@]}"
+          done < <(gh release list --json tagName,isPrerelease --limit 100 \
+            --jq '.[] | select(.tagName != "latest") | [.tagName, .isPrerelease] | @tsv' \
+            | while IFS=$'\t' read -r t pre; do
+                marked=$(gh release view "$t" --json body -q '.body | contains("<!-- rolling: true -->")')
+                if [ "$pre" = "true" ] || [ "$marked" = "true" ]; then
+                  printf '%s|%s|%s\n' "$t" "$pre" "$marked"
+                fi
+              done)

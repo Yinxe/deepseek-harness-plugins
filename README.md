@@ -32,9 +32,29 @@ DeepSeek Harness（DSH）插件 Monorepo（pnpm workspaces + TypeScript ESM）�
 
 > 其余插件暂无界面截图；使用说明与配置见各自的 README（上表「文档」列）。
 
-## 安装到 DSH（唯一方式：克隆本仓库 + 本地安装）
+## 安装到 DSH
 
-> 包尚未发布到 npm，**只能本地装**，不能 `pnpm add @dshp/*` / `add github:`。
+### 方式一：从 GitHub Releases 直接安装（推荐，无需 clone）
+
+CI 把每个插件打包成 tgz 发布到 Releases，`latest` 预发布固定跟随 main 最新构建：
+
+```bash
+# macOS / Linux
+dsh --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-mcwiki-search-latest.tgz
+```
+
+```powershell
+# Windows PowerShell
+dsh --profile web add `
+  'https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-mcwiki-search-latest.tgz'
+```
+
+全部插件的下载与安装命令见 [Releases](https://github.com/Yinxe/deepseek-harness-plugins/releases) 各预发布说明；更新 = 重跑同一条命令 + `dsh web` 重启。
+
+### 方式二：克隆仓库本地安装（开发 / 定制）
+
+> 包尚未发布到 npm，不能 `pnpm add @dshp/*` / `add github:`。
 
 ```bash
 git clone git@github.com:Yinxe/deepseek-harness-plugins.git
@@ -65,6 +85,19 @@ dsh web   # 重启生效
 2. dsh plugin --profile web add ./plugins/<子目录名>
 3. 重启 dsh web，确认无报错、设置页出现对应条目
 ```
+
+### 发布与更新约定（CI 自动执行）
+
+| 通道            | 触发          | 行为                                                  |
+| --------------- | ------------- | ----------------------------------------------------- |
+| `latest` 预发布 | 推送 `main`   | 滚动重建到最新提交，下载地址固定                      |
+| 版本 Release    | 推送 `v*` tag | 静态存档，永不随构建变化                              |
+| 分支预发布      | 推送其他分支  | 以分支名命名的预发布（`release/1.0` → `release-1.0`） |
+| 自定义后缀      | 手动触发      | 勾选 rolling = 预发布随滚动；不勾 = 静态正式版        |
+
+- **滚动约定**：所有**预发布**（以及 notes 首行带 `<!-- rolling: true -->` 标记的 release）都跟随 main——每次 main 推送成功后整体重建到最新提交；停止跟随 = 取消 Pre-release 勾选或删除标记行。
+- `dev` 与 `feature/*` 分支、PR 只跑 CI 门禁，不产出发布物。
+- Release 说明由 `scripts/gen-release-notes.cjs` 生成：逐插件列出包名、版本、双语描述、下载与安装命令。
 
 ## 结构
 
