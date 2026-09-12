@@ -31,3 +31,5 @@ Thumbs.db
 # 测试覆盖
 coverage/
 .nyc_output/
+
+.mimosa/

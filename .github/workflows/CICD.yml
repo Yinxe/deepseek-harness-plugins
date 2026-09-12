@@ -1,0 +1,120 @@
+# CI 门禁 + 打包发布：PR 与普通分支推送只跑门禁；
+# main 推送、v* tag 推送、手动触发在门禁全过后额外打包所有插件并发 GitHub Release。
+name: ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      suffix:
+        description: '包名后缀（如 latest 或 v0.1.5-rc1）；构建自 main 且后缀为 latest 时会更新滚动 latest 预发布，其余情况只产出 Artifacts'
+        required: false
+        default: 'latest'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      suffix: ${{ steps.meta.outputs.suffix }}
+      pack: ${{ steps.meta.outputs.pack }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Determine package suffix
+        id: meta
+        env:
+          INPUT_SUFFIX: ${{ inputs.suffix }}
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+            suffix="$GITHUB_REF_NAME"
+          else
+            suffix="${INPUT_SUFFIX:-latest}"
+          fi
+          if [[ ! "$suffix" =~ ^[A-Za-z0-9._-]+$ ]]; then
+            echo "::error::suffix 仅允许字母、数字和 . _ -，实际收到：$suffix"
+            exit 1
+          fi
+          echo "suffix=$suffix" >> "$GITHUB_OUTPUT"
+
+          # 仅 main 分支 / v* tag 推送、以及手动触发时打包；PR 与普通分支只做门禁
+          pack=false
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            pack=true
+          elif [[ "$GITHUB_REF" == "refs/heads/main" || "$GITHUB_REF" == refs/tags/v* ]]; then
+            pack=true
+          fi
+          echo "pack=$pack" >> "$GITHUB_OUTPUT"
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm test
+
+      - name: Pack all plugins
+        if: steps.meta.outputs.pack == 'true'
+        env:
+          SUFFIX: ${{ steps.meta.outputs.suffix }}
+        run: |
+          mkdir -p dist
+          for dir in plugins/*/; do
+            pkg_name=$(node -p "require('./${dir}package.json').name")
+            pkg_ver=$(node -p "require('./${dir}package.json').version")
+            short=${pkg_name##*/}
+            (cd "$dir" && pnpm pack --pack-destination ../../dist)
+            mv "dist/dshp-$short-$pkg_ver.tgz" "dist/dshp-$short-$SUFFIX.tgz"
+          done
+          ls -lh dist
+
+      - uses: actions/upload-artifact@v4
+        if: steps.meta.outputs.pack == 'true'
+        with:
+          name: dshp-plugins-${{ steps.meta.outputs.suffix }}
+          path: dist/*.tgz
+          if-no-files-found: error
+
+  publish:
+    needs: check
+    if: needs.check.outputs.pack == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dshp-plugins-${{ needs.check.outputs.suffix }}
+          path: dist
+
+      - name: Create versioned GitHub release
+        if: github.ref_type == 'tag'
+        run: gh release create "$GITHUB_REF_NAME" dist/*.tgz --generate-notes
+
+      - name: Refresh rolling "latest" prerelease
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.suffix == 'latest')
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest dist/*.tgz \
+            --target "$GITHUB_SHA" \
+            --title "latest (main@${GITHUB_SHA::7})" \
+            --notes "滚动构建自 main 分支（${GITHUB_SHA::7}），每次推送自动整体替换。固定下载地址：https://github.com/${GITHUB_REPOSITORY}/releases/download/latest/dshp-<插件名>-latest.tgz" \
+            --prerelease
