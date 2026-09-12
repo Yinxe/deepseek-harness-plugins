@@ -130,22 +130,9 @@ jobs:
             fi
             gh release delete "$SUFFIX" --yes --cleanup-tag
           fi
-          {
-            echo "手动触发的测试构建（${GITHUB_SHA::7}）。同名 tag 为 workflow 自动创建。"
-            printf '正式发版前请先删除：`gh release delete %s --cleanup-tag --yes`\n' "$SUFFIX"
-            echo
-            echo "## 插件下载与安装"
-            echo
-            for f in dist/*.tgz; do
-              base=$(basename "$f")
-              url="https://github.com/$GITHUB_REPOSITORY/releases/download/$SUFFIX/$base"
-              echo "- [$base]($url)"
-              echo '  ```bash'
-              echo "  dsh --profile web add $url"
-              echo '  ```'
-              echo
-            done
-          } > notes.md
+          NOTES_HEADER="手动触发的测试构建（${GITHUB_SHA::7}）。同名 tag 为 workflow 自动创建。" \
+          NOTES_HINT="正式发版前请先删除：\`gh release delete $SUFFIX --cleanup-tag --yes\`" \
+            node scripts/gen-release-notes.cjs
           gh release create "$SUFFIX" dist/*.tgz \
             --target "$GITHUB_SHA" \
             --title "$SUFFIX" \
@@ -156,21 +143,8 @@ jobs:
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.suffix == 'latest')
         run: |
           gh release delete latest --yes --cleanup-tag || true
-          {
-            echo "滚动构建自 main 分支（${GITHUB_SHA::7}），每次推送自动整体替换。"
-            echo
-            echo "## 插件下载与安装（固定地址）"
-            echo
-            for f in dist/*.tgz; do
-              base=$(basename "$f")
-              url="https://github.com/$GITHUB_REPOSITORY/releases/download/latest/$base"
-              echo "- [$base]($url)"
-              echo '  ```bash'
-              echo "  dsh --profile web add $url"
-              echo '  ```'
-              echo
-            done
-          } > notes.md
+          NOTES_HEADER="滚动构建自 main 分支（${GITHUB_SHA::7}），每次推送自动整体替换。" \
+            node scripts/gen-release-notes.cjs
           gh release create latest dist/*.tgz \
             --target "$GITHUB_SHA" \
             --title "latest (main@${GITHUB_SHA::7})" \
