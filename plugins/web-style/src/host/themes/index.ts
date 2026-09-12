@@ -10,24 +10,10 @@
  *
  * @module @dshp/web-style/themes
  */
-import * as opencode from './opencode.js';
-import * as linear from './linear.js';
-import * as notion from './notion.js';
 import * as claude from './claude.js';
-import * as nvidia from './nvidia.js';
-import * as github from './github.js';
-import * as replicate from './replicate.js';
-import * as cisco from './cisco.js';
-import * as tide from './tide.js';
-import * as nebula from './nebula.js';
-import * as discord from './discord.js';
 import * as supabase from './supabase.js';
 import * as sakura from './sakura.js';
-import * as skeumorphism from './skeumorphism.js';
-import * as wechat from './wechat.js';
 import * as xiaohongshu from './xiaohongshu.js';
-import * as neobrutalism from './neobrutalism.js';
-import * as missioncontrol from './missioncontrol.js';
 import * as levels from './levels.js';
 import * as arc from './arc.js';
 import * as luxury from './luxury.js';
@@ -50,27 +36,13 @@ function expand(module: ThemeModule): ThemeCatalogEntry[] {
 
 /** 全部主题注册清单（顺序与 client 画廊展示顺序一致；Host 仅用 id 白名单 + token 下发）。 */
 export const THEME_CATALOG: ThemeCatalogEntry[] = [
-  ...expand(opencode),
-  ...expand(github),
-  ...expand(linear),
-  ...expand(notion),
   ...expand(claude),
-  ...expand(nvidia),
-  ...expand(replicate),
-  ...expand(cisco),
-  ...expand(neobrutalism),
-  ...expand(missioncontrol),
   ...expand(levels),
   ...expand(arc),
   ...expand(luxury),
-  ...expand(skeumorphism),
-  ...expand(wechat),
   ...expand(xiaohongshu),
-  ...expand(discord),
   ...expand(supabase),
-  ...expand(nebula),
   ...expand(sakura),
-  ...expand(tide),
 ];
 
 /** 目录内全部主题 id（Host 白名单与 scripts/check-themes.mjs 共用）。 */

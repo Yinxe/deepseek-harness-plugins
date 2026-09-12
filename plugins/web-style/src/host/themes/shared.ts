@@ -49,42 +49,14 @@ export interface ThemeCatalogEntry extends ThemeMetaEntry {
   tokens: TokenMap;
 }
 
-/** Berkeley Mono 等宽栈（opencode "everything is code"）。 */
+/** DSH 默认等宽栈（保留主题的代码面）。 */
 export const MONO =
   '"Berkeley Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace';
-/** 通用系统无衬线栈（GitHub / NVIDIA）。 */
+/** 通用系统无衬线栈（arc / levels / luxury / supabase / xiaohongshu / sakura）。 */
 export const SANS =
   '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif';
-/** Linear 的 Inter 栈。 */
-export const INTER =
-  '"Inter Variable", "Inter", "SF Pro Display", -apple-system, system-ui, "Segoe UI", Roboto, sans-serif';
-/** Notion 的 NotionInter 栈。 */
-export const NOTION = '"NotionInter", "Inter", -apple-system, system-ui, Helvetica, Arial, sans-serif';
 /** Claude 的 Anthropic Sans 栈。 */
 export const CLAUDE_SANS = '"Anthropic Sans", "Arial", system-ui, -apple-system, sans-serif';
-
-/** HashiCorp Sans 栈（标题面；正文回落到 system-ui）。 */
-export const HASHICORP =
-  '"HashiCorp Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
-/** Runway 的 abcNormal 栈（单一字体包办从 48px 标题到 11px 标签）。 */
-export const ABC_NORMAL =
-  '"abcNormal", "abcNormal Fallback", "Inter", "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif';
-/** SpaceX 的 D-DIN 栈（工业 DIN 血统，全大写 + 正字距）。 */
-export const DIN = '"D-DIN", "DIN Alternate", "Helvetica Neue", Arial, Verdana, sans-serif';
-/** Warp 的 Matter 栈（几何无衬线，Regular 一档走天下）。 */
-export const MATTER = '"Matter Regular", "Matter", "Inter", ui-sans-serif, system-ui, sans-serif';
-/** Spotify 的 CircularSp 派生栈（SpotifyMixUI / SpotifyMixUITitle）。 */
-export const SPOTIFY = '"SpotifyMixUI", "CircularSp", "Helvetica Neue", Helvetica, Arial, sans-serif';
-/** Tetris 的像素显示栈（Press Start 2P）。 */
-export const PIXEL = '"Press Start 2P", "Arial Black", system-ui, sans-serif';
-
-/** Roboto Mono 栈（trading-terminal 的数据面）。 */
-export const ROBOTO_MONO = '"Roboto Mono", "SF Mono", ui-monospace, Menlo, monospace';
-/** Geist Mono 栈（Raycast / Warp 的代码面）。 */
-export const GEIST_MONO =
-  '"Geist Mono", "GeistMono", ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace';
-/** SF Mono 栈（minimal / sleek）。 */
-export const SF_MONO = '"SF Mono", ui-monospace, Menlo, Monaco, Consolas, monospace';
 
 /** UI 文本字体 token 前缀集合（base-16 / l-20 / … / xxxs-strong-11）。 */
 export const TEXT_STYLE_KEYS: string[] = [

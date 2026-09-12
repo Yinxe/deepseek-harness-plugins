@@ -747,88 +747,11 @@
   // src/client/themes.ts
   var THEMES = [
     {
-      id: "opencode-terminal-dark",
-      colorScheme: "dark",
-      label: "OpenCode \u66B1\u591C\u7EC8\u7AEF",
-      desc: "\u6696\u9ED1 #201d1d + Apple \u84DD\uFF0C\u5168\u7AD9 mono",
-      swatch: ["#201d1d", "#302c2c", "#007aff", "#30d158"]
-    },
-    {
-      id: "opencode-terminal-light",
-      colorScheme: "light",
-      label: "OpenCode \u7EB8\u611F\u7EC8\u7AEF",
-      desc: "\u6696\u767D #fdfcfc + \u6696\u7070\u5C42\u6B21",
-      swatch: ["#fdfcfc", "#f1eeee", "#201d1d", "#007aff"]
-    },
-    {
-      id: "github-dark",
-      colorScheme: "dark",
-      label: "GitHub \u6697\u8272 Primer",
-      desc: "#0d1117 + Primer \u84DD #2f81f7",
-      swatch: ["#0d1117", "#161b22", "#2f81f7", "#3fb950"]
-    },
-    {
-      id: "github-light",
-      colorScheme: "light",
-      label: "GitHub \u4EAE\u8272 Primer",
-      desc: "\u7EAF\u767D + #0969da + \u7EFF\u8272\u6309\u94AE",
-      swatch: ["#ffffff", "#f6f8fa", "#0969da", "#1f883d"]
-    },
-    {
-      id: "linear-dark",
-      colorScheme: "dark",
-      label: "Linear \u6697\u591C\u65E0\u5F69",
-      desc: "\u8FD1\u9ED1 #08090a + Indigo #5e6ad2",
-      swatch: ["#08090a", "#191a1b", "#5e6ad2", "#f7f8f8"]
-    },
-    {
-      id: "notion-light",
-      colorScheme: "light",
-      label: "Notion \u6696\u767D\u6781\u7B80",
-      desc: "\u7EAF\u767D + \u6696\u7070 + Notion \u84DD",
-      swatch: ["#ffffff", "#f6f5f4", "#31302e", "#0075de"]
-    },
-    {
       id: "claude-parchment-light",
       colorScheme: "light",
       label: "Claude \u7F8A\u76AE\u7EB8",
       desc: "\u7F8A\u76AE\u7EB8 #f5f4ed + \u8D64\u9676 #c96442",
       swatch: ["#f5f4ed", "#faf9f5", "#c96442", "#141413"]
-    },
-    {
-      id: "nvidia-dark",
-      colorScheme: "dark",
-      label: "NVIDIA \u786C\u6838\u7EFF",
-      desc: "\u7EAF\u9ED1 #000 + \u4FE1\u53F7\u7EFF #76b900",
-      swatch: ["#000000", "#1a1a1a", "#76b900", "#ffffff"]
-    },
-    {
-      id: "replicate-light",
-      colorScheme: "light",
-      label: "Replicate \u5F00\u53D1\u8005\u7EA2",
-      desc: "\u7EAF\u767D #ffffff + \u54C1\u724C\u7EA2 #ea2804",
-      swatch: ["#ffffff", "#f8f8f8", "#ea2804", "#202020"]
-    },
-    {
-      id: "cisco-dark",
-      colorScheme: "dark",
-      label: "Cisco \u4FE1\u4EFB\u84DD",
-      desc: "\u85CF\u9752 #0f1720 + \u4FE1\u53F7\u84DD #049fd9",
-      swatch: ["#0f1720", "#1b2530", "#049fd9", "#ffffff"]
-    },
-    {
-      id: "neobrutalism-light",
-      colorScheme: "light",
-      label: "Neobrutalism \u7C97\u91CE\u62FC\u8D34",
-      desc: "\u5976\u6CB9 #fff4cf + \u6A58\u7EA2 #d24b1f",
-      swatch: ["#fff4cf", "#fffaf0", "#d24b1f", "#2a1810"]
-    },
-    {
-      id: "mission-control-dark",
-      colorScheme: "dark",
-      label: "Mission Control \u6DF1\u7A7A",
-      desc: "\u6DF1\u7A7A #090b12 + \u6307\u6325\u84DD #60a5fa",
-      swatch: ["#090b12", "#121722", "#60a5fa", "#f8fafc"]
     },
     {
       id: "levels-light",
@@ -852,32 +775,11 @@
       swatch: ["#080706", "#151310", "#c6a15b", "#fff8ea"]
     },
     {
-      id: "skeumorphism-light",
-      colorScheme: "light",
-      label: "Skeumorphism \u62DF\u7269\u9676\u571F",
-      desc: "\u9676\u571F #f7eee6 + \u9676\u91C9 #b46a46",
-      swatch: ["#f7eee6", "#fff8f1", "#b46a46", "#2b211c"]
-    },
-    {
-      id: "wechat-light",
-      colorScheme: "light",
-      label: "WeChat \u5FAE\u4FE1\u7EFF",
-      desc: "\u6D45\u7070 #ededed + \u5FAE\u4FE1\u7EFF #07c160",
-      swatch: ["#ededed", "#f7f7f7", "#07c160", "#1a1a1a"]
-    },
-    {
       id: "xiaohongshu-light",
       colorScheme: "light",
       label: "\u5C0F\u7EA2\u4E66 \u79CD\u8349\u7EA2",
       desc: "\u7C73\u7070 #f5f5f5 + \u79CD\u8349\u7EA2 #ff2442",
       swatch: ["#f5f5f5", "#ffffff", "#ff2442", "rgba(0, 0, 0, 0.8)"]
-    },
-    {
-      id: "discord-dark",
-      colorScheme: "dark",
-      label: "Discord Blurple\u591C",
-      desc: "\u6DF1\u7070 #313338 + Blurple #5865f2",
-      swatch: ["#313338", "#2b2d31", "#5865f2", "#dbdee1"]
     },
     {
       id: "supabase-dark",
@@ -887,25 +789,11 @@
       swatch: ["#171717", "#1c1c1c", "#3ecf8e", "#fafafa"]
     },
     {
-      id: "nebula-dark",
-      colorScheme: "dark",
-      label: "Nebula \u661F\u4E91\u7D2B",
-      desc: "\u7D2B\u9ED1 #0d0a1a + \u9713\u7D2B #8b5cf6",
-      swatch: ["#0d0a1a", "#161230", "#8b5cf6", "#f1edfd"]
-    },
-    {
       id: "sakura-light",
       colorScheme: "light",
       label: "Sakura \u6A31\u7C89",
       desc: "\u6A31\u767D #fff9fa + \u6A31\u7C89 #e75480",
       swatch: ["#fff9fa", "#fbeef2", "#e75480", "#432635"]
-    },
-    {
-      id: "tide-dark",
-      colorScheme: "dark",
-      label: "Tide \u6F6E\u6C50\u9752",
-      desc: "\u6DF1\u9752 #062a2c + \u6F6E\u6C50 #2dd4bf",
-      swatch: ["#062a2c", "#0b3538", "#2dd4bf", "#eafaf8"]
     }
   ];
   var BUILTIN_LABELS = {

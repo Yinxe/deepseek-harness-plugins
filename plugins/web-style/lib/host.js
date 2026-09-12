@@ -550,18 +550,18 @@ Schema.extend("const", (data, { value }, options) => {
   if (deepEqual(data, value)) return [value];
   throw new ValidationError(`expected ${value} but got ${data}`, options);
 });
-function checkWithinRange(data, meta22, description, options, skipMin = false) {
-  const { max = Infinity, min = -Infinity } = meta22;
+function checkWithinRange(data, meta8, description, options, skipMin = false) {
+  const { max = Infinity, min = -Infinity } = meta8;
   if (data > max) throw new ValidationError(`expected ${description} <= ${max} but got ${data}`, options);
   if (data < min && !skipMin) throw new ValidationError(`expected ${description} >= ${min} but got ${data}`, options);
 }
-Schema.extend("string", (data, { meta: meta22 }, options) => {
+Schema.extend("string", (data, { meta: meta8 }, options) => {
   if (typeof data !== "string") throw new ValidationError(`expected string but got ${data}`, options);
-  if (meta22.pattern) {
-    const regexp = new RegExp(meta22.pattern.source, meta22.pattern.flags);
+  if (meta8.pattern) {
+    const regexp = new RegExp(meta8.pattern.source, meta8.pattern.flags);
     if (!regexp.test(data)) throw new ValidationError(`expect string to match regexp ${regexp}`, options);
   }
-  checkWithinRange(data.length, meta22, "string length", options);
+  checkWithinRange(data.length, meta8, "string length", options);
   return [data];
 });
 function decimalShift(data, digits) {
@@ -581,18 +581,18 @@ function isMultipleOf(data, min, step) {
   const digits = step.toString().slice(index + 1).length;
   return Math.abs(decimalShift(data, digits) - decimalShift(min, digits)) % decimalShift(step, digits) === 0;
 }
-Schema.extend("number", (data, { meta: meta22 }, options) => {
+Schema.extend("number", (data, { meta: meta8 }, options) => {
   if (typeof data !== "number") throw new ValidationError(`expected number but got ${data}`, options);
-  checkWithinRange(data, meta22, "number", options);
-  const { step } = meta22;
-  if (step && !isMultipleOf(data, meta22.min ?? 0, step)) throw new ValidationError(`expected number multiple of ${step} but got ${data}`, options);
+  checkWithinRange(data, meta8, "number", options);
+  const { step } = meta8;
+  if (step && !isMultipleOf(data, meta8.min ?? 0, step)) throw new ValidationError(`expected number multiple of ${step} but got ${data}`, options);
   return [data];
 });
 Schema.extend("boolean", (data, _, options) => {
   if (typeof data === "boolean") return [data];
   throw new ValidationError(`expected boolean but got ${data}`, options);
 });
-Schema.extend("bitset", (data, { bits, meta: meta22 }, options) => {
+Schema.extend("bitset", (data, { bits, meta: meta8 }, options) => {
   let value = 0, keys = [];
   if (typeof data === "number") {
     value = data;
@@ -604,7 +604,7 @@ Schema.extend("bitset", (data, { bits, meta: meta22 }, options) => {
       if (key in bits) value |= bits[key];
     }
   } else throw new ValidationError(`expected number or array but got ${data}`, options);
-  if (value === meta22.default) return [value];
+  if (value === meta8.default) return [value];
   return [value, keys];
 });
 Schema.extend("function", (data, _, options) => {
@@ -639,9 +639,9 @@ function property(data, key, schema, options) {
     return schema.meta.default;
   }
 }
-Schema.extend("array", (data, { inner, meta: meta22 }, options) => {
+Schema.extend("array", (data, { inner, meta: meta8 }, options) => {
   if (!Array.isArray(data)) throw new ValidationError(`expected array but got ${data}`, options);
-  checkWithinRange(data.length, meta22, "array length", options, !isNullable(inner.meta.default));
+  checkWithinRange(data.length, meta8, "array length", options, !isNullable(inner.meta.default));
   return [data.map((_, index) => property(data, index, inner, options))];
 });
 Schema.extend("dict", (data, { inner, sKey }, options, strict) => {
@@ -790,10 +790,9 @@ defineMethod("transform", [
   "preserve"
 ], ({ inner }, isInner) => inner.toString(isInner));
 
-// src/host/themes/opencode.ts
-var opencode_exports = {};
-__export(opencode_exports, {
-  dark: () => dark,
+// src/host/themes/claude.ts
+var claude_exports = {};
+__export(claude_exports, {
   light: () => light,
   meta: () => meta
 });
@@ -801,8 +800,6 @@ __export(opencode_exports, {
 // src/host/themes/shared.ts
 var MONO = '"Berkeley Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace';
 var SANS = '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif';
-var INTER = '"Inter Variable", "Inter", "SF Pro Display", -apple-system, system-ui, "Segoe UI", Roboto, sans-serif';
-var NOTION = '"NotionInter", "Inter", -apple-system, system-ui, Helvetica, Arial, sans-serif';
 var CLAUDE_SANS = '"Anthropic Sans", "Arial", system-ui, -apple-system, sans-serif';
 var TEXT_STYLE_KEYS = [
   "base-16",
@@ -839,8 +836,8 @@ var MD_STYLE_KEYS = [
   "table-head"
 ];
 function fillFontTokens(tokens, font, mono) {
-  const monoStack = typeof mono === "string" ? mono : MONO;
-  const ui = mono === true ? MONO : font;
+  const monoStack = MONO;
+  const ui = font;
   for (const s of TEXT_STYLE_KEYS) tokens[`--dsw-font-${s}-font-family`] = ui;
   for (const m of MD_STYLE_KEYS) {
     const isCode = m === "code" || m === "code-block" || m === "code-block-small";
@@ -855,458 +852,8 @@ var FLAT_SHADOWS = {
   "--dsw-shadow-lv1-blur": "0px"
 };
 
-// src/host/themes/opencode.ts
-var dark = fillFontTokens(
-  {
-    /* ── 背景：暖黑 → 暖灰三级抬升 ── */
-    "--dsw-alias-bg-base": "#201d1d",
-    "--dsw-alias-bg-layer-1": "#302c2c",
-    "--dsw-alias-bg-layer-2": "#3a3535",
-    "--dsw-alias-bg-layer-3": "#423d3d",
-    "--dsw-alias-bg-overlay": "#302c2c",
-    "--dsw-alias-bg-multi-select": "#302c2c",
-    "--dsw-alias-bg-module-platform": "#302c2c",
-    "--dsw-alias-bg-skeleton": "#302c2c",
-    /* ── 边框：暖灰边框（#464343 可见 / #646262 强调）── */
-    "--dsw-alias-border-l1": "#464343",
-    "--dsw-alias-border-l2": "#646262",
-    "--dsw-alias-border-l2-darkmode-thin": "#464343",
-    "--dsw-alias-border-l3": "#6e6e73",
-    "--dsw-alias-border-l4": "#9a9898",
-    "--dsw-alias-border-inverted": "#fdfcfc",
-    "--dsw-alias-border-inverted2": "#c8c6c4",
-    "--dsw-alias-separator-primary": "#464343",
-    "--dsw-alias-fill-l2": "#3a3535",
-    "--dsw-alias-fill-tsp-secondary": "rgba(253, 252, 252, 0.06)",
-    /* ── 品牌：Apple 系统蓝三段式（#007aff → #0056b3 hover）── */
-    "--dsw-alias-brand-primary": "#007aff",
-    "--dsw-alias-brand-primary-invert": "#ffffff",
-    "--dsw-alias-brand-text": "#007aff",
-    "--dsw-alias-link": "#007aff",
-    /* ── 按钮：主按钮蓝填充，其余暖灰层次 ── */
-    "--dsw-alias-button-primary-fill": "#007aff",
-    "--dsw-alias-button-primary-hover": "#0056b3",
-    "--dsw-alias-button-primary-dimmed": "#0056b3",
-    "--dsw-alias-button-contrast-fill": "#fdfcfc",
-    "--dsw-alias-button-elevated-fill": "#302c2c",
-    "--dsw-alias-button-floating-fill": "#302c2c",
-    "--dsw-alias-button-floating-hover": "#3a3535",
-    "--dsw-alias-button-ghost-active-border": "#646262",
-    "--dsw-alias-button-ghost-active-fill": "#3a3535",
-    "--dsw-alias-button-ghost-active-hover": "#423d3d",
-    "--dsw-alias-button-info-fill": "#007aff",
-    "--dsw-alias-button-info-hover": "#0056b3",
-    "--dsw-alias-button-tool-bar-fill": "#302c2c",
-    "--dsw-alias-button-tool-bar-fill-invisible": "transparent",
-    "--dsw-alias-button-tool-bar-hover": "#3a3535",
-    /* ── 交互态：暖灰悬停/按压 + 语义色半透明 ── */
-    "--dsw-alias-interactive-bg-hover": "#2a2626",
-    "--dsw-alias-interactive-bg-active": "#3a3535",
-    "--dsw-alias-interactive-bg-hover-accent": "rgba(0, 122, 255, 0.12)",
-    "--dsw-alias-interactive-bg-hover-danger": "rgba(255, 59, 48, 0.12)",
-    "--dsw-alias-interactive-bg-hover-solid": "#3a3535",
-    /* ── 文字：暖白主文字 → 暖灰四级衰减 ── */
-    "--dsw-alias-label-primary": "#fdfcfc",
-    "--dsw-alias-label-secondary": "#c8c6c4",
-    "--dsw-alias-label-tertiary": "#9a9898",
-    "--dsw-alias-label-quaternary": "#6e6e73",
-    "--dsw-alias-label-caption": "#9a9898",
-    "--dsw-alias-label-dimmed": "#6e6e73",
-    "--dsw-alias-label-error": "#ff3b30",
-    "--dsw-alias-label-primary-foreground": "#fdfcfc",
-    "--dsw-alias-label-primary-inverted": "#201d1d",
-    "--dsw-alias-label-primary-bluish": "#007aff",
-    "--dsw-alias-state-business-primary": "#007aff",
-    "--dsw-alias-state-business-tertiary": "rgba(0, 122, 255, 0.12)",
-    /* ── 语义：Apple HIG 四色 + 半透明次级 ── */
-    "--dsw-alias-state-error-primary": "#ff3b30",
-    "--dsw-alias-state-error-secondary": "rgba(255, 59, 48, 0.12)",
-    "--dsw-alias-state-success-primary": "#30d158",
-    "--dsw-alias-state-success-secondary": "rgba(48, 209, 88, 0.12)",
-    "--dsw-alias-state-warn-primary": "#ff9f0a",
-    "--dsw-alias-state-warn-secondary": "rgba(255, 159, 10, 0.12)",
-    "--dsw-alias-state-warn-label": "#ff9f0a",
-    /* ── Markdown：代码块暖灰底 + 行内代码淡绿底（opencode 标志）── */
-    "--dsw-alias-markdown-citation": "#007aff",
-    "--dsw-alias-markdown-code-block": "#302c2c",
-    "--dsw-alias-markdown-code-block-banner": "#3a3535",
-    "--dsw-alias-markdown-inline-code": "rgba(48, 209, 88, 0.08)",
-    "--dsw-alias-markdown-code-segment-selected": "rgba(0, 122, 255, 0.15)",
-    "--dsw-alias-markdown-code-segment-unselected": "transparent",
-    "--dsw-alias-markdown-placeholder": "#6e6e73",
-    /* ── 滚动条 ── */
-    "--dsw-alias-scrollbar-bg-l1": "#464343",
-    "--dsw-alias-scrollbar-bg-l2": "#3a3535",
-    "--dsw-alias-scrollbar-hover-l1": "#646262",
-    "--dsw-alias-scrollbar-hover-l2": "#423d3d",
-    /* ── 浮层与特定区域 ── */
-    "--dsw-alias-toast-bg": "#302c2c",
-    "--dsw-alias-tooltip-bg": "#302c2c",
-    "--dsw-hovercard-bg": "#302c2c",
-    "--dsw-specific-sidebar-fill": "#201d1d",
-    "--dsw-specific-sidebar-nav-item-active": "rgba(0, 122, 255, 0.22)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "#007aff",
-    "--dsw-specific-sidebar-nav-item-hover": "#2a2626",
-    "--dsw-specific-bubble": "#302c2c",
-    "--dsw-specific-bubble-highlight": "#3a3535",
-    "--dsw-specific-input-major": "#302c2c",
-    "--dsw-specific-login-input": "#302c2c",
-    "--dsw-specific-menu": "#302c2c",
-    "--dsw-specific-selector": "#302c2c",
-    "--dsw-specific-tip": "#302c2c",
-    /* ── 字体 + 扁平阴影 ── */
-    "--dsw-font-family": MONO,
-    "--dsw-font-mono": MONO,
-    ...FLAT_SHADOWS
-  },
-  MONO,
-  true
-);
-var light = fillFontTokens(
-  {
-    "--dsw-alias-bg-base": "#fdfcfc",
-    "--dsw-alias-bg-layer-1": "#f1eeee",
-    "--dsw-alias-bg-layer-2": "#e9e2e2",
-    "--dsw-alias-bg-layer-3": "#e2dcdc",
-    "--dsw-alias-bg-overlay": "#ffffff",
-    "--dsw-alias-bg-multi-select": "#f1eeee",
-    "--dsw-alias-bg-module-platform": "#f1eeee",
-    "--dsw-alias-bg-skeleton": "#f1eeee",
-    "--dsw-alias-border-l1": "#e2dcdc",
-    "--dsw-alias-border-l2": "#9a9898",
-    "--dsw-alias-border-l2-darkmode-thin": "#e2dcdc",
-    "--dsw-alias-border-l3": "#b5aeae",
-    "--dsw-alias-border-l4": "#9a9898",
-    "--dsw-alias-border-inverted": "#201d1d",
-    "--dsw-alias-border-inverted2": "#424245",
-    "--dsw-alias-separator-primary": "#d6cfcf",
-    "--dsw-alias-fill-l2": "#e9e2e2",
-    "--dsw-alias-fill-tsp-secondary": "rgba(32, 29, 29, 0.05)",
-    "--dsw-alias-brand-primary": "#007aff",
-    "--dsw-alias-brand-primary-invert": "#ffffff",
-    "--dsw-alias-brand-text": "#007aff",
-    "--dsw-alias-link": "#007aff",
-    /* 浅色主按钮还原 opencode 原版"暗底白字"（#201d1d 填充） */
-    "--dsw-alias-button-primary-fill": "#201d1d",
-    "--dsw-alias-button-primary-hover": "#3d3a3a",
-    "--dsw-alias-button-primary-dimmed": "#424245",
-    "--dsw-alias-button-contrast-fill": "#201d1d",
-    "--dsw-alias-button-elevated-fill": "#ffffff",
-    "--dsw-alias-button-floating-fill": "#ffffff",
-    "--dsw-alias-button-floating-hover": "#f1eeee",
-    "--dsw-alias-button-ghost-active-border": "#9a9898",
-    "--dsw-alias-button-ghost-active-fill": "#e9e2e2",
-    "--dsw-alias-button-ghost-active-hover": "#d6cfcf",
-    "--dsw-alias-button-info-fill": "#007aff",
-    "--dsw-alias-button-info-hover": "#0056b3",
-    "--dsw-alias-button-tool-bar-fill": "#f1eeee",
-    "--dsw-alias-button-tool-bar-fill-invisible": "transparent",
-    "--dsw-alias-button-tool-bar-hover": "#e9e2e2",
-    "--dsw-alias-interactive-bg-hover": "#f1eeee",
-    "--dsw-alias-interactive-bg-active": "#e9e2e2",
-    "--dsw-alias-interactive-bg-hover-accent": "rgba(0, 122, 255, 0.10)",
-    "--dsw-alias-interactive-bg-hover-danger": "rgba(255, 59, 48, 0.10)",
-    "--dsw-alias-interactive-bg-hover-solid": "#e2dcdc",
-    "--dsw-alias-label-primary": "#201d1d",
-    "--dsw-alias-label-secondary": "#424245",
-    "--dsw-alias-label-tertiary": "#6e6e73",
-    "--dsw-alias-label-quaternary": "#9a9898",
-    "--dsw-alias-label-caption": "#6e6e73",
-    "--dsw-alias-label-dimmed": "#9a9898",
-    "--dsw-alias-label-error": "#d70015",
-    "--dsw-alias-label-primary-foreground": "#fdfcfc",
-    "--dsw-alias-label-primary-inverted": "#fdfcfc",
-    "--dsw-alias-label-primary-bluish": "#007aff",
-    "--dsw-alias-state-business-primary": "#007aff",
-    "--dsw-alias-state-business-tertiary": "rgba(0, 122, 255, 0.10)",
-    /* 浅色下语义色降饱和（Apple HIG 的浅色变体） */
-    "--dsw-alias-state-error-primary": "#d70015",
-    "--dsw-alias-state-error-secondary": "rgba(255, 59, 48, 0.10)",
-    "--dsw-alias-state-success-primary": "#178a33",
-    "--dsw-alias-state-success-secondary": "rgba(48, 209, 88, 0.10)",
-    "--dsw-alias-state-warn-primary": "#b26a00",
-    "--dsw-alias-state-warn-secondary": "rgba(255, 159, 10, 0.10)",
-    "--dsw-alias-state-warn-label": "#b26a00",
-    "--dsw-alias-markdown-citation": "#007aff",
-    "--dsw-alias-markdown-code-block": "#f6f3f3",
-    "--dsw-alias-markdown-code-block-banner": "#eae4e4",
-    "--dsw-alias-markdown-inline-code": "rgba(48, 209, 88, 0.10)",
-    "--dsw-alias-markdown-code-segment-selected": "rgba(0, 122, 255, 0.12)",
-    "--dsw-alias-markdown-code-segment-unselected": "transparent",
-    "--dsw-alias-markdown-placeholder": "#9a9898",
-    "--dsw-alias-scrollbar-bg-l1": "#d6cfcf",
-    "--dsw-alias-scrollbar-bg-l2": "#e2dcdc",
-    "--dsw-alias-scrollbar-hover-l1": "#9a9898",
-    "--dsw-alias-scrollbar-hover-l2": "#d6cfcf",
-    "--dsw-alias-toast-bg": "#ffffff",
-    "--dsw-alias-tooltip-bg": "#ffffff",
-    "--dsw-hovercard-bg": "#ffffff",
-    "--dsw-specific-sidebar-fill": "#f1eeee",
-    "--dsw-specific-sidebar-nav-item-active": "rgba(0, 122, 255, 0.22)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "#007aff",
-    "--dsw-specific-sidebar-nav-item-hover": "#e9e2e2",
-    "--dsw-specific-bubble": "#f1eeee",
-    "--dsw-specific-bubble-highlight": "#e9e2e2",
-    "--dsw-specific-input-major": "#f8f7f7",
-    "--dsw-specific-login-input": "#f8f7f7",
-    "--dsw-specific-menu": "#ffffff",
-    "--dsw-specific-selector": "#ffffff",
-    "--dsw-specific-tip": "#f1eeee",
-    "--dsw-font-family": MONO,
-    "--dsw-font-mono": MONO,
-    ...FLAT_SHADOWS
-  },
-  MONO,
-  true
-);
-var meta = {
-  dark: {
-    id: "opencode-terminal-dark",
-    label: "OpenCode \u66B1\u591C\u7EC8\u7AEF",
-    desc: "\u6696\u9ED1 #201d1d + Apple \u84DD\uFF0C\u5168\u7AD9 mono",
-    swatch: ["#201d1d", "#302c2c", "#007aff", "#30d158"]
-  },
-  light: {
-    id: "opencode-terminal-light",
-    label: "OpenCode \u7EB8\u611F\u7EC8\u7AEF",
-    desc: "\u6696\u767D #fdfcfc + \u6696\u7070\u5C42\u6B21",
-    swatch: ["#fdfcfc", "#f1eeee", "#201d1d", "#007aff"]
-  }
-};
-
-// src/host/themes/linear.ts
-var linear_exports = {};
-__export(linear_exports, {
-  dark: () => dark2,
-  meta: () => meta2
-});
-var dark2 = fillFontTokens(
-  {
-    "--dsw-alias-bg-base": "#08090a",
-    "--dsw-alias-bg-layer-1": "#191a1b",
-    "--dsw-alias-bg-layer-2": "#1f2022",
-    "--dsw-alias-bg-layer-3": "#252629",
-    "--dsw-alias-bg-overlay": "#191a1b",
-    "--dsw-alias-bg-multi-select": "#191a1b",
-    "--dsw-alias-bg-module-platform": "#191a1b",
-    "--dsw-alias-bg-skeleton": "#191a1b",
-    /* 半透明白边框 —— Linear 的深度全靠这层 */
-    "--dsw-alias-border-l1": "rgba(255, 255, 255, 0.08)",
-    "--dsw-alias-border-l2": "rgba(255, 255, 255, 0.14)",
-    "--dsw-alias-border-l2-darkmode-thin": "rgba(255, 255, 255, 0.08)",
-    "--dsw-alias-border-l3": "rgba(255, 255, 255, 0.22)",
-    "--dsw-alias-border-l4": "rgba(255, 255, 255, 0.35)",
-    "--dsw-alias-border-inverted": "#f7f8f8",
-    "--dsw-alias-border-inverted2": "#d0d6e0",
-    "--dsw-alias-separator-primary": "rgba(255, 255, 255, 0.08)",
-    "--dsw-alias-fill-l2": "#1f2022",
-    "--dsw-alias-fill-tsp-secondary": "rgba(247, 248, 248, 0.05)",
-    /* Indigo：#5e6ad2 → hover #828fff（更亮的饱和悬停） */
-    "--dsw-alias-brand-primary": "#5e6ad2",
-    "--dsw-alias-brand-primary-invert": "#ffffff",
-    "--dsw-alias-brand-text": "#828fff",
-    "--dsw-alias-link": "#828fff",
-    "--dsw-alias-button-primary-fill": "#5e6ad2",
-    "--dsw-alias-button-primary-hover": "#828fff",
-    "--dsw-alias-button-primary-dimmed": "#4752c4",
-    "--dsw-alias-button-contrast-fill": "#f7f8f8",
-    "--dsw-alias-button-elevated-fill": "#191a1b",
-    "--dsw-alias-button-floating-fill": "#191a1b",
-    "--dsw-alias-button-floating-hover": "#1f2022",
-    "--dsw-alias-button-ghost-active-border": "rgba(255, 255, 255, 0.14)",
-    "--dsw-alias-button-ghost-active-fill": "#1f2022",
-    "--dsw-alias-button-ghost-active-hover": "#252629",
-    "--dsw-alias-button-info-fill": "#5e6ad2",
-    "--dsw-alias-button-info-hover": "#828fff",
-    "--dsw-alias-button-tool-bar-fill": "#191a1b",
-    "--dsw-alias-button-tool-bar-fill-invisible": "transparent",
-    "--dsw-alias-button-tool-bar-hover": "#1f2022",
-    /* 交互态全走半透明白，不引入新色相 */
-    "--dsw-alias-interactive-bg-hover": "rgba(255, 255, 255, 0.06)",
-    "--dsw-alias-interactive-bg-active": "rgba(255, 255, 255, 0.10)",
-    "--dsw-alias-interactive-bg-hover-accent": "rgba(94, 106, 210, 0.25)",
-    "--dsw-alias-interactive-bg-hover-danger": "rgba(220, 38, 38, 0.20)",
-    "--dsw-alias-interactive-bg-hover-solid": "#1f2022",
-    "--dsw-alias-label-primary": "#f7f8f8",
-    "--dsw-alias-label-secondary": "#d0d6e0",
-    "--dsw-alias-label-tertiary": "#8f959f",
-    "--dsw-alias-label-quaternary": "#6a707a",
-    "--dsw-alias-label-caption": "#8f959f",
-    "--dsw-alias-label-dimmed": "#6a707a",
-    "--dsw-alias-label-error": "#dc2626",
-    "--dsw-alias-label-primary-foreground": "#f7f8f8",
-    "--dsw-alias-label-primary-inverted": "#08090a",
-    "--dsw-alias-label-primary-bluish": "#828fff",
-    "--dsw-alias-state-business-primary": "#828fff",
-    "--dsw-alias-state-business-tertiary": "rgba(94, 106, 210, 0.25)",
-    "--dsw-alias-state-error-primary": "#dc2626",
-    "--dsw-alias-state-error-secondary": "rgba(220, 38, 38, 0.15)",
-    "--dsw-alias-state-success-primary": "#27a644",
-    "--dsw-alias-state-success-secondary": "rgba(39, 166, 68, 0.15)",
-    "--dsw-alias-state-warn-primary": "#eab308",
-    "--dsw-alias-state-warn-secondary": "rgba(234, 179, 8, 0.15)",
-    "--dsw-alias-state-warn-label": "#eab308",
-    "--dsw-alias-markdown-citation": "#828fff",
-    "--dsw-alias-markdown-code-block": "#191a1b",
-    "--dsw-alias-markdown-code-block-banner": "#1f2022",
-    "--dsw-alias-markdown-inline-code": "rgba(130, 143, 255, 0.12)",
-    "--dsw-alias-markdown-code-segment-selected": "rgba(94, 106, 210, 0.25)",
-    "--dsw-alias-markdown-code-segment-unselected": "transparent",
-    "--dsw-alias-markdown-placeholder": "#6a707a",
-    "--dsw-alias-scrollbar-bg-l1": "rgba(255, 255, 255, 0.10)",
-    "--dsw-alias-scrollbar-bg-l2": "rgba(255, 255, 255, 0.06)",
-    "--dsw-alias-scrollbar-hover-l1": "rgba(255, 255, 255, 0.20)",
-    "--dsw-alias-scrollbar-hover-l2": "rgba(255, 255, 255, 0.12)",
-    "--dsw-alias-toast-bg": "#191a1b",
-    "--dsw-alias-tooltip-bg": "#252629",
-    "--dsw-hovercard-bg": "#1f2022",
-    "--dsw-specific-sidebar-fill": "#08090a",
-    "--dsw-specific-sidebar-nav-item-active": "rgba(94, 106, 210, 0.22)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "#5e6ad2",
-    "--dsw-specific-sidebar-nav-item-hover": "rgba(255, 255, 255, 0.06)",
-    "--dsw-specific-bubble": "#191a1b",
-    "--dsw-specific-bubble-highlight": "#1f2022",
-    "--dsw-specific-input-major": "#191a1b",
-    "--dsw-specific-login-input": "#191a1b",
-    "--dsw-specific-menu": "#1f2022",
-    "--dsw-specific-selector": "#1f2022",
-    "--dsw-specific-tip": "#252629",
-    "--dsw-font-family": INTER,
-    "--dsw-font-mono": MONO,
-    ...FLAT_SHADOWS
-  },
-  INTER
-);
-var meta2 = {
-  dark: {
-    id: "linear-dark",
-    label: "Linear \u6697\u591C\u65E0\u5F69",
-    desc: "\u8FD1\u9ED1 #08090a + Indigo #5e6ad2",
-    swatch: ["#08090a", "#191a1b", "#5e6ad2", "#f7f8f8"]
-  }
-};
-
-// src/host/themes/notion.ts
-var notion_exports = {};
-__export(notion_exports, {
-  light: () => light2,
-  meta: () => meta3
-});
-var light2 = fillFontTokens(
-  {
-    "--dsw-alias-bg-base": "#ffffff",
-    "--dsw-alias-bg-layer-1": "#f6f5f4",
-    "--dsw-alias-bg-layer-2": "#efefee",
-    "--dsw-alias-bg-layer-3": "#e8e7e5",
-    "--dsw-alias-bg-overlay": "#ffffff",
-    "--dsw-alias-bg-multi-select": "#f6f5f4",
-    "--dsw-alias-bg-module-platform": "#f6f5f4",
-    "--dsw-alias-bg-skeleton": "#f6f5f4",
-    /* whisper 边框：半透明黑 */
-    "--dsw-alias-border-l1": "rgba(0, 0, 0, 0.1)",
-    "--dsw-alias-border-l2": "rgba(0, 0, 0, 0.16)",
-    "--dsw-alias-border-l2-darkmode-thin": "rgba(0, 0, 0, 0.1)",
-    "--dsw-alias-border-l3": "rgba(0, 0, 0, 0.24)",
-    "--dsw-alias-border-l4": "rgba(0, 0, 0, 0.32)",
-    "--dsw-alias-border-inverted": "#31302e",
-    "--dsw-alias-border-inverted2": "#615d59",
-    "--dsw-alias-separator-primary": "rgba(0, 0, 0, 0.06)",
-    "--dsw-alias-fill-l2": "#efefee",
-    "--dsw-alias-fill-tsp-secondary": "rgba(0, 0, 0, 0.04)",
-    "--dsw-alias-brand-primary": "#0075de",
-    "--dsw-alias-brand-primary-invert": "#ffffff",
-    "--dsw-alias-brand-text": "#0075de",
-    "--dsw-alias-link": "#0075de",
-    "--dsw-alias-button-primary-fill": "#0075de",
-    "--dsw-alias-button-primary-hover": "#005bab",
-    "--dsw-alias-button-primary-dimmed": "#005bab",
-    "--dsw-alias-button-contrast-fill": "#31302e",
-    "--dsw-alias-button-elevated-fill": "#ffffff",
-    "--dsw-alias-button-floating-fill": "#ffffff",
-    "--dsw-alias-button-floating-hover": "#f6f5f4",
-    "--dsw-alias-button-ghost-active-border": "rgba(0, 0, 0, 0.16)",
-    "--dsw-alias-button-ghost-active-fill": "#efefee",
-    "--dsw-alias-button-ghost-active-hover": "#e8e7e5",
-    "--dsw-alias-button-info-fill": "#0075de",
-    "--dsw-alias-button-info-hover": "#005bab",
-    "--dsw-alias-button-tool-bar-fill": "#f6f5f4",
-    "--dsw-alias-button-tool-bar-fill-invisible": "transparent",
-    "--dsw-alias-button-tool-bar-hover": "#efefee",
-    "--dsw-alias-interactive-bg-hover": "#f6f5f4",
-    "--dsw-alias-interactive-bg-active": "#efefee",
-    "--dsw-alias-interactive-bg-hover-accent": "rgba(0, 117, 222, 0.10)",
-    "--dsw-alias-interactive-bg-hover-danger": "rgba(220, 38, 38, 0.08)",
-    "--dsw-alias-interactive-bg-hover-solid": "#efefee",
-    "--dsw-alias-label-primary": "rgba(0, 0, 0, 0.95)",
-    "--dsw-alias-label-secondary": "#31302e",
-    "--dsw-alias-label-tertiary": "#615d59",
-    "--dsw-alias-label-quaternary": "#a39e98",
-    "--dsw-alias-label-caption": "#615d59",
-    "--dsw-alias-label-dimmed": "#a39e98",
-    "--dsw-alias-label-error": "#dc2626",
-    "--dsw-alias-label-primary-foreground": "#ffffff",
-    "--dsw-alias-label-primary-inverted": "#ffffff",
-    "--dsw-alias-label-primary-bluish": "#0075de",
-    "--dsw-alias-state-business-primary": "#0075de",
-    "--dsw-alias-state-business-tertiary": "rgba(0, 117, 222, 0.10)",
-    "--dsw-alias-state-error-primary": "#dc2626",
-    "--dsw-alias-state-error-secondary": "rgba(220, 38, 38, 0.08)",
-    "--dsw-alias-state-success-primary": "#1aae39",
-    "--dsw-alias-state-success-secondary": "rgba(26, 174, 57, 0.10)",
-    "--dsw-alias-state-warn-primary": "#dd5b00",
-    "--dsw-alias-state-warn-secondary": "rgba(221, 91, 0, 0.10)",
-    "--dsw-alias-state-warn-label": "#dd5b00",
-    "--dsw-alias-markdown-citation": "#0075de",
-    "--dsw-alias-markdown-code-block": "#f6f5f4",
-    "--dsw-alias-markdown-code-block-banner": "#efefee",
-    "--dsw-alias-markdown-inline-code": "rgba(0, 0, 0, 0.06)",
-    "--dsw-alias-markdown-code-segment-selected": "rgba(0, 117, 222, 0.12)",
-    "--dsw-alias-markdown-code-segment-unselected": "transparent",
-    "--dsw-alias-markdown-placeholder": "#a39e98",
-    "--dsw-alias-scrollbar-bg-l1": "rgba(0, 0, 0, 0.14)",
-    "--dsw-alias-scrollbar-bg-l2": "rgba(0, 0, 0, 0.08)",
-    "--dsw-alias-scrollbar-hover-l1": "rgba(0, 0, 0, 0.26)",
-    "--dsw-alias-scrollbar-hover-l2": "rgba(0, 0, 0, 0.16)",
-    "--dsw-alias-toast-bg": "#ffffff",
-    "--dsw-alias-tooltip-bg": "#31302e",
-    "--dsw-hovercard-bg": "#ffffff",
-    "--dsw-specific-sidebar-fill": "#f6f5f4",
-    "--dsw-specific-sidebar-nav-item-active": "rgba(0, 117, 222, 0.22)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "#0075de",
-    "--dsw-specific-sidebar-nav-item-hover": "#efefee",
-    "--dsw-specific-bubble": "#f6f5f4",
-    "--dsw-specific-bubble-highlight": "#efefee",
-    "--dsw-specific-input-major": "#f6f5f4",
-    "--dsw-specific-login-input": "#f6f5f4",
-    "--dsw-specific-menu": "#ffffff",
-    "--dsw-specific-selector": "#ffffff",
-    "--dsw-specific-tip": "#31302e",
-    /* 多层微阴影 —— Notion "felt-not-seen" 深度 */
-    "--dsw-shadow-lv1": "0 1px 2px rgba(0, 0, 0, 0.04)",
-    "--dsw-shadow-lv2": "0 2px 6px rgba(0, 0, 0, 0.04)",
-    "--dsw-shadow-lv3": "0 4px 12px rgba(0, 0, 0, 0.05)",
-    "--dsw-shadow-lv1-blur": "2px",
-    "--dsw-font-family": NOTION,
-    "--dsw-font-mono": MONO
-  },
-  NOTION
-);
-var meta3 = {
-  light: {
-    id: "notion-light",
-    label: "Notion \u6696\u767D\u6781\u7B80",
-    desc: "\u7EAF\u767D + \u6696\u7070 + Notion \u84DD",
-    swatch: ["#ffffff", "#f6f5f4", "#31302e", "#0075de"]
-  }
-};
-
 // src/host/themes/claude.ts
-var claude_exports = {};
-__export(claude_exports, {
-  light: () => light3,
-  meta: () => meta4
-});
-var light3 = fillFontTokens(
+var light = fillFontTokens(
   {
     "--dsw-alias-bg-base": "#f5f4ed",
     "--dsw-alias-bg-layer-1": "#faf9f5",
@@ -1407,7 +954,7 @@ var light3 = fillFontTokens(
   },
   CLAUDE_SANS
 );
-var meta4 = {
+var meta = {
   light: {
     id: "claude-parchment-light",
     label: "Claude \u7F8A\u76AE\u7EB8",
@@ -1416,895 +963,13 @@ var meta4 = {
   }
 };
 
-// src/host/themes/nvidia.ts
-var nvidia_exports = {};
-__export(nvidia_exports, {
-  dark: () => dark3,
-  meta: () => meta5
-});
-var dark3 = fillFontTokens(
-  {
-    "--dsw-alias-bg-base": "#000000",
-    "--dsw-alias-bg-layer-1": "#1a1a1a",
-    "--dsw-alias-bg-layer-2": "#222222",
-    "--dsw-alias-bg-layer-3": "#2a2a2a",
-    "--dsw-alias-bg-overlay": "#1a1a1a",
-    "--dsw-alias-bg-multi-select": "#1a1a1a",
-    "--dsw-alias-bg-module-platform": "#1a1a1a",
-    "--dsw-alias-bg-skeleton": "#1a1a1a",
-    "--dsw-alias-border-l1": "#2a2a2a",
-    "--dsw-alias-border-l2": "#5e5e5e",
-    "--dsw-alias-border-l2-darkmode-thin": "#2a2a2a",
-    "--dsw-alias-border-l3": "#7a7a7a",
-    "--dsw-alias-border-l4": "#9a9a9a",
-    "--dsw-alias-border-inverted": "#ffffff",
-    "--dsw-alias-border-inverted2": "#a7a7a7",
-    "--dsw-alias-separator-primary": "#2a2a2a",
-    "--dsw-alias-fill-l2": "#222222",
-    "--dsw-alias-fill-tsp-secondary": "rgba(255, 255, 255, 0.05)",
-    /* NVIDIA 绿：品牌指纹 */
-    "--dsw-alias-brand-primary": "#76b900",
-    "--dsw-alias-brand-primary-invert": "#000000",
-    "--dsw-alias-brand-text": "#76b900",
-    "--dsw-alias-link": "#76b900",
-    /* 主按钮绿填充；悬停走"绿→青"的品牌惊喜 */
-    "--dsw-alias-button-primary-fill": "#76b900",
-    "--dsw-alias-button-primary-hover": "#1eaedb",
-    "--dsw-alias-button-primary-dimmed": "#3f8500",
-    "--dsw-alias-button-contrast-fill": "#ffffff",
-    "--dsw-alias-button-elevated-fill": "#1a1a1a",
-    "--dsw-alias-button-floating-fill": "#1a1a1a",
-    "--dsw-alias-button-floating-hover": "#222222",
-    "--dsw-alias-button-ghost-active-border": "#76b900",
-    "--dsw-alias-button-ghost-active-fill": "#222222",
-    "--dsw-alias-button-ghost-active-hover": "#2a2a2a",
-    "--dsw-alias-button-info-fill": "#1eaedb",
-    "--dsw-alias-button-info-hover": "#007fff",
-    "--dsw-alias-button-tool-bar-fill": "#1a1a1a",
-    "--dsw-alias-button-tool-bar-fill-invisible": "transparent",
-    "--dsw-alias-button-tool-bar-hover": "#222222",
-    "--dsw-alias-interactive-bg-hover": "#161616",
-    "--dsw-alias-interactive-bg-active": "#222222",
-    "--dsw-alias-interactive-bg-hover-accent": "rgba(118, 185, 0, 0.15)",
-    "--dsw-alias-interactive-bg-hover-danger": "rgba(229, 32, 32, 0.15)",
-    "--dsw-alias-interactive-bg-hover-solid": "#222222",
-    "--dsw-alias-label-primary": "#ffffff",
-    "--dsw-alias-label-secondary": "#a7a7a7",
-    "--dsw-alias-label-tertiary": "#898989",
-    "--dsw-alias-label-quaternary": "#757575",
-    "--dsw-alias-label-caption": "#898989",
-    "--dsw-alias-label-dimmed": "#757575",
-    "--dsw-alias-label-error": "#e52020",
-    "--dsw-alias-label-primary-foreground": "#ffffff",
-    "--dsw-alias-label-primary-inverted": "#000000",
-    "--dsw-alias-label-primary-bluish": "#1eaedb",
-    "--dsw-alias-state-business-primary": "#76b900",
-    "--dsw-alias-state-business-tertiary": "rgba(118, 185, 0, 0.15)",
-    /* 成功绿用更深的 #3f8500 与品牌绿区分 */
-    "--dsw-alias-state-error-primary": "#e52020",
-    "--dsw-alias-state-error-secondary": "rgba(229, 32, 32, 0.15)",
-    "--dsw-alias-state-success-primary": "#76b900",
-    "--dsw-alias-state-success-secondary": "rgba(118, 185, 0, 0.15)",
-    "--dsw-alias-state-warn-primary": "#ef9100",
-    "--dsw-alias-state-warn-secondary": "rgba(239, 145, 0, 0.15)",
-    "--dsw-alias-state-warn-label": "#ef9100",
-    "--dsw-alias-markdown-citation": "#76b900",
-    "--dsw-alias-markdown-code-block": "#1a1a1a",
-    "--dsw-alias-markdown-code-block-banner": "#222222",
-    "--dsw-alias-markdown-inline-code": "rgba(118, 185, 0, 0.10)",
-    "--dsw-alias-markdown-code-segment-selected": "rgba(118, 185, 0, 0.18)",
-    "--dsw-alias-markdown-code-segment-unselected": "transparent",
-    "--dsw-alias-markdown-placeholder": "#757575",
-    "--dsw-alias-scrollbar-bg-l1": "#2a2a2a",
-    "--dsw-alias-scrollbar-bg-l2": "#222222",
-    "--dsw-alias-scrollbar-hover-l1": "#5e5e5e",
-    "--dsw-alias-scrollbar-hover-l2": "#2a2a2a",
-    "--dsw-alias-toast-bg": "#1a1a1a",
-    "--dsw-alias-tooltip-bg": "#2a2a2a",
-    "--dsw-hovercard-bg": "#222222",
-    "--dsw-specific-sidebar-fill": "#000000",
-    "--dsw-specific-sidebar-nav-item-active": "rgba(118, 185, 0, 0.22)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "#76b900",
-    "--dsw-specific-sidebar-nav-item-hover": "#161616",
-    "--dsw-specific-bubble": "#1a1a1a",
-    "--dsw-specific-bubble-highlight": "#222222",
-    "--dsw-specific-input-major": "#1a1a1a",
-    "--dsw-specific-login-input": "#1a1a1a",
-    "--dsw-specific-menu": "#222222",
-    "--dsw-specific-selector": "#222222",
-    "--dsw-specific-tip": "#2a2a2a",
-    "--dsw-font-family": SANS,
-    "--dsw-font-mono": MONO,
-    ...FLAT_SHADOWS
-  },
-  SANS
-);
-var meta5 = {
-  dark: {
-    id: "nvidia-dark",
-    label: "NVIDIA \u786C\u6838\u7EFF",
-    desc: "\u7EAF\u9ED1 #000 + \u4FE1\u53F7\u7EFF #76b900",
-    swatch: ["#000000", "#1a1a1a", "#76b900", "#ffffff"]
-  }
-};
-
-// src/host/themes/github.ts
-var github_exports = {};
-__export(github_exports, {
-  dark: () => dark4,
-  light: () => light4,
-  meta: () => meta6
-});
-var dark4 = fillFontTokens(
-  {
-    "--dsw-alias-bg-base": "#0d1117",
-    "--dsw-alias-bg-layer-1": "#161b22",
-    "--dsw-alias-bg-layer-2": "#21262d",
-    "--dsw-alias-bg-layer-3": "#282e35",
-    "--dsw-alias-bg-overlay": "#161b22",
-    "--dsw-alias-bg-multi-select": "#161b22",
-    "--dsw-alias-bg-module-platform": "#161b22",
-    "--dsw-alias-bg-skeleton": "#161b22",
-    "--dsw-alias-border-l1": "#30363d",
-    "--dsw-alias-border-l2": "#3d444d",
-    "--dsw-alias-border-l2-darkmode-thin": "#30363d",
-    "--dsw-alias-border-l3": "#545d68",
-    "--dsw-alias-border-l4": "#6e7681",
-    "--dsw-alias-border-inverted": "#f0f6fc",
-    "--dsw-alias-border-inverted2": "#c9d1d9",
-    "--dsw-alias-separator-primary": "#21262d",
-    "--dsw-alias-fill-l2": "#21262d",
-    "--dsw-alias-fill-tsp-secondary": "rgba(240, 246, 252, 0.05)",
-    "--dsw-alias-brand-primary": "#2f81f7",
-    "--dsw-alias-brand-primary-invert": "#ffffff",
-    "--dsw-alias-brand-text": "#2f81f7",
-    "--dsw-alias-link": "#2f81f7",
-    /* 主按钮 GitHub 绿 #238636（暗色官方值） */
-    "--dsw-alias-button-primary-fill": "#238636",
-    "--dsw-alias-button-primary-hover": "#2ea043",
-    "--dsw-alias-button-primary-dimmed": "#1f6e30",
-    "--dsw-alias-button-contrast-fill": "#f0f6fc",
-    "--dsw-alias-button-elevated-fill": "#161b22",
-    "--dsw-alias-button-floating-fill": "#161b22",
-    "--dsw-alias-button-floating-hover": "#21262d",
-    "--dsw-alias-button-ghost-active-border": "#3d444d",
-    "--dsw-alias-button-ghost-active-fill": "#21262d",
-    "--dsw-alias-button-ghost-active-hover": "#282e35",
-    "--dsw-alias-button-info-fill": "#2f81f7",
-    "--dsw-alias-button-info-hover": "#1f6feb",
-    "--dsw-alias-button-tool-bar-fill": "#161b22",
-    "--dsw-alias-button-tool-bar-fill-invisible": "transparent",
-    "--dsw-alias-button-tool-bar-hover": "#21262d",
-    "--dsw-alias-interactive-bg-hover": "#161b22",
-    "--dsw-alias-interactive-bg-active": "#21262d",
-    "--dsw-alias-interactive-bg-hover-accent": "rgba(47, 129, 247, 0.15)",
-    "--dsw-alias-interactive-bg-hover-danger": "rgba(248, 81, 73, 0.15)",
-    "--dsw-alias-interactive-bg-hover-solid": "#21262d",
-    "--dsw-alias-label-primary": "#f0f6fc",
-    "--dsw-alias-label-secondary": "#c9d1d9",
-    "--dsw-alias-label-tertiary": "#8b949e",
-    "--dsw-alias-label-quaternary": "#6e7681",
-    "--dsw-alias-label-caption": "#8b949e",
-    "--dsw-alias-label-dimmed": "#6e7681",
-    "--dsw-alias-label-error": "#f85149",
-    "--dsw-alias-label-primary-foreground": "#f0f6fc",
-    "--dsw-alias-label-primary-inverted": "#0d1117",
-    "--dsw-alias-label-primary-bluish": "#2f81f7",
-    "--dsw-alias-state-business-primary": "#2f81f7",
-    "--dsw-alias-state-business-tertiary": "rgba(47, 129, 247, 0.15)",
-    "--dsw-alias-state-error-primary": "#f85149",
-    "--dsw-alias-state-error-secondary": "rgba(248, 81, 73, 0.15)",
-    "--dsw-alias-state-success-primary": "#3fb950",
-    "--dsw-alias-state-success-secondary": "rgba(63, 185, 80, 0.15)",
-    "--dsw-alias-state-warn-primary": "#d29922",
-    "--dsw-alias-state-warn-secondary": "rgba(210, 153, 34, 0.15)",
-    "--dsw-alias-state-warn-label": "#d29922",
-    "--dsw-alias-markdown-citation": "#2f81f7",
-    "--dsw-alias-markdown-code-block": "#161b22",
-    "--dsw-alias-markdown-code-block-banner": "#21262d",
-    "--dsw-alias-markdown-inline-code": "rgba(56, 139, 253, 0.15)",
-    "--dsw-alias-markdown-code-segment-selected": "rgba(47, 129, 247, 0.25)",
-    "--dsw-alias-markdown-code-segment-unselected": "transparent",
-    "--dsw-alias-markdown-placeholder": "#6e7681",
-    "--dsw-alias-scrollbar-bg-l1": "#30363d",
-    "--dsw-alias-scrollbar-bg-l2": "#21262d",
-    "--dsw-alias-scrollbar-hover-l1": "#545d68",
-    "--dsw-alias-scrollbar-hover-l2": "#30363d",
-    "--dsw-alias-toast-bg": "#161b22",
-    "--dsw-alias-tooltip-bg": "#282e35",
-    "--dsw-hovercard-bg": "#21262d",
-    "--dsw-specific-sidebar-fill": "#0d1117",
-    "--dsw-specific-sidebar-nav-item-active": "rgba(47, 129, 247, 0.22)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "#2f81f7",
-    "--dsw-specific-sidebar-nav-item-hover": "#161b22",
-    "--dsw-specific-bubble": "#161b22",
-    "--dsw-specific-bubble-highlight": "#21262d",
-    "--dsw-specific-input-major": "#0d1117",
-    "--dsw-specific-login-input": "#0d1117",
-    "--dsw-specific-menu": "#21262d",
-    "--dsw-specific-selector": "#21262d",
-    "--dsw-specific-tip": "#282e35",
-    "--dsw-shadow-lv1": "none",
-    "--dsw-shadow-lv2": "none",
-    "--dsw-shadow-lv3": "none",
-    "--dsw-shadow-lv1-blur": "0px",
-    "--dsw-font-family": SANS,
-    "--dsw-font-mono": MONO
-  },
-  SANS
-);
-var light4 = fillFontTokens(
-  {
-    "--dsw-alias-bg-base": "#ffffff",
-    "--dsw-alias-bg-layer-1": "#f6f8fa",
-    "--dsw-alias-bg-layer-2": "#eff2f5",
-    "--dsw-alias-bg-layer-3": "#eaeef2",
-    "--dsw-alias-bg-overlay": "#ffffff",
-    "--dsw-alias-bg-multi-select": "#f6f8fa",
-    "--dsw-alias-bg-module-platform": "#f6f8fa",
-    "--dsw-alias-bg-skeleton": "#f6f8fa",
-    /* 发丝线 #d0d7de —— 结构骨架 */
-    "--dsw-alias-border-l1": "#d0d7de",
-    "--dsw-alias-border-l2": "#afb8c1",
-    "--dsw-alias-border-l2-darkmode-thin": "#d0d7de",
-    "--dsw-alias-border-l3": "#8c959f",
-    "--dsw-alias-border-l4": "#57606a",
-    "--dsw-alias-border-inverted": "#1f2328",
-    "--dsw-alias-border-inverted2": "#656d76",
-    "--dsw-alias-separator-primary": "#d8dee4",
-    "--dsw-alias-fill-l2": "#eff2f5",
-    "--dsw-alias-fill-tsp-secondary": "rgba(31, 35, 40, 0.04)",
-    "--dsw-alias-brand-primary": "#0969da",
-    "--dsw-alias-brand-primary-invert": "#ffffff",
-    "--dsw-alias-brand-text": "#0969da",
-    "--dsw-alias-link": "#0969da",
-    /* 主按钮 GitHub 绿 #1f883d（亮色官方值） */
-    "--dsw-alias-button-primary-fill": "#1f883d",
-    "--dsw-alias-button-primary-hover": "#1a7f37",
-    "--dsw-alias-button-primary-dimmed": "#16795c",
-    "--dsw-alias-button-contrast-fill": "#1f2328",
-    "--dsw-alias-button-elevated-fill": "#ffffff",
-    "--dsw-alias-button-floating-fill": "#ffffff",
-    "--dsw-alias-button-floating-hover": "#f6f8fa",
-    "--dsw-alias-button-ghost-active-border": "#afb8c1",
-    "--dsw-alias-button-ghost-active-fill": "#eff2f5",
-    "--dsw-alias-button-ghost-active-hover": "#eaeef2",
-    "--dsw-alias-button-info-fill": "#0969da",
-    "--dsw-alias-button-info-hover": "#0550ae",
-    "--dsw-alias-button-tool-bar-fill": "#f6f8fa",
-    "--dsw-alias-button-tool-bar-fill-invisible": "transparent",
-    "--dsw-alias-button-tool-bar-hover": "#eff2f5",
-    "--dsw-alias-interactive-bg-hover": "#f6f8fa",
-    "--dsw-alias-interactive-bg-active": "#eff2f5",
-    "--dsw-alias-interactive-bg-hover-accent": "rgba(9, 105, 218, 0.10)",
-    "--dsw-alias-interactive-bg-hover-danger": "rgba(207, 34, 46, 0.08)",
-    "--dsw-alias-interactive-bg-hover-solid": "#eff2f5",
-    "--dsw-alias-label-primary": "#1f2328",
-    "--dsw-alias-label-secondary": "#1f2328",
-    "--dsw-alias-label-tertiary": "#656d76",
-    "--dsw-alias-label-quaternary": "#8c959f",
-    "--dsw-alias-label-caption": "#656d76",
-    "--dsw-alias-label-dimmed": "#8c959f",
-    "--dsw-alias-label-error": "#cf222e",
-    "--dsw-alias-label-primary-foreground": "#ffffff",
-    "--dsw-alias-label-primary-inverted": "#ffffff",
-    "--dsw-alias-label-primary-bluish": "#0969da",
-    "--dsw-alias-state-business-primary": "#0969da",
-    "--dsw-alias-state-business-tertiary": "rgba(9, 105, 218, 0.10)",
-    "--dsw-alias-state-error-primary": "#cf222e",
-    "--dsw-alias-state-error-secondary": "rgba(207, 34, 46, 0.08)",
-    "--dsw-alias-state-success-primary": "#1a7f37",
-    "--dsw-alias-state-success-secondary": "rgba(26, 127, 55, 0.10)",
-    "--dsw-alias-state-warn-primary": "#9a6700",
-    "--dsw-alias-state-warn-secondary": "rgba(154, 103, 0, 0.10)",
-    "--dsw-alias-state-warn-label": "#9a6700",
-    "--dsw-alias-markdown-citation": "#0969da",
-    "--dsw-alias-markdown-code-block": "#f6f8fa",
-    "--dsw-alias-markdown-code-block-banner": "#eff2f5",
-    "--dsw-alias-markdown-inline-code": "rgba(9, 105, 218, 0.08)",
-    "--dsw-alias-markdown-code-segment-selected": "rgba(9, 105, 218, 0.12)",
-    "--dsw-alias-markdown-code-segment-unselected": "transparent",
-    "--dsw-alias-markdown-placeholder": "#8c959f",
-    "--dsw-alias-scrollbar-bg-l1": "#d0d7de",
-    "--dsw-alias-scrollbar-bg-l2": "#eff2f5",
-    "--dsw-alias-scrollbar-hover-l1": "#afb8c1",
-    "--dsw-alias-scrollbar-hover-l2": "#d0d7de",
-    "--dsw-alias-toast-bg": "#ffffff",
-    "--dsw-alias-tooltip-bg": "#1f2328",
-    "--dsw-hovercard-bg": "#ffffff",
-    "--dsw-specific-sidebar-fill": "#f6f8fa",
-    "--dsw-specific-sidebar-nav-item-active": "rgba(9, 105, 218, 0.22)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "#0969da",
-    "--dsw-specific-sidebar-nav-item-hover": "#eff2f5",
-    "--dsw-specific-bubble": "#f6f8fa",
-    "--dsw-specific-bubble-highlight": "#eff2f5",
-    "--dsw-specific-input-major": "#f6f8fa",
-    "--dsw-specific-login-input": "#f6f8fa",
-    "--dsw-specific-menu": "#ffffff",
-    "--dsw-specific-selector": "#ffffff",
-    "--dsw-specific-tip": "#1f2328",
-    "--dsw-shadow-lv1": "0 1px 0 rgba(31, 35, 40, 0.04)",
-    "--dsw-shadow-lv2": "0 1px 3px rgba(31, 35, 40, 0.06)",
-    "--dsw-shadow-lv3": "0 1px 5px rgba(31, 35, 40, 0.08)",
-    "--dsw-shadow-lv1-blur": "1px",
-    "--dsw-font-family": SANS,
-    "--dsw-font-mono": MONO
-  },
-  SANS
-);
-var meta6 = {
-  dark: {
-    id: "github-dark",
-    label: "GitHub \u6697\u8272 Primer",
-    desc: "#0d1117 + Primer \u84DD #2f81f7",
-    swatch: ["#0d1117", "#161b22", "#2f81f7", "#3fb950"]
-  },
-  light: {
-    id: "github-light",
-    label: "GitHub \u4EAE\u8272 Primer",
-    desc: "\u7EAF\u767D + #0969da + \u7EFF\u8272\u6309\u94AE",
-    swatch: ["#ffffff", "#f6f8fa", "#0969da", "#1f883d"]
-  }
-};
-
-// src/host/themes/replicate.ts
-var replicate_exports = {};
-__export(replicate_exports, {
-  light: () => light5,
-  meta: () => meta7
-});
-var light5 = fillFontTokens(
-  {
-    "--dsw-alias-bg-base": "#ffffff",
-    "--dsw-alias-bg-layer-1": "#f8f8f8",
-    "--dsw-alias-bg-layer-2": "#efefef",
-    "--dsw-alias-bg-layer-3": "#e5e5e5",
-    "--dsw-alias-bg-overlay": "#ffffff",
-    "--dsw-alias-bg-multi-select": "#f8f8f8",
-    "--dsw-alias-bg-module-platform": "#f8f8f8",
-    "--dsw-alias-bg-skeleton": "#f8f8f8",
-    "--dsw-alias-border-l1": "#e5e5e5",
-    "--dsw-alias-border-l2": "#bbbbbb",
-    "--dsw-alias-border-l2-darkmode-thin": "#e5e5e5",
-    "--dsw-alias-border-l3": "#8d8d8d",
-    "--dsw-alias-border-l4": "#4e4e4e",
-    "--dsw-alias-border-inverted": "#202020",
-    "--dsw-alias-border-inverted2": "#4e4e4e",
-    "--dsw-alias-separator-primary": "#e5e5e5",
-    "--dsw-alias-fill-l2": "#efefef",
-    "--dsw-alias-fill-tsp-secondary": "rgba(32, 32, 32, 0.04)",
-    /* 品牌红：主操作与高光 */
-    "--dsw-alias-brand-primary": "#ea2804",
-    "--dsw-alias-brand-primary-invert": "#ffffff",
-    "--dsw-alias-brand-text": "#ea2804",
-    "--dsw-alias-link": "#ea2804",
-    "--dsw-alias-button-primary-fill": "#ea2804",
-    "--dsw-alias-button-primary-hover": "#d42403",
-    "--dsw-alias-button-primary-dimmed": "#b01e02",
-    "--dsw-alias-button-contrast-fill": "#202020",
-    "--dsw-alias-button-elevated-fill": "#ffffff",
-    "--dsw-alias-button-floating-fill": "#ffffff",
-    "--dsw-alias-button-floating-hover": "#f8f8f8",
-    "--dsw-alias-button-ghost-active-border": "#bbbbbb",
-    "--dsw-alias-button-ghost-active-fill": "#efefef",
-    "--dsw-alias-button-ghost-active-hover": "#e5e5e5",
-    "--dsw-alias-button-info-fill": "#ea2804",
-    "--dsw-alias-button-info-hover": "#d42403",
-    "--dsw-alias-button-tool-bar-fill": "#f8f8f8",
-    "--dsw-alias-button-tool-bar-fill-invisible": "transparent",
-    "--dsw-alias-button-tool-bar-hover": "#efefef",
-    "--dsw-alias-interactive-bg-hover": "#f8f8f8",
-    "--dsw-alias-interactive-bg-active": "#efefef",
-    "--dsw-alias-interactive-bg-hover-accent": "rgba(234, 40, 4, 0.10)",
-    "--dsw-alias-interactive-bg-hover-danger": "rgba(220, 38, 38, 0.08)",
-    "--dsw-alias-interactive-bg-hover-solid": "#efefef",
-    "--dsw-alias-label-primary": "#202020",
-    "--dsw-alias-label-secondary": "#4e4e4e",
-    "--dsw-alias-label-tertiary": "#646464",
-    "--dsw-alias-label-quaternary": "#8d8d8d",
-    "--dsw-alias-label-caption": "#646464",
-    "--dsw-alias-label-dimmed": "#8d8d8d",
-    "--dsw-alias-label-error": "#dc2626",
-    "--dsw-alias-label-primary-foreground": "#ffffff",
-    "--dsw-alias-label-primary-inverted": "#ffffff",
-    "--dsw-alias-label-primary-bluish": "#ea2804",
-    "--dsw-alias-state-business-primary": "#ea2804",
-    "--dsw-alias-state-business-tertiary": "rgba(234, 40, 4, 0.10)",
-    "--dsw-alias-state-error-primary": "#dc2626",
-    "--dsw-alias-state-error-secondary": "rgba(220, 38, 38, 0.08)",
-    "--dsw-alias-state-success-primary": "#2b9a66",
-    "--dsw-alias-state-success-secondary": "rgba(43, 154, 102, 0.10)",
-    "--dsw-alias-state-warn-primary": "#9a6700",
-    "--dsw-alias-state-warn-secondary": "rgba(234, 179, 8, 0.10)",
-    "--dsw-alias-state-warn-label": "#9a6700",
-    "--dsw-alias-markdown-citation": "#ea2804",
-    "--dsw-alias-markdown-code-block": "#f8f8f8",
-    "--dsw-alias-markdown-code-block-banner": "#efefef",
-    "--dsw-alias-markdown-inline-code": "rgba(234, 40, 4, 0.08)",
-    "--dsw-alias-markdown-code-segment-selected": "rgba(234, 40, 4, 0.12)",
-    "--dsw-alias-markdown-code-segment-unselected": "transparent",
-    "--dsw-alias-markdown-placeholder": "#8d8d8d",
-    "--dsw-alias-scrollbar-bg-l1": "#e5e5e5",
-    "--dsw-alias-scrollbar-bg-l2": "#efefef",
-    "--dsw-alias-scrollbar-hover-l1": "#bbbbbb",
-    "--dsw-alias-scrollbar-hover-l2": "#e5e5e5",
-    "--dsw-alias-toast-bg": "#ffffff",
-    "--dsw-alias-tooltip-bg": "#202020",
-    "--dsw-hovercard-bg": "#ffffff",
-    "--dsw-specific-sidebar-fill": "#f8f8f8",
-    "--dsw-specific-sidebar-nav-item-active": "rgba(234, 40, 4, 0.22)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "#ea2804",
-    "--dsw-specific-sidebar-nav-item-hover": "#efefef",
-    "--dsw-specific-bubble": "#f8f8f8",
-    "--dsw-specific-bubble-highlight": "#efefef",
-    "--dsw-specific-input-major": "#f8f8f8",
-    "--dsw-specific-login-input": "#f8f8f8",
-    "--dsw-specific-menu": "#ffffff",
-    "--dsw-specific-selector": "#ffffff",
-    "--dsw-specific-tip": "#202020",
-    "--dsw-font-family": SANS,
-    "--dsw-font-mono": MONO,
-    ...FLAT_SHADOWS
-  },
-  SANS
-);
-var meta7 = {
-  light: {
-    id: "replicate-light",
-    label: "Replicate \u5F00\u53D1\u8005\u7EA2",
-    desc: "\u7EAF\u767D #ffffff + \u54C1\u724C\u7EA2 #ea2804",
-    swatch: ["#ffffff", "#f8f8f8", "#ea2804", "#202020"]
-  }
-};
-
-// src/host/themes/cisco.ts
-var cisco_exports = {};
-__export(cisco_exports, {
-  dark: () => dark5,
-  meta: () => meta8
-});
-var dark5 = fillFontTokens(
-  {
-    "--dsw-alias-bg-base": "#0f1720",
-    "--dsw-alias-bg-layer-1": "#1b2530",
-    "--dsw-alias-bg-layer-2": "#243447",
-    "--dsw-alias-bg-layer-3": "#2e4257",
-    "--dsw-alias-bg-overlay": "#1b2530",
-    "--dsw-alias-bg-multi-select": "#1b2530",
-    "--dsw-alias-bg-module-platform": "#1b2530",
-    "--dsw-alias-bg-skeleton": "#1b2530",
-    "--dsw-alias-border-l1": "#243447",
-    "--dsw-alias-border-l2": "#58585b",
-    "--dsw-alias-border-l2-darkmode-thin": "rgba(232, 235, 241, 0.14)",
-    "--dsw-alias-border-l3": "#9e9ea2",
-    "--dsw-alias-border-l4": "#e8ebf1",
-    "--dsw-alias-border-inverted": "#ffffff",
-    "--dsw-alias-border-inverted2": "#e8ebf1",
-    "--dsw-alias-separator-primary": "#243447",
-    "--dsw-alias-fill-l2": "#243447",
-    "--dsw-alias-fill-tsp-secondary": "rgba(255, 255, 255, 0.05)",
-    /* Cisco 蓝：品牌信号 */
-    "--dsw-alias-brand-primary": "#049fd9",
-    "--dsw-alias-brand-primary-invert": "#001923",
-    "--dsw-alias-brand-text": "#049fd9",
-    "--dsw-alias-link": "#049fd9",
-    "--dsw-alias-button-primary-fill": "#049fd9",
-    "--dsw-alias-button-primary-hover": "#048fc3",
-    "--dsw-alias-button-primary-dimmed": "#03709a",
-    "--dsw-alias-button-contrast-fill": "#ffffff",
-    "--dsw-alias-button-elevated-fill": "#1b2530",
-    "--dsw-alias-button-floating-fill": "#1b2530",
-    "--dsw-alias-button-floating-hover": "#243447",
-    "--dsw-alias-button-ghost-active-border": "#58585b",
-    "--dsw-alias-button-ghost-active-fill": "#243447",
-    "--dsw-alias-button-ghost-active-hover": "#2e4257",
-    "--dsw-alias-button-info-fill": "#049fd9",
-    "--dsw-alias-button-info-hover": "#048fc3",
-    "--dsw-alias-button-tool-bar-fill": "#1b2530",
-    "--dsw-alias-button-tool-bar-fill-invisible": "transparent",
-    "--dsw-alias-button-tool-bar-hover": "#243447",
-    "--dsw-alias-interactive-bg-hover": "#16202c",
-    "--dsw-alias-interactive-bg-active": "#243447",
-    "--dsw-alias-interactive-bg-hover-accent": "rgba(4, 159, 217, 0.18)",
-    "--dsw-alias-interactive-bg-hover-danger": "rgba(207, 32, 48, 0.15)",
-    "--dsw-alias-interactive-bg-hover-solid": "#243447",
-    "--dsw-alias-label-primary": "#ffffff",
-    "--dsw-alias-label-secondary": "#e8ebf1",
-    "--dsw-alias-label-tertiary": "#9e9ea2",
-    "--dsw-alias-label-quaternary": "#58585b",
-    "--dsw-alias-label-caption": "#9e9ea2",
-    "--dsw-alias-label-dimmed": "#58585b",
-    "--dsw-alias-label-error": "#cf2030",
-    "--dsw-alias-label-primary-foreground": "#ffffff",
-    "--dsw-alias-label-primary-inverted": "#0f1720",
-    "--dsw-alias-label-primary-bluish": "#64bbe3",
-    "--dsw-alias-state-business-primary": "#049fd9",
-    "--dsw-alias-state-business-tertiary": "rgba(4, 159, 217, 0.18)",
-    "--dsw-alias-state-error-primary": "#cf2030",
-    "--dsw-alias-state-error-secondary": "rgba(207, 32, 48, 0.15)",
-    "--dsw-alias-state-success-primary": "#6cc04a",
-    "--dsw-alias-state-success-secondary": "rgba(108, 192, 74, 0.15)",
-    "--dsw-alias-state-warn-primary": "#ffcc00",
-    "--dsw-alias-state-warn-secondary": "rgba(255, 204, 0, 0.15)",
-    "--dsw-alias-state-warn-label": "#ffcc00",
-    "--dsw-alias-markdown-citation": "#64bbe3",
-    "--dsw-alias-markdown-code-block": "#1b2530",
-    "--dsw-alias-markdown-code-block-banner": "#243447",
-    "--dsw-alias-markdown-inline-code": "rgba(4, 159, 217, 0.12)",
-    "--dsw-alias-markdown-code-segment-selected": "rgba(4, 159, 217, 0.22)",
-    "--dsw-alias-markdown-code-segment-unselected": "transparent",
-    "--dsw-alias-markdown-placeholder": "#58585b",
-    "--dsw-alias-scrollbar-bg-l1": "#58585b",
-    "--dsw-alias-scrollbar-bg-l2": "#243447",
-    "--dsw-alias-scrollbar-hover-l1": "#9e9ea2",
-    "--dsw-alias-scrollbar-hover-l2": "#58585b",
-    "--dsw-alias-toast-bg": "#1b2530",
-    "--dsw-alias-tooltip-bg": "#243447",
-    "--dsw-hovercard-bg": "#243447",
-    "--dsw-specific-sidebar-fill": "#0f1720",
-    "--dsw-specific-sidebar-nav-item-active": "rgba(4, 159, 217, 0.22)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "#049fd9",
-    "--dsw-specific-sidebar-nav-item-hover": "#16202c",
-    "--dsw-specific-bubble": "#1b2530",
-    "--dsw-specific-bubble-highlight": "#243447",
-    "--dsw-specific-input-major": "#1b2530",
-    "--dsw-specific-login-input": "#1b2530",
-    "--dsw-specific-menu": "#243447",
-    "--dsw-specific-selector": "#243447",
-    "--dsw-specific-tip": "#2e4257",
-    "--dsw-font-family": SANS,
-    "--dsw-font-mono": MONO,
-    ...FLAT_SHADOWS
-  },
-  SANS
-);
-var meta8 = {
-  dark: {
-    id: "cisco-dark",
-    label: "Cisco \u4FE1\u4EFB\u84DD",
-    desc: "\u85CF\u9752 #0f1720 + \u4FE1\u53F7\u84DD #049fd9",
-    swatch: ["#0f1720", "#1b2530", "#049fd9", "#ffffff"]
-  }
-};
-
-// src/host/themes/tide.ts
-var tide_exports = {};
-__export(tide_exports, {
-  dark: () => dark6,
-  meta: () => meta9
-});
-var dark6 = fillFontTokens(
-  {
-    "--dsw-alias-bg-base": "#062a2c",
-    "--dsw-alias-bg-layer-1": "#0b3538",
-    "--dsw-alias-bg-layer-2": "#104144",
-    "--dsw-alias-bg-layer-3": "#174f52",
-    "--dsw-alias-bg-overlay": "#0b3538",
-    "--dsw-alias-bg-multi-select": "#0b3538",
-    "--dsw-alias-bg-module-platform": "#0b3538",
-    "--dsw-alias-bg-skeleton": "#0b3538",
-    "--dsw-alias-border-l1": "#174f52",
-    "--dsw-alias-border-l2": "#3d7a7d",
-    "--dsw-alias-border-l2-darkmode-thin": "#174f52",
-    "--dsw-alias-border-l3": "#5b9a9d",
-    "--dsw-alias-border-l4": "#7fbabd",
-    "--dsw-alias-border-inverted": "#eafaf8",
-    "--dsw-alias-border-inverted2": "#b5deda",
-    "--dsw-alias-separator-primary": "#174f52",
-    "--dsw-alias-fill-l2": "#104144",
-    "--dsw-alias-fill-tsp-secondary": "rgba(234, 250, 248, 0.05)",
-    /* 潮汐青：品牌信号 */
-    "--dsw-alias-brand-primary": "#2dd4bf",
-    "--dsw-alias-brand-primary-invert": "#062a2c",
-    "--dsw-alias-brand-text": "#5eead4",
-    "--dsw-alias-link": "#5eead4",
-    "--dsw-alias-button-primary-fill": "#2dd4bf",
-    "--dsw-alias-button-primary-hover": "#5eead4",
-    "--dsw-alias-button-primary-dimmed": "#0d9488",
-    "--dsw-alias-button-contrast-fill": "#eafaf8",
-    "--dsw-alias-button-elevated-fill": "#0b3538",
-    "--dsw-alias-button-floating-fill": "#0b3538",
-    "--dsw-alias-button-floating-hover": "#104144",
-    "--dsw-alias-button-ghost-active-border": "#3d7a7d",
-    "--dsw-alias-button-ghost-active-fill": "#104144",
-    "--dsw-alias-button-ghost-active-hover": "#174f52",
-    "--dsw-alias-button-info-fill": "#38bdf8",
-    "--dsw-alias-button-info-hover": "#7dd3fc",
-    "--dsw-alias-button-tool-bar-fill": "#0b3538",
-    "--dsw-alias-button-tool-bar-fill-invisible": "transparent",
-    "--dsw-alias-button-tool-bar-hover": "#104144",
-    "--dsw-alias-interactive-bg-hover": "#0d3a3d",
-    "--dsw-alias-interactive-bg-active": "#104144",
-    "--dsw-alias-interactive-bg-hover-accent": "rgba(45, 212, 191, 0.15)",
-    "--dsw-alias-interactive-bg-hover-danger": "rgba(248, 113, 113, 0.15)",
-    "--dsw-alias-interactive-bg-hover-solid": "#104144",
-    "--dsw-alias-label-primary": "#eafaf8",
-    "--dsw-alias-label-secondary": "#b5deda",
-    "--dsw-alias-label-tertiary": "#7fa8a5",
-    "--dsw-alias-label-quaternary": "#527a78",
-    "--dsw-alias-label-caption": "#7fa8a5",
-    "--dsw-alias-label-dimmed": "#527a78",
-    "--dsw-alias-label-error": "#f87171",
-    "--dsw-alias-label-primary-foreground": "#eafaf8",
-    "--dsw-alias-label-primary-inverted": "#062a2c",
-    "--dsw-alias-label-primary-bluish": "#38bdf8",
-    "--dsw-alias-state-business-primary": "#5eead4",
-    "--dsw-alias-state-business-tertiary": "rgba(45, 212, 191, 0.15)",
-    "--dsw-alias-state-error-primary": "#f87171",
-    "--dsw-alias-state-error-secondary": "rgba(248, 113, 113, 0.15)",
-    "--dsw-alias-state-success-primary": "#34d399",
-    "--dsw-alias-state-success-secondary": "rgba(52, 211, 153, 0.15)",
-    "--dsw-alias-state-warn-primary": "#fbbf24",
-    "--dsw-alias-state-warn-secondary": "rgba(251, 191, 36, 0.15)",
-    "--dsw-alias-state-warn-label": "#fbbf24",
-    "--dsw-alias-markdown-citation": "#5eead4",
-    "--dsw-alias-markdown-code-block": "#0b3538",
-    "--dsw-alias-markdown-code-block-banner": "#104144",
-    "--dsw-alias-markdown-inline-code": "rgba(45, 212, 191, 0.10)",
-    "--dsw-alias-markdown-code-segment-selected": "rgba(45, 212, 191, 0.20)",
-    "--dsw-alias-markdown-code-segment-unselected": "transparent",
-    "--dsw-alias-markdown-placeholder": "#527a78",
-    "--dsw-alias-scrollbar-bg-l1": "#3d7a7d",
-    "--dsw-alias-scrollbar-bg-l2": "#104144",
-    "--dsw-alias-scrollbar-hover-l1": "#7fa8a5",
-    "--dsw-alias-scrollbar-hover-l2": "#3d7a7d",
-    "--dsw-alias-toast-bg": "#0b3538",
-    "--dsw-alias-tooltip-bg": "#174f52",
-    "--dsw-hovercard-bg": "#104144",
-    "--dsw-specific-sidebar-fill": "#062a2c",
-    "--dsw-specific-sidebar-nav-item-active": "rgba(45, 212, 191, 0.22)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "#2dd4bf",
-    "--dsw-specific-sidebar-nav-item-hover": "#0d3a3d",
-    "--dsw-specific-bubble": "#0b3538",
-    "--dsw-specific-bubble-highlight": "#104144",
-    "--dsw-specific-input-major": "#0b3538",
-    "--dsw-specific-login-input": "#0b3538",
-    "--dsw-specific-menu": "#104144",
-    "--dsw-specific-selector": "#104144",
-    "--dsw-specific-tip": "#174f52",
-    "--dsw-font-family": SANS,
-    "--dsw-font-mono": MONO,
-    ...FLAT_SHADOWS
-  },
-  SANS
-);
-var meta9 = {
-  dark: {
-    id: "tide-dark",
-    label: "Tide \u6F6E\u6C50\u9752",
-    desc: "\u6DF1\u9752 #062a2c + \u6F6E\u6C50 #2dd4bf",
-    swatch: ["#062a2c", "#0b3538", "#2dd4bf", "#eafaf8"]
-  }
-};
-
-// src/host/themes/nebula.ts
-var nebula_exports = {};
-__export(nebula_exports, {
-  dark: () => dark7,
-  meta: () => meta10
-});
-var dark7 = fillFontTokens(
-  {
-    "--dsw-alias-bg-base": "#0d0a1a",
-    "--dsw-alias-bg-layer-1": "#161230",
-    "--dsw-alias-bg-layer-2": "#1e1840",
-    "--dsw-alias-bg-layer-3": "#282058",
-    "--dsw-alias-bg-overlay": "#161230",
-    "--dsw-alias-bg-multi-select": "#161230",
-    "--dsw-alias-bg-module-platform": "#161230",
-    "--dsw-alias-bg-skeleton": "#161230",
-    "--dsw-alias-border-l1": "#2a2350",
-    "--dsw-alias-border-l2": "#554a8a",
-    "--dsw-alias-border-l2-darkmode-thin": "#2a2350",
-    "--dsw-alias-border-l3": "#6d63a8",
-    "--dsw-alias-border-l4": "#8b7fc7",
-    "--dsw-alias-border-inverted": "#f1edfd",
-    "--dsw-alias-border-inverted2": "#c9bff0",
-    "--dsw-alias-separator-primary": "#2a2350",
-    "--dsw-alias-fill-l2": "#1e1840",
-    "--dsw-alias-fill-tsp-secondary": "rgba(241, 237, 253, 0.05)",
-    /* 霓紫：品牌信号 */
-    "--dsw-alias-brand-primary": "#8b5cf6",
-    "--dsw-alias-brand-primary-invert": "#ffffff",
-    "--dsw-alias-brand-text": "#a78bfa",
-    "--dsw-alias-link": "#a78bfa",
-    "--dsw-alias-button-primary-fill": "#8b5cf6",
-    "--dsw-alias-button-primary-hover": "#a78bfa",
-    "--dsw-alias-button-primary-dimmed": "#6d28d9",
-    "--dsw-alias-button-contrast-fill": "#f1edfd",
-    "--dsw-alias-button-elevated-fill": "#161230",
-    "--dsw-alias-button-floating-fill": "#161230",
-    "--dsw-alias-button-floating-hover": "#1e1840",
-    "--dsw-alias-button-ghost-active-border": "#554a8a",
-    "--dsw-alias-button-ghost-active-fill": "#1e1840",
-    "--dsw-alias-button-ghost-active-hover": "#282058",
-    "--dsw-alias-button-info-fill": "#d946ef",
-    "--dsw-alias-button-info-hover": "#e879f9",
-    "--dsw-alias-button-tool-bar-fill": "#161230",
-    "--dsw-alias-button-tool-bar-fill-invisible": "transparent",
-    "--dsw-alias-button-tool-bar-hover": "#1e1840",
-    "--dsw-alias-interactive-bg-hover": "#1a1438",
-    "--dsw-alias-interactive-bg-active": "#1e1840",
-    "--dsw-alias-interactive-bg-hover-accent": "rgba(139, 92, 246, 0.20)",
-    "--dsw-alias-interactive-bg-hover-danger": "rgba(244, 63, 94, 0.15)",
-    "--dsw-alias-interactive-bg-hover-solid": "#1e1840",
-    "--dsw-alias-label-primary": "#f1edfd",
-    "--dsw-alias-label-secondary": "#c9bff0",
-    "--dsw-alias-label-tertiary": "#8f86b8",
-    "--dsw-alias-label-quaternary": "#655c94",
-    "--dsw-alias-label-caption": "#8f86b8",
-    "--dsw-alias-label-dimmed": "#655c94",
-    "--dsw-alias-label-error": "#fb7185",
-    "--dsw-alias-label-primary-foreground": "#f1edfd",
-    "--dsw-alias-label-primary-inverted": "#0d0a1a",
-    "--dsw-alias-label-primary-bluish": "#a78bfa",
-    "--dsw-alias-state-business-primary": "#a78bfa",
-    "--dsw-alias-state-business-tertiary": "rgba(139, 92, 246, 0.20)",
-    "--dsw-alias-state-error-primary": "#fb7185",
-    "--dsw-alias-state-error-secondary": "rgba(251, 113, 133, 0.15)",
-    "--dsw-alias-state-success-primary": "#34d399",
-    "--dsw-alias-state-success-secondary": "rgba(52, 211, 153, 0.15)",
-    "--dsw-alias-state-warn-primary": "#fbbf24",
-    "--dsw-alias-state-warn-secondary": "rgba(251, 191, 36, 0.15)",
-    "--dsw-alias-state-warn-label": "#fbbf24",
-    "--dsw-alias-markdown-citation": "#a78bfa",
-    "--dsw-alias-markdown-code-block": "#161230",
-    "--dsw-alias-markdown-code-block-banner": "#1e1840",
-    "--dsw-alias-markdown-inline-code": "rgba(167, 139, 250, 0.12)",
-    "--dsw-alias-markdown-code-segment-selected": "rgba(139, 92, 246, 0.25)",
-    "--dsw-alias-markdown-code-segment-unselected": "transparent",
-    "--dsw-alias-markdown-placeholder": "#655c94",
-    "--dsw-alias-scrollbar-bg-l1": "#554a8a",
-    "--dsw-alias-scrollbar-bg-l2": "#1e1840",
-    "--dsw-alias-scrollbar-hover-l1": "#8f86b8",
-    "--dsw-alias-scrollbar-hover-l2": "#554a8a",
-    "--dsw-alias-toast-bg": "#161230",
-    "--dsw-alias-tooltip-bg": "#282058",
-    "--dsw-hovercard-bg": "#1e1840",
-    "--dsw-specific-sidebar-fill": "#0d0a1a",
-    "--dsw-specific-sidebar-nav-item-active": "rgba(139, 92, 246, 0.22)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "#8b5cf6",
-    "--dsw-specific-sidebar-nav-item-hover": "#1a1438",
-    "--dsw-specific-bubble": "#161230",
-    "--dsw-specific-bubble-highlight": "#1e1840",
-    "--dsw-specific-input-major": "#161230",
-    "--dsw-specific-login-input": "#161230",
-    "--dsw-specific-menu": "#1e1840",
-    "--dsw-specific-selector": "#1e1840",
-    "--dsw-specific-tip": "#282058",
-    "--dsw-font-family": SANS,
-    "--dsw-font-mono": MONO,
-    ...FLAT_SHADOWS
-  },
-  SANS
-);
-var meta10 = {
-  dark: {
-    id: "nebula-dark",
-    label: "Nebula \u661F\u4E91\u7D2B",
-    desc: "\u7D2B\u9ED1 #0d0a1a + \u9713\u7D2B #8b5cf6",
-    swatch: ["#0d0a1a", "#161230", "#8b5cf6", "#f1edfd"]
-  }
-};
-
-// src/host/themes/discord.ts
-var discord_exports = {};
-__export(discord_exports, {
-  dark: () => dark8,
-  meta: () => meta11
-});
-var dark8 = fillFontTokens(
-  {
-    "--dsw-alias-bg-base": "#313338",
-    "--dsw-alias-bg-layer-1": "#2b2d31",
-    "--dsw-alias-bg-layer-2": "#242529",
-    "--dsw-alias-bg-layer-3": "#1e1f22",
-    "--dsw-alias-bg-overlay": "#2b2d31",
-    "--dsw-alias-bg-multi-select": "#2b2d31",
-    "--dsw-alias-bg-module-platform": "#2b2d31",
-    "--dsw-alias-bg-skeleton": "#242529",
-    "--dsw-alias-border-l1": "rgba(255, 255, 255, 0.06)",
-    "--dsw-alias-border-l2": "#3f4147",
-    "--dsw-alias-border-l2-darkmode-thin": "rgba(255, 255, 255, 0.06)",
-    "--dsw-alias-border-l3": "#5c5e66",
-    "--dsw-alias-border-l4": "#80848e",
-    "--dsw-alias-border-inverted": "#f2f3f5",
-    "--dsw-alias-border-inverted2": "#dbdee1",
-    "--dsw-alias-separator-primary": "rgba(255, 255, 255, 0.06)",
-    "--dsw-alias-fill-l2": "#242529",
-    "--dsw-alias-fill-tsp-secondary": "rgba(219, 222, 225, 0.06)",
-    /* Blurple：品牌指纹 */
-    "--dsw-alias-brand-primary": "#5865f2",
-    "--dsw-alias-brand-primary-invert": "#ffffff",
-    "--dsw-alias-brand-text": "#5865f2",
-    "--dsw-alias-link": "#5865f2",
-    "--dsw-alias-button-primary-fill": "#5865f2",
-    "--dsw-alias-button-primary-hover": "#4752c4",
-    "--dsw-alias-button-primary-dimmed": "#3c45a5",
-    "--dsw-alias-button-contrast-fill": "#f2f3f5",
-    "--dsw-alias-button-elevated-fill": "#2b2d31",
-    "--dsw-alias-button-floating-fill": "#2b2d31",
-    "--dsw-alias-button-floating-hover": "#313338",
-    "--dsw-alias-button-ghost-active-border": "#3f4147",
-    "--dsw-alias-button-ghost-active-fill": "#242529",
-    "--dsw-alias-button-ghost-active-hover": "#1e1f22",
-    "--dsw-alias-button-info-fill": "#5865f2",
-    "--dsw-alias-button-info-hover": "#4752c4",
-    "--dsw-alias-button-tool-bar-fill": "#2b2d31",
-    "--dsw-alias-button-tool-bar-fill-invisible": "transparent",
-    "--dsw-alias-button-tool-bar-hover": "#313338",
-    "--dsw-alias-interactive-bg-hover": "#2e3035",
-    "--dsw-alias-interactive-bg-active": "#34363c",
-    "--dsw-alias-interactive-bg-hover-accent": "rgba(88, 101, 242, 0.18)",
-    "--dsw-alias-interactive-bg-hover-danger": "rgba(242, 63, 67, 0.15)",
-    "--dsw-alias-interactive-bg-hover-solid": "#34363c",
-    "--dsw-alias-label-primary": "#dbdee1",
-    "--dsw-alias-label-secondary": "#b5bac1",
-    "--dsw-alias-label-tertiary": "#949ba4",
-    "--dsw-alias-label-quaternary": "#80848e",
-    "--dsw-alias-label-caption": "#949ba4",
-    "--dsw-alias-label-dimmed": "#6d6f78",
-    "--dsw-alias-label-error": "#f23f43",
-    "--dsw-alias-label-primary-foreground": "#dbdee1",
-    "--dsw-alias-label-primary-inverted": "#313338",
-    "--dsw-alias-label-primary-bluish": "#7289da",
-    "--dsw-alias-state-business-primary": "#5865f2",
-    "--dsw-alias-state-business-tertiary": "rgba(88, 101, 242, 0.18)",
-    /* 状态点三色：在线绿 / 闲置黄 / 勿扰红 */
-    "--dsw-alias-state-error-primary": "#f23f43",
-    "--dsw-alias-state-error-secondary": "rgba(242, 63, 67, 0.15)",
-    "--dsw-alias-state-success-primary": "#23a55a",
-    "--dsw-alias-state-success-secondary": "rgba(35, 165, 90, 0.15)",
-    "--dsw-alias-state-warn-primary": "#f0b232",
-    "--dsw-alias-state-warn-secondary": "rgba(240, 178, 50, 0.15)",
-    "--dsw-alias-state-warn-label": "#f0b232",
-    "--dsw-alias-markdown-citation": "#7289da",
-    "--dsw-alias-markdown-code-block": "#2b2d31",
-    "--dsw-alias-markdown-code-block-banner": "#1e1f22",
-    "--dsw-alias-markdown-inline-code": "rgba(88, 101, 242, 0.16)",
-    "--dsw-alias-markdown-code-segment-selected": "rgba(88, 101, 242, 0.25)",
-    "--dsw-alias-markdown-code-segment-unselected": "transparent",
-    "--dsw-alias-markdown-placeholder": "#6d6f78",
-    "--dsw-alias-scrollbar-bg-l1": "#3f4147",
-    "--dsw-alias-scrollbar-bg-l2": "#242529",
-    "--dsw-alias-scrollbar-hover-l1": "#80848e",
-    "--dsw-alias-scrollbar-hover-l2": "#3f4147",
-    "--dsw-alias-toast-bg": "#2b2d31",
-    "--dsw-alias-tooltip-bg": "#1e1f22",
-    "--dsw-hovercard-bg": "#242529",
-    "--dsw-specific-sidebar-fill": "#2b2d31",
-    "--dsw-specific-sidebar-nav-item-active": "rgba(88, 101, 242, 0.22)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "#5865f2",
-    "--dsw-specific-sidebar-nav-item-hover": "#2e3035",
-    "--dsw-specific-bubble": "#2b2d31",
-    "--dsw-specific-bubble-highlight": "#313338",
-    "--dsw-specific-input-major": "#1e1f22",
-    "--dsw-specific-login-input": "#2b2d31",
-    "--dsw-specific-menu": "#2b2d31",
-    "--dsw-specific-selector": "#2b2d31",
-    "--dsw-specific-tip": "#1e1f22",
-    "--dsw-font-family": SANS,
-    "--dsw-font-mono": MONO,
-    ...FLAT_SHADOWS
-  },
-  SANS
-);
-var meta11 = {
-  dark: {
-    id: "discord-dark",
-    label: "Discord Blurple\u591C",
-    desc: "\u6DF1\u7070 #313338 + Blurple #5865f2",
-    swatch: ["#313338", "#2b2d31", "#5865f2", "#dbdee1"]
-  }
-};
-
 // src/host/themes/supabase.ts
 var supabase_exports = {};
 __export(supabase_exports, {
-  dark: () => dark9,
-  meta: () => meta12
+  dark: () => dark,
+  meta: () => meta2
 });
-var dark9 = fillFontTokens(
+var dark = fillFontTokens(
   {
     "--dsw-alias-bg-base": "#171717",
     "--dsw-alias-bg-layer-1": "#1c1c1c",
@@ -2399,7 +1064,7 @@ var dark9 = fillFontTokens(
   },
   SANS
 );
-var meta12 = {
+var meta2 = {
   dark: {
     id: "supabase-dark",
     label: "Supabase \u7FE1\u7FE0\u591C",
@@ -2411,10 +1076,10 @@ var meta12 = {
 // src/host/themes/sakura.ts
 var sakura_exports = {};
 __export(sakura_exports, {
-  light: () => light6,
-  meta: () => meta13
+  light: () => light2,
+  meta: () => meta3
 });
-var light6 = fillFontTokens(
+var light2 = fillFontTokens(
   {
     "--dsw-alias-bg-base": "#fff9fa",
     "--dsw-alias-bg-layer-1": "#fbeef2",
@@ -2513,7 +1178,7 @@ var light6 = fillFontTokens(
   },
   SANS
 );
-var meta13 = {
+var meta3 = {
   light: {
     id: "sakura-light",
     label: "Sakura \u6A31\u7C89",
@@ -2522,238 +1187,13 @@ var meta13 = {
   }
 };
 
-// src/host/themes/skeumorphism.ts
-var skeumorphism_exports = {};
-__export(skeumorphism_exports, {
-  light: () => light7,
-  meta: () => meta14
-});
-var light7 = fillFontTokens(
-  {
-    "--dsw-alias-bg-base": "#f7eee6",
-    "--dsw-alias-bg-layer-1": "#fff8f1",
-    "--dsw-alias-bg-layer-2": "#f2e3d3",
-    "--dsw-alias-bg-layer-3": "#ead6c7",
-    "--dsw-alias-bg-overlay": "#fff8f1",
-    "--dsw-alias-bg-multi-select": "#f2e3d3",
-    "--dsw-alias-bg-module-platform": "#fff8f1",
-    "--dsw-alias-bg-skeleton": "#f2e3d3",
-    "--dsw-alias-border-l1": "#eaded4",
-    "--dsw-alias-border-l2": "#dac8b9",
-    "--dsw-alias-border-l2-darkmode-thin": "#eaded4",
-    "--dsw-alias-border-l3": "#c9b3a1",
-    "--dsw-alias-border-l4": "#8a7a70",
-    "--dsw-alias-border-inverted": "#2b211c",
-    "--dsw-alias-border-inverted2": "#5a4b43",
-    "--dsw-alias-separator-primary": "#eaded4",
-    "--dsw-alias-fill-l2": "#f2e3d3",
-    "--dsw-alias-fill-tsp-secondary": "rgba(43, 33, 28, 0.05)",
-    /* 陶釉：品牌指纹 */
-    "--dsw-alias-brand-primary": "#b46a46",
-    "--dsw-alias-brand-primary-invert": "#ffffff",
-    "--dsw-alias-brand-text": "#b46a46",
-    "--dsw-alias-link": "#b46a46",
-    "--dsw-alias-button-primary-fill": "#b46a46",
-    "--dsw-alias-button-primary-hover": "#a66240",
-    "--dsw-alias-button-primary-dimmed": "#9b5b3c",
-    "--dsw-alias-button-contrast-fill": "#2b211c",
-    "--dsw-alias-button-elevated-fill": "#fff8f1",
-    "--dsw-alias-button-floating-fill": "#fff8f1",
-    "--dsw-alias-button-floating-hover": "#f2e3d3",
-    "--dsw-alias-button-ghost-active-border": "#dac8b9",
-    "--dsw-alias-button-ghost-active-fill": "#f2e3d3",
-    "--dsw-alias-button-ghost-active-hover": "#ead6c7",
-    "--dsw-alias-button-info-fill": "#b46a46",
-    "--dsw-alias-button-info-hover": "#a66240",
-    "--dsw-alias-button-tool-bar-fill": "#fff8f1",
-    "--dsw-alias-button-tool-bar-fill-invisible": "transparent",
-    "--dsw-alias-button-tool-bar-hover": "#f2e3d3",
-    "--dsw-alias-interactive-bg-hover": "#f2e3d3",
-    "--dsw-alias-interactive-bg-active": "#ead6c7",
-    "--dsw-alias-interactive-bg-hover-accent": "rgba(180, 106, 70, 0.12)",
-    "--dsw-alias-interactive-bg-hover-danger": "rgba(184, 76, 76, 0.12)",
-    "--dsw-alias-interactive-bg-hover-solid": "#ead6c7",
-    "--dsw-alias-label-primary": "#2b211c",
-    "--dsw-alias-label-secondary": "#5a4b43",
-    "--dsw-alias-label-tertiary": "#8a7a70",
-    "--dsw-alias-label-quaternary": "#b39d8d",
-    "--dsw-alias-label-caption": "#8a7a70",
-    "--dsw-alias-label-dimmed": "#b39d8d",
-    "--dsw-alias-label-error": "#b84c4c",
-    "--dsw-alias-label-primary-foreground": "#ffffff",
-    "--dsw-alias-label-primary-inverted": "#fff8f1",
-    "--dsw-alias-label-primary-bluish": "#b46a46",
-    "--dsw-alias-state-business-primary": "#b46a46",
-    "--dsw-alias-state-business-tertiary": "rgba(180, 106, 70, 0.12)",
-    "--dsw-alias-state-error-primary": "#b84c4c",
-    "--dsw-alias-state-error-secondary": "rgba(184, 76, 76, 0.10)",
-    "--dsw-alias-state-success-primary": "#4d8f5a",
-    "--dsw-alias-state-success-secondary": "rgba(77, 143, 90, 0.12)",
-    "--dsw-alias-state-warn-primary": "#c88735",
-    "--dsw-alias-state-warn-secondary": "rgba(200, 135, 53, 0.12)",
-    "--dsw-alias-state-warn-label": "#c88735",
-    "--dsw-alias-markdown-citation": "#b46a46",
-    "--dsw-alias-markdown-code-block": "#fff8f1",
-    "--dsw-alias-markdown-code-block-banner": "#f2e3d3",
-    "--dsw-alias-markdown-inline-code": "rgba(180, 106, 70, 0.10)",
-    "--dsw-alias-markdown-code-segment-selected": "rgba(180, 106, 70, 0.14)",
-    "--dsw-alias-markdown-code-segment-unselected": "transparent",
-    "--dsw-alias-markdown-placeholder": "#b39d8d",
-    "--dsw-alias-scrollbar-bg-l1": "#dac8b9",
-    "--dsw-alias-scrollbar-bg-l2": "#ead6c7",
-    "--dsw-alias-scrollbar-hover-l1": "#b46a46",
-    "--dsw-alias-scrollbar-hover-l2": "#dac8b9",
-    "--dsw-alias-toast-bg": "#fff8f1",
-    "--dsw-alias-tooltip-bg": "#2b211c",
-    "--dsw-hovercard-bg": "#fff8f1",
-    "--dsw-specific-sidebar-fill": "#f7eee6",
-    "--dsw-specific-sidebar-nav-item-active": "rgba(180, 106, 70, 0.22)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "#b46a46",
-    "--dsw-specific-sidebar-nav-item-hover": "#f2e3d3",
-    "--dsw-specific-bubble": "#fff8f1",
-    "--dsw-specific-bubble-highlight": "#f2e3d3",
-    "--dsw-specific-input-major": "#fff8f1",
-    "--dsw-specific-login-input": "#fff8f1",
-    "--dsw-specific-menu": "#fff8f1",
-    "--dsw-specific-selector": "#fff8f1",
-    "--dsw-specific-tip": "#ead6c7",
-    "--dsw-font-family": SANS,
-    "--dsw-font-mono": MONO,
-    /* 拟物柔和阴影（本主题唯一例外：不用 FLAT_SHADOWS） */
-    "--dsw-shadow-lv1": "0 2px 6px rgba(43, 33, 28, 0.12)",
-    "--dsw-shadow-lv2": "0 4px 12px rgba(43, 33, 28, 0.12)",
-    "--dsw-shadow-lv3": "0 8px 20px rgba(43, 33, 28, 0.12)",
-    "--dsw-shadow-lv1-blur": "6px"
-  },
-  SANS
-);
-var meta14 = {
-  light: {
-    id: "skeumorphism-light",
-    label: "Skeumorphism \u62DF\u7269\u9676\u571F",
-    desc: "\u9676\u571F #f7eee6 + \u9676\u91C9 #b46a46",
-    swatch: ["#f7eee6", "#fff8f1", "#b46a46", "#2b211c"]
-  }
-};
-
-// src/host/themes/wechat.ts
-var wechat_exports = {};
-__export(wechat_exports, {
-  light: () => light8,
-  meta: () => meta15
-});
-var light8 = fillFontTokens(
-  {
-    "--dsw-alias-bg-base": "#ededed",
-    "--dsw-alias-bg-layer-1": "#f7f7f7",
-    "--dsw-alias-bg-layer-2": "#efefef",
-    "--dsw-alias-bg-layer-3": "#e4e4e4",
-    "--dsw-alias-bg-overlay": "#ffffff",
-    "--dsw-alias-bg-multi-select": "#f7f7f7",
-    "--dsw-alias-bg-module-platform": "#f7f7f7",
-    "--dsw-alias-bg-skeleton": "#f1f1f1",
-    "--dsw-alias-border-l1": "#e0e0e0",
-    "--dsw-alias-border-l2": "#c8c8c8",
-    "--dsw-alias-border-l2-darkmode-thin": "#e0e0e0",
-    "--dsw-alias-border-l3": "#a8a8a8",
-    "--dsw-alias-border-l4": "#888888",
-    "--dsw-alias-border-inverted": "#1a1a1a",
-    "--dsw-alias-border-inverted2": "#1a1a1a",
-    "--dsw-alias-separator-primary": "#e0e0e0",
-    "--dsw-alias-fill-l2": "#efefef",
-    "--dsw-alias-fill-tsp-secondary": "rgba(26, 26, 26, 0.04)",
-    /* 微信绿：唯一信号色 */
-    "--dsw-alias-brand-primary": "#07c160",
-    "--dsw-alias-brand-primary-invert": "#ffffff",
-    "--dsw-alias-brand-text": "#07c160",
-    "--dsw-alias-link": "#07c160",
-    "--dsw-alias-button-primary-fill": "#07c160",
-    "--dsw-alias-button-primary-hover": "#10b160",
-    "--dsw-alias-button-primary-dimmed": "#059050",
-    "--dsw-alias-button-contrast-fill": "#1a1a1a",
-    "--dsw-alias-button-elevated-fill": "#ffffff",
-    "--dsw-alias-button-floating-fill": "#ffffff",
-    "--dsw-alias-button-floating-hover": "#f7f7f7",
-    "--dsw-alias-button-ghost-active-border": "#c8c8c8",
-    "--dsw-alias-button-ghost-active-fill": "#efefef",
-    "--dsw-alias-button-ghost-active-hover": "#e4e4e4",
-    "--dsw-alias-button-info-fill": "#07c160",
-    "--dsw-alias-button-info-hover": "#10b160",
-    "--dsw-alias-button-tool-bar-fill": "#f7f7f7",
-    "--dsw-alias-button-tool-bar-fill-invisible": "transparent",
-    "--dsw-alias-button-tool-bar-hover": "#efefef",
-    "--dsw-alias-interactive-bg-hover": "#f1f1f1",
-    "--dsw-alias-interactive-bg-active": "#e4e4e4",
-    "--dsw-alias-interactive-bg-hover-accent": "rgba(7, 193, 96, 0.12)",
-    "--dsw-alias-interactive-bg-hover-danger": "rgba(250, 81, 81, 0.10)",
-    "--dsw-alias-interactive-bg-hover-solid": "#e4e4e4",
-    "--dsw-alias-label-primary": "#1a1a1a",
-    "--dsw-alias-label-secondary": "#1a1a1a",
-    "--dsw-alias-label-tertiary": "#888888",
-    "--dsw-alias-label-quaternary": "#b2b2b2",
-    "--dsw-alias-label-caption": "#888888",
-    "--dsw-alias-label-dimmed": "#b2b2b2",
-    "--dsw-alias-label-error": "#fa5151",
-    "--dsw-alias-label-primary-foreground": "#ffffff",
-    "--dsw-alias-label-primary-inverted": "#ffffff",
-    "--dsw-alias-label-primary-bluish": "#07c160",
-    "--dsw-alias-state-business-primary": "#07c160",
-    "--dsw-alias-state-business-tertiary": "rgba(7, 193, 96, 0.12)",
-    /* 微信绿即成功态（green is "done"） */
-    "--dsw-alias-state-error-primary": "#fa5151",
-    "--dsw-alias-state-error-secondary": "rgba(250, 81, 81, 0.10)",
-    "--dsw-alias-state-success-primary": "#07c160",
-    "--dsw-alias-state-success-secondary": "rgba(7, 193, 96, 0.12)",
-    "--dsw-alias-state-warn-primary": "#fab702",
-    "--dsw-alias-state-warn-secondary": "rgba(250, 183, 2, 0.12)",
-    "--dsw-alias-state-warn-label": "#9a6700",
-    "--dsw-alias-markdown-citation": "#07c160",
-    "--dsw-alias-markdown-code-block": "#f7f7f7",
-    "--dsw-alias-markdown-code-block-banner": "#efefef",
-    "--dsw-alias-markdown-inline-code": "rgba(7, 193, 96, 0.10)",
-    "--dsw-alias-markdown-code-segment-selected": "rgba(7, 193, 96, 0.14)",
-    "--dsw-alias-markdown-code-segment-unselected": "transparent",
-    "--dsw-alias-markdown-placeholder": "#b2b2b2",
-    "--dsw-alias-scrollbar-bg-l1": "#e0e0e0",
-    "--dsw-alias-scrollbar-bg-l2": "#efefef",
-    "--dsw-alias-scrollbar-hover-l1": "#888888",
-    "--dsw-alias-scrollbar-hover-l2": "#e0e0e0",
-    "--dsw-alias-toast-bg": "#ffffff",
-    "--dsw-alias-tooltip-bg": "#1a1a1a",
-    "--dsw-hovercard-bg": "#ffffff",
-    "--dsw-specific-sidebar-fill": "#ededed",
-    "--dsw-specific-sidebar-nav-item-active": "rgba(7, 193, 96, 0.22)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "#07c160",
-    "--dsw-specific-sidebar-nav-item-hover": "#efefef",
-    "--dsw-specific-bubble": "#ffffff",
-    "--dsw-specific-bubble-highlight": "#f7f7f7",
-    "--dsw-specific-input-major": "#f7f7f7",
-    "--dsw-specific-login-input": "#f7f7f7",
-    "--dsw-specific-menu": "#ffffff",
-    "--dsw-specific-selector": "#ffffff",
-    "--dsw-specific-tip": "#f7f7f7",
-    "--dsw-font-family": SANS,
-    "--dsw-font-mono": MONO,
-    ...FLAT_SHADOWS
-  },
-  SANS
-);
-var meta15 = {
-  light: {
-    id: "wechat-light",
-    label: "WeChat \u5FAE\u4FE1\u7EFF",
-    desc: "\u6D45\u7070 #ededed + \u5FAE\u4FE1\u7EFF #07c160",
-    swatch: ["#ededed", "#f7f7f7", "#07c160", "#1a1a1a"]
-  }
-};
-
 // src/host/themes/xiaohongshu.ts
 var xiaohongshu_exports = {};
 __export(xiaohongshu_exports, {
-  light: () => light9,
-  meta: () => meta16
+  light: () => light3,
+  meta: () => meta4
 });
-var light9 = fillFontTokens(
+var light3 = fillFontTokens(
   {
     "--dsw-alias-bg-base": "#f5f5f5",
     "--dsw-alias-bg-layer-1": "#ffffff",
@@ -2849,7 +1289,7 @@ var light9 = fillFontTokens(
   },
   SANS
 );
-var meta16 = {
+var meta4 = {
   light: {
     id: "xiaohongshu-light",
     label: "\u5C0F\u7EA2\u4E66 \u79CD\u8349\u7EA2",
@@ -2858,238 +1298,13 @@ var meta16 = {
   }
 };
 
-// src/host/themes/neobrutalism.ts
-var neobrutalism_exports = {};
-__export(neobrutalism_exports, {
-  light: () => light10,
-  meta: () => meta17
-});
-var light10 = fillFontTokens(
-  {
-    "--dsw-alias-bg-base": "#fff4cf",
-    "--dsw-alias-bg-layer-1": "#fffaf0",
-    "--dsw-alias-bg-layer-2": "#ffe8c2",
-    "--dsw-alias-bg-layer-3": "#ffdca8",
-    "--dsw-alias-bg-overlay": "#fffaf0",
-    "--dsw-alias-bg-multi-select": "#fffaf0",
-    "--dsw-alias-bg-module-platform": "#fffaf0",
-    "--dsw-alias-bg-skeleton": "#fffaf0",
-    "--dsw-alias-border-l1": "#efd0ab",
-    "--dsw-alias-border-l2": "#d9aa7a",
-    "--dsw-alias-border-l2-darkmode-thin": "#efd0ab",
-    "--dsw-alias-border-l3": "#bd8f60",
-    "--dsw-alias-border-l4": "#8a6652",
-    "--dsw-alias-border-inverted": "#2a1810",
-    "--dsw-alias-border-inverted2": "#593625",
-    "--dsw-alias-separator-primary": "#efd0ab",
-    "--dsw-alias-fill-l2": "#ffe8c2",
-    "--dsw-alias-fill-tsp-secondary": "rgba(42, 24, 16, 0.04)",
-    /* 橘红：CTA 与激活信号 */
-    "--dsw-alias-brand-primary": "#d24b1f",
-    "--dsw-alias-brand-primary-invert": "#ffffff",
-    "--dsw-alias-brand-text": "#d24b1f",
-    "--dsw-alias-link": "#d24b1f",
-    "--dsw-alias-button-primary-fill": "#d24b1f",
-    "--dsw-alias-button-primary-hover": "#c1451d",
-    "--dsw-alias-button-primary-dimmed": "#b5411b",
-    "--dsw-alias-button-contrast-fill": "#2a1810",
-    "--dsw-alias-button-elevated-fill": "#fffaf0",
-    "--dsw-alias-button-floating-fill": "#fffaf0",
-    "--dsw-alias-button-floating-hover": "#ffe8c2",
-    "--dsw-alias-button-ghost-active-border": "#d9aa7a",
-    "--dsw-alias-button-ghost-active-fill": "#ffe8c2",
-    "--dsw-alias-button-ghost-active-hover": "#ffdca8",
-    "--dsw-alias-button-info-fill": "#d24b1f",
-    "--dsw-alias-button-info-hover": "#c1451d",
-    "--dsw-alias-button-tool-bar-fill": "#fffaf0",
-    "--dsw-alias-button-tool-bar-fill-invisible": "transparent",
-    "--dsw-alias-button-tool-bar-hover": "#ffe8c2",
-    "--dsw-alias-interactive-bg-hover": "#ffe8c2",
-    "--dsw-alias-interactive-bg-active": "#ffdca8",
-    "--dsw-alias-interactive-bg-hover-accent": "rgba(210, 75, 31, 0.10)",
-    "--dsw-alias-interactive-bg-hover-danger": "rgba(184, 58, 47, 0.08)",
-    "--dsw-alias-interactive-bg-hover-solid": "#ffdca8",
-    "--dsw-alias-label-primary": "#2a1810",
-    "--dsw-alias-label-secondary": "#593625",
-    "--dsw-alias-label-tertiary": "#8a6652",
-    "--dsw-alias-label-quaternary": "#bd8f60",
-    "--dsw-alias-label-caption": "#8a6652",
-    "--dsw-alias-label-dimmed": "#bd8f60",
-    "--dsw-alias-label-error": "#b83a2f",
-    "--dsw-alias-label-primary-foreground": "#ffffff",
-    "--dsw-alias-label-primary-inverted": "#fffaf0",
-    "--dsw-alias-label-primary-bluish": "#d24b1f",
-    "--dsw-alias-state-business-primary": "#d24b1f",
-    "--dsw-alias-state-business-tertiary": "rgba(210, 75, 31, 0.10)",
-    /* 警示琥珀在奶油底上压暗，保证文字可读 */
-    "--dsw-alias-state-error-primary": "#b83a2f",
-    "--dsw-alias-state-error-secondary": "rgba(184, 58, 47, 0.08)",
-    "--dsw-alias-state-success-primary": "#3d8f4f",
-    "--dsw-alias-state-success-secondary": "rgba(61, 143, 79, 0.10)",
-    "--dsw-alias-state-warn-primary": "#9a6700",
-    "--dsw-alias-state-warn-secondary": "rgba(242, 169, 59, 0.10)",
-    "--dsw-alias-state-warn-label": "#9a6700",
-    "--dsw-alias-markdown-citation": "#d24b1f",
-    "--dsw-alias-markdown-code-block": "#fffaf0",
-    "--dsw-alias-markdown-code-block-banner": "#ffe8c2",
-    "--dsw-alias-markdown-inline-code": "rgba(210, 75, 31, 0.08)",
-    "--dsw-alias-markdown-code-segment-selected": "rgba(210, 75, 31, 0.12)",
-    "--dsw-alias-markdown-code-segment-unselected": "transparent",
-    "--dsw-alias-markdown-placeholder": "#bd8f60",
-    "--dsw-alias-scrollbar-bg-l1": "#d9aa7a",
-    "--dsw-alias-scrollbar-bg-l2": "#ffe8c2",
-    "--dsw-alias-scrollbar-hover-l1": "#bd8f60",
-    "--dsw-alias-scrollbar-hover-l2": "#d9aa7a",
-    "--dsw-alias-toast-bg": "#fffaf0",
-    "--dsw-alias-tooltip-bg": "#2a1810",
-    "--dsw-hovercard-bg": "#fffaf0",
-    "--dsw-specific-sidebar-fill": "#fff4cf",
-    "--dsw-specific-sidebar-nav-item-active": "rgba(210, 75, 31, 0.22)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "#d24b1f",
-    "--dsw-specific-sidebar-nav-item-hover": "#ffe8c2",
-    "--dsw-specific-bubble": "#fffaf0",
-    "--dsw-specific-bubble-highlight": "#ffe8c2",
-    "--dsw-specific-input-major": "#fffaf0",
-    "--dsw-specific-login-input": "#fffaf0",
-    "--dsw-specific-menu": "#fffaf0",
-    "--dsw-specific-selector": "#fffaf0",
-    "--dsw-specific-tip": "#2a1810",
-    "--dsw-font-family": SANS,
-    "--dsw-font-mono": MONO,
-    /* 唯一的阴影例外：硬偏移实色投影，三档由浅入深 */
-    "--dsw-shadow-lv1": "3px 3px 0 #2a1810",
-    "--dsw-shadow-lv2": "5px 5px 0 #2a1810",
-    "--dsw-shadow-lv3": "8px 8px 0 #2a1810",
-    "--dsw-shadow-lv1-blur": "0px"
-  },
-  SANS
-);
-var meta17 = {
-  light: {
-    id: "neobrutalism-light",
-    label: "Neobrutalism \u7C97\u91CE\u62FC\u8D34",
-    desc: "\u5976\u6CB9 #fff4cf + \u6A58\u7EA2 #d24b1f",
-    swatch: ["#fff4cf", "#fffaf0", "#d24b1f", "#2a1810"]
-  }
-};
-
-// src/host/themes/missioncontrol.ts
-var missioncontrol_exports = {};
-__export(missioncontrol_exports, {
-  dark: () => dark10,
-  meta: () => meta18
-});
-var dark10 = fillFontTokens(
-  {
-    "--dsw-alias-bg-base": "#090b12",
-    "--dsw-alias-bg-layer-1": "#121722",
-    "--dsw-alias-bg-layer-2": "#1b2233",
-    "--dsw-alias-bg-layer-3": "#232e42",
-    "--dsw-alias-bg-overlay": "#121722",
-    "--dsw-alias-bg-multi-select": "#121722",
-    "--dsw-alias-bg-module-platform": "#121722",
-    "--dsw-alias-bg-skeleton": "#121722",
-    "--dsw-alias-border-l1": "#1d2636",
-    "--dsw-alias-border-l2": "#2a3447",
-    "--dsw-alias-border-l2-darkmode-thin": "#1d2636",
-    "--dsw-alias-border-l3": "#3b4a63",
-    "--dsw-alias-border-l4": "#5b6b84",
-    "--dsw-alias-border-inverted": "#f8fafc",
-    "--dsw-alias-border-inverted2": "#cbd5e1",
-    "--dsw-alias-separator-primary": "#1d2636",
-    "--dsw-alias-fill-l2": "#1b2233",
-    "--dsw-alias-fill-tsp-secondary": "rgba(248, 250, 252, 0.05)",
-    /* 指挥蓝：主信号 */
-    "--dsw-alias-brand-primary": "#60a5fa",
-    "--dsw-alias-brand-primary-invert": "#06101d",
-    "--dsw-alias-brand-text": "#60a5fa",
-    "--dsw-alias-link": "#60a5fa",
-    "--dsw-alias-button-primary-fill": "#60a5fa",
-    "--dsw-alias-button-primary-hover": "#5898e6",
-    "--dsw-alias-button-primary-dimmed": "#538ed7",
-    "--dsw-alias-button-contrast-fill": "#f8fafc",
-    "--dsw-alias-button-elevated-fill": "#121722",
-    "--dsw-alias-button-floating-fill": "#121722",
-    "--dsw-alias-button-floating-hover": "#1b2233",
-    "--dsw-alias-button-ghost-active-border": "#60a5fa",
-    "--dsw-alias-button-ghost-active-fill": "#1b2233",
-    "--dsw-alias-button-ghost-active-hover": "#232e42",
-    "--dsw-alias-button-info-fill": "#00d4ff",
-    "--dsw-alias-button-info-hover": "#1adcff",
-    "--dsw-alias-button-tool-bar-fill": "#121722",
-    "--dsw-alias-button-tool-bar-fill-invisible": "transparent",
-    "--dsw-alias-button-tool-bar-hover": "#1b2233",
-    "--dsw-alias-interactive-bg-hover": "#0e1420",
-    "--dsw-alias-interactive-bg-active": "#1b2233",
-    "--dsw-alias-interactive-bg-hover-accent": "rgba(96, 165, 250, 0.15)",
-    "--dsw-alias-interactive-bg-hover-danger": "rgba(251, 113, 133, 0.15)",
-    "--dsw-alias-interactive-bg-hover-solid": "#1b2233",
-    "--dsw-alias-label-primary": "#f8fafc",
-    "--dsw-alias-label-secondary": "#cbd5e1",
-    "--dsw-alias-label-tertiary": "#94a3b8",
-    "--dsw-alias-label-quaternary": "#64748f",
-    "--dsw-alias-label-caption": "#94a3b8",
-    "--dsw-alias-label-dimmed": "#64748f",
-    "--dsw-alias-label-error": "#fb7185",
-    "--dsw-alias-label-primary-foreground": "#f8fafc",
-    "--dsw-alias-label-primary-inverted": "#090b12",
-    "--dsw-alias-label-primary-bluish": "#60a5fa",
-    "--dsw-alias-state-business-primary": "#60a5fa",
-    "--dsw-alias-state-business-tertiary": "rgba(96, 165, 250, 0.15)",
-    "--dsw-alias-state-error-primary": "#fb7185",
-    "--dsw-alias-state-error-secondary": "rgba(251, 113, 133, 0.15)",
-    "--dsw-alias-state-success-primary": "#22c55e",
-    "--dsw-alias-state-success-secondary": "rgba(34, 197, 94, 0.15)",
-    "--dsw-alias-state-warn-primary": "#fbbf24",
-    "--dsw-alias-state-warn-secondary": "rgba(251, 191, 36, 0.15)",
-    "--dsw-alias-state-warn-label": "#fbbf24",
-    "--dsw-alias-markdown-citation": "#60a5fa",
-    "--dsw-alias-markdown-code-block": "#121722",
-    "--dsw-alias-markdown-code-block-banner": "#1b2233",
-    "--dsw-alias-markdown-inline-code": "rgba(96, 165, 250, 0.10)",
-    "--dsw-alias-markdown-code-segment-selected": "rgba(96, 165, 250, 0.18)",
-    "--dsw-alias-markdown-code-segment-unselected": "transparent",
-    "--dsw-alias-markdown-placeholder": "#64748f",
-    "--dsw-alias-scrollbar-bg-l1": "#2a3447",
-    "--dsw-alias-scrollbar-bg-l2": "#1b2233",
-    "--dsw-alias-scrollbar-hover-l1": "#3b4a63",
-    "--dsw-alias-scrollbar-hover-l2": "#2a3447",
-    "--dsw-alias-toast-bg": "#121722",
-    "--dsw-alias-tooltip-bg": "#232e42",
-    "--dsw-hovercard-bg": "#1b2233",
-    "--dsw-specific-sidebar-fill": "#090b12",
-    "--dsw-specific-sidebar-nav-item-active": "rgba(96, 165, 250, 0.22)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "#60a5fa",
-    "--dsw-specific-sidebar-nav-item-hover": "#0e1420",
-    "--dsw-specific-bubble": "#121722",
-    "--dsw-specific-bubble-highlight": "#1b2233",
-    "--dsw-specific-input-major": "#121722",
-    "--dsw-specific-login-input": "#121722",
-    "--dsw-specific-menu": "#1b2233",
-    "--dsw-specific-selector": "#1b2233",
-    "--dsw-specific-tip": "#232e42",
-    "--dsw-font-family": SANS,
-    "--dsw-font-mono": MONO,
-    ...FLAT_SHADOWS
-  },
-  SANS
-);
-var meta18 = {
-  dark: {
-    id: "mission-control-dark",
-    label: "Mission Control \u6DF1\u7A7A",
-    desc: "\u6DF1\u7A7A #090b12 + \u6307\u6325\u84DD #60a5fa",
-    swatch: ["#090b12", "#121722", "#60a5fa", "#f8fafc"]
-  }
-};
-
 // src/host/themes/levels.ts
 var levels_exports = {};
 __export(levels_exports, {
-  light: () => light11,
-  meta: () => meta19
+  light: () => light4,
+  meta: () => meta5
 });
-var light11 = fillFontTokens(
+var light4 = fillFontTokens(
   {
     "--dsw-alias-bg-base": "#fbf7ef",
     "--dsw-alias-bg-layer-1": "#ffffff",
@@ -3184,7 +1399,7 @@ var light11 = fillFontTokens(
   },
   SANS
 );
-var meta19 = {
+var meta5 = {
   light: {
     id: "levels-light",
     label: "Levels \u7EB8\u611F\u8BC4\u5BA1",
@@ -3196,10 +1411,10 @@ var meta19 = {
 // src/host/themes/arc.ts
 var arc_exports = {};
 __export(arc_exports, {
-  light: () => light12,
-  meta: () => meta20
+  light: () => light5,
+  meta: () => meta6
 });
-var light12 = fillFontTokens(
+var light5 = fillFontTokens(
   {
     "--dsw-alias-bg-base": "#fdf3ec",
     "--dsw-alias-bg-layer-1": "#ffffff",
@@ -3295,7 +1510,7 @@ var light12 = fillFontTokens(
   },
   SANS
 );
-var meta20 = {
+var meta6 = {
   light: {
     id: "arc-light",
     label: "Arc \u871C\u6843\u73CA\u745A",
@@ -3307,10 +1522,10 @@ var meta20 = {
 // src/host/themes/luxury.ts
 var luxury_exports = {};
 __export(luxury_exports, {
-  dark: () => dark11,
-  meta: () => meta21
+  dark: () => dark2,
+  meta: () => meta7
 });
-var dark11 = fillFontTokens(
+var dark2 = fillFontTokens(
   {
     "--dsw-alias-bg-base": "#080706",
     "--dsw-alias-bg-layer-1": "#151310",
@@ -3405,7 +1620,7 @@ var dark11 = fillFontTokens(
   },
   SANS
 );
-var meta21 = {
+var meta7 = {
   dark: {
     id: "luxury-dark",
     label: "Luxury \u938F\u91D1\u9ED1",
@@ -3419,34 +1634,20 @@ function expand(module) {
   const entries = [];
   for (const scheme of ["dark", "light"]) {
     const tokens = scheme === "dark" ? module.dark : module.light;
-    const meta22 = scheme === "dark" ? module.meta?.dark : module.meta?.light;
-    if (!tokens || !meta22) continue;
-    entries.push({ colorScheme: scheme, tokens, ...meta22 });
+    const meta8 = scheme === "dark" ? module.meta?.dark : module.meta?.light;
+    if (!tokens || !meta8) continue;
+    entries.push({ colorScheme: scheme, tokens, ...meta8 });
   }
   return entries;
 }
 var THEME_CATALOG = [
-  ...expand(opencode_exports),
-  ...expand(github_exports),
-  ...expand(linear_exports),
-  ...expand(notion_exports),
   ...expand(claude_exports),
-  ...expand(nvidia_exports),
-  ...expand(replicate_exports),
-  ...expand(cisco_exports),
-  ...expand(neobrutalism_exports),
-  ...expand(missioncontrol_exports),
   ...expand(levels_exports),
   ...expand(arc_exports),
   ...expand(luxury_exports),
-  ...expand(skeumorphism_exports),
-  ...expand(wechat_exports),
   ...expand(xiaohongshu_exports),
-  ...expand(discord_exports),
   ...expand(supabase_exports),
-  ...expand(nebula_exports),
-  ...expand(sakura_exports),
-  ...expand(tide_exports)
+  ...expand(sakura_exports)
 ];
 var THEME_IDS = THEME_CATALOG.map((t) => t.id);
 

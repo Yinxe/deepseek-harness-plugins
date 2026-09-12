@@ -1,6 +1,6 @@
 # @dshp/web-style
 
-DeepSeek Harness（DSH）**Web 外观定制套件**：**23 套主题画廊**（14 套品牌适配 + 9 套原创，每套约 110–120 个 `--dsw-*` token 全量映射）+ **设置页一键切换并持久化**；另有 **壁纸取色（Material You / MD3）** 一键生成整套动态配色（可导出 MD3 令牌）与 **全局圆角** 三档。
+DeepSeek Harness（DSH）**Web 外观定制套件**：**7 套主题画廊**（每套 122 个 `--dsw-*` token 全量映射）+ **设置页一键切换并持久化**；另有 **壁纸取色（Material You / MD3）** 一键生成整套动态配色（可导出 MD3 令牌）与 **全局圆角** 三档。
 
 > 设计原则：**与官方外观系统同轨，不做对抗**。不注册自定义主题 id，而是把每套主题作为官方 `overrideTokens` **覆盖层**叠加在官方亮/暗之上——主题自身 scheme 分支填主题值，对侧分支填官方原样值，因此官方「外观」行（浅色/深色/跟随系统）永远合法可用，「回到官方」= 撤销覆盖层。主题 token 单源 `src/host/themes/`，由 Host 经同源路由下发，client 只存卡片 meta；运行时零依赖。
 
@@ -79,35 +79,48 @@ dsh web
 
 label / desc / swatch 以 `src/host/themes/*.ts` 的 `meta` 为准（token 同源此处，client 只存 meta）。
 
-| 主题 id                   | 模式   | 风格                                             | 来源            |
-| ------------------------- | ------ | ------------------------------------------------ | --------------- |
-| `opencode-terminal-dark`  | 纯暗   | 暖黑 #201d1d + Apple 蓝 + 全站 Berkeley Mono     | opencode-ai     |
-| `opencode-terminal-light` | 纯亮   | 暖白 #fdfcfc 纸感 + 暖灰层次                     | opencode-ai     |
-| `github-dark`             | 双模式 | #0d1117 + Primer 蓝 #2f81f7 + 绿色主按钮         | github          |
-| `github-light`            |        | 纯白 + #0969da + 发丝线 #d0d7de                  | github          |
-| `linear-dark`             | 纯暗   | 近黑 #08090a + Indigo #5e6ad2，半透明白边框      | linear          |
-| `notion-light`            | 纯亮   | 纯白 + 暖灰 + Notion Blue，whisper 边框 + 微阴影 | notion          |
-| `claude-parchment-light`  | 纯亮   | 羊皮纸 #f5f4ed + 赤陶 #c96442，ring 型深度       | claude          |
-| `nvidia-dark`             | 纯暗   | 纯黑 #000 + 信号绿 #76b900                       | nvidia          |
-| `replicate-light`         | 纯亮   | 纯白 #ffffff + 品牌红 #ea2804，全站胶囊感        | replicate       |
-| `cisco-dark`              | 纯暗   | 藏青 #0f1720 + 信号蓝 #049fd9                    | cisco           |
-| `neobrutalism-light`      | 纯亮   | 奶油 #fff4cf + 橘红 #d24b1f，硬偏移阴影          | neobrutalism    |
-| `mission-control-dark`    | 纯暗   | 深空 #090b12 + 指挥蓝 #60a5fa                    | mission-control |
-| `levels-light`            | 纯亮   | 米纸 #fbf7ef + 代谢绿 #2f8f46                    | levels          |
-| `arc-light`               | 纯亮   | 蜜桃 #fdf3ec + 珊瑚 #ff5f5f                      | arc             |
-| `luxury-dark`             | 纯暗   | 曜石 #080706 + 鎏金 #c6a15b                      | luxury          |
-| `skeumorphism-light`      | 纯亮   | 陶土 #f7eee6 + 陶釉 #b46a46，柔和拟物阴影        | skeumorphism    |
-| `wechat-light`            | 纯亮   | 浅灰 #ededed + 微信绿 #07c160                    | wechat          |
-| `xiaohongshu-light`       | 纯亮   | 米灰 #f5f5f5 + 种草红 #ff2442                    | xiaohongshu     |
-| `discord-dark`            | 纯暗   | 深灰 #313338 + Blurple #5865f2                   | discord         |
-| `supabase-dark`           | 纯暗   | 墨黑 #171717 + 翡翠绿 #3ecf8e                    | supabase        |
-| `nebula-dark`             | 纯暗   | 紫黑 #0d0a1a + 霓紫 #8b5cf6                      | 原创            |
-| `sakura-light`            | 纯亮   | 樱白 #fff9fa + 樱粉 #e75480                      | 原创            |
-| `tide-dark`               | 纯暗   | 深青 #062a2c + 潮汐 #2dd4bf                      | 原创            |
+| 主题 id                  | 模式 | 风格                                       | 来源        |
+| ------------------------ | ---- | ------------------------------------------ | ----------- |
+| `claude-parchment-light` | 纯亮 | 羊皮纸 #f5f4ed + 赤陶 #c96442，ring 型深度 | claude      |
+| `xiaohongshu-light`      | 纯亮 | 米灰 #f5f5f5 + 种草红 #ff2442              | xiaohongshu |
+| `levels-light`           | 纯亮 | 米纸 #fbf7ef + 代谢绿 #2f8f46              | levels      |
+| `arc-light`              | 纯亮 | 蜜桃 #fdf3ec + 珊瑚 #ff5f5f                | arc         |
+| `sakura-light`           | 纯亮 | 樱白 #fff9fa + 樱粉 #e75480                | 原创        |
+| `luxury-dark`            | 纯暗 | 曜石 #080706 + 鎏金 #c6a15b                | luxury      |
+| `supabase-dark`          | 纯暗 | 墨黑 #171717 + 翡翠绿 #3ecf8e              | supabase    |
 
 另有一套虚拟主题 `photo:custom`：壁纸取色（MD3 运行时生成，不在目录内，但属于合法持久化值，Host 白名单放行）。
 
-每套约 110–120 个 `--dsw-*` token 全量映射：背景 / 边框 / 品牌 / 按钮 / 交互态 / 文字 / 语义色 / Markdown / 滚动条 / 侧栏 / 气泡 / 浮层 / 阴影 / 字体栈。
+每套 122 个 `--dsw-*` token 全量映射：背景 / 边框 / 品牌 / 按钮 / 交互态 / 文字 / 语义色 / Markdown / 滚动条 / 侧栏 / 气泡 / 浮层 / 阴影 / 字体栈。
+
+`scripts/check-themes.mjs` 强制**全部主题覆盖同一套 token 名**（多写少写都报错），
+并校验 `official.ts` 与 DSH 实际值一致 —— 后者是覆盖层的「对侧 scheme 无操作原值」，
+漂移会导致选浅色主题再切深色时把 DSH 的旧配色涂回去。基线由
+`node scripts/sync-official.mjs` 从已安装的 DSH 重新生成（快照落在
+`scripts/dsw-alias-baseline.json`，CI 离线比对）。
+
+### 侧栏选中行跟随品牌色
+
+`--dsw-specific-sidebar-nav-item-active` 是侧栏选中行的胶囊底（DSH 的 `.navCell.active`，
+画在 `--dsw-specific-sidebar-fill` 之上）。约定值固化为：
+
+```
+rgba(<该主题 --dsw-alias-brand-primary 的 RGB>, 0.22)
+```
+
+原来 33 套里 21 套与 `nav-item-hover` 的感知色差 ΔE < 5（其中 8 套**完全相同**、
+3 套与侧栏底色几乎无差），选中态基本看不出来。改成品牌色叠色后：
+
+| 指标                         |    改前 |                      改后 |
+| ---------------------------- | ------: | ------------------------: |
+| ΔE(active, hover) < 5 的主题 | 21 / 33 |                **0 / 33** |
+| active 与 hover 完全相同     |  8 / 33 |                **0 / 33** |
+| 最小 ΔE(active, hover)       |     0.0 |                   **6.6** |
+| 最小 ΔE(active, 侧栏底色)    |     0.0 |                  **11.3** |
+| 最小 `label-primary` 对比度  |    8.94 | **8.20**（仍远超 AA 4.5） |
+
+`check-themes.mjs` 固定住这条派生关系；壁纸取色主题（`src/client/md3.ts`）同样走
+`withAlpha(brand, 0.22)`。**改主题品牌色后必须同步这个值**，否则 `pnpm test` 会失败。
 
 ## 配置项
 
@@ -153,7 +166,7 @@ web-style/
 │       ├── md3.ts             #   Material You 引擎（seed → 调色板 → sys → --dsw-*，含 MD3 导出）
 │       ├── official.ts        #   官方 alias token 原值（对侧「无操作覆盖」用）
 │       ├── api.ts             #   /ext/dshp-web-style/* fetch 封装（themes 缓存一次）
-│       ├── themes.ts          #   画廊 meta（23 条，与 Host 目录逐项一致）
+│       ├── themes.ts          #   画廊 meta（33 条，与 Host 目录逐项一致）
 │       ├── state.ts           #   模块级会话状态
 │       ├── radius.ts          #   全局圆角三档（语义属性选择器）
 │       ├── clipboard.ts       #   复制 MD3（Clipboard API + execCommand 回落）
@@ -211,8 +224,38 @@ dsh web
 
 **等价性验证**（移植时执行，脚本已删）：以原 `lib/themes/*` 与 `client.js` 为基准逐项比对——23 套目录条目（含全部 token）全等、10 个 seed × {palettes, light/dark scheme, `buildPhotoTokens`, `buildM3ExportCss`} 全等、`hexToHsl`/`hslToHex`/`withAlpha`/`extractDominant`/`extractPalette`/`buildWallpaperTheme` 全等、23 条画廊 meta 全等、88 + 88 个 `OFFICIAL_*` token 全等。
 
+> 注：移植期这份手抄的 `OFFICIAL_DARK` 后来被查出**漂移了 65/88 项**（值仍停留在 DSH 0.0.x 的旧暗色调色板），
+> 会导致「选浅色主题 → 切深色」时整片回退成旧配色。现已改为由 `scripts/sync-official.mjs`
+> 从真实安装重新生成（90 + 90 项，0 漂移），并由 `check-themes.mjs` 常驻校验。
+
+### 主题集精简
+
+曾扩展到 33 套，但实测**大多数主题的视觉区分度不足** —— 基本是「同一套布局换个色相」，
+而维护成本随数量线性增长（每套 122 个 token，任何全局约定都要同步几十处）。
+现精简为 7 套：`claude-parchment-light` / `xiaohongshu-light` / `levels-light` / `arc-light` /
+`sakura-light` / `luxury-dark` / `supabase-dark`。
+
+> ⚠️ **明暗分布**：7 套里 **5 套浅色、只有 2 套深色**（`luxury-dark` / `supabase-dark`）。
+> 日常用深色模式的话，实际只有这 2 套可选。
+
+### 同期修复（来自 token 审计）
+
+1. **`OFFICIAL_LIGHT/DARK` 重新生成** —— 暗色分支此前漂移 **65/88** 项（值仍停留在 DSH 0.0.x 的旧暗色调色板），
+   会让「选浅色主题 → 切深色」整片回退成旧配色。现由 `scripts/sync-official.mjs` 从真实 DSH 生成
+   （90 + 90，0 漂移），`check-themes.mjs` 常驻校验。
+2. **补 `--dsw-alias-link`** —— 此前基线与主题都没有它，markdown 链接与文件提及永远是 DeepSeek 蓝。
+3. **补 `--dsw-alias-state-business-primary/tertiary`** —— 此前官方 DeepSeek 蓝会渗进每套主题。
+4. **删死 token `--dsw-alias-line-secondary`** —— 全 DSH 零引用。
+5. **`--dsw-alias-markdown-tag` 交给官方默认** —— DSH 里它是「活动标签页底色」（面不是前景），
+   主题按前景语义填中灰实色会把活跃标签压成灰块，故主题一律不覆盖（`check-themes.mjs` 守着这条）。
+6. **画廊按钮文字改为按亮度择优** —— 原先写死 `#fff`，在保留的这 7 套上**一套都不达标**
+   （最差 Supabase 绿仅 1.91:1）；改为按 accent 相对亮度在白/近黑间择优后 **7/7 达标**。
+7. **`.tg-search::placeholder` 换用 `--dsw-alias-label-tertiary`** —— 原用的 `label-quaternary` DSH 并未定义。
+8. **`fillFontTokens` 支持自定义等宽栈** —— 传字符串时 markdown 代码块与 `--dsw-font-mono` 同源。
+
 ## 免责声明
 
-主题配色参考各品牌公开的设计系统（GitHub Primer / Linear / Notion / Claude / NVIDIA / OpenCode / Arc / Discord / Supabase / Cisco / Replicate / WeChat / 小红书 等）的**公开色值**，用于本地界面外观定制；商标与品牌归属各自所有者，本项目与上述公司无任何关联。原创主题（Nebula / Sakura / Tide）为本项目贡献。
+主题配色参考各品牌公开的设计系统（Claude / 小红书 / Levels / Arc / Supabase / Luxury 等）的**公开色值**，
+用于本地界面外观定制；商标与品牌归属各自所有者，本项目与上述公司无任何关联。原创主题（Sakura）为本项目贡献。
 
 本插件只改 CSS 变量与圆角，不修改官方代码、不注入脚本行为、不收集任何数据；壁纸取色在浏览器本地 48×48 采样，图片不上传。
