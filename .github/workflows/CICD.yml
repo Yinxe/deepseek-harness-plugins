@@ -197,6 +197,30 @@ jobs:
             exit 1
           fi
 
+          # 1) 先重建滚动项（若存在）：用改名副本上传，dist 保持 -latest 命名不动；
+          #    latest 留到最后创建（创建时间最新 → Releases 列表置顶）
+          cur_suffix="${{ needs.check.outputs.suffix }}"
+          for r in "${rolling[@]}"; do
+            IFS='|' read -r tag pre marked <<< "$r"
+            if [ -z "$tag" ]; then continue; fi
+            echo "重建滚动 release: $tag (pre=$pre)"
+            rm -rf dist-roll && mkdir dist-roll
+            for f in dist/*.tgz; do
+              base=$(basename "$f")
+              cp "$f" "dist-roll/${base%-$cur_suffix.tgz}-$tag.tgz"
+            done
+            gh release delete "$tag" --yes --cleanup-tag || true
+            SUFFIX="$tag" \
+            NOTES_HEADER="滚动构建自 main 分支（${GITHUB_SHA::7}），每次推送自动整体替换。" \
+            NOTES_ROLLING="$marked" \
+              node scripts/gen-release-notes.cjs
+            create_args=(dist-roll/*.tgz --target "$GITHUB_SHA" --title "$tag" --notes-file notes.md)
+            if [ "$pre" = "true" ]; then create_args+=(--prerelease); fi
+            gh release create "$tag" "${create_args[@]}"
+          done
+          rm -rf dist-roll
+
+          # 2) 最后重建 latest 并授予 Latest 徽标，保证列表置顶
           gh release delete latest --yes --cleanup-tag || true
           NOTES_HEADER="滚动构建自 main 分支（${GITHUB_SHA::7}），每次推送自动整体替换。" \
             node scripts/gen-release-notes.cjs
@@ -205,26 +229,4 @@ jobs:
             --title "latest (main@${GITHUB_SHA::7})" \
             --notes-file notes.md \
             --prerelease
-
-          # 重建唯一的滚动项（若存在）。
-          # 注意：dist 里的包按 check 阶段后缀（main 推送为 latest）命名，
-          # 滚到其他 tag 时必须重命名为 -<tag>.tgz，否则包名与发布身份不一致、
-          # notes 生成器也无法反解出插件元数据
-          cur_suffix="${{ needs.check.outputs.suffix }}"
-          for r in "${rolling[@]}"; do
-            IFS='|' read -r tag pre marked <<< "$r"
-            if [ -z "$tag" ]; then continue; fi
-            echo "重建滚动 release: $tag (pre=$pre)"
-            for f in dist/*.tgz; do
-              base=$(basename "$f")
-              mv "$f" "dist/${base%-$cur_suffix.tgz}-$tag.tgz"
-            done
-            gh release delete "$tag" --yes --cleanup-tag || true
-            SUFFIX="$tag" \
-            NOTES_HEADER="滚动构建自 main 分支（${GITHUB_SHA::7}），每次推送自动整体替换。" \
-            NOTES_ROLLING="$marked" \
-              node scripts/gen-release-notes.cjs
-            create_args=(dist/*.tgz --target "$GITHUB_SHA" --title "$tag" --notes-file notes.md)
-            if [ "$pre" = "true" ]; then create_args+=(--prerelease); fi
-            gh release create "$tag" "${create_args[@]}"
-          done
+          gh release edit latest --latest || true

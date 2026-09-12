@@ -97,7 +97,7 @@ dsh web   # 重启生效
 | 分支预发布      | 推送其他分支  | 以分支名命名的预发布（`release/1.0` → `release-1.0`） |
 | 自定义后缀      | 手动触发      | 勾选 rolling = 预发布随滚动；不勾 = 静态正式版        |
 
-- **滚动约定**：所有**预发布**（以及 notes 首行带 `<!-- rolling: true -->` 标记的 release）都跟随 main——每次 main 推送成功后整体重建到最新提交；停止跟随 = 取消 Pre-release 勾选或删除标记行。
+- **滚动约定**：所有**预发布**（以及 notes 首行带 `<!-- rolling: true -->` 标记的 release）都跟随 main——每次 main 推送成功后整体重建到最新提交；停止跟随 = 取消 Pre-release 勾选或删除标记行。`latest` 每次最后重建并授予 Latest 徽标，始终置顶 Releases 列表。
 - **数量约束**：除 `latest` 外同时最多允许 **1 个**滚动项；出现多个时 CI 立即报错终止（不动任何现有 Release），处理后再推送即可。
 - `dev` 与 `feature/*` 分支、PR 只跑 CI 门禁，不产出发布物。
 - Release 说明由 `scripts/gen-release-notes.cjs` 生成：逐插件列出包名、版本、双语描述、下载与安装命令。
