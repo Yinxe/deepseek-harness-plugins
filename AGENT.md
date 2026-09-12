@@ -396,7 +396,7 @@ const day = cn.getUTCDay(),
 
 ## 12. 质量门禁（CI 顺序即本地顺序）
 
-本地提交前跑全套（与 `.github/workflows/ci.yml` 同序）：
+本地提交前跑全套（与 `.github/workflows/CICD.yml` 同序）：
 
 ```bash
 pnpm format:check   # prettier 只检查不写；红了跑 pnpm format
@@ -434,7 +434,7 @@ pnpm test           # pnpm -r test（至少 node --check 双 bundle）
 - 移植说明（原 JS 仓库 → TS 文件的逐文件对应、构建命令）**放文末**，不要占开头位置。
 - 一键 AI 安装话术块给 ```text 代码块，写清子目录名与包名，便于直接粘给 DSH AI。
 
-**根 README** 负责「找插件 + 装插件」：插件一览表（每行链到该插件 README）→ 截图预览（引用 `plugins/<name>/images/*`）→ 安装到 DSH（含一键 AI 安装）→ 结构 → 环境 → 常用命令 → 加新插件。不写单个插件的功能细节（细节归各自 README；门禁以 ci.yml 为准，版本/tag 政策见 §14，发布流已下线不写）。
+**根 README** 负责「找插件 + 装插件」：插件一览表（每行链到该插件 README）→ 截图预览（引用 `plugins/<name>/images/*`）→ 安装到 DSH（含一键 AI 安装）→ 结构 → 环境 → 常用命令 → 加新插件。不写单个插件的功能细节（细节归各自 README；门禁以 CICD.yml 为准，版本/tag 政策见 §14，发布流已下线不写）。
 
 ---
 
@@ -442,7 +442,7 @@ pnpm test           # pnpm -r test（至少 node --check 双 bundle）
 
 - main 永远跟最新 DSH。`compat.json` 为空是正常态（暂无历史包袱）。
 - DSH 发新版且有 breaking：当前 main 打 annotated tag `v<根版本>`（message 写 DSH 版本）→ `compat.json` 追加一行 → 再在 main 上适配。平时不打 tag。老 DSH 用户按 `compat.json` `git checkout <tag>`。
-- 发 npm（已下线，暂不做）：发布流在 `de6ab3c` 下线，当前 `.github/workflows/` 只有 `ci.yml`，README 安装节写的是“只能本地装”。将来要重新启用：重建 `.github/workflows/publish.yml`（tag `v*` 触发 → `pnpm -r publish --provenance`，Trusted Publishing 免 Token），npm 建组织 `dshp`（公有包免费）或改名到个人 scope，每个包配 Trusted Publisher。未重建前不要写“打 tag 即发布”。
+- 发 npm（已下线，暂不做）：发布流在 `de6ab3c` 下线，当前 `.github/workflows/` 只有 `CICD.yml`（门禁 + tgz 打包发 GitHub Releases：main 推送滚动更新 `latest` 预发布、`v*` tag 发版本 Release、其他分支推送发同名预发布；dev 与 `feature/*` 分支仅跑门禁不发布；手动触发可带自定义后缀，勾选 rolling 后该预发布随 main 滚动；npm 发包仍下线），README 安装节写的是“只能本地装”。将来要重新启用：重建 `.github/workflows/publish.yml`（tag `v*` 触发 → `pnpm -r publish --provenance`，Trusted Publishing 免 Token），npm 建组织 `dshp`（公有包免费）或改名到个人 scope，每个包配 Trusted Publisher。未重建前不要写“打 tag 即发布”。
 - 发版 checklist：`format/lint/typecheck/build/test` 全绿 → `lib/` 已重打并提交 → 插件 README 安装/更新节已同步 → 版本号已升 →（发包时）tag 已打。
 
 ---

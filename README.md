@@ -93,7 +93,7 @@ dsh web   # 重启生效
 ├── tsconfig.json               # solution 引用
 ├── pnpm-workspace.yaml         # packages: plugins/* + storeDir
 ├── compat.json                 # DSH 版本兼容矩阵（空 = 暂无历史包袱）
-└── .github/workflows/ci.yml    # format → lint → typecheck → build → test
+└── .github/workflows/CICD.yml  # 门禁 + 打包发布：main→latest 预发布，v* tag→版本 Release，其他分支→同名预发布；dev 与 feature/* 仅门禁
 ```
 
 每个插件内部一律是同一套布局：`src/host/`（Node 半）+ `src/client/`（浏览器半）+ `lib/`（已提交的单文件产物）+ `cordis.patch.yml`。
@@ -133,7 +133,7 @@ pnpm --filter @dshp/token-meter build
 pnpm --filter @dshp/token-meter typecheck
 ```
 
-提交前跑齐上面 5 条门禁（与 `ci.yml` 同序）；改了 `src/` 必须重新 build 并把 `lib/` 一起提交。
+提交前跑齐上面 5 条门禁（与 `CICD.yml` 同序）；改了 `src/` 必须重新 build 并把 `lib/` 一起提交。
 
 ## 加新插件
 
