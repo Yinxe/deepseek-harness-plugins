@@ -504,7 +504,11 @@
               summary
             )
           },
-          body !== null ? h("div", { className: "mw-cmdBody" }, h(P.MarkdownText, { text, streaming: false, labels: MD_LABELS })) : null
+          body !== null ? h(
+            "div",
+            { className: "mw-cmdBody" },
+            h(P.MarkdownText, { text, streaming: false, labels: MD_LABELS })
+          ) : null
         )
       );
     };
