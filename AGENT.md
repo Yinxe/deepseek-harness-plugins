@@ -396,7 +396,13 @@ const day = cn.getUTCDay(),
 
 ## 12. 质量门禁（CI 顺序即本地顺序）
 
-本地提交前跑全套（与 `.github/workflows/CICD.yml` 同序）：
+提交前跑一条流程命令（构建 → 类型检查 → 质量检查 → 格式化，任一环节红即停，格式化自动写盘收尾）：
+
+```bash
+pnpm check   # build → typecheck → lint → format（提交前跑这个）
+```
+
+CI 分步把关仍按严格检查序（与 `.github/workflows/CICD.yml` 同序）：
 
 ```bash
 pnpm format:check   # prettier 只检查不写；红了跑 pnpm format
