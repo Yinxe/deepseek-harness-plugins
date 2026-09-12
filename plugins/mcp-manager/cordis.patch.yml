@@ -1,0 +1,8 @@
+# @dshp/mcp-manager bundle patch: MCP server manager for DeepSeek Harness.
+# Host half: read/CRUD of @deepseek-ai/dsh-mcp-client loader entries in the
+# profile's cordis.patch.yml + /ext/dshp-mcp-manager/* routes + HTTP probe.
+# Client half: Settings page section（服务器列表 + 表单/JSON 双模式编辑器）.
+
+- insert:
+    - id: dshp-mcp-manager
+      name: '@dshp/mcp-manager'
