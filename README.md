@@ -14,6 +14,7 @@ DeepSeek Harness（DSH）插件 Monorepo（pnpm workspaces + TypeScript ESM）�
 | **[@dshp/search-provider](plugins/search-provider/README.md)** | `web_search` 供应商中枢：Tavily 等可插拔接入，动态选型                                                                            | [README](plugins/search-provider/README.md) |
 | **[@dshp/web-style](plugins/web-style/README.md)**             | Web 外观定制：23 套主题画廊一键切换并持久化 + 壁纸取色（Material You）+ 全局圆角                                                  | [README](plugins/web-style/README.md)       |
 | **[@dshp/skill-manager](plugins/skill-manager/README.md)**     | 技能管理：设置页统一管理全局（`~/.dsh/skills`、`~/.agents/skills`）与工作区技能——新建/编辑/启停/复制移动/删除                     | [README](plugins/skill-manager/README.md)   |
+| **[@dshp/mcp-manager](plugins/mcp-manager/README.md)**         | MCP 服务器管理：设置页管理 cordis.patch.yml 里的官方 dsh-mcp-client 实例——新建/编辑/启停/删除/探活，表单+JSON 双模式，回写保注释  | [README](plugins/mcp-manager/README.md)     |
 
 ## 截图预览
 
@@ -70,6 +71,7 @@ dsh plugin --profile web add ./plugins/mcwiki-search
 dsh plugin --profile web add ./plugins/search-provider
 dsh plugin --profile web add ./plugins/web-style
 dsh plugin --profile web add ./plugins/skill-manager
+dsh plugin --profile web add ./plugins/mcp-manager
 
 dsh web   # 重启生效
 ```
@@ -120,6 +122,7 @@ dsh web   # 重启生效
 │   ├── mcwiki-search/          # @dshp/mcwiki-search（Minecraft Wiki 查询）
 │   ├── search-provider/        # @dshp/search-provider（web_search 供应商中枢）
 │   ├── skill-manager/          # @dshp/skill-manager（全局 + 工作区技能管理）
+│   ├── mcp-manager/            # @dshp/mcp-manager（MCP 服务器管理：patch 条目 CRUD + 探活）
 │   └── web-style/              # @dshp/web-style（23 套主题画廊 + 壁纸取色 + 全局圆角）
 │       ├── src/host/           #   Host TS：types/http/config + themes/（token 单源，21 个主题模块）
 │       ├── src/client/         #   Client TS：GallerySection/apply-theme/md3/official/radius/themes/api/state
