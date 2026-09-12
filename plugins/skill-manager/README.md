@@ -4,7 +4,19 @@ DeepSeek Harness（DSH）技能管理：在 Web 设置页统一管理**全局技
 
 > 设计原则：文件布局与 frontmatter 语义**逐条对齐** `@deepseek-ai/dsh-skill-filesystem`（rank、调用开关布尔文法、kebab-case 名字规范）；写入范围被严格限定在上述技能根内（名字白名单 + 路径包含 + realpath 三重校验）；**故意不注册模型工具**——技能文件是提示词注入面，写入必须由人完成。
 
-## 安装（唯一方式：克隆 monorepo + 本地安装）
+## 安装
+
+### 方式一：从 Release 安装（推荐，无需 clone）
+
+```bash
+# latest 滚动版（跟随 main 最新构建；滚动更新 = 重跑同一条命令）
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-skill-manager-latest.tgz
+
+dsh web   # 重启生效
+```
+
+### 方式二：克隆 monorepo 本地安装（开发 / 定制）
 
 ```bash
 git clone git@github.com:Yinxe/deepseek-harness-plugins.git
@@ -29,7 +41,32 @@ dsh web   # 重启生效
 3. 重启 dsh web，确认无报错、设置页出现「Skills」条目
 ```
 
+### 历史版本（兼容旧版 DSH）
+
+main 永远跟随最新 DSH。老版本 DSH 用户装**静态历史版本**：按 `compat.json` 记录的兼容 tag，到 [Releases](https://github.com/Yinxe/deepseek-harness-plugins/releases) 找对应版本 Release（`v*` tag 触发，静态存档、永不滚动），资产名 = `dshp-skill-manager-<tag>.tgz`：
+
+```bash
+# 以 v0.1.5-rc.1 为例
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/v0.1.5-rc.1/dshp-skill-manager-v0.1.5-rc.1.tgz
+
+dsh web   # 重启生效
+```
+
 ## 更新
+
+### 滚动更新（Release 安装，推荐）
+
+`latest` 资产随 main 每次构建滚动重建，**重跑同一条安装命令 + 重启**即滚到最新：
+
+```bash
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-skill-manager-latest.tgz
+
+dsh web   # 重启生效
+```
+
+### 本地更新（克隆安装）
 
 ```bash
 cd deepseek-harness-plugins && git pull && pnpm install

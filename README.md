@@ -52,7 +52,26 @@ dsh --profile web add `
   'https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-mcwiki-search-latest.tgz'
 ```
 
-全部插件的下载与安装命令见 [Releases](https://github.com/Yinxe/deepseek-harness-plugins/releases) 各预发布说明；更新 = 重跑同一条命令 + `dsh web` 重启。
+全部插件的下载与安装命令见 [Releases](https://github.com/Yinxe/deepseek-harness-plugins/releases) 各预发布说明；**滚动更新 = 重跑同一条命令 + `dsh web` 重启**（`latest` 资产随 main 每次构建滚动重建）。
+
+### 历史版本（兼容旧版 DSH）
+
+main 永远跟随最新 DSH。老版本 DSH 用户装**静态历史版本**：按 [`compat.json`](compat.json) 记录的兼容 tag（「DSH 版本 → 推荐 tag」矩阵），到 [Releases](https://github.com/Yinxe/deepseek-harness-plugins/releases) 找对应版本 Release（`v*` tag 触发，静态存档、永不滚动），资产名 = `dshp-<插件名>-<tag>.tgz`：
+
+```bash
+# 以 v0.1.5-rc.1 为例
+dsh --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/v0.1.5-rc.1/dshp-mcwiki-search-v0.1.5-rc.1.tgz
+```
+
+### 卸载
+
+```bash
+dsh plugin --profile web remove "@dshp/<插件名>"
+dsh web   # 重启生效
+```
+
+`remove` 直接转发 pnpm（参数 = 包名），并自动从 `dsh.profile.bundles` 撤下挂载；写入 `settings.yaml` 的配置分节按需手动清理。各插件的详细安装/更新/卸载说明见各自 README。
 
 ### 方式二：克隆仓库本地安装（开发 / 定制）
 
