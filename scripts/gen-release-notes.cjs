@@ -54,10 +54,9 @@ for (const file of files) {
 
   out.push(`### ${name}${version ? ` \`${version}\`` : ''}`, '');
   out.push(`- 下载：[${file}](${url})`);
-  out.push(`- 安装：\`dsh --profile web add ${url}\``);
   if (en) out.push(`- EN: ${en}`);
   if (zh) out.push(`- 中文：${zh}`);
-  out.push('');
+  out.push('', '```bash', `dsh --profile web add ${url}`, '```', '');
 }
 
 fs.writeFileSync('notes.md', out.join('\n'));
