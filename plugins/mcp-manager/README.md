@@ -8,7 +8,19 @@ DeepSeek Harness（DSH）MCP 服务器管理器：在设置页里列出、新建
 > 设计原则：只做 patch 文件条目的「管家」，不自己连 MCP——连接、工具注册、重连全部交给官方
 > `dsh-mcp-client`；本插件只负责让这些实例的声明变得可视、可改、可回退（`.bak` 备份 + 落盘自校验）。
 
-## 安装（唯一方式：克隆 monorepo + 本地安装）
+## 安装
+
+### 方式一：从 Release 安装（推荐，无需 clone）
+
+```bash
+# latest 滚动版（跟随 main 最新构建；滚动更新 = 重跑同一条命令）
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-mcp-manager-latest.tgz
+
+dsh web   # 重启生效
+```
+
+### 方式二：克隆 monorepo 本地安装（开发 / 定制）
 
 ```bash
 git clone git@github.com:Yinxe/deepseek-harness-plugins.git
@@ -34,7 +46,32 @@ dsh web   # 重启生效
 3. 重启 dsh web，确认设置页出现 MCP 分节
 ```
 
+### 历史版本（兼容旧版 DSH）
+
+main 永远跟随最新 DSH。老版本 DSH 用户装**静态历史版本**：按 `compat.json` 记录的兼容 tag，到 [Releases](https://github.com/Yinxe/deepseek-harness-plugins/releases) 找对应版本 Release（`v*` tag 触发，静态存档、永不滚动），资产名 = `dshp-mcp-manager-<tag>.tgz`：
+
+```bash
+# 以 v0.1.5-rc.1 为例
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/v0.1.5-rc.1/dshp-mcp-manager-v0.1.5-rc.1.tgz
+
+dsh web   # 重启生效
+```
+
 ## 更新
+
+### 滚动更新（Release 安装，推荐）
+
+`latest` 资产随 main 每次构建滚动重建，**重跑同一条安装命令 + 重启**即滚到最新：
+
+```bash
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-mcp-manager-latest.tgz
+
+dsh web   # 重启生效
+```
+
+### 本地更新（克隆安装）
 
 重跑安装命令同一条 `dsh plugin --profile web add ./plugins/mcp-manager`（覆盖安装）+ `dsh web` 重启。
 版本历史见根 README 与 git log；本插件遵循 semver，条目路由协议变化会升 minor，合并语义破坏性变化升 major。
@@ -154,7 +191,7 @@ plugins/mcp-manager/
 ## 卸载
 
 ```bash
-dsh plugin --profile web remove dshp-mcp-manager
+dsh plugin --profile web remove "@dshp/mcp-manager"
 dsh web   # 重启生效
 ```
 

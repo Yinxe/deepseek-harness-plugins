@@ -4,7 +4,19 @@ DeepSeek Harness（DSH）**视觉桥接**插件：让**纯文本模型**也能�
 
 > 设计原则：**对模型零侵扰、对用户零残留**。图片只取 leaf 字段的 owned copy，会话级 LRU 缓存；无密钥、无外部依赖；卸载即干净。
 
-## 安装（唯一方式：克隆 monorepo + 本地安装）
+## 安装
+
+### 方式一：从 Release 安装（推荐，无需 clone）
+
+```bash
+# latest 滚动版（跟随 main 最新构建；滚动更新 = 重跑同一条命令）
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-vision-bridge-latest.tgz
+
+dsh web   # 重启生效
+```
+
+### 方式二：克隆 monorepo 本地安装（开发 / 定制）
 
 > 本包尚未发布到 npm（`@dshp/vision-bridge` 在 npm 上 404），**不要用 `add github:` / `pnpm add`**，唯一入口就是克隆本仓库后本地 `add`。
 
@@ -38,7 +50,32 @@ dsh web
 3. dsh web 重启，确认无报错，设置页出现「视觉模型」即成功
 ```
 
+### 历史版本（兼容旧版 DSH）
+
+main 永远跟随最新 DSH。老版本 DSH 用户装**静态历史版本**：按 `compat.json` 记录的兼容 tag，到 [Releases](https://github.com/Yinxe/deepseek-harness-plugins/releases) 找对应版本 Release（`v*` tag 触发，静态存档、永不滚动），资产名 = `dshp-vision-bridge-<tag>.tgz`：
+
+```bash
+# 以 v0.1.5-rc.1 为例
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/v0.1.5-rc.1/dshp-vision-bridge-v0.1.5-rc.1.tgz
+
+dsh web   # 重启生效
+```
+
 ## 更新
+
+### 滚动更新（Release 安装，推荐）
+
+`latest` 资产随 main 每次构建滚动重建，**重跑同一条安装命令 + 重启**即滚到最新：
+
+```bash
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-vision-bridge-latest.tgz
+
+dsh web   # 重启生效
+```
+
+### 本地更新（克隆安装）
 
 ```sh
 cd deepseek-harness-plugins

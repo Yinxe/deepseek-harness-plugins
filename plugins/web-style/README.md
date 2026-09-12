@@ -4,7 +4,19 @@ DeepSeek Harness（DSH）**Web 外观定制套件**：**7 套主题画廊**（�
 
 > 设计原则：**与官方外观系统同轨，不做对抗**。不注册自定义主题 id，而是把每套主题作为官方 `overrideTokens` **覆盖层**叠加在官方亮/暗之上——主题自身 scheme 分支填主题值，对侧分支填官方原样值，因此官方「外观」行（浅色/深色/跟随系统）永远合法可用，「回到官方」= 撤销覆盖层。主题 token 单源 `src/host/themes/`，由 Host 经同源路由下发，client 只存卡片 meta；运行时零依赖。
 
-## 安装（唯一方式：克隆 monorepo + 本地安装）
+## 安装
+
+### 方式一：从 Release 安装（推荐，无需 clone）
+
+```bash
+# latest 滚动版（跟随 main 最新构建；滚动更新 = 重跑同一条命令）
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-web-style-latest.tgz
+
+dsh web   # 重启生效
+```
+
+### 方式二：克隆 monorepo 本地安装（开发 / 定制）
 
 > 本包尚未发布到 npm，**不要用 `add github:` / `pnpm add`**，唯一入口就是克隆本仓库后本地 `add`。
 
@@ -53,7 +65,32 @@ dsh web
 4. dsh web 重启，确认无报错，设置页「外观定制」出现主题画廊即成功
 ```
 
+### 历史版本（兼容旧版 DSH）
+
+main 永远跟随最新 DSH。老版本 DSH 用户装**静态历史版本**：按 `compat.json` 记录的兼容 tag，到 [Releases](https://github.com/Yinxe/deepseek-harness-plugins/releases) 找对应版本 Release（`v*` tag 触发，静态存档、永不滚动），资产名 = `dshp-web-style-<tag>.tgz`：
+
+```bash
+# 以 v0.1.5-rc.1 为例
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/v0.1.5-rc.1/dshp-web-style-v0.1.5-rc.1.tgz
+
+dsh web   # 重启生效
+```
+
 ## 更新
+
+### 滚动更新（Release 安装，推荐）
+
+`latest` 资产随 main 每次构建滚动重建，**重跑同一条安装命令 + 重启**即滚到最新：
+
+```bash
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-web-style-latest.tgz
+
+dsh web   # 重启生效
+```
+
+### 本地更新（克隆安装）
 
 ```sh
 cd deepseek-harness-plugins

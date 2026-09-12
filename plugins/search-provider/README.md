@@ -6,7 +6,19 @@ DeepSeek Harness（DSH）AI 搜索提供方中枢：用可插拔的第三方搜�
 
 > 本插件为 monorepo（[deepseek-harness-plugins](https://github.com/Yinxe/deepseek-harness-plugins)）成员，等同改写自独立仓库 [dsh-tavily-search](https://github.com/Yinxe/dsh-tavily-search)（`@dshp-inx/tavily-search`），并提供从旧插件手工迁移的路径（见下文）。
 
-## 安装（唯一方式：克隆 monorepo + 本地安装）
+## 安装
+
+### 方式一：从 Release 安装（推荐，无需 clone）
+
+```bash
+# latest 滚动版（跟随 main 最新构建；滚动更新 = 重跑同一条命令）
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-search-provider-latest.tgz
+
+dsh web   # 重启生效
+```
+
+### 方式二：克隆 monorepo 本地安装（开发 / 定制）
 
 > 本包尚未发布到 npm，**不要用 `add github:` / `pnpm add`**，唯一入口就是克隆本仓库后本地 `add`。
 
@@ -53,7 +65,32 @@ dsh web
 
 **验证**：重启 `dsh web` → 打开 web 页面 → 设置 → AI 搜索，能看到「搜索引擎」行显示「Tavily · 当前生效」即安装成功。
 
+### 历史版本（兼容旧版 DSH）
+
+main 永远跟随最新 DSH。老版本 DSH 用户装**静态历史版本**：按 `compat.json` 记录的兼容 tag，到 [Releases](https://github.com/Yinxe/deepseek-harness-plugins/releases) 找对应版本 Release（`v*` tag 触发，静态存档、永不滚动），资产名 = `dshp-search-provider-<tag>.tgz`：
+
+```bash
+# 以 v0.1.5-rc.1 为例
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/v0.1.5-rc.1/dshp-search-provider-v0.1.5-rc.1.tgz
+
+dsh web   # 重启生效
+```
+
 ## 更新
+
+### 滚动更新（Release 安装，推荐）
+
+`latest` 资产随 main 每次构建滚动重建，**重跑同一条安装命令 + 重启**即滚到最新：
+
+```bash
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-search-provider-latest.tgz
+
+dsh web   # 重启生效
+```
+
+### 本地更新（克隆安装）
 
 ```sh
 cd deepseek-harness-plugins && git pull && pnpm install
