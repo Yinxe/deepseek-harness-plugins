@@ -102,14 +102,16 @@ jobs:
       # gh 用显式仓库解析，不依赖 git remote；checkout 只为 gen-release-notes.cjs 读取 plugins/*/package.json
       GH_REPO: ${{ github.repository }}
     steps:
+      # checkout 必须在 download-artifact 之前：其默认 clean: true 会执行
+      # git clean -ffdx，若放在后面会把先下载的 dist/ 清空
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
       - uses: actions/download-artifact@v4
         with:
           name: dshp-plugins-${{ needs.check.outputs.suffix }}
           path: dist
-
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
 
       - name: Create versioned GitHub release
         if: github.ref_type == 'tag'
