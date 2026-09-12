@@ -13,6 +13,7 @@ DeepSeek Harness（DSH）插件 Monorepo（pnpm workspaces + TypeScript ESM）�
 | **[@dshp/mcwiki-search](plugins/mcwiki-search/README.md)**     | Minecraft Wiki 查询工具（搜索 / 引言 / 全文，含模板清理的 AI 可读转换）                                                           | [README](plugins/mcwiki-search/README.md)   |
 | **[@dshp/search-provider](plugins/search-provider/README.md)** | `web_search` 供应商中枢：Tavily 等可插拔接入，动态选型                                                                            | [README](plugins/search-provider/README.md) |
 | **[@dshp/web-style](plugins/web-style/README.md)**             | Web 外观定制：23 套主题画廊一键切换并持久化 + 壁纸取色（Material You）+ 全局圆角                                                  | [README](plugins/web-style/README.md)       |
+| **[@dshp/skill-manager](plugins/skill-manager/README.md)**     | 技能管理：设置页统一管理全局（`~/.dsh/skills`、`~/.agents/skills`）与工作区技能——新建/编辑/启停/复制移动/删除                     | [README](plugins/skill-manager/README.md)   |
 
 ## 截图预览
 
@@ -32,9 +33,29 @@ DeepSeek Harness（DSH）插件 Monorepo（pnpm workspaces + TypeScript ESM）�
 
 > 其余插件暂无界面截图；使用说明与配置见各自的 README（上表「文档」列）。
 
-## 安装到 DSH（唯一方式：克隆本仓库 + 本地安装）
+## 安装到 DSH
 
-> 包尚未发布到 npm，**只能本地装**，不能 `pnpm add @dshp/*` / `add github:`。
+### 方式一：从 GitHub Releases 直接安装（推荐，无需 clone）
+
+CI 把每个插件打包成 tgz 发布到 Releases，`latest` 滚动发布固定跟随 main 最新构建（持 Latest 徽标、始终置顶）：
+
+```bash
+# macOS / Linux
+dsh --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-mcwiki-search-latest.tgz
+```
+
+```powershell
+# Windows PowerShell
+dsh --profile web add `
+  'https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-mcwiki-search-latest.tgz'
+```
+
+全部插件的下载与安装命令见 [Releases](https://github.com/Yinxe/deepseek-harness-plugins/releases) 各预发布说明；更新 = 重跑同一条命令 + `dsh web` 重启。
+
+### 方式二：克隆仓库本地安装（开发 / 定制）
+
+> 包尚未发布到 npm，不能 `pnpm add @dshp/*` / `add github:`。
 
 ```bash
 git clone git@github.com:Yinxe/deepseek-harness-plugins.git
@@ -48,6 +69,7 @@ dsh plugin --profile web add ./plugins/vision-bridge
 dsh plugin --profile web add ./plugins/mcwiki-search
 dsh plugin --profile web add ./plugins/search-provider
 dsh plugin --profile web add ./plugins/web-style
+dsh plugin --profile web add ./plugins/skill-manager
 
 dsh web   # 重启生效
 ```
@@ -66,6 +88,20 @@ dsh web   # 重启生效
 3. 重启 dsh web，确认无报错、设置页出现对应条目
 ```
 
+### 发布与更新约定（CI 自动执行）
+
+| 通道         | 触发          | 行为                                                             |
+| ------------ | ------------- | ---------------------------------------------------------------- |
+| `latest`     | 推送 `main`   | 滚动重建到最新提交（正式渠道，持 Latest 徽标置顶），下载地址固定 |
+| 版本 Release | 推送 `v*` tag | 静态存档，永不随构建变化                                         |
+| 分支预发布   | 推送其他分支  | 以分支名命名的预发布（`release/1.0` → `release-1.0`）            |
+| 自定义后缀   | 手动触发      | 勾选 rolling = 预发布随滚动；不勾 = 静态正式版                   |
+
+- **滚动约定**：所有**预发布**（以及 notes 首行带 `<!-- rolling: true -->` 标记的 release）都跟随 main——每次 main 推送成功后整体重建到最新提交；停止跟随 = 取消 Pre-release 勾选或删除标记行。`latest` 每次最后重建并授予 Latest 徽标，始终置顶 Releases 列表。
+- **数量约束**：除 `latest` 外同时最多允许 **1 个**滚动项；出现多个时 CI 立即报错终止（不动任何现有 Release），处理后再推送即可。
+- `dev` 与 `feature/*` 分支、PR 只跑 CI 门禁，不产出发布物。
+- Release 说明由 `scripts/gen-release-notes.cjs` 生成：逐插件列出包名、版本、双语描述、下载与安装命令。
+
 ## 结构
 
 ```
@@ -83,6 +119,7 @@ dsh web   # 重启生效
 │   │   └── lib/                #   单文件构建产物（已提交）
 │   ├── mcwiki-search/          # @dshp/mcwiki-search（Minecraft Wiki 查询）
 │   ├── search-provider/        # @dshp/search-provider（web_search 供应商中枢）
+│   ├── skill-manager/          # @dshp/skill-manager（全局 + 工作区技能管理）
 │   └── web-style/              # @dshp/web-style（23 套主题画廊 + 壁纸取色 + 全局圆角）
 │       ├── src/host/           #   Host TS：types/http/config + themes/（token 单源，21 个主题模块）
 │       ├── src/client/         #   Client TS：GallerySection/apply-theme/md3/official/radius/themes/api/state
@@ -93,7 +130,7 @@ dsh web   # 重启生效
 ├── tsconfig.json               # solution 引用
 ├── pnpm-workspace.yaml         # packages: plugins/* + storeDir
 ├── compat.json                 # DSH 版本兼容矩阵（空 = 暂无历史包袱）
-└── .github/workflows/ci.yml    # format → lint → typecheck → build → test
+└── .github/workflows/CICD.yml  # 门禁 + 打包发布：main→latest 滚动发布，v* tag→版本 Release，其他分支→同名预发布；dev 与 feature/* 仅门禁
 ```
 
 每个插件内部一律是同一套布局：`src/host/`（Node 半）+ `src/client/`（浏览器半）+ `lib/`（已提交的单文件产物）+ `cordis.patch.yml`。
@@ -121,6 +158,7 @@ dsh web   # 重启生效
 
 ```bash
 pnpm install
+pnpm check         # 一条流程：build → typecheck → lint → format（提交前跑这个）
 pnpm format        # prettier 全仓写盘
 pnpm format:check  # CI 用，只检查不写
 pnpm lint          # oxlint 全仓（--deny-warnings，警告也算挂）
@@ -133,7 +171,7 @@ pnpm --filter @dshp/token-meter build
 pnpm --filter @dshp/token-meter typecheck
 ```
 
-提交前跑齐上面 5 条门禁（与 `ci.yml` 同序）；改了 `src/` 必须重新 build 并把 `lib/` 一起提交。
+提交前跑 `pnpm check`（构建 → 类型检查 → 质量检查 → 格式化一步完成）；CI 仍按严格检查序把关；改了 `src/` 必须重新 build 并把 `lib/` 一起提交。
 
 ## 加新插件
 
