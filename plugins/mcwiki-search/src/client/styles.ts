@@ -37,4 +37,11 @@ export const CSS: string = `
 .mw-result-meta{color:var(--dsw-alias-label-tertiary);font-size:12px;margin-top:4px;word-break:break-all}
 .mw-codeblock{margin-top:8px}
 .mw-codeblock pre{max-height:320px;overflow:auto}
+/* /mcwiki 命令卡片（conversation.chat.commandview 槽位；布局only，颜色走官方 token） */
+.mw-cmdRoot{width:100%}
+.mw-cmdRow{width:100%}
+.mw-cmdTitle{font-size:13px}
+.mw-cmdSummary{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mw-cmdSummaryErr{color:var(--dsw-alias-state-error-primary)}
+.mw-cmdBody{font-size:13px;line-height:20px;color:var(--dsw-alias-label-primary);padding:4px 0 8px}
 `;

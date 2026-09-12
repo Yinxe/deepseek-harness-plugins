@@ -8,6 +8,9 @@
  *   - mcwiki_get_page    —— 抓取页面：intro（extracts 纯文本）或 full（wikitext→Markdown/纯文本）
  *   - mcwiki_random      —— 随机条目 + 引言纯文本
  *
+ * 以及人用斜杠命令（command.ts，commands 可选服务，未挂载自动跳过）：
+ *   /mcwiki <搜索词> | read <条目标题> | random —— 结果直接回显给用户，不经模型
+ *
  * 以及三个同源 JSON 路由（设置页状态 / 配置持久化 / 连接测试）：
  *   GET  /ext/dshp-mcwiki-search/state
  *   POST /ext/dshp-mcwiki-search/config  { timeoutMs?, maxChars?, introMaxChars?, searchMaxResults? }
@@ -24,6 +27,7 @@
  * @module @dshp/mcwiki-search
  */
 import { ConfigSchema, DEFAULT_CONFIG, NS, sanitizePatchConfig } from './config.js';
+import { registerCommand } from './command.js';
 import { registerRoutes } from './routes.js';
 import { registerTools } from './tools.js';
 import type { AnyCtx, PluginConfig } from './types.js';
@@ -81,6 +85,19 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
 
   registerTools(ctx, getConfig);
   registerRoutes(ctx, getConfig, updateConfig);
+
+  // /mcwiki 斜杠命令（commands 为可选服务，未挂载时内部跳过注册）
+  try {
+    registerCommand(ctx, getConfig);
+  } catch (e) {
+    try {
+      console.error(
+        '[dshp-mcwiki-search] register /mcwiki command failed: ' + String((e as Error)?.message ?? e),
+      );
+    } catch {
+      /* ignore */
+    }
+  }
 
   // 系统提示引导（可选服务；不存在则跳过，工具本身仍可用）
   try {

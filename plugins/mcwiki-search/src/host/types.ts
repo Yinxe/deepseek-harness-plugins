@@ -49,7 +49,8 @@ export interface PageIntroResult {
   title: string;
   pageid: number;
   url: string;
-  section: 'intro';
+  /** intro = 引言段（exintro）；page = 整页纯文本（wholePage，api 层选项，模型工具不用） */
+  section: 'intro' | 'page';
   format: 'text';
   text: string;
   truncated: boolean;
