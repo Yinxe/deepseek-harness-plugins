@@ -3,3 +3,5 @@ packages:
 allowBuilds:
   esbuild: true
 storeDir: /tmp/pnpm-store
+autoInstallPeers: true
+strictPeerDependencies: false

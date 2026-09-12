@@ -141,8 +141,8 @@ export type AnyLlm = any;
 
 - **运行时依赖 = 0**：`dependencies` 保持 `{}`。host 需要的库（schemastery/cosmokit/spec）全部 `noExternal` 内联；client 需要的 react/primitives 全部 `external` 运行时注入。新增第三方先问：能不能不引？标杆 `http.ts`/`cache.ts` 零依赖手写就是答案（json 应答、同源校验、LRU 缓存都没引库）。
 - **dev 依赖最小集**：`tsup` + `typescript`（根）+ 按需 `@types/react` / `@deepseek-ai/schemastery`。**不许加**：typescript-eslint（8.70 明确不支持 TS 7，等上游）、eslint 全家、webpack/rollup（构建只用 tsup）、任何运行时 polyfill。
-- **包管理只用 pnpm**：`pnpm install` / `pnpm --filter` / `pnpm -r`。禁用 npm/yarn。`pnpm-workspace.yaml` 的 `storeDir: /tmp/pnpm-store` 和 `.npmrc`（`auto-install-peers=true`，`strict-peer-dependencies=false`）**不许改**（沙箱 store 只读，改了装不上）。
-- **版本跟随标杆**：Node `>=20`（开发用 24，见 `.nvmrc`）、pnpm 11（见根 `devEngines`，`onFail: download`）。升大版本（TS/tsup/oxlint）先在单个插件试点，全绿再推广。
+- **包管理只用 pnpm**：`pnpm install` / `pnpm --filter` / `pnpm -r`。禁用 npm/yarn。`pnpm-workspace.yaml` 的 `storeDir: /tmp/pnpm-store`、`autoInstallPeers: true`、`strictPeerDependencies: false` **不许改**（沙箱 store 只读，改了装不上；peer 两项已从 `.npmrc` 迁入 workspace yaml——`.npmrc` 只留 registry 注释，避免 npm/nx 报 Unknown project config 警告）。
+- **版本跟随标杆**：Node `>=20`（开发用 24，见 `.nvmrc`）、pnpm 11（见根 `devEngines`，`onFail: ignore`——`download` 会让 npm 11.12 在仓库内拦截 npx 包装的 dsh）。升大版本（TS/tsup/oxlint）先在单个插件试点，全绿再推广。
 - **禁区**：不许直接编辑 `node_modules/`（pnpm store 硬链接，改坏整个 store）；不许把 `lib/` 加入 `.gitignore`；不许在源码里 `require()` 第三方运行时包。
 
 ---
