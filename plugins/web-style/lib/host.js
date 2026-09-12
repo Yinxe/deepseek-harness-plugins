@@ -943,7 +943,9 @@ var light = fillFontTokens(
     "--dsw-specific-login-input": "#faf9f5",
     "--dsw-specific-menu": "#faf9f5",
     "--dsw-specific-selector": "#faf9f5",
-    "--dsw-specific-tip": "#31302e",
+    /* dock 面板（任务列表 / 目标条）是随 scheme 走的普通面，取自己的 layer-2；
+       此前误填了 --dsw-alias-tooltip-bg 那种反色浮层的值，亮色下会渲染成深灰 */
+    "--dsw-specific-tip": "#f0eee6",
     /* ring 型深度 —— 0 0 0 1px 的围合而非投影 */
     "--dsw-shadow-lv1": "0 0 0 1px #e8e6dc",
     "--dsw-shadow-lv2": "0 0 0 1px #dcd9ce",
@@ -1167,7 +1169,7 @@ var light2 = fillFontTokens(
     "--dsw-specific-login-input": "#fbeef2",
     "--dsw-specific-menu": "#ffffff",
     "--dsw-specific-selector": "#ffffff",
-    "--dsw-specific-tip": "#432635",
+    "--dsw-specific-tip": "#f6dee6",
     /* 柔粉阴影（拟 notional 的 whisper 深度，带一点樱色） */
     "--dsw-shadow-lv1": "0 1px 2px rgba(231, 84, 128, 0.06)",
     "--dsw-shadow-lv2": "0 2px 6px rgba(231, 84, 128, 0.06)",
@@ -1392,7 +1394,7 @@ var light4 = fillFontTokens(
     "--dsw-specific-login-input": "#ffffff",
     "--dsw-specific-menu": "#ffffff",
     "--dsw-specific-selector": "#ffffff",
-    "--dsw-specific-tip": "#1f2a24",
+    "--dsw-specific-tip": "#eef7ed",
     "--dsw-font-family": SANS,
     "--dsw-font-mono": MONO,
     ...FLAT_SHADOWS
@@ -1503,7 +1505,7 @@ var light5 = fillFontTokens(
     "--dsw-specific-login-input": "#ffffff",
     "--dsw-specific-menu": "#ffffff",
     "--dsw-specific-selector": "#ffffff",
-    "--dsw-specific-tip": "#1a1a1f",
+    "--dsw-specific-tip": "#fff4ea",
     "--dsw-font-family": SANS,
     "--dsw-font-mono": MONO,
     ...FLAT_SHADOWS

@@ -108,7 +108,7 @@ export const light = fillFontTokens(
     '--dsw-specific-login-input': '#ffffff',
     '--dsw-specific-menu': '#ffffff',
     '--dsw-specific-selector': '#ffffff',
-    '--dsw-specific-tip': '#1f2a24',
+    '--dsw-specific-tip': '#eef7ed',
 
     '--dsw-font-family': SANS,
     '--dsw-font-mono': MONO,

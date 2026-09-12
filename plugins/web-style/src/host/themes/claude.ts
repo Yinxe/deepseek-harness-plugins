@@ -110,7 +110,9 @@ export const light = fillFontTokens(
     '--dsw-specific-login-input': '#faf9f5',
     '--dsw-specific-menu': '#faf9f5',
     '--dsw-specific-selector': '#faf9f5',
-    '--dsw-specific-tip': '#31302e',
+    /* dock 面板（任务列表 / 目标条）是随 scheme 走的普通面，取自己的 layer-2；
+       此前误填了 --dsw-alias-tooltip-bg 那种反色浮层的值，亮色下会渲染成深灰 */
+    '--dsw-specific-tip': '#f0eee6',
 
     /* ring 型深度 —— 0 0 0 1px 的围合而非投影 */
     '--dsw-shadow-lv1': '0 0 0 1px #e8e6dc',

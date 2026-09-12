@@ -107,7 +107,7 @@ export const light = fillFontTokens(
     '--dsw-specific-login-input': '#fbeef2',
     '--dsw-specific-menu': '#ffffff',
     '--dsw-specific-selector': '#ffffff',
-    '--dsw-specific-tip': '#432635',
+    '--dsw-specific-tip': '#f6dee6',
 
     /* 柔粉阴影（拟 notional 的 whisper 深度，带一点樱色） */
     '--dsw-shadow-lv1': '0 1px 2px rgba(231, 84, 128, 0.06)',
