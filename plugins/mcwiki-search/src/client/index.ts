@@ -8,6 +8,7 @@
  */
 import { CSS } from './styles.js';
 import { createMcWikiSection } from './McWikiSection.js';
+import { createMcwikiCommandCard } from './CommandCard.js';
 import type { DshRequire } from './types.js';
 
 declare global {
@@ -53,6 +54,13 @@ function register(): void {
             { name: 'settings.section', id: 'dshp-mcwiki-search', order: 26, label: 'Minecraft Wiki 搜索' },
             Section,
           ),
+        );
+
+        // /mcwiki 命令卡片：官方 conversation.chat.commandview 槽位按命令名
+        // keyed，占用 key 'mcwiki' 替换通用 <pre> 卡片，用 MarkdownText 渲染
+        const CommandCard = createMcwikiCommandCard(React, P);
+        slots.inject('conversation.chat.commandview', () =>
+          slots.register({ name: 'conversation.chat.commandview', key: 'mcwiki' }, CommandCard),
         );
       };
 

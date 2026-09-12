@@ -5,9 +5,11 @@
  * 设计约束（对齐输入框现实）：
  *  - 单命令单动作，**不做子命令**：input.hint 只是静态文字，输入框不会为
  *    子命令做补全，用户发现不了。想看别的条目就 /mcwiki <条目名> 再搜。
- *  - 第一条详情**完整输出**（不传 maxChars 上限）：人看的详情不该按给模型
- *    的紧凑设置来截断（对齐 README 的「完整性承诺」）；详情抓取失败降级
- *    为纯列表。
+ *  - 输出是 **Markdown**：客户端通过官方 `conversation.chat.commandview`
+ *    槽位（按命令名 keyed）注册了自定义卡片，用原语库的 MarkdownText 渲染；
+ *    未占用该槽位的端点回退通用卡片，Markdown 源文本也保持可读。
+ *  - 第一条详情 = **整页纯文本**（wiki 的 exintro 引言往往只有一两句，没料），
+ *    上限取设置「全文上限」maxChars（0 = 完整）；详情抓取失败降级为纯列表。
  *
  * 注册形态对齐官方 @deepseek-ai/dsh-command-goal：ctx.commands.register +
  * definitionId + input.hint，handler 返回 CommandResult，支持 Promise。
@@ -15,7 +17,7 @@
  *
  * @module @dshp/mcwiki-search
  */
-import { fetchPageIntro, pageUrl, searchWiki } from './api.js';
+import { fetchPageIntro, searchWiki } from './api.js';
 import type { AnyCtx, PageIntroResult, PluginConfig, SearchWikiResult } from './types.js';
 
 /** ISO 时间串 → 日期（YYYY-MM-DD）；非该形态原样返回。 */
@@ -33,9 +35,28 @@ function fail(text: string): { kind: 'error'; text: string } {
   return { kind: 'error', text };
 }
 
-/** 引言 → 人读文本（标题 + 正文 + 来源链接）。 */
-function renderIntro(title: string, text: string, url: string): string {
-  return [`${title}`, '', text, '', `来源：${url || pageUrl(title)}`].join('\n');
+/** wiki 纯文本导出的 `== X ==` 分节标题 → Markdown `###` 层级。 */
+function wikiHeadingsToMarkdown(text: string): string {
+  return text
+    .split('\n')
+    .map((line) => {
+      const m = /^(={2,5})\s*(.+?)\s*\1\s*$/.exec(line);
+      if (!m) return line;
+      const level = (m[1]?.length ?? 2) + 1; // == → ###，=== → ####
+      return '#'.repeat(level) + ' ' + (m[2] ?? '');
+    })
+    .join('\n');
+}
+
+/** 搜索结果 → Markdown 编号列表（标题即链接 + 摘要 + 更新日期）。 */
+function renderList(r: SearchWikiResult): string {
+  const head = `### 「${r.query}」· ${r.totalHits} 条命中（显示前 ${r.results.length} 条${r.truncated ? '，已按设置截断' : ''}）`;
+  const items = r.results.map((item, i) => {
+    const lines = [`${i + 1}. **[${item.title}](${item.url})** — ${item.snippet}`];
+    if (item.updated) lines.push(`   （更新于 ${shortDate(item.updated)}）`);
+    return lines.join('\n');
+  });
+  return [head, '', ...items].join('\n');
 }
 
 /** 解析并执行一条 /mcwiki（网络调用按 invocation.signal 取消）。 */
@@ -45,7 +66,7 @@ async function executeMcwikiCommand(
 ): Promise<{ kind: 'success' | 'error'; text: string }> {
   const cfg = getConfig();
   const raw = typeof invocation?.rawInput === 'string' ? invocation.rawInput.trim() : '';
-  if (raw.length === 0) return ok('用法：/mcwiki <搜索词或条目名>——回显搜索列表与第一条详情');
+  if (raw.length === 0) return ok('用法：/mcwiki <搜索词或条目名>——回显搜索列表与第一条条目详情');
   const signal = invocation?.signal instanceof AbortSignal ? invocation.signal : undefined;
 
   const r = (await searchWiki({
@@ -58,25 +79,29 @@ async function executeMcwikiCommand(
     return ok(`「${r.query}」没有命中任何条目；换个更短的关键词试试。`);
   }
 
-  // 命中即附第一条的完整引言（多数查询「第一条就是答案」，一次给全；
-  // 详情抓取失败只降级为纯列表，不影响已拿到的搜索结果）
+  // 命中即附第一条的整页正文（wiki 的 exintro 引言往往只有一两句，没料；
+  // 上限取设置「全文上限」maxChars（0 = 完整）；抓取失败降级为纯列表）
   const first = r.results[0];
   if (first === undefined) return ok(`「${r.query}」没有命中任何条目。`);
   let detail: string;
   try {
-    // 整页纯文本前 6000 字（wiki 的 exintro 引言往往只有一两句，没料；
-    // 整页才有分节正文，6000 与设置页转换测试同量级，刷屏可控）
     const intro = (await fetchPageIntro({
       pageid: first.pageid,
       wholePage: true,
-      maxChars: 6000,
+      maxChars: cfg.maxChars,
       signal,
       timeoutMs: cfg.timeoutMs,
     })) as PageIntroResult;
-    detail = renderIntro(intro.title, intro.text, intro.url);
+    detail = [
+      `## ${intro.title}${intro.truncated ? `（正文已按设置截断到 ${cfg.maxChars} 字）` : ''}`,
+      '',
+      wikiHeadingsToMarkdown(intro.text),
+      '',
+      `来源：${intro.url}`,
+    ].join('\n');
   } catch (e) {
     detail =
-      '—— 详情获取失败（' +
+      '> —— 详情获取失败（' +
       String((e as Error)?.message ?? e).slice(0, 120) +
       '），可再试一次 /mcwiki ' +
       first.title +
@@ -86,25 +111,13 @@ async function executeMcwikiCommand(
     [
       renderList(r),
       '',
-      '—— 第一条「' + first.title + '」详情 ——',
+      '---',
+      '',
       detail,
       '',
-      '（详情为条目全文前 6000 字；需要完整内容就让模型调用 mcwiki_get_page，section=full 读 Markdown 全文）',
+      '> 详情为第一条的整页文本（上限取设置「全文上限」，0 = 完整）；需要 Markdown 全文转换就让模型调用 mcwiki_get_page。',
     ].join('\n'),
   );
-}
-
-/** 搜索结果 → 编号列表（标题 + 摘要 + URL + 更新日期）。 */
-function renderList(r: SearchWikiResult): string {
-  if (r.results.length === 0) {
-    return `「${r.query}」没有命中任何条目；换个更短的关键词试试。`;
-  }
-  const head = `「${r.query}」共 ${r.totalHits} 条命中（显示前 ${r.results.length} 条${r.truncated ? '，已按设置截断' : ''}），第一条详情附后：`;
-  const items = r.results.map(
-    (item, i) =>
-      `${i + 1}. ${item.title}\n   ${item.snippet}\n   ${item.url}${item.updated ? `（更新于 ${shortDate(item.updated)}）` : ''}`,
-  );
-  return [head, ...items].join('\n');
 }
 
 /** 注册 /mcwiki（commands 为可选服务；未挂载时静默跳过并记一行 info）。 */
@@ -124,7 +137,7 @@ export function registerCommand(ctx: AnyCtx, getConfig: () => PluginConfig): voi
         // definitionId 为品牌字符串（官方包用包名）；AnyCtx 体系下直接传同值
         definitionId: '@dshp/mcwiki-search',
         name: 'mcwiki',
-        description: '查询中文 Minecraft Wiki：回显搜索列表与第一条条目的完整引言',
+        description: '查询中文 Minecraft Wiki：回显搜索列表与第一条条目正文（Markdown 渲染）',
         input: { hint: '<搜索词或条目名>' },
         handler: (invocation: { rawInput?: unknown; signal?: unknown }) =>
           executeMcwikiCommand(getConfig, invocation).catch((e: unknown) =>

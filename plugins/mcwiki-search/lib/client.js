@@ -40,6 +40,13 @@
 .mw-result-meta{color:var(--dsw-alias-label-tertiary);font-size:12px;margin-top:4px;word-break:break-all}
 .mw-codeblock{margin-top:8px}
 .mw-codeblock pre{max-height:320px;overflow:auto}
+/* /mcwiki \u547D\u4EE4\u5361\u7247\uFF08conversation.chat.commandview \u69FD\u4F4D\uFF1B\u5E03\u5C40only\uFF0C\u989C\u8272\u8D70\u5B98\u65B9 token\uFF09 */
+.mw-cmdRoot{width:100%}
+.mw-cmdRow{width:100%}
+.mw-cmdTitle{font-size:13px}
+.mw-cmdSummary{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mw-cmdSummaryErr{color:var(--dsw-alias-state-error-primary)}
+.mw-cmdBody{font-size:13px;line-height:20px;color:var(--dsw-alias-label-primary);padding:4px 0 8px}
 `;
 
   // src/client/api.ts
@@ -460,6 +467,49 @@
     return McWikiSettingsSection;
   }
 
+  // src/client/CommandCard.ts
+  var MD_LABELS = { code: { copyLabel: "\u590D\u5236", copiedLabel: "\u5DF2\u590D\u5236" }, footnotes: "\u811A\u6CE8" };
+  function summaryOf(text) {
+    return text.split("\n")[0]?.replace(/^#+\s*/, "").replace(/\*\*/g, "").slice(0, 120) ?? "";
+  }
+  function createMcwikiCommandCard(React, P) {
+    const h = React.createElement.bind(React);
+    return function McwikiCommandCard(props) {
+      const [open, setOpen] = React.useState(false);
+      const node = props?.node ?? {};
+      const outcome = node.outcome ?? null;
+      const text = typeof outcome?.text === "string" ? outcome.text : "";
+      const state = outcome === null ? "running" : outcome.kind === "error" ? "error" : "ok";
+      const body = text.includes("\n") ? text : null;
+      const summary = outcome === null ? "\u6B63\u5728\u67E5\u8BE2 Minecraft Wiki\u2026" : state === "error" ? text : text.length === 0 ? "\u5B8C\u6210" : summaryOf(text);
+      return h(
+        "div",
+        { className: "mw-cmdRoot", "data-state": state },
+        h(
+          P.DisclosureRow,
+          {
+            rowClassName: "mw-cmdRow",
+            titleClassName: "mw-cmdTitle",
+            chevronClassName: "mw-cmdChevron",
+            icon: state === "error" ? h(P.StateDot, { state: "error" }) : h(P.IconApiOutline14, null),
+            title: "mcwiki",
+            open: open && body !== null,
+            expandable: body !== null,
+            expandOnRowClick: true,
+            keepContentWhenOpen: true,
+            onToggle: () => setOpen((v) => !v),
+            collapsedContent: h(
+              "span",
+              { className: "mw-cmdSummary" + (state === "error" ? " mw-cmdSummaryErr" : "") },
+              summary
+            )
+          },
+          body !== null ? h("div", { className: "mw-cmdBody" }, h(P.MarkdownText, { text, streaming: false, labels: MD_LABELS })) : null
+        )
+      );
+    };
+  }
+
   // src/client/index.ts
   var PLUGIN_ID = "@dshp/mcwiki-search";
   function register() {
@@ -490,6 +540,11 @@
               { name: "settings.section", id: "dshp-mcwiki-search", order: 26, label: "Minecraft Wiki \u641C\u7D22" },
               Section
             )
+          );
+          const CommandCard = createMcwikiCommandCard(React, P);
+          slots.inject(
+            "conversation.chat.commandview",
+            () => slots.register({ name: "conversation.chat.commandview", key: "mcwiki" }, CommandCard)
           );
         };
         return moduleShim.exports;
