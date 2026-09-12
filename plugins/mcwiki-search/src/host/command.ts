@@ -43,17 +43,14 @@ function renderSearch(r: SearchWikiResult): string {
   if (r.results.length === 0) {
     return `「${r.query}」没有命中任何条目；换个更短的关键词试试。\n${USAGE}`;
   }
-  const head = `「${r.query}」共 ${r.totalHits} 条命中（显示前 ${r.results.length} 条${r.truncated ? '，已按设置截断' : ''}）：`;
+  const head = `「${r.query}」共 ${r.totalHits} 条命中（显示前 ${r.results.length} 条${r.truncated ? '，已按设置截断' : ''}），第一条详情附后：`;
   const items = r.results.map(
     (item, i) =>
       `${i + 1}. ${item.title}\n   ${item.snippet}\n   ${item.url}${item.updated ? `（更新于 ${shortDate(item.updated)}）` : ''}`,
   );
-  return [
-    head,
-    ...items,
-    '',
-    '提示：/mcwiki read <标题> 看引言；需要全文就让模型调用 mcwiki_get_page。',
-  ].join('\n');
+  return [head, ...items, '', '看其他条目：/mcwiki read <标题>；需要全文就让模型调用 mcwiki_get_page。'].join(
+    '\n',
+  );
 }
 
 /** 引言 → 人读文本（标题 + 正文 + 来源链接）。 */
@@ -108,7 +105,30 @@ async function executeMcwikiCommand(
     signal,
     timeoutMs: cfg.timeoutMs,
   })) as SearchWikiResult;
-  return ok(renderSearch(r));
+  if (r.results.length === 0) return ok(renderSearch(r));
+
+  // 命中即附第一条的引言详情（多数查询「第一条就是答案」，一次给全；
+  // 详情抓取失败只降级为纯列表，不影响已拿到的搜索结果）
+  const first = r.results[0];
+  if (first === undefined) return ok(renderSearch(r));
+  let detail: string;
+  try {
+    const intro = (await fetchPageIntro({
+      pageid: first.pageid,
+      maxChars: cfg.introMaxChars,
+      signal,
+      timeoutMs: cfg.timeoutMs,
+    })) as PageIntroResult;
+    detail = renderIntro(intro.title, intro.text, intro.url, intro.truncated);
+  } catch (e) {
+    detail =
+      '—— 第一条详情获取失败（' +
+      String((e as Error)?.message ?? e).slice(0, 120) +
+      '），可用 /mcwiki read ' +
+      first.title +
+      ' 重试 ——';
+  }
+  return ok([renderSearch(r), '', '—— 第一条「' + first.title + '」详情 ——', detail].join('\n'));
 }
 
 /** 注册 /mcwiki（commands 为可选服务；未挂载时静默跳过并记一行 info）。 */
