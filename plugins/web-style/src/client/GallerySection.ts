@@ -49,6 +49,40 @@ function accentOf(t: ThemeMeta | null): string {
   return '#2f81f7';
 }
 
+/**
+ * 品牌填充上的文字色：按相对亮度在「白 / 近黑」之间择优。
+ *
+ * 主题 accent 从 Spotify 绿 (#1ed760) 到 SpaceX 近白 (#f0f0fa) 都有，固定白字在
+ * 18/23 套主题上不到 WCAG AA 4.5:1（最差 supabase #3ecf8e 只有 1.91）；按亮度择优
+ * 后 20/23 达标（最差 4.37，已贴近阈值）。这也是「不写死主题色」的落法 ——
+ * 两个端点是**对比度端点**，不是主题色；主题色一律走 --dsw-* token。
+ */
+const INK_ON_LIGHT = '#ffffff';
+const INK_ON_DARK = '#111111';
+
+/** sRGB 相对亮度（WCAG 2.x 定义）；解析失败返回 null。 */
+function relLuminance(hex: string): number | null {
+  const m = /^#([0-9a-f]{6})$/i.exec((hex || '').trim());
+  if (!m) return null;
+  const n = parseInt(m[1] as string, 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  }) as [number, number, number];
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** 给定填充色，返回在其上对比度更高的墨色。 */
+function inkOn(fill: string): string {
+  const l = relLuminance(fill);
+  if (l === null) return INK_ON_LIGHT;
+  // 与两种端点各算一次对比度，取高者
+  const lLight = relLuminance(INK_ON_LIGHT) as number;
+  const lDark = relLuminance(INK_ON_DARK) as number;
+  const ratio = (a: number, b: number) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  return ratio(l, lLight) >= ratio(l, lDark) ? INK_ON_LIGHT : INK_ON_DARK;
+}
+
 /** 卡片三色拼接：壁纸主题用运行时调色板，其余用 meta.swatch。 */
 function mosaicOf(t: ThemeMeta | null): string[] {
   if (t && t.id === PHOTO_ID && state.photoTheme) {
@@ -178,7 +212,7 @@ export function createGallery(React: AnyReact, ctx: AnyCtx, theme: ThemeService,
             { className: 'tg-foot' },
             React.createElement(
               'span',
-              { className: 'tg-use', style: { background: accent } },
+              { className: 'tg-use', style: { background: accent, color: inkOn(accent) } },
               active ? '使用中' : '启用',
             ),
             React.createElement(

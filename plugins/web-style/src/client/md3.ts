@@ -517,7 +517,13 @@ export function buildPhotoTokens(input: PhotoSeedInput, scheme: 'light' | 'dark'
   const border1 = m.outlineVariant;
   const border2 = m.outline;
   const hover = m.surfaceContainerHighest;
-  const active = m.surfaceContainerHigh;
+  /*
+   * 侧栏选中行底色 = 品牌色 22% 叠色，跟随壁纸取出的主色。
+   * 原为 m.surfaceContainerHigh —— 与 hover（surfaceContainerHighest）是 MD3 的
+   * 相邻两档，实测 ΔE < 5，选中态几乎看不出；33 套静态主题同批改成该规则
+   * （见 src/host/themes/*.ts 与 scripts/check-themes.mjs 的派生校验）。
+   */
+  const active = withAlpha(brand, 0.22);
   const err = m.error;
 
   return {

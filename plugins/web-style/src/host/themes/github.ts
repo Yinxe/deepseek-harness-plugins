@@ -30,13 +30,13 @@ export const dark = fillFontTokens(
     '--dsw-alias-border-inverted': '#f0f6fc',
     '--dsw-alias-border-inverted2': '#c9d1d9',
     '--dsw-alias-separator-primary': '#21262d',
-    '--dsw-alias-line-secondary': '#30363d',
     '--dsw-alias-fill-l2': '#21262d',
     '--dsw-alias-fill-tsp-secondary': 'rgba(240, 246, 252, 0.05)',
 
     '--dsw-alias-brand-primary': '#2f81f7',
     '--dsw-alias-brand-primary-invert': '#ffffff',
     '--dsw-alias-brand-text': '#2f81f7',
+    '--dsw-alias-link': '#2f81f7',
 
     /* 主按钮 GitHub 绿 #238636（暗色官方值） */
     '--dsw-alias-button-primary-fill': '#238636',
@@ -72,6 +72,8 @@ export const dark = fillFontTokens(
     '--dsw-alias-label-primary-inverted': '#0d1117',
     '--dsw-alias-label-primary-bluish': '#2f81f7',
 
+    '--dsw-alias-state-business-primary': '#2f81f7',
+    '--dsw-alias-state-business-tertiary': 'rgba(47, 129, 247, 0.15)',
     '--dsw-alias-state-error-primary': '#f85149',
     '--dsw-alias-state-error-secondary': 'rgba(248, 81, 73, 0.15)',
     '--dsw-alias-state-success-primary': '#3fb950',
@@ -87,7 +89,6 @@ export const dark = fillFontTokens(
     '--dsw-alias-markdown-code-segment-selected': 'rgba(47, 129, 247, 0.25)',
     '--dsw-alias-markdown-code-segment-unselected': 'transparent',
     '--dsw-alias-markdown-placeholder': '#6e7681',
-    '--dsw-alias-markdown-tag': '#8b949e',
 
     '--dsw-alias-scrollbar-bg-l1': '#30363d',
     '--dsw-alias-scrollbar-bg-l2': '#21262d',
@@ -98,7 +99,7 @@ export const dark = fillFontTokens(
     '--dsw-alias-tooltip-bg': '#282e35',
     '--dsw-hovercard-bg': '#21262d',
     '--dsw-specific-sidebar-fill': '#0d1117',
-    '--dsw-specific-sidebar-nav-item-active': '#21262d',
+    '--dsw-specific-sidebar-nav-item-active': 'rgba(47, 129, 247, 0.22)',
     '--dsw-specific-sidebar-nav-item-active-accent': '#2f81f7',
     '--dsw-specific-sidebar-nav-item-hover': '#161b22',
     '--dsw-specific-bubble': '#161b22',
@@ -140,13 +141,13 @@ export const light = fillFontTokens(
     '--dsw-alias-border-inverted': '#1f2328',
     '--dsw-alias-border-inverted2': '#656d76',
     '--dsw-alias-separator-primary': '#d8dee4',
-    '--dsw-alias-line-secondary': '#eff2f5',
     '--dsw-alias-fill-l2': '#eff2f5',
     '--dsw-alias-fill-tsp-secondary': 'rgba(31, 35, 40, 0.04)',
 
     '--dsw-alias-brand-primary': '#0969da',
     '--dsw-alias-brand-primary-invert': '#ffffff',
     '--dsw-alias-brand-text': '#0969da',
+    '--dsw-alias-link': '#0969da',
 
     /* 主按钮 GitHub 绿 #1f883d（亮色官方值） */
     '--dsw-alias-button-primary-fill': '#1f883d',
@@ -182,6 +183,8 @@ export const light = fillFontTokens(
     '--dsw-alias-label-primary-inverted': '#ffffff',
     '--dsw-alias-label-primary-bluish': '#0969da',
 
+    '--dsw-alias-state-business-primary': '#0969da',
+    '--dsw-alias-state-business-tertiary': 'rgba(9, 105, 218, 0.10)',
     '--dsw-alias-state-error-primary': '#cf222e',
     '--dsw-alias-state-error-secondary': 'rgba(207, 34, 46, 0.08)',
     '--dsw-alias-state-success-primary': '#1a7f37',
@@ -197,7 +200,6 @@ export const light = fillFontTokens(
     '--dsw-alias-markdown-code-segment-selected': 'rgba(9, 105, 218, 0.12)',
     '--dsw-alias-markdown-code-segment-unselected': 'transparent',
     '--dsw-alias-markdown-placeholder': '#8c959f',
-    '--dsw-alias-markdown-tag': '#656d76',
 
     '--dsw-alias-scrollbar-bg-l1': '#d0d7de',
     '--dsw-alias-scrollbar-bg-l2': '#eff2f5',
@@ -208,7 +210,7 @@ export const light = fillFontTokens(
     '--dsw-alias-tooltip-bg': '#1f2328',
     '--dsw-hovercard-bg': '#ffffff',
     '--dsw-specific-sidebar-fill': '#f6f8fa',
-    '--dsw-specific-sidebar-nav-item-active': '#eff2f5',
+    '--dsw-specific-sidebar-nav-item-active': 'rgba(9, 105, 218, 0.22)',
     '--dsw-specific-sidebar-nav-item-active-accent': '#0969da',
     '--dsw-specific-sidebar-nav-item-hover': '#eff2f5',
     '--dsw-specific-bubble': '#f6f8fa',

@@ -379,7 +379,7 @@
     const border1 = m.outlineVariant;
     const border2 = m.outline;
     const hover = m.surfaceContainerHighest;
-    const active = m.surfaceContainerHigh;
+    const active = withAlpha(brand, 0.22);
     const err = m.error;
     return {
       // 背景
@@ -535,21 +535,22 @@
     "--dsw-alias-bg-mask-1": "#0000003d",
     "--dsw-alias-bg-mask-2": "#0000001f",
     "--dsw-alias-bg-mask-3": "#0000007a",
-    "--dsw-alias-bg-mask-photo": "#000000e0",
     "--dsw-alias-bg-mask-drop": "#ffffffb3",
+    "--dsw-alias-bg-mask-photo": "#000000e0",
     "--dsw-alias-bg-module-platform": "var(--dsw-static-neutral-bluish-60)",
     "--dsw-alias-bg-multi-select": "var(--dsw-static-neutral-bluish-60)",
     "--dsw-alias-bg-overlay": "var(--dsw-static-neutral-bluish-150)",
     "--dsw-alias-bg-skeleton": "#0000000a",
-    "--dsw-alias-border-inverted2": "#0000",
     "--dsw-alias-border-inverted": "#0000",
+    "--dsw-alias-border-inverted2": "#0000",
     "--dsw-alias-border-l1": "#0000000a",
-    "--dsw-alias-border-l2-darkmode-thin": "#0000001a",
     "--dsw-alias-border-l2": "#0000001a",
+    "--dsw-alias-border-l2-darkmode-thin": "#0000001a",
     "--dsw-alias-border-l3": "#0000001f",
     "--dsw-alias-border-l4": "#00000029",
-    "--dsw-alias-brand-primary-invert": "var(--dsw-static-neutral-bluish-1000)",
     "--dsw-alias-brand-primary": "var(--dsw-static-neutral-bluish-1000)",
+    "--dsw-alias-brand-primary-invert": "var(--dsw-static-neutral-bluish-1000)",
+    "--dsw-alias-brand-primary-new-colorprimary-new-color": "#4176e6",
     "--dsw-alias-brand-text": "var(--dsw-static-neutral-bluish-1000)",
     "--dsw-alias-button-contrast-fill": "var(--dsw-static-neutral-bluish-700)",
     "--dsw-alias-button-elevated-fill": "var(--dsw-static-neutral-bluish-00)",
@@ -563,29 +564,30 @@
     "--dsw-alias-button-primary-dimmed": "var(--dsw-static-neutral-bluish-100)",
     "--dsw-alias-button-primary-fill": "var(--dsw-alias-brand-primary)",
     "--dsw-alias-button-primary-hover": "var(--dsw-static-neutral-bluish-750)",
-    "--dsw-alias-button-tool-bar-fill-invisible": "#1f1f1f5c",
     "--dsw-alias-button-tool-bar-fill": "#54555780",
+    "--dsw-alias-button-tool-bar-fill-invisible": "#1f1f1f5c",
     "--dsw-alias-button-tool-bar-hover": "#54555799",
     "--dsw-alias-interactive-bg-active": "#2631481a",
+    "--dsw-alias-interactive-bg-hover": "#2631480f",
     "--dsw-alias-interactive-bg-hover-accent": "#26314824",
     "--dsw-alias-interactive-bg-hover-danger": "#ec13130d",
     "--dsw-alias-interactive-bg-hover-solid": "var(--dsw-static-neutral-bluish-75)",
-    "--dsw-alias-interactive-bg-hover": "#2631480f",
     "--dsw-alias-label-caption": "var(--dsw-static-neutral-bluish-400)",
     "--dsw-alias-label-dimmed": "var(--dsw-static-neutral-bluish-200)",
+    "--dsw-alias-label-primary": "var(--dsw-static-neutral-bluish-1000)",
     "--dsw-alias-label-primary-bluish": "var(--dsw-static-blue-900)",
     "--dsw-alias-label-primary-dimmed": "var(--dsw-static-neutral-bluish-950)",
     "--dsw-alias-label-primary-foreground": "var(--dsw-static-neutral-bluish-00)",
     "--dsw-alias-label-primary-inverted": "var(--dsw-static-neutral-bluish-00)",
-    "--dsw-alias-label-primary": "var(--dsw-static-neutral-bluish-1000)",
     "--dsw-alias-label-secondary": "var(--dsw-static-neutral-bluish-700)",
     "--dsw-alias-label-tertiary": "var(--dsw-static-neutral-bluish-600)",
+    "--dsw-alias-link": "var(--dsw-static-deepseek-500)",
     "--dsw-alias-markdown-citation": "var(--dsw-static-neutral-bluish-100)",
-    "--dsw-alias-markdown-code-block-banner": "var(--dsw-static-neutral-bluish-50)",
     "--dsw-alias-markdown-code-block": "var(--dsw-static-neutral-bluish-50)",
+    "--dsw-alias-markdown-code-block-banner": "var(--dsw-static-neutral-bluish-50)",
     "--dsw-alias-markdown-code-segment-selected": "var(--dsw-static-neutral-bluish-00)",
     "--dsw-alias-markdown-code-segment-unselected": "var(--dsw-static-neutral-bluish-75)",
-    "--dsw-alias-markdown-inline-code": "var(--dsw-static-neutral-bluish-100)",
+    "--dsw-alias-markdown-inline-code": "var(--dsw-static-neutral-50)",
     "--dsw-alias-markdown-placeholder": "var(--dsw-static-neutral-bluish-60)",
     "--dsw-alias-markdown-tag": "var(--dsw-static-neutral-bluish-75)",
     "--dsw-alias-scrollbar-bg-l1": "var(--dsw-static-neutral-200)",
@@ -605,107 +607,109 @@
     "--dsw-alias-state-warn-tertiary": "var(--dsw-static-amber-100)",
     "--dsw-alias-toast-bg": "var(--dsw-static-neutral-bluish-800)",
     "--dsw-alias-tooltip-bg": "var(--dsw-static-neutral-bluish-850)",
-    "--dsw-specific-bubble-highlight": "var(--dsw-static-deepseek-200)",
     "--dsw-specific-bubble": "var(--dsw-static-deepseek-50)",
+    "--dsw-specific-bubble-highlight": "var(--dsw-static-deepseek-200)",
     "--dsw-specific-input-major": "var(--dsw-static-neutral-bluish-00)",
     "--dsw-specific-login-input": "var(--dsw-static-neutral-bluish-50)",
     "--dsw-specific-menu": "var(--dsw-alias-bg-layer-3)",
     "--dsw-specific-selector": "var(--dsw-static-neutral-bluish-60)",
     "--dsw-specific-sidebar-fill": "var(--dsw-static-neutral-bluish-50)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "var(--dsw-static-deepseek-100)",
     "--dsw-specific-sidebar-nav-item-active": "var(--dsw-static-neutral-bluish-100)",
+    "--dsw-specific-sidebar-nav-item-active-accent": "var(--dsw-static-deepseek-100)",
     "--dsw-specific-sidebar-nav-item-hover": "var(--dsw-static-neutral-bluish-75)",
     "--dsw-specific-tip": "var(--dsw-static-neutral-bluish-60)"
   };
   var OFFICIAL_DARK = {
     "--dsw-alias-bg-base": "var(--dsw-static-neutral-bluish-950)",
-    "--dsw-alias-bg-layer-1": "var(--dsw-static-neutral-bluish-900)",
+    "--dsw-alias-bg-layer-1": "var(--dsw-static-neutral-bluish-875)",
     "--dsw-alias-bg-layer-2": "var(--dsw-static-neutral-bluish-850)",
     "--dsw-alias-bg-layer-3": "var(--dsw-static-neutral-bluish-800)",
-    "--dsw-alias-bg-mask-1": "#ffffff1a",
-    "--dsw-alias-bg-mask-2": "#ffffff0f",
-    "--dsw-alias-bg-mask-3": "#ffffff4d",
+    "--dsw-alias-bg-mask-1": "#00000080",
+    "--dsw-alias-bg-mask-2": "#0003",
+    "--dsw-alias-bg-mask-3": "#0000007a",
+    "--dsw-alias-bg-mask-drop": "#272730b3",
     "--dsw-alias-bg-mask-photo": "#000000e0",
-    "--dsw-alias-bg-mask-drop": "#ffffff33",
-    "--dsw-alias-bg-module-platform": "var(--dsw-static-neutral-bluish-900)",
-    "--dsw-alias-bg-multi-select": "var(--dsw-static-neutral-bluish-850)",
-    "--dsw-alias-bg-overlay": "var(--dsw-static-neutral-bluish-850)",
-    "--dsw-alias-bg-skeleton": "#ffffff0d",
-    "--dsw-alias-border-inverted2": "#0000",
-    "--dsw-alias-border-inverted": "#0000",
-    "--dsw-alias-border-l1": "#ffffff12",
-    "--dsw-alias-border-l2-darkmode-thin": "#ffffff14",
+    "--dsw-alias-bg-module-platform": "var(--dsw-static-neutral-bluish-800)",
+    "--dsw-alias-bg-multi-select": "var(--dsw-static-neutral-850)",
+    "--dsw-alias-bg-overlay": "var(--dsw-static-neutral-bluish-700)",
+    "--dsw-alias-bg-skeleton": "#ffffff14",
+    "--dsw-alias-border-inverted": "#ffffff0f",
+    "--dsw-alias-border-inverted2": "#ffffff14",
+    "--dsw-alias-border-l1": "#ffffff0f",
     "--dsw-alias-border-l2": "#ffffff1f",
+    "--dsw-alias-border-l2-darkmode-thin": "#ffffff0f",
     "--dsw-alias-border-l3": "#ffffff29",
-    "--dsw-alias-border-l4": "#ffffff33",
-    "--dsw-alias-brand-primary-invert": "var(--dsw-static-neutral-bluish-00)",
-    "--dsw-alias-brand-primary": "var(--dsw-static-deepseek-400)",
-    "--dsw-alias-brand-text": "var(--dsw-static-deepseek-400)",
-    "--dsw-alias-button-contrast-fill": "var(--dsw-static-neutral-bluish-100)",
-    "--dsw-alias-button-elevated-fill": "var(--dsw-static-neutral-bluish-900)",
+    "--dsw-alias-border-l4": "#fff3",
+    "--dsw-alias-brand-primary": "var(--dsw-static-neutral-bluish-50)",
+    "--dsw-alias-brand-primary-invert": "var(--dsw-static-neutral-bluish-50)",
+    "--dsw-alias-brand-primary-new-colorprimary-new-color": "var(--dsw-static-deepseek-450)",
+    "--dsw-alias-brand-text": "var(--dsw-static-neutral-bluish-50)",
+    "--dsw-alias-button-contrast-fill": "var(--dsw-static-neutral-bluish-50)",
+    "--dsw-alias-button-elevated-fill": "var(--dsw-static-neutral-bluish-750)",
     "--dsw-alias-button-floating-fill": "var(--dsw-static-neutral-bluish-850)",
     "--dsw-alias-button-floating-hover": "var(--dsw-static-neutral-bluish-800)",
     "--dsw-alias-button-ghost-active-border": "var(--dsw-static-neutral-bluish-600)",
-    "--dsw-alias-button-ghost-active-fill": "var(--dsw-static-neutral-bluish-850)",
-    "--dsw-alias-button-ghost-active-hover": "var(--dsw-static-neutral-bluish-800)",
+    "--dsw-alias-button-ghost-active-fill": "var(--dsw-static-neutral-bluish-750)",
+    "--dsw-alias-button-ghost-active-hover": "var(--dsw-static-neutral-bluish-700)",
     "--dsw-alias-button-info-fill": "var(--dsw-static-deepseek-400)",
-    "--dsw-alias-button-info-hover": "var(--dsw-static-deepseek-300)",
-    "--dsw-alias-button-primary-dimmed": "var(--dsw-static-deepseek-600)",
+    "--dsw-alias-button-info-hover": "var(--dsw-static-deepseek-500)",
+    "--dsw-alias-button-primary-dimmed": "var(--dsw-static-neutral-bluish-750)",
     "--dsw-alias-button-primary-fill": "var(--dsw-alias-brand-primary)",
-    "--dsw-alias-button-primary-hover": "var(--dsw-static-deepseek-450)",
-    "--dsw-alias-button-tool-bar-fill-invisible": "#54555799",
+    "--dsw-alias-button-primary-hover": "var(--dsw-static-neutral-bluish-100)",
     "--dsw-alias-button-tool-bar-fill": "#54555780",
+    "--dsw-alias-button-tool-bar-fill-invisible": "#1f1f1f5c",
     "--dsw-alias-button-tool-bar-hover": "#54555799",
-    "--dsw-alias-interactive-bg-active": "#5686fe29",
-    "--dsw-alias-interactive-bg-hover-accent": "#5686fe33",
-    "--dsw-alias-interactive-bg-hover-danger": "#f25a5a33",
+    "--dsw-alias-interactive-bg-active": "#ffffff24",
+    "--dsw-alias-interactive-bg-hover": "#ffffff14",
+    "--dsw-alias-interactive-bg-hover-accent": "#ffffff3d",
+    "--dsw-alias-interactive-bg-hover-danger": "#f25a5a26",
     "--dsw-alias-interactive-bg-hover-solid": "var(--dsw-static-neutral-bluish-800)",
-    "--dsw-alias-interactive-bg-hover": "#5686fe1f",
-    "--dsw-alias-label-caption": "var(--dsw-static-neutral-bluish-500)",
-    "--dsw-alias-label-dimmed": "var(--dsw-static-neutral-bluish-600)",
-    "--dsw-alias-label-primary-bluish": "var(--dsw-static-blue-100)",
-    "--dsw-alias-label-primary-dimmed": "var(--dsw-static-neutral-bluish-50)",
-    "--dsw-alias-label-primary-foreground": "var(--dsw-static-neutral-bluish-950)",
-    "--dsw-alias-label-primary-inverted": "var(--dsw-static-neutral-bluish-00)",
-    "--dsw-alias-label-primary": "var(--dsw-static-neutral-bluish-00)",
-    "--dsw-alias-label-secondary": "var(--dsw-static-neutral-bluish-100)",
-    "--dsw-alias-label-tertiary": "var(--dsw-static-neutral-bluish-600)",
-    "--dsw-alias-markdown-citation": "var(--dsw-static-deepseek-400)",
-    "--dsw-alias-markdown-code-block-banner": "var(--dsw-static-neutral-bluish-900)",
+    "--dsw-alias-label-caption": "var(--dsw-static-neutral-bluish-600)",
+    "--dsw-alias-label-dimmed": "var(--dsw-static-neutral-bluish-750)",
+    "--dsw-alias-label-primary": "var(--dsw-static-neutral-bluish-50)",
+    "--dsw-alias-label-primary-bluish": "var(--dsw-static-neutral-bluish-50)",
+    "--dsw-alias-label-primary-dimmed": "var(--dsw-static-neutral-bluish-100)",
+    "--dsw-alias-label-primary-foreground": "var(--dsw-static-neutral-bluish-1000)",
+    "--dsw-alias-label-primary-inverted": "var(--dsw-static-neutral-bluish-800)",
+    "--dsw-alias-label-secondary": "var(--dsw-static-neutral-bluish-300)",
+    "--dsw-alias-label-tertiary": "var(--dsw-static-neutral-bluish-400)",
+    "--dsw-alias-link": "var(--dsw-static-deepseek-400)",
+    "--dsw-alias-markdown-citation": "var(--dsw-static-neutral-bluish-800)",
     "--dsw-alias-markdown-code-block": "var(--dsw-static-neutral-bluish-900)",
-    "--dsw-alias-markdown-code-segment-selected": "var(--dsw-static-neutral-bluish-50)",
-    "--dsw-alias-markdown-code-segment-unselected": "var(--dsw-static-neutral-bluish-700)",
-    "--dsw-alias-markdown-inline-code": "var(--dsw-static-neutral-bluish-800)",
-    "--dsw-alias-markdown-placeholder": "var(--dsw-static-neutral-bluish-700)",
-    "--dsw-alias-markdown-tag": "var(--dsw-static-neutral-bluish-700)",
-    "--dsw-alias-scrollbar-bg-l1": "var(--dsw-static-neutral-400)",
-    "--dsw-alias-scrollbar-bg-l2": "var(--dsw-static-neutral-500)",
-    "--dsw-alias-scrollbar-hover-l1": "var(--dsw-static-neutral-500)",
-    "--dsw-alias-scrollbar-hover-l2": "var(--dsw-static-neutral-600)",
+    "--dsw-alias-markdown-code-block-banner": "var(--dsw-static-neutral-bluish-850)",
+    "--dsw-alias-markdown-code-segment-selected": "var(--dsw-static-neutral-bluish-800)",
+    "--dsw-alias-markdown-code-segment-unselected": "var(--dsw-static-neutral-bluish-900)",
+    "--dsw-alias-markdown-inline-code": "var(--dsw-static-neutral-800)",
+    "--dsw-alias-markdown-placeholder": "var(--dsw-static-neutral-bluish-850)",
+    "--dsw-alias-markdown-tag": "var(--dsw-static-neutral-bluish-850)",
+    "--dsw-alias-scrollbar-bg-l1": "var(--dsw-static-neutral-700)",
+    "--dsw-alias-scrollbar-bg-l2": "var(--dsw-static-neutral-600)",
+    "--dsw-alias-scrollbar-hover-l1": "var(--dsw-static-neutral-600)",
+    "--dsw-alias-scrollbar-hover-l2": "var(--dsw-static-neutral-550)",
     "--dsw-alias-state-business-primary": "var(--dsw-static-deepseek-400)",
-    "--dsw-alias-state-business-tertiary": "var(--dsw-static-deepseek-100)",
+    "--dsw-alias-state-business-tertiary": "var(--dsw-static-deepseek-800)",
     "--dsw-alias-state-error-primary": "var(--dsw-static-red-400)",
     "--dsw-alias-state-error-secondary": "var(--dsw-static-red-400)",
-    "--dsw-alias-state-success-primary": "var(--dsw-static-green-400)",
+    "--dsw-alias-state-success-primary": "var(--dsw-static-green-500)",
     "--dsw-alias-state-success-secondary": "var(--dsw-static-green-400)",
-    "--dsw-alias-state-success-tertiary": "var(--dsw-static-green-100)",
-    "--dsw-alias-state-warn-label": "var(--dsw-static-amber-400)",
-    "--dsw-alias-state-warn-primary": "var(--dsw-static-amber-400)",
+    "--dsw-alias-state-success-tertiary": "var(--dsw-static-green-900)",
+    "--dsw-alias-state-warn-label": "var(--dsw-static-amber-600)",
+    "--dsw-alias-state-warn-primary": "var(--dsw-static-amber-500)",
     "--dsw-alias-state-warn-secondary": "var(--dsw-static-amber-400)",
-    "--dsw-alias-state-warn-tertiary": "var(--dsw-static-amber-100)",
-    "--dsw-alias-toast-bg": "var(--dsw-static-neutral-bluish-800)",
-    "--dsw-alias-tooltip-bg": "var(--dsw-static-neutral-bluish-850)",
-    "--dsw-specific-bubble-highlight": "var(--dsw-static-deepseek-700)",
-    "--dsw-specific-bubble": "var(--dsw-static-deepseek-800)",
-    "--dsw-specific-input-major": "var(--dsw-static-neutral-bluish-900)",
-    "--dsw-specific-login-input": "var(--dsw-static-neutral-bluish-850)",
+    "--dsw-alias-state-warn-tertiary": "var(--dsw-static-amber-900)",
+    "--dsw-alias-toast-bg": "var(--dsw-static-neutral-bluish-750)",
+    "--dsw-alias-tooltip-bg": "var(--dsw-static-neutral-bluish-750)",
+    "--dsw-specific-bubble": "var(--dsw-static-neutral-bluish-850)",
+    "--dsw-specific-bubble-highlight": "var(--dsw-static-neutral-bluish-750)",
+    "--dsw-specific-input-major": "var(--dsw-static-neutral-bluish-850)",
+    "--dsw-specific-login-input": "var(--dsw-static-neutral-bluish-900)",
     "--dsw-specific-menu": "var(--dsw-alias-bg-layer-3)",
-    "--dsw-specific-selector": "var(--dsw-static-neutral-bluish-850)",
+    "--dsw-specific-selector": "var(--dsw-static-neutral-bluish-800)",
     "--dsw-specific-sidebar-fill": "var(--dsw-static-neutral-bluish-900)",
-    "--dsw-specific-sidebar-nav-item-active-accent": "var(--dsw-static-deepseek-700)",
-    "--dsw-specific-sidebar-nav-item-active": "var(--dsw-static-neutral-bluish-800)",
+    "--dsw-specific-sidebar-nav-item-active": "var(--dsw-static-neutral-bluish-750)",
+    "--dsw-specific-sidebar-nav-item-active-accent": "var(--dsw-static-neutral-bluish-800)",
     "--dsw-specific-sidebar-nav-item-hover": "var(--dsw-static-neutral-bluish-850)",
-    "--dsw-specific-tip": "var(--dsw-static-neutral-bluish-700)"
+    "--dsw-specific-tip": "var(--dsw-static-neutral-bluish-800)"
   };
 
   // src/client/radius.ts
@@ -1103,6 +1107,26 @@
     if (t && Array.isArray(t.swatch) && typeof t.swatch[2] === "string") return t.swatch[2];
     return "#2f81f7";
   }
+  var INK_ON_LIGHT = "#ffffff";
+  var INK_ON_DARK = "#111111";
+  function relLuminance(hex) {
+    const m = /^#([0-9a-f]{6})$/i.exec((hex || "").trim());
+    if (!m) return null;
+    const n = parseInt(m[1], 16);
+    const [r, g, b] = [n >> 16 & 255, n >> 8 & 255, n & 255].map((v) => {
+      const s = v / 255;
+      return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+  function inkOn(fill) {
+    const l = relLuminance(fill);
+    if (l === null) return INK_ON_LIGHT;
+    const lLight = relLuminance(INK_ON_LIGHT);
+    const lDark = relLuminance(INK_ON_DARK);
+    const ratio = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    return ratio(l, lLight) >= ratio(l, lDark) ? INK_ON_LIGHT : INK_ON_DARK;
+  }
   function mosaicOf(t) {
     if (t && t.id === PHOTO_ID && state.photoTheme) {
       const pal = state.photoTheme.palettes;
@@ -1195,7 +1219,7 @@
               { className: "tg-foot" },
               React.createElement(
                 "span",
-                { className: "tg-use", style: { background: accent } },
+                { className: "tg-use", style: { background: accent, color: inkOn(accent) } },
                 active ? "\u4F7F\u7528\u4E2D" : "\u542F\u7528"
               ),
               React.createElement(
@@ -1629,7 +1653,7 @@
 .tg-nowDots i{width:12px;height:12px;border-radius:50%;border:.5px solid var(--dsw-alias-border-l2);display:block}
 .tg-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .tg-search{box-sizing:border-box;height:26px;width:170px;max-width:100%;padding:0 11px;border-radius:13px;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font-size:12px;line-height:26px;outline:none}
-.tg-search::placeholder{color:var(--dsw-alias-label-quaternary)}
+.tg-search::placeholder{color:var(--dsw-alias-label-tertiary)}
 .tg-search:focus{border-color:var(--dsw-alias-brand-primary)}
 .tg-count{margin-left:auto;font-size:11px;color:var(--dsw-alias-label-tertiary);white-space:nowrap}
 /* \u58C1\u7EB8\u53D6\u8272\u72EC\u7ACB\u914D\u7F6E\u533A\uFF08MD3 \u6574\u5957\u914D\u8272\u9884\u89C8 + \u64CD\u4F5C\uFF09 */
@@ -1668,7 +1692,7 @@
 .tg-title{font-size:13px;font-weight:700;line-height:18px;color:var(--dsw-alias-label-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tg-desc{font-size:10px;line-height:14px;color:var(--dsw-alias-label-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tg-foot{display:flex;align-items:center;gap:6px;margin-top:6px}
-.tg-use{display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 10px;border:none;border-radius:11px;font-size:11px;font-weight:600;line-height:22px;color:#fff;cursor:pointer;flex:none}
+.tg-use{display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 10px;border:none;border-radius:11px;font-size:11px;font-weight:600;line-height:22px;cursor:pointer;flex:none}
 .tg-use:hover{filter:brightness(1.08)}
 .tg-live{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:500;line-height:14px;white-space:nowrap}
 .tg-live i{width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block;flex:none}

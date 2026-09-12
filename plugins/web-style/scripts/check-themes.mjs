@@ -18,7 +18,7 @@
  * Host 白名单已从目录动态派生，故第 2 项校验点从「client 源码文本」升级为
  * 「client 源码 meta 结构 + 产物存在性」。
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -48,6 +48,88 @@ for (const t of THEME_CATALOG) {
   }
 }
 console.log(`目录：${THEME_CATALOG.length} 套主题 / ${THEME_IDS.length} 个 id`);
+
+// ── 1b. 全部主题必须覆盖同一套 token 名 ──────────────────────────────────
+// 主题是「全量映射」：任何一套少写或多写一个 token，都会在切主题时留下
+// 未被覆盖的旧值（对侧分支拿不到官方原值），且极难靠肉眼发现。
+const ref = THEME_CATALOG[0];
+const refKeys = Object.keys(ref.tokens ?? {}).toSorted();
+for (const t of THEME_CATALOG) {
+  const keys = Object.keys(t.tokens ?? {}).toSorted();
+  const missing = refKeys.filter((k) => !keys.includes(k));
+  const extra = keys.filter((k) => !refKeys.includes(k));
+  if (missing.length) bad(`${t.id} 缺 token：${missing.join(', ')}`);
+  if (extra.length) bad(`${t.id} 多 token：${extra.join(', ')}`);
+}
+console.log(`token 契约：每套 ${refKeys.length} 个（基准 ${ref.id}）`);
+
+// 有意不覆盖的 token：交给 DSH 官方默认值，主题一律不写
+for (const t of THEME_CATALOG) {
+  for (const k of ['--dsw-alias-markdown-tag']) {
+    if (k in (t.tokens ?? {})) bad(`${t.id} 不应覆盖 ${k}（应交给官方默认）`);
+  }
+}
+
+// ── 1b-2. 侧栏选中行必须「跟随主题品牌色」 ──────────────────────────────
+// `--dsw-specific-sidebar-nav-item-active` 是侧栏选中行的胶囊底
+// （dsh-client-ui-settings-general 的 .navCell.active），画在 sidebar-fill 之上。
+// 约定值 = 品牌色 22% 叠色；此前 33 套里 21 套与 hover 的 ΔE < 5（8 套完全相同），
+// 选中态基本不可辨。这里固定住派生关系，避免各写各的再次漂移。
+const NAV_ALPHA = 0.22;
+const rgb6 = (c) => {
+  const m = /^#([0-9a-f]{6})$/i.exec(String(c ?? '').trim());
+  if (!m) return null;
+  const n = parseInt(m[1], 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+};
+for (const t of THEME_CATALOG) {
+  const brand = rgb6(t.tokens?.['--dsw-alias-brand-primary']);
+  const nav = String(t.tokens?.['--dsw-specific-sidebar-nav-item-active'] ?? '');
+  if (!brand) {
+    bad(`${t.id} 的品牌色不是 6 位 hex，无法校验 nav-item-active 派生`);
+    continue;
+  }
+  const want = `rgba(${brand[0]}, ${brand[1]}, ${brand[2]}, ${NAV_ALPHA})`;
+  if (nav !== want) bad(`${t.id} nav-item-active 应随品牌色：期望 ${want}，实际 ${nav}`);
+}
+console.log(`侧栏选中行：${THEME_CATALOG.length} 套均跟随品牌色（${NAV_ALPHA} 叠色）`);
+
+// ── 1c. 官方基线必须等于 DSH 当前值 ────────────────────────────────────
+// OFFICIAL_LIGHT/DARK 是对侧 scheme 的「无操作原值」；一旦漂移，选浅色主题再切
+// 深色就会把 DSH 的旧配色涂回去（历史上漂移过 65/88 项）。
+// 快照由 scripts/sync-official.mjs 生成；这里离线比对，无需安装 DSH。
+const baselinePath = join(here, 'dsw-alias-baseline.json');
+if (!existsSync(baselinePath)) {
+  bad('缺 scripts/dsw-alias-baseline.json（跑 node scripts/sync-official.mjs 生成）');
+} else {
+  const base = JSON.parse(readFileSync(baselinePath, 'utf8'));
+  const offSrc = readFileSync(join(root, 'src', 'client', 'official.ts'), 'utf8');
+  const parseExport = (name) => {
+    const s = offSrc.indexOf(`export const ${name}`);
+    const e = offSrc.indexOf('\n};', s);
+    const out = {};
+    for (const m of offSrc.slice(s, e).matchAll(/'(--dsw-[A-Za-z0-9_-]+)'\s*:\s*'([^']*)'/g)) {
+      out[m[1]] = m[2];
+    }
+    return out;
+  };
+  for (const [name, want] of [
+    ['OFFICIAL_LIGHT', base.light],
+    ['OFFICIAL_DARK', base.dark],
+  ]) {
+    const got = parseExport(name);
+    const wKeys = Object.keys(want).toSorted();
+    const gKeys = Object.keys(got).toSorted();
+    for (const k of wKeys) {
+      if (!(k in got)) bad(`${name} 缺 ${k}`);
+      else if (got[k] !== want[k]) bad(`${name} ${k} 漂移：${got[k]} ≠ ${want[k]}`);
+    }
+    for (const k of gKeys) if (!wKeys.includes(k)) bad(`${name} 多出 ${k}（DSH 未定义）`);
+  }
+  console.log(
+    `官方基线：light ${Object.keys(base.light).length} / dark ${Object.keys(base.dark).length}（与 DSH 快照一致）`,
+  );
+}
 
 // ── 2. client 画廊 meta 与目录逐项对齐 ─────────────────────────────────
 const clientSrc = readFileSync(join(root, 'src', 'client', 'themes.ts'), 'utf8');

@@ -28,7 +28,6 @@ export const light = fillFontTokens(
     '--dsw-alias-border-inverted': '#1a1a1a',
     '--dsw-alias-border-inverted2': '#1a1a1a',
     '--dsw-alias-separator-primary': '#e0e0e0',
-    '--dsw-alias-line-secondary': '#efefef',
     '--dsw-alias-fill-l2': '#efefef',
     '--dsw-alias-fill-tsp-secondary': 'rgba(26, 26, 26, 0.04)',
 
@@ -36,6 +35,7 @@ export const light = fillFontTokens(
     '--dsw-alias-brand-primary': '#07c160',
     '--dsw-alias-brand-primary-invert': '#ffffff',
     '--dsw-alias-brand-text': '#07c160',
+    '--dsw-alias-link': '#07c160',
 
     '--dsw-alias-button-primary-fill': '#07c160',
     '--dsw-alias-button-primary-hover': '#10b160',
@@ -70,6 +70,8 @@ export const light = fillFontTokens(
     '--dsw-alias-label-primary-inverted': '#ffffff',
     '--dsw-alias-label-primary-bluish': '#07c160',
 
+    '--dsw-alias-state-business-primary': '#07c160',
+    '--dsw-alias-state-business-tertiary': 'rgba(7, 193, 96, 0.12)',
     /* 微信绿即成功态（green is "done"） */
     '--dsw-alias-state-error-primary': '#fa5151',
     '--dsw-alias-state-error-secondary': 'rgba(250, 81, 81, 0.10)',
@@ -86,7 +88,6 @@ export const light = fillFontTokens(
     '--dsw-alias-markdown-code-segment-selected': 'rgba(7, 193, 96, 0.14)',
     '--dsw-alias-markdown-code-segment-unselected': 'transparent',
     '--dsw-alias-markdown-placeholder': '#b2b2b2',
-    '--dsw-alias-markdown-tag': '#888888',
 
     '--dsw-alias-scrollbar-bg-l1': '#e0e0e0',
     '--dsw-alias-scrollbar-bg-l2': '#efefef',
@@ -98,7 +99,7 @@ export const light = fillFontTokens(
     '--dsw-hovercard-bg': '#ffffff',
 
     '--dsw-specific-sidebar-fill': '#ededed',
-    '--dsw-specific-sidebar-nav-item-active': '#e4e4e4',
+    '--dsw-specific-sidebar-nav-item-active': 'rgba(7, 193, 96, 0.22)',
     '--dsw-specific-sidebar-nav-item-active-accent': '#07c160',
     '--dsw-specific-sidebar-nav-item-hover': '#efefef',
     '--dsw-specific-bubble': '#ffffff',

@@ -29,7 +29,6 @@ export const dark = fillFontTokens(
     '--dsw-alias-border-inverted': '#f8fafc',
     '--dsw-alias-border-inverted2': '#cbd5e1',
     '--dsw-alias-separator-primary': '#1d2636',
-    '--dsw-alias-line-secondary': '#1b2233',
     '--dsw-alias-fill-l2': '#1b2233',
     '--dsw-alias-fill-tsp-secondary': 'rgba(248, 250, 252, 0.05)',
 
@@ -37,6 +36,7 @@ export const dark = fillFontTokens(
     '--dsw-alias-brand-primary': '#60a5fa',
     '--dsw-alias-brand-primary-invert': '#06101d',
     '--dsw-alias-brand-text': '#60a5fa',
+    '--dsw-alias-link': '#60a5fa',
 
     '--dsw-alias-button-primary-fill': '#60a5fa',
     '--dsw-alias-button-primary-hover': '#5898e6',
@@ -71,6 +71,8 @@ export const dark = fillFontTokens(
     '--dsw-alias-label-primary-inverted': '#090b12',
     '--dsw-alias-label-primary-bluish': '#60a5fa',
 
+    '--dsw-alias-state-business-primary': '#60a5fa',
+    '--dsw-alias-state-business-tertiary': 'rgba(96, 165, 250, 0.15)',
     '--dsw-alias-state-error-primary': '#fb7185',
     '--dsw-alias-state-error-secondary': 'rgba(251, 113, 133, 0.15)',
     '--dsw-alias-state-success-primary': '#22c55e',
@@ -86,7 +88,6 @@ export const dark = fillFontTokens(
     '--dsw-alias-markdown-code-segment-selected': 'rgba(96, 165, 250, 0.18)',
     '--dsw-alias-markdown-code-segment-unselected': 'transparent',
     '--dsw-alias-markdown-placeholder': '#64748f',
-    '--dsw-alias-markdown-tag': '#94a3b8',
 
     '--dsw-alias-scrollbar-bg-l1': '#2a3447',
     '--dsw-alias-scrollbar-bg-l2': '#1b2233',
@@ -98,7 +99,7 @@ export const dark = fillFontTokens(
     '--dsw-hovercard-bg': '#1b2233',
 
     '--dsw-specific-sidebar-fill': '#090b12',
-    '--dsw-specific-sidebar-nav-item-active': '#1b2233',
+    '--dsw-specific-sidebar-nav-item-active': 'rgba(96, 165, 250, 0.22)',
     '--dsw-specific-sidebar-nav-item-active-accent': '#60a5fa',
     '--dsw-specific-sidebar-nav-item-hover': '#0e1420',
     '--dsw-specific-bubble': '#121722',

@@ -28,7 +28,6 @@ export const light = fillFontTokens(
     '--dsw-alias-border-inverted': 'rgba(0, 0, 0, 0.8)',
     '--dsw-alias-border-inverted2': 'rgba(0, 0, 0, 0.62)',
     '--dsw-alias-separator-primary': 'rgba(0, 0, 0, 0.05)',
-    '--dsw-alias-line-secondary': 'rgba(0, 0, 0, 0.05)',
     '--dsw-alias-fill-l2': 'rgba(0, 0, 0, 0.05)',
     '--dsw-alias-fill-tsp-secondary': 'rgba(0, 0, 0, 0.04)',
 
@@ -36,6 +35,7 @@ export const light = fillFontTokens(
     '--dsw-alias-brand-primary': '#ff2442',
     '--dsw-alias-brand-primary-invert': '#ffffff',
     '--dsw-alias-brand-text': '#ff2442',
+    '--dsw-alias-link': '#ff2442',
 
     '--dsw-alias-button-primary-fill': '#ff2442',
     '--dsw-alias-button-primary-hover': '#ff2e4d',
@@ -70,6 +70,8 @@ export const light = fillFontTokens(
     '--dsw-alias-label-primary-inverted': '#ffffff',
     '--dsw-alias-label-primary-bluish': '#ff2442',
 
+    '--dsw-alias-state-business-primary': '#ff2442',
+    '--dsw-alias-state-business-tertiary': 'rgba(255, 36, 66, 0.10)',
     /* 危险态复用品牌红（官方明确决策） */
     '--dsw-alias-state-error-primary': '#ff2442',
     '--dsw-alias-state-error-secondary': 'rgba(255, 36, 66, 0.10)',
@@ -86,7 +88,6 @@ export const light = fillFontTokens(
     '--dsw-alias-markdown-code-segment-selected': 'rgba(255, 36, 66, 0.12)',
     '--dsw-alias-markdown-code-segment-unselected': 'transparent',
     '--dsw-alias-markdown-placeholder': 'rgba(0, 0, 0, 0.27)',
-    '--dsw-alias-markdown-tag': 'rgba(0, 0, 0, 0.45)',
 
     '--dsw-alias-scrollbar-bg-l1': 'rgba(0, 0, 0, 0.08)',
     '--dsw-alias-scrollbar-bg-l2': '#f0f0f0',
@@ -98,7 +99,7 @@ export const light = fillFontTokens(
     '--dsw-hovercard-bg': '#ffffff',
 
     '--dsw-specific-sidebar-fill': '#f5f5f5',
-    '--dsw-specific-sidebar-nav-item-active': '#efefef',
+    '--dsw-specific-sidebar-nav-item-active': 'rgba(255, 36, 66, 0.22)',
     '--dsw-specific-sidebar-nav-item-active-accent': '#ff2442',
     '--dsw-specific-sidebar-nav-item-hover': '#fafafa',
     '--dsw-specific-bubble': '#ffffff',

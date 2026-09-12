@@ -6,6 +6,11 @@
  *   - dark / light：`--dsw-*` token → CSS 值 的映射（不含字体批量 token，注册前填充）
  *   - meta：画廊展示元数据（id / label / desc / swatch）
  *
+ * 有意不覆盖的 token（全部 23 套主题一律不定义，由官方亮/暗值直接生效）：
+ *   - `--dsw-alias-markdown-tag`：DSH 里它是「活动标签页底色」（index-*.css 的
+ *     `._tabActive_* { background: var(--dsw-alias-markdown-tag) }`），是面不是前景。
+ *     主题若按前景语义填中灰实色，会把活动标签页压成一块灰块；故交给官方默认。
+ *
  * 原实现：dsh-custom-ui/lib/themes/shared.js（JS），本文件为等价 TS 重写，
  * 仅补类型（TokenMap / ThemeMetaMap），常量与函数逻辑逐行对齐。
  *
@@ -58,6 +63,29 @@ export const NOTION = '"NotionInter", "Inter", -apple-system, system-ui, Helveti
 /** Claude 的 Anthropic Sans 栈。 */
 export const CLAUDE_SANS = '"Anthropic Sans", "Arial", system-ui, -apple-system, sans-serif';
 
+/** HashiCorp Sans 栈（标题面；正文回落到 system-ui）。 */
+export const HASHICORP =
+  '"HashiCorp Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+/** Runway 的 abcNormal 栈（单一字体包办从 48px 标题到 11px 标签）。 */
+export const ABC_NORMAL =
+  '"abcNormal", "abcNormal Fallback", "Inter", "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif';
+/** SpaceX 的 D-DIN 栈（工业 DIN 血统，全大写 + 正字距）。 */
+export const DIN = '"D-DIN", "DIN Alternate", "Helvetica Neue", Arial, Verdana, sans-serif';
+/** Warp 的 Matter 栈（几何无衬线，Regular 一档走天下）。 */
+export const MATTER = '"Matter Regular", "Matter", "Inter", ui-sans-serif, system-ui, sans-serif';
+/** Spotify 的 CircularSp 派生栈（SpotifyMixUI / SpotifyMixUITitle）。 */
+export const SPOTIFY = '"SpotifyMixUI", "CircularSp", "Helvetica Neue", Helvetica, Arial, sans-serif';
+/** Tetris 的像素显示栈（Press Start 2P）。 */
+export const PIXEL = '"Press Start 2P", "Arial Black", system-ui, sans-serif';
+
+/** Roboto Mono 栈（trading-terminal 的数据面）。 */
+export const ROBOTO_MONO = '"Roboto Mono", "SF Mono", ui-monospace, Menlo, monospace';
+/** Geist Mono 栈（Raycast / Warp 的代码面）。 */
+export const GEIST_MONO =
+  '"Geist Mono", "GeistMono", ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace';
+/** SF Mono 栈（minimal / sleek）。 */
+export const SF_MONO = '"SF Mono", ui-monospace, Menlo, Monaco, Consolas, monospace';
+
 /** UI 文本字体 token 前缀集合（base-16 / l-20 / … / xxxs-strong-11）。 */
 export const TEXT_STYLE_KEYS: string[] = [
   'base-16',
@@ -98,14 +126,18 @@ export const MD_STYLE_KEYS: string[] = [
 
 /**
  * 把字体批量 token 填充进一份 token 映射（原地修改）。
- * mono 主题全部走 MONO；其他主题用传入的 font 栈（code 系仍走 MONO）。
+ *
+ * `mono` 传 true 时全部文本走 MONO（opencode「一切皆代码」）；传字符串时把它当作
+ * 该主题的等宽栈 —— 此时 markdown 代码块与 `--dsw-font-mono` 保持同源
+ * （Roboto Mono / Geist Mono / Press Start 2P 这类主题专属等宽栈）。
  */
-export function fillFontTokens(tokens: TokenMap, font: string, mono = false): TokenMap {
-  const ui = mono ? MONO : font;
+export function fillFontTokens(tokens: TokenMap, font: string, mono?: boolean | string): TokenMap {
+  const monoStack = typeof mono === 'string' ? mono : MONO;
+  const ui = mono === true ? MONO : font;
   for (const s of TEXT_STYLE_KEYS) tokens[`--dsw-font-${s}-font-family`] = ui;
   for (const m of MD_STYLE_KEYS) {
     const isCode = m === 'code' || m === 'code-block' || m === 'code-block-small';
-    tokens[`--dsw-font-markdown-${m}-font-family`] = isCode ? MONO : ui;
+    tokens[`--dsw-font-markdown-${m}-font-family`] = isCode ? monoStack : ui;
   }
   return tokens;
 }

@@ -30,7 +30,6 @@ export const dark = fillFontTokens(
     '--dsw-alias-border-inverted': '#f7f8f8',
     '--dsw-alias-border-inverted2': '#d0d6e0',
     '--dsw-alias-separator-primary': 'rgba(255, 255, 255, 0.08)',
-    '--dsw-alias-line-secondary': 'rgba(255, 255, 255, 0.05)',
     '--dsw-alias-fill-l2': '#1f2022',
     '--dsw-alias-fill-tsp-secondary': 'rgba(247, 248, 248, 0.05)',
 
@@ -38,6 +37,7 @@ export const dark = fillFontTokens(
     '--dsw-alias-brand-primary': '#5e6ad2',
     '--dsw-alias-brand-primary-invert': '#ffffff',
     '--dsw-alias-brand-text': '#828fff',
+    '--dsw-alias-link': '#828fff',
 
     '--dsw-alias-button-primary-fill': '#5e6ad2',
     '--dsw-alias-button-primary-hover': '#828fff',
@@ -73,6 +73,8 @@ export const dark = fillFontTokens(
     '--dsw-alias-label-primary-inverted': '#08090a',
     '--dsw-alias-label-primary-bluish': '#828fff',
 
+    '--dsw-alias-state-business-primary': '#828fff',
+    '--dsw-alias-state-business-tertiary': 'rgba(94, 106, 210, 0.25)',
     '--dsw-alias-state-error-primary': '#dc2626',
     '--dsw-alias-state-error-secondary': 'rgba(220, 38, 38, 0.15)',
     '--dsw-alias-state-success-primary': '#27a644',
@@ -88,7 +90,6 @@ export const dark = fillFontTokens(
     '--dsw-alias-markdown-code-segment-selected': 'rgba(94, 106, 210, 0.25)',
     '--dsw-alias-markdown-code-segment-unselected': 'transparent',
     '--dsw-alias-markdown-placeholder': '#6a707a',
-    '--dsw-alias-markdown-tag': '#8f959f',
 
     '--dsw-alias-scrollbar-bg-l1': 'rgba(255, 255, 255, 0.10)',
     '--dsw-alias-scrollbar-bg-l2': 'rgba(255, 255, 255, 0.06)',
@@ -99,7 +100,7 @@ export const dark = fillFontTokens(
     '--dsw-alias-tooltip-bg': '#252629',
     '--dsw-hovercard-bg': '#1f2022',
     '--dsw-specific-sidebar-fill': '#08090a',
-    '--dsw-specific-sidebar-nav-item-active': 'rgba(255, 255, 255, 0.10)',
+    '--dsw-specific-sidebar-nav-item-active': 'rgba(94, 106, 210, 0.22)',
     '--dsw-specific-sidebar-nav-item-active-accent': '#5e6ad2',
     '--dsw-specific-sidebar-nav-item-hover': 'rgba(255, 255, 255, 0.06)',
     '--dsw-specific-bubble': '#191a1b',

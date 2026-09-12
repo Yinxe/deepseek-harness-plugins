@@ -29,7 +29,6 @@ export const light = fillFontTokens(
     '--dsw-alias-border-inverted': '#2a1810',
     '--dsw-alias-border-inverted2': '#593625',
     '--dsw-alias-separator-primary': '#efd0ab',
-    '--dsw-alias-line-secondary': '#ffe8c2',
     '--dsw-alias-fill-l2': '#ffe8c2',
     '--dsw-alias-fill-tsp-secondary': 'rgba(42, 24, 16, 0.04)',
 
@@ -37,6 +36,7 @@ export const light = fillFontTokens(
     '--dsw-alias-brand-primary': '#d24b1f',
     '--dsw-alias-brand-primary-invert': '#ffffff',
     '--dsw-alias-brand-text': '#d24b1f',
+    '--dsw-alias-link': '#d24b1f',
 
     '--dsw-alias-button-primary-fill': '#d24b1f',
     '--dsw-alias-button-primary-hover': '#c1451d',
@@ -71,6 +71,8 @@ export const light = fillFontTokens(
     '--dsw-alias-label-primary-inverted': '#fffaf0',
     '--dsw-alias-label-primary-bluish': '#d24b1f',
 
+    '--dsw-alias-state-business-primary': '#d24b1f',
+    '--dsw-alias-state-business-tertiary': 'rgba(210, 75, 31, 0.10)',
     /* 警示琥珀在奶油底上压暗，保证文字可读 */
     '--dsw-alias-state-error-primary': '#b83a2f',
     '--dsw-alias-state-error-secondary': 'rgba(184, 58, 47, 0.08)',
@@ -87,7 +89,6 @@ export const light = fillFontTokens(
     '--dsw-alias-markdown-code-segment-selected': 'rgba(210, 75, 31, 0.12)',
     '--dsw-alias-markdown-code-segment-unselected': 'transparent',
     '--dsw-alias-markdown-placeholder': '#bd8f60',
-    '--dsw-alias-markdown-tag': '#8a6652',
 
     '--dsw-alias-scrollbar-bg-l1': '#d9aa7a',
     '--dsw-alias-scrollbar-bg-l2': '#ffe8c2',
@@ -99,7 +100,7 @@ export const light = fillFontTokens(
     '--dsw-hovercard-bg': '#fffaf0',
 
     '--dsw-specific-sidebar-fill': '#fff4cf',
-    '--dsw-specific-sidebar-nav-item-active': '#ffe8c2',
+    '--dsw-specific-sidebar-nav-item-active': 'rgba(210, 75, 31, 0.22)',
     '--dsw-specific-sidebar-nav-item-active-accent': '#d24b1f',
     '--dsw-specific-sidebar-nav-item-hover': '#ffe8c2',
     '--dsw-specific-bubble': '#fffaf0',

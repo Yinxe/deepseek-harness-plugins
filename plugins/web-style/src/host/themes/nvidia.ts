@@ -29,7 +29,6 @@ export const dark = fillFontTokens(
     '--dsw-alias-border-inverted': '#ffffff',
     '--dsw-alias-border-inverted2': '#a7a7a7',
     '--dsw-alias-separator-primary': '#2a2a2a',
-    '--dsw-alias-line-secondary': '#222222',
     '--dsw-alias-fill-l2': '#222222',
     '--dsw-alias-fill-tsp-secondary': 'rgba(255, 255, 255, 0.05)',
 
@@ -37,6 +36,7 @@ export const dark = fillFontTokens(
     '--dsw-alias-brand-primary': '#76b900',
     '--dsw-alias-brand-primary-invert': '#000000',
     '--dsw-alias-brand-text': '#76b900',
+    '--dsw-alias-link': '#76b900',
 
     /* 主按钮绿填充；悬停走"绿→青"的品牌惊喜 */
     '--dsw-alias-button-primary-fill': '#76b900',
@@ -72,6 +72,8 @@ export const dark = fillFontTokens(
     '--dsw-alias-label-primary-inverted': '#000000',
     '--dsw-alias-label-primary-bluish': '#1eaedb',
 
+    '--dsw-alias-state-business-primary': '#76b900',
+    '--dsw-alias-state-business-tertiary': 'rgba(118, 185, 0, 0.15)',
     /* 成功绿用更深的 #3f8500 与品牌绿区分 */
     '--dsw-alias-state-error-primary': '#e52020',
     '--dsw-alias-state-error-secondary': 'rgba(229, 32, 32, 0.15)',
@@ -88,7 +90,6 @@ export const dark = fillFontTokens(
     '--dsw-alias-markdown-code-segment-selected': 'rgba(118, 185, 0, 0.18)',
     '--dsw-alias-markdown-code-segment-unselected': 'transparent',
     '--dsw-alias-markdown-placeholder': '#757575',
-    '--dsw-alias-markdown-tag': '#898989',
 
     '--dsw-alias-scrollbar-bg-l1': '#2a2a2a',
     '--dsw-alias-scrollbar-bg-l2': '#222222',
@@ -99,7 +100,7 @@ export const dark = fillFontTokens(
     '--dsw-alias-tooltip-bg': '#2a2a2a',
     '--dsw-hovercard-bg': '#222222',
     '--dsw-specific-sidebar-fill': '#000000',
-    '--dsw-specific-sidebar-nav-item-active': '#222222',
+    '--dsw-specific-sidebar-nav-item-active': 'rgba(118, 185, 0, 0.22)',
     '--dsw-specific-sidebar-nav-item-active-accent': '#76b900',
     '--dsw-specific-sidebar-nav-item-hover': '#161616',
     '--dsw-specific-bubble': '#1a1a1a',

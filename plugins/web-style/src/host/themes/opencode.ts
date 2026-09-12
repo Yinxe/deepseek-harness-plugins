@@ -34,7 +34,6 @@ export const dark = fillFontTokens(
     '--dsw-alias-border-inverted': '#fdfcfc',
     '--dsw-alias-border-inverted2': '#c8c6c4',
     '--dsw-alias-separator-primary': '#464343',
-    '--dsw-alias-line-secondary': '#302c2c',
     '--dsw-alias-fill-l2': '#3a3535',
     '--dsw-alias-fill-tsp-secondary': 'rgba(253, 252, 252, 0.06)',
 
@@ -42,6 +41,7 @@ export const dark = fillFontTokens(
     '--dsw-alias-brand-primary': '#007aff',
     '--dsw-alias-brand-primary-invert': '#ffffff',
     '--dsw-alias-brand-text': '#007aff',
+    '--dsw-alias-link': '#007aff',
 
     /* ── 按钮：主按钮蓝填充，其余暖灰层次 ── */
     '--dsw-alias-button-primary-fill': '#007aff',
@@ -79,6 +79,8 @@ export const dark = fillFontTokens(
     '--dsw-alias-label-primary-inverted': '#201d1d',
     '--dsw-alias-label-primary-bluish': '#007aff',
 
+    '--dsw-alias-state-business-primary': '#007aff',
+    '--dsw-alias-state-business-tertiary': 'rgba(0, 122, 255, 0.12)',
     /* ── 语义：Apple HIG 四色 + 半透明次级 ── */
     '--dsw-alias-state-error-primary': '#ff3b30',
     '--dsw-alias-state-error-secondary': 'rgba(255, 59, 48, 0.12)',
@@ -96,7 +98,6 @@ export const dark = fillFontTokens(
     '--dsw-alias-markdown-code-segment-selected': 'rgba(0, 122, 255, 0.15)',
     '--dsw-alias-markdown-code-segment-unselected': 'transparent',
     '--dsw-alias-markdown-placeholder': '#6e6e73',
-    '--dsw-alias-markdown-tag': '#9a9898',
 
     /* ── 滚动条 ── */
     '--dsw-alias-scrollbar-bg-l1': '#464343',
@@ -109,7 +110,7 @@ export const dark = fillFontTokens(
     '--dsw-alias-tooltip-bg': '#302c2c',
     '--dsw-hovercard-bg': '#302c2c',
     '--dsw-specific-sidebar-fill': '#201d1d',
-    '--dsw-specific-sidebar-nav-item-active': '#3a3535',
+    '--dsw-specific-sidebar-nav-item-active': 'rgba(0, 122, 255, 0.22)',
     '--dsw-specific-sidebar-nav-item-active-accent': '#007aff',
     '--dsw-specific-sidebar-nav-item-hover': '#2a2626',
     '--dsw-specific-bubble': '#302c2c',
@@ -149,13 +150,13 @@ export const light = fillFontTokens(
     '--dsw-alias-border-inverted': '#201d1d',
     '--dsw-alias-border-inverted2': '#424245',
     '--dsw-alias-separator-primary': '#d6cfcf',
-    '--dsw-alias-line-secondary': '#e9e2e2',
     '--dsw-alias-fill-l2': '#e9e2e2',
     '--dsw-alias-fill-tsp-secondary': 'rgba(32, 29, 29, 0.05)',
 
     '--dsw-alias-brand-primary': '#007aff',
     '--dsw-alias-brand-primary-invert': '#ffffff',
     '--dsw-alias-brand-text': '#007aff',
+    '--dsw-alias-link': '#007aff',
 
     /* 浅色主按钮还原 opencode 原版"暗底白字"（#201d1d 填充） */
     '--dsw-alias-button-primary-fill': '#201d1d',
@@ -191,6 +192,8 @@ export const light = fillFontTokens(
     '--dsw-alias-label-primary-inverted': '#fdfcfc',
     '--dsw-alias-label-primary-bluish': '#007aff',
 
+    '--dsw-alias-state-business-primary': '#007aff',
+    '--dsw-alias-state-business-tertiary': 'rgba(0, 122, 255, 0.10)',
     /* 浅色下语义色降饱和（Apple HIG 的浅色变体） */
     '--dsw-alias-state-error-primary': '#d70015',
     '--dsw-alias-state-error-secondary': 'rgba(255, 59, 48, 0.10)',
@@ -207,7 +210,6 @@ export const light = fillFontTokens(
     '--dsw-alias-markdown-code-segment-selected': 'rgba(0, 122, 255, 0.12)',
     '--dsw-alias-markdown-code-segment-unselected': 'transparent',
     '--dsw-alias-markdown-placeholder': '#9a9898',
-    '--dsw-alias-markdown-tag': '#6e6e73',
 
     '--dsw-alias-scrollbar-bg-l1': '#d6cfcf',
     '--dsw-alias-scrollbar-bg-l2': '#e2dcdc',
@@ -218,7 +220,7 @@ export const light = fillFontTokens(
     '--dsw-alias-tooltip-bg': '#ffffff',
     '--dsw-hovercard-bg': '#ffffff',
     '--dsw-specific-sidebar-fill': '#f1eeee',
-    '--dsw-specific-sidebar-nav-item-active': '#e2dcdc',
+    '--dsw-specific-sidebar-nav-item-active': 'rgba(0, 122, 255, 0.22)',
     '--dsw-specific-sidebar-nav-item-active-accent': '#007aff',
     '--dsw-specific-sidebar-nav-item-hover': '#e9e2e2',
     '--dsw-specific-bubble': '#f1eeee',

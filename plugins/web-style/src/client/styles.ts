@@ -32,7 +32,7 @@ export const CSS = `.tg-page{max-width:800px;display:flex;flex-direction:column;
 .tg-nowDots i{width:12px;height:12px;border-radius:50%;border:.5px solid var(--dsw-alias-border-l2);display:block}
 .tg-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .tg-search{box-sizing:border-box;height:26px;width:170px;max-width:100%;padding:0 11px;border-radius:13px;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);font-size:12px;line-height:26px;outline:none}
-.tg-search::placeholder{color:var(--dsw-alias-label-quaternary)}
+.tg-search::placeholder{color:var(--dsw-alias-label-tertiary)}
 .tg-search:focus{border-color:var(--dsw-alias-brand-primary)}
 .tg-count{margin-left:auto;font-size:11px;color:var(--dsw-alias-label-tertiary);white-space:nowrap}
 /* 壁纸取色独立配置区（MD3 整套配色预览 + 操作） */
@@ -71,7 +71,7 @@ export const CSS = `.tg-page{max-width:800px;display:flex;flex-direction:column;
 .tg-title{font-size:13px;font-weight:700;line-height:18px;color:var(--dsw-alias-label-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tg-desc{font-size:10px;line-height:14px;color:var(--dsw-alias-label-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tg-foot{display:flex;align-items:center;gap:6px;margin-top:6px}
-.tg-use{display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 10px;border:none;border-radius:11px;font-size:11px;font-weight:600;line-height:22px;color:#fff;cursor:pointer;flex:none}
+.tg-use{display:inline-flex;align-items:center;justify-content:center;height:22px;padding:0 10px;border:none;border-radius:11px;font-size:11px;font-weight:600;line-height:22px;cursor:pointer;flex:none}
 .tg-use:hover{filter:brightness(1.08)}
 .tg-live{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:500;line-height:14px;white-space:nowrap}
 .tg-live i{width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block;flex:none}

@@ -29,7 +29,6 @@ export const light = fillFontTokens(
     '--dsw-alias-border-inverted': '#1a1a1f',
     '--dsw-alias-border-inverted2': '#54545a',
     '--dsw-alias-separator-primary': '#f6f0e8',
-    '--dsw-alias-line-secondary': '#fff4ea',
     '--dsw-alias-fill-l2': '#fff4ea',
     '--dsw-alias-fill-tsp-secondary': 'rgba(26, 26, 31, 0.04)',
 
@@ -37,6 +36,7 @@ export const light = fillFontTokens(
     '--dsw-alias-brand-primary': '#ff5f5f',
     '--dsw-alias-brand-primary-invert': '#ffffff',
     '--dsw-alias-brand-text': '#ff5f5f',
+    '--dsw-alias-link': '#ff5f5f',
 
     '--dsw-alias-button-primary-fill': '#ff5f5f',
     '--dsw-alias-button-primary-hover': '#eb5757',
@@ -71,6 +71,8 @@ export const light = fillFontTokens(
     '--dsw-alias-label-primary-inverted': '#ffffff',
     '--dsw-alias-label-primary-bluish': '#ff5f5f',
 
+    '--dsw-alias-state-business-primary': '#ff5f5f',
+    '--dsw-alias-state-business-tertiary': 'rgba(255, 95, 95, 0.10)',
     /* 高 saturation 的珊瑚/蜜橙在浅底压暗，保证文字可读 */
     '--dsw-alias-state-error-primary': '#d94f4f',
     '--dsw-alias-state-error-secondary': 'rgba(245, 101, 101, 0.08)',
@@ -87,7 +89,6 @@ export const light = fillFontTokens(
     '--dsw-alias-markdown-code-segment-selected': 'rgba(255, 95, 95, 0.12)',
     '--dsw-alias-markdown-code-segment-unselected': 'transparent',
     '--dsw-alias-markdown-placeholder': '#d3c2ae',
-    '--dsw-alias-markdown-tag': '#8c8c93',
 
     '--dsw-alias-scrollbar-bg-l1': '#ece5db',
     '--dsw-alias-scrollbar-bg-l2': '#fbe7d8',
@@ -99,7 +100,7 @@ export const light = fillFontTokens(
     '--dsw-hovercard-bg': '#ffffff',
 
     '--dsw-specific-sidebar-fill': '#fdf3ec',
-    '--dsw-specific-sidebar-nav-item-active': '#fff4ea',
+    '--dsw-specific-sidebar-nav-item-active': 'rgba(255, 95, 95, 0.22)',
     '--dsw-specific-sidebar-nav-item-active-accent': '#ff5f5f',
     '--dsw-specific-sidebar-nav-item-hover': '#fff4ea',
     '--dsw-specific-bubble': '#ffffff',

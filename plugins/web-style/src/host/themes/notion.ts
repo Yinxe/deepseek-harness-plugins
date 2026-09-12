@@ -31,13 +31,13 @@ export const light = fillFontTokens(
     '--dsw-alias-border-inverted': '#31302e',
     '--dsw-alias-border-inverted2': '#615d59',
     '--dsw-alias-separator-primary': 'rgba(0, 0, 0, 0.06)',
-    '--dsw-alias-line-secondary': 'rgba(0, 0, 0, 0.1)',
     '--dsw-alias-fill-l2': '#efefee',
     '--dsw-alias-fill-tsp-secondary': 'rgba(0, 0, 0, 0.04)',
 
     '--dsw-alias-brand-primary': '#0075de',
     '--dsw-alias-brand-primary-invert': '#ffffff',
     '--dsw-alias-brand-text': '#0075de',
+    '--dsw-alias-link': '#0075de',
 
     '--dsw-alias-button-primary-fill': '#0075de',
     '--dsw-alias-button-primary-hover': '#005bab',
@@ -72,6 +72,8 @@ export const light = fillFontTokens(
     '--dsw-alias-label-primary-inverted': '#ffffff',
     '--dsw-alias-label-primary-bluish': '#0075de',
 
+    '--dsw-alias-state-business-primary': '#0075de',
+    '--dsw-alias-state-business-tertiary': 'rgba(0, 117, 222, 0.10)',
     '--dsw-alias-state-error-primary': '#dc2626',
     '--dsw-alias-state-error-secondary': 'rgba(220, 38, 38, 0.08)',
     '--dsw-alias-state-success-primary': '#1aae39',
@@ -87,7 +89,6 @@ export const light = fillFontTokens(
     '--dsw-alias-markdown-code-segment-selected': 'rgba(0, 117, 222, 0.12)',
     '--dsw-alias-markdown-code-segment-unselected': 'transparent',
     '--dsw-alias-markdown-placeholder': '#a39e98',
-    '--dsw-alias-markdown-tag': '#615d59',
 
     '--dsw-alias-scrollbar-bg-l1': 'rgba(0, 0, 0, 0.14)',
     '--dsw-alias-scrollbar-bg-l2': 'rgba(0, 0, 0, 0.08)',
@@ -98,7 +99,7 @@ export const light = fillFontTokens(
     '--dsw-alias-tooltip-bg': '#31302e',
     '--dsw-hovercard-bg': '#ffffff',
     '--dsw-specific-sidebar-fill': '#f6f5f4',
-    '--dsw-specific-sidebar-nav-item-active': '#efefee',
+    '--dsw-specific-sidebar-nav-item-active': 'rgba(0, 117, 222, 0.22)',
     '--dsw-specific-sidebar-nav-item-active-accent': '#0075de',
     '--dsw-specific-sidebar-nav-item-hover': '#efefee',
     '--dsw-specific-bubble': '#f6f5f4',
