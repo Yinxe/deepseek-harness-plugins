@@ -11,10 +11,6 @@ on:
         description: '包名后缀（如 latest 或 v0.1.5-rc1）；latest 且构建自 main 时滚动更新 latest 预发布，其他后缀自动创建同名 tag 与预发布'
         required: false
         default: 'latest'
-      rolling:
-        description: '配合自定义后缀：预发布带滚动标记，之后每次 main 推送都自动重建到最新提交；删除该 Release 即停止跟随'
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -180,19 +176,15 @@ jobs:
             --notes-file notes.md \
             --prerelease
 
-          # 带 <!-- rolling: true --> 标记的后缀预发布同样跟随 main 重建到当前提交
+          # 约定：所有预发布（latest 除外）都跟随 main 滚动重建；
+          # 想停止跟随某预发布，取消其 Pre-release 勾选即可（正式 release 不会被触碰）
           rolling_tags=$(gh release list --json tagName,isPrerelease --limit 100 \
-            --jq '.[] | select(.isPrerelease) | .tagName' \
-            | while read -r t; do
-                [ "$t" = "latest" ] && continue
-                gh release view "$t" --json body -q .body | grep -q 'rolling: true' && echo "$t"
-              done)
+            --jq '.[] | select(.isPrerelease and .tagName != "latest") | .tagName')
           for tag in $rolling_tags; do
             echo "重建滚动预发布: $tag"
             gh release delete "$tag" --yes --cleanup-tag || true
             SUFFIX="$tag" \
             NOTES_HEADER="滚动构建自 main 分支（${GITHUB_SHA::7}），每次推送自动整体替换。" \
-            NOTES_ROLLING=true \
               node scripts/gen-release-notes.cjs
             gh release create "$tag" dist/*.tgz \
               --target "$GITHUB_SHA" \
