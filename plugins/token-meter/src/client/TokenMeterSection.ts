@@ -11,7 +11,7 @@
  * 状态经 quota 共享 store 即时同步（设置/右栏同一数据源）；偏好变更后广播
  * tm-prefs-changed，右栏用量面板跟进重载。
  */
-import { fetchState } from './api.js';
+import { clearStatsCache, fetchState, fetchStats } from './api.js';
 import { createQuotaSection } from './QuotaSection.js';
 import { createStatsSection } from './StatsSection.js';
 import { createWidgetSystem } from './widgets.js';
@@ -116,20 +116,34 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
         else notifyPrefs({ defaultRange: v });
       });
 
-    const kids: any[] = [];
-    kids.push(
-      h(
-        'p',
-        { key: 'd', className: 'tm-intro' },
-        '额度供应商与偏好。详细额度与用量图表请到右侧栏「额度 / 用量」面板查看（空间更宽）。配置持久化在 settings.yaml（',
-        h('code', { className: 'tm-mono' }, (s.namespace as string) || 'dshp-token-meter'),
-        ' 命名空间），外部编辑热重载。',
-      ),
-    );
-    if (s.error) kids.push(h('p', { key: 'err', className: 'tm-notice tm-notice-err' }, s.error));
-    if (opErr) kids.push(h('p', { key: 'operr', className: 'tm-notice tm-notice-err' }, opErr));
+    const [tab, setTab] = useState<'stats' | 'quota'>('stats');
+    const [statsSnap, setStatsSnap] = useState(null as any);
+    const [clearArmed, setClearArmed] = useState(false);
+    const [clearMsg, setClearMsg] = useState('');
+    React.useEffect(() => {
+      let alive = true;
+      const tick = (): void => {
+        void fetchStats()
+          .then((v) => {
+            if (alive) setStatsSnap(v);
+          })
+          .catch(() => {});
+      };
+      tick();
+      const id = window.setInterval(tick, 5000);
+      return () => {
+        alive = false;
+        window.clearInterval(id);
+      };
+    }, [clearMsg]);
+
+    const commonKids: any[] = [];
+    const statsKids: any[] = [];
+    const quotaKids: any[] = [];
+    if (s.error) commonKids.push(h('p', { key: 'err', className: 'tm-notice tm-notice-err' }, s.error));
+    if (opErr) commonKids.push(h('p', { key: 'operr', className: 'tm-notice tm-notice-err' }, opErr));
     if (!s.cfg) {
-      kids.push(
+      commonKids.push(
         h(
           'div',
           { key: 'loading', className: 'tm-loading' },
@@ -137,7 +151,7 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
           h('span', { className: 'tm-loadingText' }, s.loading ? '正在读取配置…' : '配置加载失败'),
         ),
       );
-      return h('div', { className: 'tm-page' }, kids);
+      return h('div', { className: 'tm-page' }, commonKids);
     }
 
     const vendors = s.cfg.vendors || [];
@@ -154,8 +168,8 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
             : 60;
     const defRange = String(s.cfg.defaultRange || 'all');
 
-    // 偏好（右栏常驻展示，无需显示开关；失效的侧边栏开关已移除）
-    kids.push(
+    // 偏好：额度侧（自动刷新）与统计侧（默认范围、在线阈值）分到各自 tab
+    quotaKids.push(
       h(
         'div',
         { key: 'display', className: 'tm-section' },
@@ -177,6 +191,145 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
             onSelect: (id: string) => void withBusy(() => store.setRefresh(Number(id))),
           }),
         ),
+      ),
+    );
+
+    const snapTotal = statsSnap && typeof statsSnap.total === 'number' ? statsSnap.total : null;
+    const snapScanned = statsSnap && typeof statsSnap.scanned === 'number' ? statsSnap.scanned : null;
+    const snapErrors = statsSnap && typeof statsSnap.errors === 'number' ? statsSnap.errors : null;
+    const snapHits = statsSnap && typeof statsSnap.cacheHits === 'number' ? statsSnap.cacheHits : null;
+    const snapReused = statsSnap && typeof statsSnap.reused === 'number' ? statsSnap.reused : null;
+    const gapNow = String((s.cfg as any).onlineGapMin ?? 5);
+    statsKids.push(
+      h(
+        'div',
+        { key: 'source', className: 'tm-card' },
+        h('div', { className: 'tm-title' }, '数据来源：会话记录（唯一真相源）'),
+        h(
+          'p',
+          { className: 'tm-desc', style: { margin: '4px 0 0' } },
+          '所有统计（Token 用量、在线时长、模型分布、热力图…）都由 ',
+          h('code', { className: 'tm-mono' }, '$DSH_HOME/sessions/'),
+          ' 下的会话日志聚合而来。下面的缓存只是**可丢的派生数据**：删掉后会自动凭会话日志重算，但**会话记录本身丢了就再也算不回来**。',
+        ),
+        h(
+          'p',
+          { className: 'tm-desc', style: { margin: '4px 0 0' } },
+          '迁移 / 备份 / 换机时：**保留 `sessions/` 目录**（体积以本机为例约 250MB）；',
+          h('code', { className: 'tm-mono' }, 'storages/token_stats.json'),
+          ' 不必备份（重建即可）。',
+        ),
+        h(
+          'div',
+          { className: 'tm-toolbar', style: { marginTop: 8 } },
+          h(
+            Btn,
+            {
+              variant: 'outline',
+              size: 'sm',
+              onClick: () => {
+                try {
+                  void navigator.clipboard.writeText('$DSH_HOME/sessions/');
+                  setClearMsg('已复制会话目录路径');
+                } catch {
+                  setClearMsg('复制失败，请手动复制 $DSH_HOME/sessions/');
+                }
+              },
+            },
+            '复制会话目录路径',
+          ),
+        ),
+      ),
+    );
+    statsKids.push(
+      h(
+        'div',
+        { key: 'cache', className: 'tm-section' },
+        h('div', { className: 'tm-sectionHead' }, '缓存与扫描状态'),
+        h(
+          'div',
+          { className: 'tm-card' },
+          h(
+            'div',
+            { className: 'tm-chart-title', style: { marginBottom: 4 } },
+            h('span', { className: 'tm-chart-name' }, '派生缓存'),
+            h(
+              'span',
+              { className: 'tm-hint' },
+              statsSnap && statsSnap.generatedAt
+                ? '更新于 ' + new Date(statsSnap.generatedAt).toLocaleTimeString()
+                : '读取中…',
+            ),
+          ),
+          h(
+            'div',
+            { className: 'tm-cacheRow', style: { marginTop: 0 } },
+            h('span', null, '会话 ' + (snapScanned ?? '—') + '/' + (snapTotal ?? '—') + ' 已扫描'),
+            h(
+              'span',
+              null,
+              '复用 ' + (snapReused ?? '—') + (snapHits != null ? '（缓存 ' + snapHits + '）' : ''),
+            ),
+            h('span', null, '扫描失败 ' + (snapErrors ?? '—')),
+            h(
+              'span',
+              null,
+              '直读 ' + (statsSnap && statsSnap.directReads != null ? statsSnap.directReads : '—'),
+            ),
+            h('span', null, '存储 ' + (statsSnap && statsSnap.storage ? statsSnap.storage : '—')),
+          ),
+          h(
+            'p',
+            { className: 'tm-desc', style: { margin: '6px 0 0' } },
+            '「复用」= 该会话日志没变，直接沿用上次结果（重启后来自持久化缓存，运行中来自内存）；日志变大时只读新增部分。',
+          ),
+          h(
+            'div',
+            { className: 'tm-toolbar', style: { marginTop: 8 } },
+            clearArmed
+              ? h(
+                  Btn,
+                  {
+                    variant: 'outline',
+                    size: 'sm',
+                    disabled: busy,
+                    onClick: () =>
+                      void withBusy(async () => {
+                        setClearMsg('');
+                        const r = await clearStatsCache();
+                        setClearMsg(
+                          r.ok
+                            ? '已清除 ' + (r.removed ?? 0) + ' 行缓存，正在重算…'
+                            : String(r.error || '清除失败'),
+                        );
+                        setClearArmed(false);
+                      }),
+                  },
+                  '确认清除并重算',
+                )
+              : h(
+                  Btn,
+                  { variant: 'outline', size: 'sm', disabled: busy, onClick: () => setClearArmed(true) },
+                  '清除统计缓存',
+                ),
+            clearArmed
+              ? h(Btn, { variant: 'outline', size: 'sm', onClick: () => setClearArmed(false) }, '取消')
+              : null,
+            clearMsg ? h('span', { className: 'tm-hint' }, clearMsg) : null,
+          ),
+          h(
+            'p',
+            { className: 'tm-desc', style: { margin: '6px 0 0' } },
+            '清除后下一次扫描会重新读取全部会话日志（本机约 6 秒），期间面板显示「后台补扫中」。',
+          ),
+        ),
+      ),
+    );
+    statsKids.push(
+      h(
+        'div',
+        { key: 'statpref', className: 'tm-section' },
+        h('div', { className: 'tm-sectionHead' }, '偏好'),
         h(
           UI.SecRow,
           { key: 'range', label: '默认范围', desc: '右侧栏「用量」面板打开时默认统计多少天的数据。' },
@@ -191,6 +344,26 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
               { id: 'all', label: '全部' },
             ],
             onSelect: (id: string) => void pickRange(id),
+          }),
+        ),
+        h(
+          UI.SecRow,
+          {
+            key: 'gap',
+            label: '在线时长空闲阈值',
+            desc: '「在线时长」面板默认口径：相邻事件间隔超过它就算「离开」。它是口径不是精度，调大在线时长变多。',
+          },
+          h(UI.PillSelect, {
+            disabled: busy,
+            value: gapNow,
+            selectedLabel: gapNow + ' 分钟',
+            options: [1, 5, 15, 30, 60].map((n) => ({ id: String(n), label: n + ' 分钟' })),
+            onSelect: (id: string) =>
+              void withBusy(async () => {
+                const r = await store.savePrefs({ onlineGapMin: Number(id) } as any);
+                if (!r.ok) setOpErr(String(r.error || '保存失败'));
+                else notifyPrefs({ onlineGapMin: Number(id) });
+              }),
           }),
         ),
       ),
@@ -321,7 +494,7 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
           ),
         );
       });
-    kids.push(
+    quotaKids.push(
       h(
         'div',
         { key: 'vendors', className: 'tm-section' },
@@ -335,7 +508,7 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
       ),
     );
     if (editing)
-      kids.push(
+      quotaKids.push(
         h(
           'div',
           { key: 'edit', className: 'tm-section' },
@@ -356,7 +529,7 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
           }),
         ),
       );
-    kids.push(
+    quotaKids.push(
       h(
         'div',
         { key: 'add', className: 'tm-section' },
@@ -373,7 +546,7 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
     if (confirmDel) {
       const target = confirmDel as { id: string; name: string };
       if (P.RiskConfirmation) {
-        kids.push(
+        quotaKids.push(
           h(P.RiskConfirmation, {
             key: 'confirm-del',
             open: true,
@@ -393,7 +566,7 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
           }),
         );
       } else {
-        kids.push(
+        quotaKids.push(
           h(
             'div',
             { key: 'confirm-del', className: 'tm-errbox' },
@@ -437,7 +610,35 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
         );
       }
     }
-    return h('div', { className: 'tm-page' }, kids);
+    const tabBtn = (id: 'stats' | 'quota', label: string): any =>
+      h(
+        'button',
+        {
+          key: id,
+          type: 'button',
+          className: 'tm-tab' + (tab === id ? ' tm-tabOn' : ''),
+          onClick: () => setTab(id),
+        },
+        label,
+      );
+    return h(
+      'div',
+      { className: 'tm-page' },
+      commonKids,
+      h('div', { className: 'tm-tabs' }, tabBtn('stats', '统计设置'), tabBtn('quota', '额度配置')),
+      h(
+        'p',
+        { className: 'tm-intro' },
+        tab === 'stats'
+          ? '统计设置：数据来源、派生缓存与默认口径。详细图表在右侧栏「用量 / 在线时长」面板。'
+          : '额度配置：供应商与拉取偏好。详细额度卡在右侧栏「额度」面板。配置持久化在 settings.yaml（',
+        tab === 'stats'
+          ? null
+          : h('code', { className: 'tm-mono' }, (s.namespace as string) || 'dshp-token-meter'),
+        tab === 'stats' ? null : ' 命名空间），外部编辑热重载。',
+      ),
+      tab === 'stats' ? statsKids : quotaKids,
+    );
   }
 
   /** 右侧栏「用量」面板：完整统计图表（开关行隐藏，收归设置页） */

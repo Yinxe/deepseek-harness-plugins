@@ -159,7 +159,7 @@ function register(): void {
 
         slots.inject('settings.section', () =>
           slots.register(
-            { name: 'settings.section', id: 'dshp-token-meter', order: 27, label: 'Token 计量' },
+            { name: 'settings.section', id: 'dshp-token-meter', order: 27, label: 'Token 统计与额度' },
             SettingsEntry,
           ),
         );

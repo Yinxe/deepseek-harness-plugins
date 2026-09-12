@@ -595,6 +595,9 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
   async function saveConfig(patch) {
     return await post("/config", patch);
   }
+  async function clearStatsCache() {
+    return await post("/clear-cache", {});
+  }
   async function fetchStats() {
     const r = await fetch(`${BASE}/stats`, { cache: "no-store" });
     return await r.json();
@@ -7435,20 +7438,32 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         if (!r.ok) setOpErr(String(r.error || "\u4FDD\u5B58\u5931\u8D25"));
         else notifyPrefs({ defaultRange: v });
       });
-      const kids = [];
-      kids.push(
-        h(
-          "p",
-          { key: "d", className: "tm-intro" },
-          "\u989D\u5EA6\u4F9B\u5E94\u5546\u4E0E\u504F\u597D\u3002\u8BE6\u7EC6\u989D\u5EA6\u4E0E\u7528\u91CF\u56FE\u8868\u8BF7\u5230\u53F3\u4FA7\u680F\u300C\u989D\u5EA6 / \u7528\u91CF\u300D\u9762\u677F\u67E5\u770B\uFF08\u7A7A\u95F4\u66F4\u5BBD\uFF09\u3002\u914D\u7F6E\u6301\u4E45\u5316\u5728 settings.yaml\uFF08",
-          h("code", { className: "tm-mono" }, s.namespace || "dshp-token-meter"),
-          " \u547D\u540D\u7A7A\u95F4\uFF09\uFF0C\u5916\u90E8\u7F16\u8F91\u70ED\u91CD\u8F7D\u3002"
-        )
-      );
-      if (s.error) kids.push(h("p", { key: "err", className: "tm-notice tm-notice-err" }, s.error));
-      if (opErr) kids.push(h("p", { key: "operr", className: "tm-notice tm-notice-err" }, opErr));
+      const [tab, setTab] = useState("stats");
+      const [statsSnap, setStatsSnap] = useState(null);
+      const [clearArmed, setClearArmed] = useState(false);
+      const [clearMsg, setClearMsg] = useState("");
+      React.useEffect(() => {
+        let alive = true;
+        const tick = () => {
+          void fetchStats().then((v) => {
+            if (alive) setStatsSnap(v);
+          }).catch(() => {
+          });
+        };
+        tick();
+        const id = window.setInterval(tick, 5e3);
+        return () => {
+          alive = false;
+          window.clearInterval(id);
+        };
+      }, [clearMsg]);
+      const commonKids = [];
+      const statsKids = [];
+      const quotaKids = [];
+      if (s.error) commonKids.push(h("p", { key: "err", className: "tm-notice tm-notice-err" }, s.error));
+      if (opErr) commonKids.push(h("p", { key: "operr", className: "tm-notice tm-notice-err" }, opErr));
       if (!s.cfg) {
-        kids.push(
+        commonKids.push(
           h(
             "div",
             { key: "loading", className: "tm-loading" },
@@ -7456,7 +7471,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             h("span", { className: "tm-loadingText" }, s.loading ? "\u6B63\u5728\u8BFB\u53D6\u914D\u7F6E\u2026" : "\u914D\u7F6E\u52A0\u8F7D\u5931\u8D25")
           )
         );
-        return h("div", { className: "tm-page" }, kids);
+        return h("div", { className: "tm-page" }, commonKids);
       }
       const vendors = s.cfg.vendors || [];
       const activeId = s.cfg.activeVendor || "";
@@ -7464,7 +7479,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const rawSec = s.cfg.refreshSec;
       const curSec = rawSec === void 0 || rawSec === null || rawSec === "" ? 60 : Number(rawSec) === 0 ? 0 : isFinite(Number(rawSec)) ? Math.min(3600, Math.max(10, Number(rawSec) || 60)) : 60;
       const defRange = String(s.cfg.defaultRange || "all");
-      kids.push(
+      quotaKids.push(
         h(
           "div",
           { key: "display", className: "tm-section" },
@@ -7485,7 +7500,136 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
               ),
               onSelect: (id) => void withBusy(() => store.setRefresh(Number(id)))
             })
+          )
+        )
+      );
+      const snapTotal = statsSnap && typeof statsSnap.total === "number" ? statsSnap.total : null;
+      const snapScanned = statsSnap && typeof statsSnap.scanned === "number" ? statsSnap.scanned : null;
+      const snapErrors = statsSnap && typeof statsSnap.errors === "number" ? statsSnap.errors : null;
+      const snapHits = statsSnap && typeof statsSnap.cacheHits === "number" ? statsSnap.cacheHits : null;
+      const snapReused = statsSnap && typeof statsSnap.reused === "number" ? statsSnap.reused : null;
+      const gapNow = String(s.cfg.onlineGapMin ?? 5);
+      statsKids.push(
+        h(
+          "div",
+          { key: "source", className: "tm-card" },
+          h("div", { className: "tm-title" }, "\u6570\u636E\u6765\u6E90\uFF1A\u4F1A\u8BDD\u8BB0\u5F55\uFF08\u552F\u4E00\u771F\u76F8\u6E90\uFF09"),
+          h(
+            "p",
+            { className: "tm-desc", style: { margin: "4px 0 0" } },
+            "\u6240\u6709\u7EDF\u8BA1\uFF08Token \u7528\u91CF\u3001\u5728\u7EBF\u65F6\u957F\u3001\u6A21\u578B\u5206\u5E03\u3001\u70ED\u529B\u56FE\u2026\uFF09\u90FD\u7531 ",
+            h("code", { className: "tm-mono" }, "$DSH_HOME/sessions/"),
+            " \u4E0B\u7684\u4F1A\u8BDD\u65E5\u5FD7\u805A\u5408\u800C\u6765\u3002\u4E0B\u9762\u7684\u7F13\u5B58\u53EA\u662F**\u53EF\u4E22\u7684\u6D3E\u751F\u6570\u636E**\uFF1A\u5220\u6389\u540E\u4F1A\u81EA\u52A8\u51ED\u4F1A\u8BDD\u65E5\u5FD7\u91CD\u7B97\uFF0C\u4F46**\u4F1A\u8BDD\u8BB0\u5F55\u672C\u8EAB\u4E22\u4E86\u5C31\u518D\u4E5F\u7B97\u4E0D\u56DE\u6765**\u3002"
           ),
+          h(
+            "p",
+            { className: "tm-desc", style: { margin: "4px 0 0" } },
+            "\u8FC1\u79FB / \u5907\u4EFD / \u6362\u673A\u65F6\uFF1A**\u4FDD\u7559 `sessions/` \u76EE\u5F55**\uFF08\u4F53\u79EF\u4EE5\u672C\u673A\u4E3A\u4F8B\u7EA6 250MB\uFF09\uFF1B",
+            h("code", { className: "tm-mono" }, "storages/token_stats.json"),
+            " \u4E0D\u5FC5\u5907\u4EFD\uFF08\u91CD\u5EFA\u5373\u53EF\uFF09\u3002"
+          ),
+          h(
+            "div",
+            { className: "tm-toolbar", style: { marginTop: 8 } },
+            h(
+              Btn,
+              {
+                variant: "outline",
+                size: "sm",
+                onClick: () => {
+                  try {
+                    void navigator.clipboard.writeText("$DSH_HOME/sessions/");
+                    setClearMsg("\u5DF2\u590D\u5236\u4F1A\u8BDD\u76EE\u5F55\u8DEF\u5F84");
+                  } catch {
+                    setClearMsg("\u590D\u5236\u5931\u8D25\uFF0C\u8BF7\u624B\u52A8\u590D\u5236 $DSH_HOME/sessions/");
+                  }
+                }
+              },
+              "\u590D\u5236\u4F1A\u8BDD\u76EE\u5F55\u8DEF\u5F84"
+            )
+          )
+        )
+      );
+      statsKids.push(
+        h(
+          "div",
+          { key: "cache", className: "tm-section" },
+          h("div", { className: "tm-sectionHead" }, "\u7F13\u5B58\u4E0E\u626B\u63CF\u72B6\u6001"),
+          h(
+            "div",
+            { className: "tm-card" },
+            h(
+              "div",
+              { className: "tm-chart-title", style: { marginBottom: 4 } },
+              h("span", { className: "tm-chart-name" }, "\u6D3E\u751F\u7F13\u5B58"),
+              h(
+                "span",
+                { className: "tm-hint" },
+                statsSnap && statsSnap.generatedAt ? "\u66F4\u65B0\u4E8E " + new Date(statsSnap.generatedAt).toLocaleTimeString() : "\u8BFB\u53D6\u4E2D\u2026"
+              )
+            ),
+            h(
+              "div",
+              { className: "tm-cacheRow", style: { marginTop: 0 } },
+              h("span", null, "\u4F1A\u8BDD " + (snapScanned ?? "\u2014") + "/" + (snapTotal ?? "\u2014") + " \u5DF2\u626B\u63CF"),
+              h(
+                "span",
+                null,
+                "\u590D\u7528 " + (snapReused ?? "\u2014") + (snapHits != null ? "\uFF08\u7F13\u5B58 " + snapHits + "\uFF09" : "")
+              ),
+              h("span", null, "\u626B\u63CF\u5931\u8D25 " + (snapErrors ?? "\u2014")),
+              h(
+                "span",
+                null,
+                "\u76F4\u8BFB " + (statsSnap && statsSnap.directReads != null ? statsSnap.directReads : "\u2014")
+              ),
+              h("span", null, "\u5B58\u50A8 " + (statsSnap && statsSnap.storage ? statsSnap.storage : "\u2014"))
+            ),
+            h(
+              "p",
+              { className: "tm-desc", style: { margin: "6px 0 0" } },
+              "\u300C\u590D\u7528\u300D= \u8BE5\u4F1A\u8BDD\u65E5\u5FD7\u6CA1\u53D8\uFF0C\u76F4\u63A5\u6CBF\u7528\u4E0A\u6B21\u7ED3\u679C\uFF08\u91CD\u542F\u540E\u6765\u81EA\u6301\u4E45\u5316\u7F13\u5B58\uFF0C\u8FD0\u884C\u4E2D\u6765\u81EA\u5185\u5B58\uFF09\uFF1B\u65E5\u5FD7\u53D8\u5927\u65F6\u53EA\u8BFB\u65B0\u589E\u90E8\u5206\u3002"
+            ),
+            h(
+              "div",
+              { className: "tm-toolbar", style: { marginTop: 8 } },
+              clearArmed ? h(
+                Btn,
+                {
+                  variant: "outline",
+                  size: "sm",
+                  disabled: busy,
+                  onClick: () => void withBusy(async () => {
+                    setClearMsg("");
+                    const r = await clearStatsCache();
+                    setClearMsg(
+                      r.ok ? "\u5DF2\u6E05\u9664 " + (r.removed ?? 0) + " \u884C\u7F13\u5B58\uFF0C\u6B63\u5728\u91CD\u7B97\u2026" : String(r.error || "\u6E05\u9664\u5931\u8D25")
+                    );
+                    setClearArmed(false);
+                  })
+                },
+                "\u786E\u8BA4\u6E05\u9664\u5E76\u91CD\u7B97"
+              ) : h(
+                Btn,
+                { variant: "outline", size: "sm", disabled: busy, onClick: () => setClearArmed(true) },
+                "\u6E05\u9664\u7EDF\u8BA1\u7F13\u5B58"
+              ),
+              clearArmed ? h(Btn, { variant: "outline", size: "sm", onClick: () => setClearArmed(false) }, "\u53D6\u6D88") : null,
+              clearMsg ? h("span", { className: "tm-hint" }, clearMsg) : null
+            ),
+            h(
+              "p",
+              { className: "tm-desc", style: { margin: "6px 0 0" } },
+              "\u6E05\u9664\u540E\u4E0B\u4E00\u6B21\u626B\u63CF\u4F1A\u91CD\u65B0\u8BFB\u53D6\u5168\u90E8\u4F1A\u8BDD\u65E5\u5FD7\uFF08\u672C\u673A\u7EA6 6 \u79D2\uFF09\uFF0C\u671F\u95F4\u9762\u677F\u663E\u793A\u300C\u540E\u53F0\u8865\u626B\u4E2D\u300D\u3002"
+            )
+          )
+        )
+      );
+      statsKids.push(
+        h(
+          "div",
+          { key: "statpref", className: "tm-section" },
+          h("div", { className: "tm-sectionHead" }, "\u504F\u597D"),
           h(
             UI.SecRow,
             { key: "range", label: "\u9ED8\u8BA4\u8303\u56F4", desc: "\u53F3\u4FA7\u680F\u300C\u7528\u91CF\u300D\u9762\u677F\u6253\u5F00\u65F6\u9ED8\u8BA4\u7EDF\u8BA1\u591A\u5C11\u5929\u7684\u6570\u636E\u3002" },
@@ -7500,6 +7644,25 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
                 { id: "all", label: "\u5168\u90E8" }
               ],
               onSelect: (id) => void pickRange(id)
+            })
+          ),
+          h(
+            UI.SecRow,
+            {
+              key: "gap",
+              label: "\u5728\u7EBF\u65F6\u957F\u7A7A\u95F2\u9608\u503C",
+              desc: "\u300C\u5728\u7EBF\u65F6\u957F\u300D\u9762\u677F\u9ED8\u8BA4\u53E3\u5F84\uFF1A\u76F8\u90BB\u4E8B\u4EF6\u95F4\u9694\u8D85\u8FC7\u5B83\u5C31\u7B97\u300C\u79BB\u5F00\u300D\u3002\u5B83\u662F\u53E3\u5F84\u4E0D\u662F\u7CBE\u5EA6\uFF0C\u8C03\u5927\u5728\u7EBF\u65F6\u957F\u53D8\u591A\u3002"
+            },
+            h(UI.PillSelect, {
+              disabled: busy,
+              value: gapNow,
+              selectedLabel: gapNow + " \u5206\u949F",
+              options: [1, 5, 15, 30, 60].map((n) => ({ id: String(n), label: n + " \u5206\u949F" })),
+              onSelect: (id) => void withBusy(async () => {
+                const r = await store.savePrefs({ onlineGapMin: Number(id) });
+                if (!r.ok) setOpErr(String(r.error || "\u4FDD\u5B58\u5931\u8D25"));
+                else notifyPrefs({ onlineGapMin: Number(id) });
+              })
             })
           )
         )
@@ -7615,7 +7778,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           )
         );
       });
-      kids.push(
+      quotaKids.push(
         h(
           "div",
           { key: "vendors", className: "tm-section" },
@@ -7629,7 +7792,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         )
       );
       if (editing)
-        kids.push(
+        quotaKids.push(
           h(
             "div",
             { key: "edit", className: "tm-section" },
@@ -7650,7 +7813,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             })
           )
         );
-      kids.push(
+      quotaKids.push(
         h(
           "div",
           { key: "add", className: "tm-section" },
@@ -7667,7 +7830,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       if (confirmDel) {
         const target = confirmDel;
         if (P.RiskConfirmation) {
-          kids.push(
+          quotaKids.push(
             h(P.RiskConfirmation, {
               key: "confirm-del",
               open: true,
@@ -7687,7 +7850,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             })
           );
         } else {
-          kids.push(
+          quotaKids.push(
             h(
               "div",
               { key: "confirm-del", className: "tm-errbox" },
@@ -7729,7 +7892,30 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           );
         }
       }
-      return h("div", { className: "tm-page" }, kids);
+      const tabBtn = (id, label) => h(
+        "button",
+        {
+          key: id,
+          type: "button",
+          className: "tm-tab" + (tab === id ? " tm-tabOn" : ""),
+          onClick: () => setTab(id)
+        },
+        label
+      );
+      return h(
+        "div",
+        { className: "tm-page" },
+        commonKids,
+        h("div", { className: "tm-tabs" }, tabBtn("stats", "\u7EDF\u8BA1\u8BBE\u7F6E"), tabBtn("quota", "\u989D\u5EA6\u914D\u7F6E")),
+        h(
+          "p",
+          { className: "tm-intro" },
+          tab === "stats" ? "\u7EDF\u8BA1\u8BBE\u7F6E\uFF1A\u6570\u636E\u6765\u6E90\u3001\u6D3E\u751F\u7F13\u5B58\u4E0E\u9ED8\u8BA4\u53E3\u5F84\u3002\u8BE6\u7EC6\u56FE\u8868\u5728\u53F3\u4FA7\u680F\u300C\u7528\u91CF / \u5728\u7EBF\u65F6\u957F\u300D\u9762\u677F\u3002" : "\u989D\u5EA6\u914D\u7F6E\uFF1A\u4F9B\u5E94\u5546\u4E0E\u62C9\u53D6\u504F\u597D\u3002\u8BE6\u7EC6\u989D\u5EA6\u5361\u5728\u53F3\u4FA7\u680F\u300C\u989D\u5EA6\u300D\u9762\u677F\u3002\u914D\u7F6E\u6301\u4E45\u5316\u5728 settings.yaml\uFF08",
+          tab === "stats" ? null : h("code", { className: "tm-mono" }, s.namespace || "dshp-token-meter"),
+          tab === "stats" ? null : " \u547D\u540D\u7A7A\u95F4\uFF09\uFF0C\u5916\u90E8\u7F16\u8F91\u70ED\u91CD\u8F7D\u3002"
+        ),
+        tab === "stats" ? statsKids : quotaKids
+      );
     }
     function StatsRightPane() {
       const [prefs, setPrefs] = useState({
@@ -7935,7 +8121,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           slots.inject(
             "settings.section",
             () => slots.register(
-              { name: "settings.section", id: "dshp-token-meter", order: 27, label: "Token \u8BA1\u91CF" },
+              { name: "settings.section", id: "dshp-token-meter", order: 27, label: "Token \u7EDF\u8BA1\u4E0E\u989D\u5EA6" },
               SettingsEntry
             )
           );

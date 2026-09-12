@@ -90,6 +90,11 @@ export async function secretToCred(id: string): Promise<{ ok: boolean; cred?: st
   return (await post('/secret-to-cred', { id })) as { ok: boolean; cred?: string; error?: string };
 }
 
+/** 清除统计派生缓存（下次快照全量重算）；缓存可丢，会话日志才是真相源 */
+export async function clearStatsCache(): Promise<{ ok: boolean; removed?: number; error?: string }> {
+  return (await post('/clear-cache', {})) as { ok: boolean; removed?: number; error?: string };
+}
+
 export async function fetchStats(): Promise<StatsSnapshot> {
   const r = await fetch(`${BASE}/stats`, { cache: 'no-store' });
   return (await r.json()) as StatsSnapshot;

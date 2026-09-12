@@ -222,6 +222,8 @@ export interface Engine {
   start: () => void;
   drain: () => Promise<void>;
   dispose: () => Promise<void>;
+  /** 清空派生缓存（持久化行 + 进程内状态）→ 下一次快照全量重扫；返回删掉的行数 */
+  clearCache: () => Promise<number>;
 }
 
 /**
@@ -453,6 +455,10 @@ export function createEngine(
     listedIds = new Set<string>();
     const jobs: Array<{ id: string; mtime: number; live: boolean }> = [];
     let scanned = 0;
+    /** 本次快照命中**持久化缓存**的会话数（重启后才会发生） */
+    let cacheHits = 0;
+    /** 本次快照**完全没读日志**的会话数（持久化缓存 + 进程内复用） */
+    let reused = 0;
 
     currentIndex = buildFileIndex(sessionsDir);
 
@@ -473,6 +479,7 @@ export function createEngine(
 
       if (live) {
         need = isDirty || !aggMemo.has(id);
+        if (!need) reused++;
       } else {
         const fp = fileFingerprint(currentIndex, id);
         if (isDirty || !aggMemo.has(id)) {
@@ -483,6 +490,8 @@ export function createEngine(
             hit = undefined;
           }
           if (!isDirty && hit !== undefined && hit.fp === fp && hit.v === CACHE_V) {
+            cacheHits++;
+            reused++;
             aggMemo.set(id, reviveAgg(hit));
             if (fp !== null) fpMemo.set(id, fp);
             dirty.delete(id);
@@ -491,6 +500,8 @@ export function createEngine(
           }
         } else if (fp !== null && fpMemo.get(id) !== fp) {
           need = true;
+        } else {
+          reused++; // 进程内已有聚合且日志没变 → 连缓存都不用查
         }
       }
 
@@ -619,6 +630,8 @@ export function createEngine(
       errors: errored.size,
       errorSamples: [...errorSamples.entries()].map(([id, message]) => ({ id, message })),
       sessionOutcomes,
+      cacheHits,
+      reused,
       directReads: directSessions.size,
       storage: storageOk ? 'ok' : 'disabled',
       generatedAt: Date.now(),
@@ -633,6 +646,41 @@ export function createEngine(
     }, 100);
     if (typeof (t as { unref?: () => void }).unref === 'function')
       (t as unknown as { unref: () => void }).unref();
+  }
+
+  /**
+   * 清空派生缓存：把持久化行逐条删掉，并重置进程内状态（聚合、增量流、指纹、失败计数）。
+   * 下次快照即全量重扫 —— 缓存是纯派生数据，删了只会慢一次，不会算错。
+   * @returns 删掉的行数（存储不可用时为 0，进程内状态照样清）
+   */
+  async function clearCache(): Promise<number> {
+    let removed = 0;
+    try {
+      const t = await tableReady;
+      if (t.table !== nullTable && typeof t.table.keys === 'function') {
+        const keys = [...(t.table.keys() as Iterable<string>)];
+        for (const k of keys) {
+          try {
+            await t.table.delete(k);
+            removed++;
+          } catch (error) {
+            noteStorageError('delete failed', error);
+          }
+        }
+      }
+    } catch (error) {
+      noteStorageError('clear failed', error);
+    }
+    aggMemo.clear();
+    streams.clear();
+    fpMemo.clear();
+    attempts.clear();
+    errored.clear();
+    dirty.clear();
+    errorSamples.clear();
+    directSessions.clear();
+    queue = [];
+    return removed;
   }
 
   /** 等待后台队列清空（测试用）。 */
@@ -663,5 +711,5 @@ export function createEngine(
     if ((prev as { degraded?: boolean }).degraded === true) tableReady = openDomain();
   }
 
-  return { invalidate, snapshot, start, drain, dispose };
+  return { invalidate, snapshot, start, drain, dispose, clearCache };
 }

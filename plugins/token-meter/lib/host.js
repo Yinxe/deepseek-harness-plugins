@@ -4509,6 +4509,8 @@ function createEngine(sessionQuery, dshHome, storageDomain, getGapMin) {
     listedIds = /* @__PURE__ */ new Set();
     const jobs = [];
     let scanned = 0;
+    let cacheHits = 0;
+    let reused = 0;
     currentIndex = buildFileIndex(sessionsDir);
     for (const rec of list) {
       const header = rec && rec.header;
@@ -4523,6 +4525,7 @@ function createEngine(sessionQuery, dshHome, storageDomain, getGapMin) {
       const mtime = entry === void 0 ? 0 : entry.mtimeMs;
       if (live) {
         need = isDirty || !aggMemo.has(id);
+        if (!need) reused++;
       } else {
         const fp = fileFingerprint(currentIndex, id);
         if (isDirty || !aggMemo.has(id)) {
@@ -4533,6 +4536,8 @@ function createEngine(sessionQuery, dshHome, storageDomain, getGapMin) {
             hit = void 0;
           }
           if (!isDirty && hit !== void 0 && hit.fp === fp && hit.v === CACHE_V) {
+            cacheHits++;
+            reused++;
             aggMemo.set(id, reviveAgg(hit));
             if (fp !== null) fpMemo.set(id, fp);
             dirty.delete(id);
@@ -4541,6 +4546,8 @@ function createEngine(sessionQuery, dshHome, storageDomain, getGapMin) {
           }
         } else if (fp !== null && fpMemo.get(id) !== fp) {
           need = true;
+        } else {
+          reused++;
         }
       }
       if (need && !errored.has(id)) {
@@ -4655,6 +4662,8 @@ function createEngine(sessionQuery, dshHome, storageDomain, getGapMin) {
       errors: errored.size,
       errorSamples: [...errorSamples.entries()].map(([id, message]) => ({ id, message })),
       sessionOutcomes,
+      cacheHits,
+      reused,
       directReads: directSessions.size,
       storage: storageOk ? "ok" : "disabled",
       generatedAt: Date.now(),
@@ -4668,6 +4677,35 @@ function createEngine(sessionQuery, dshHome, storageDomain, getGapMin) {
     }, 100);
     if (typeof t.unref === "function")
       t.unref();
+  }
+  async function clearCache() {
+    let removed = 0;
+    try {
+      const t = await tableReady;
+      if (t.table !== nullTable && typeof t.table.keys === "function") {
+        const keys = [...t.table.keys()];
+        for (const k of keys) {
+          try {
+            await t.table.delete(k);
+            removed++;
+          } catch (error) {
+            noteStorageError("delete failed", error);
+          }
+        }
+      }
+    } catch (error) {
+      noteStorageError("clear failed", error);
+    }
+    aggMemo.clear();
+    streams.clear();
+    fpMemo.clear();
+    attempts.clear();
+    errored.clear();
+    dirty.clear();
+    errorSamples.clear();
+    directSessions.clear();
+    queue = [];
+    return removed;
   }
   async function drain() {
     for (; ; ) {
@@ -4691,7 +4729,7 @@ function createEngine(sessionQuery, dshHome, storageDomain, getGapMin) {
     const prev = await tableReady;
     if (prev.degraded === true) tableReady = openDomain();
   }
-  return { invalidate, snapshot, start, drain, dispose };
+  return { invalidate, snapshot, start, drain, dispose, clearCache };
 }
 
 // src/host/stats/routes.ts
@@ -4719,6 +4757,23 @@ function registerStatsRoutes(ctx, engine) {
   ctx.effect(
     () => ctx.webServer.register({ kind: "exact", path: `${BASE2}/data`, handler }),
     "dshp-token-meter: stats alias route"
+  );
+  ctx.effect(
+    () => ctx.webServer.register({
+      kind: "exact",
+      path: `${BASE2}/clear-cache`,
+      handler: async (req, res) => {
+        if (!sameOrigin(req)) return json(res, 403, { ok: false, error: "forbidden" });
+        try {
+          if (!engine) return json(res, 200, { ok: false, error: "\u7EDF\u8BA1\u5F15\u64CE\u4E0D\u53EF\u7528" });
+          const removed = await engine.clearCache();
+          return json(res, 200, { ok: true, removed });
+        } catch (error) {
+          return json(res, 200, { ok: false, error: String(error?.message ?? error) });
+        }
+      }
+    }),
+    "dshp-token-meter: clear cache route"
   );
 }
 

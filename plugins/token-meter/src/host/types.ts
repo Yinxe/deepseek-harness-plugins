@@ -285,6 +285,10 @@ export interface StatsSnapshot {
   directReads?: number;
   /** 会话结局分类计数（usage / fork-empty / no-request / failed / no-usage） */
   sessionOutcomes?: Record<string, number>;
+  /** 本次快照命中持久化缓存的会话数（重启后才会发生） */
+  cacheHits?: number;
+  /** 本次快照完全没读日志的会话数（持久化缓存 + 进程内复用） */
+  reused?: number;
   storage: string;
   generatedAt: number;
   /** 在线时长估算（老 Host 无此字段时客户端自行降级隐藏面板） */

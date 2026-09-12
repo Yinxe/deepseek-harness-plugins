@@ -222,6 +222,10 @@ export interface StatsSnapshot {
   directReads?: number;
   /** 会话结局分类计数 */
   sessionOutcomes?: Record<string, number>;
+  /** 命中持久化缓存（未读日志）的会话数 */
+  cacheHits?: number;
+  /** 完全没读日志的会话数（缓存 + 进程内复用） */
+  reused?: number;
   storage: string;
   generatedAt: number;
   /** 在线时长估算（老 Host 无此字段 → 面板自行降级提示） */
