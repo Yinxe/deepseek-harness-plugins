@@ -396,7 +396,13 @@ const day = cn.getUTCDay(),
 
 ## 12. 质量门禁（CI 顺序即本地顺序）
 
-本地提交前跑全套（与 `.github/workflows/ci.yml` 同序）：
+提交前跑一条流程命令（构建 → 类型检查 → 质量检查 → 格式化，任一环节红即停，格式化自动写盘收尾）：
+
+```bash
+pnpm check   # build → typecheck → lint → format
+```
+
+CI 分步把关仍按严格检查序（与 `.github/workflows/ci.yml` 同序）：
 
 ```bash
 pnpm format:check   # prettier 只检查不写；红了跑 pnpm format
@@ -442,7 +448,7 @@ pnpm test           # pnpm -r test（至少 node --check 双 bundle）
 
 - main 永远跟最新 DSH。`compat.json` 为空是正常态（暂无历史包袱）。
 - DSH 发新版且有 breaking：当前 main 打 annotated tag `v<根版本>`（message 写 DSH 版本）→ `compat.json` 追加一行 → 再在 main 上适配。平时不打 tag。老 DSH 用户按 `compat.json` `git checkout <tag>`。
-- 发 npm（已下线，暂不做）：发布流在 `de6ab3c` 下线，当前 `.github/workflows/` 只有 `ci.yml`，README 安装节写的是“只能本地装”。将来要重新启用：重建 `.github/workflows/publish.yml`（tag `v*` 触发 → `pnpm -r publish --provenance`，Trusted Publishing 免 Token），npm 建组织 `dshp`（公有包免费）或改名到个人 scope，每个包配 Trusted Publisher。未重建前不要写“打 tag 即发布”。
+- 发 npm（已下线，暂不做）：发布流在 `de6ab3c` 下线，当前 `.github/workflows/` 只有 `CICD.yml`（门禁 + tgz 打包发 GitHub Releases：main 推送滚动更新 `latest` 预发布、`v*` tag 发版本 Release、其他分支推送发同名预发布；dev 与 `feature/*` 分支仅跑门禁不发布；npm 发包仍下线），README 安装节写的是“只能本地装”。将来要重新启用：重建 `.github/workflows/publish.yml`（tag `v*` 触发 → `pnpm -r publish --provenance`，Trusted Publishing 免 Token），npm 建组织 `dshp`（公有包免费）或改名到个人 scope，每个包配 Trusted Publisher。未重建前不要写“打 tag 即发布”。
 - 发版 checklist：`format/lint/typecheck/build/test` 全绿 → `lib/` 已重打并提交 → 插件 README 安装/更新节已同步 → 版本号已升 →（发包时）tag 已打。
 
 ---
