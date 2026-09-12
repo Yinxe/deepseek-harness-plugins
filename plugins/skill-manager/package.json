@@ -1,7 +1,7 @@
 {
-  "name": "@dshp/web-style",
-  "version": "0.1.0",
-  "description": "DeepSeek Harness (DSH) web style suite: multi-theme gallery with one-click switching, persisted theme selection, global radius tuning, and Material You wallpaper color extraction — all rendered over the official light/dark token layer. 样式套件：多套主题画廊一键切换、主题选择持久化、全局圆角调节与 Material You 壁纸取色——全部叠加渲染在官方亮/暗 token 层之上。",
+  "name": "@dshp/skill-manager",
+  "version": "0.1.3",
+  "description": "DeepSeek Harness (DSH) skill manager: browse, create, edit, enable/disable, copy/move and delete global (~/.dsh/skills, ~/.agents/skills) and workspace (<workspace>/.dsh/skills, .agents/skills) skills from the settings page, with same-origin JSON routes. 技能管理器：在设置页浏览、新建、编辑、启停、复制/移动和删除全局（~/.dsh/skills、~/.agents/skills）与工作区（<workspace>/.dsh/skills、.agents/skills）技能，内置同源 JSON 路由。",
   "license": "MIT",
   "author": "Yinxe",
   "type": "module",
@@ -21,10 +21,9 @@
     "deepseek-harness",
     "cordis",
     "plugin",
-    "theme",
-    "design-system",
-    "material-you",
-    "md3"
+    "skill",
+    "skills",
+    "manager"
   ],
   "engines": {
     "node": ">=20"
@@ -34,19 +33,19 @@
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf lib *.tsbuildinfo",
-    "test": "node --check lib/host.js && node --check lib/client.js && node scripts/check-themes.mjs && echo \"syntax ok\"",
+    "test": "node --check lib/host.js && node --check lib/client.js && echo \"syntax ok\"",
     "prepublishOnly": "pnpm typecheck && pnpm build",
     "lint": "oxlint --deny-warnings --config ../../.oxlintrc.json src tsup.config.ts"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Yinxe/deepseek-harness-plugins.git",
-    "directory": "plugins/web-style"
+    "directory": "plugins/skill-manager"
   },
   "bugs": {
     "url": "https://github.com/Yinxe/deepseek-harness-plugins/issues"
   },
-  "homepage": "https://github.com/Yinxe/deepseek-harness-plugins/tree/main/plugins/web-style#readme",
+  "homepage": "https://github.com/Yinxe/deepseek-harness-plugins/tree/main/plugins/skill-manager#readme",
   "publishConfig": {
     "access": "public",
     "provenance": true

@@ -1,0 +1,7 @@
+# @dshp/skill-manager bundle patch: Skill manager for DeepSeek Harness.
+# Host half: scan/CRUD of global & workspace skill roots + /ext/dshp-skill-manager/* routes.
+# Client half: Settings page section（全局 / 工作区技能列表 + 编辑器）.
+
+- insert:
+    - id: dshp-skill-manager
+      name: '@dshp/skill-manager'

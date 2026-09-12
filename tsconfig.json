@@ -9,6 +9,7 @@
     { "path": "./plugins/mcwiki-search" },
     { "path": "./plugins/token-meter" },
     { "path": "./plugins/search-provider" },
-    { "path": "./plugins/web-style" }
+    { "path": "./plugins/web-style" },
+    { "path": "./plugins/skill-manager" }
   ]
 }
