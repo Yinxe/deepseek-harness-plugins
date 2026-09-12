@@ -99,6 +99,8 @@ jobs:
       contents: write
     env:
       GH_TOKEN: ${{ github.token }}
+      # publish job 不做 checkout，必须显式指定仓库，gh 才不会退回 git remote 解析
+      GH_REPO: ${{ github.repository }}
     steps:
       - uses: actions/download-artifact@v4
         with:
