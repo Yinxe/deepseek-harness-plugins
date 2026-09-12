@@ -6,17 +6,7 @@ DeepSeek Harness（DSH）技能管理：在 Web 设置页统一管理**全局技
 
 ## 安装
 
-### 方式一：从 Release 安装（推荐，无需 clone）
-
-```bash
-# latest 滚动版（跟随 main 最新构建；滚动更新 = 重跑同一条命令）
-dsh plugin --profile web add \
-  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-skill-manager-latest.tgz
-
-dsh web   # 重启生效
-```
-
-### 方式二：克隆 monorepo 本地安装（开发 / 定制）
+### 方式一（推荐）：克隆 monorepo 安装 —— 更新只需 `git pull`，旧版 DSH 可 checkout tag
 
 ```bash
 git clone git@github.com:Yinxe/deepseek-harness-plugins.git
@@ -29,6 +19,8 @@ dsh plugin --profile web add ./plugins/skill-manager
 dsh web   # 重启生效
 ```
 
+- **更新**：仓库内 `git pull` + `dsh web`（最快——lib 已提交，未改 src 无需 build）；兼容旧版 DSH：按 [`compat.json`](../../compat.json) 的 tag `git checkout <tag>` 后重跑上面的 add。
+
 - 不能 `pnpm add @dshp/skill-manager` / `add github:`——包未发布，只能本地装。
 - 前置：需要 Web 设置页（client 半注册 `settings.section`）；Host 半只依赖 `settings` 与 `webServer` 两个服务。
 
@@ -39,6 +31,17 @@ dsh web   # 重启生效
 1. git clone 仓库并 pnpm install
 2. dsh plugin --profile web add ./plugins/skill-manager
 3. 重启 dsh web，确认无报错、设置页出现「Skills」条目
+```
+
+### 方式二：从 Release 安装（无需 clone；更新需手动重跑命令）
+
+latest 滚动版（跟随 main 最新构建；滚动更新 = 重跑同一条 add 命令）：
+
+```bash
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-skill-manager-latest.tgz
+
+dsh web   # 重启生效
 ```
 
 ### 历史版本（兼容旧版 DSH）
@@ -55,24 +58,13 @@ dsh web   # 重启生效
 
 ## 更新
 
-### 滚动更新（Release 安装，推荐）
+### 三种安装方式对应的更新方式
 
-`latest` 资产随 main 每次构建滚动重建，**重跑同一条安装命令 + 重启**即滚到最新：
-
-```bash
-dsh plugin --profile web add \
-  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-skill-manager-latest.tgz
-
-dsh web   # 重启生效
-```
-
-### 本地更新（克隆安装）
-
-```bash
-cd deepseek-harness-plugins && git pull && pnpm install
-pnpm --filter @dshp/skill-manager build   # src 有改动时重打 lib/
-dsh web   # 重启生效
-```
+| 安装方式             | 更新命令                                                    | 说明                                                      |
+| -------------------- | ----------------------------------------------------------- | --------------------------------------------------------- |
+| 方式一 clone（推荐） | 仓库内 `git pull` + `dsh web`                               | 最快；未改 src 免 build；旧版 DSH 用 `git checkout <tag>` |
+| 方式二 Release       | 重跑同一条 `add` 命令 + `dsh web`                           | URL 直装对 `update` 免疫；两个 pnpm 坑见根 README         |
+| 方式三 git 依赖      | `dsh plugin --profile web update @dshp/\<pkg\>` + `dsh web` | 一条命令；git 解析约 35s/插件（实测）                     |
 
 ### 更新日志
 

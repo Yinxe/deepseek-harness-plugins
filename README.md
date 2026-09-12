@@ -36,46 +36,7 @@ DeepSeek Harness（DSH）插件 Monorepo（pnpm workspaces + TypeScript ESM）�
 
 ## 安装到 DSH
 
-### 方式一：从 GitHub Releases 直接安装（推荐，无需 clone）
-
-CI 把每个插件打包成 tgz 发布到 Releases，`latest` 滚动发布固定跟随 main 最新构建（持 Latest 徽标、始终置顶）：
-
-```bash
-# macOS / Linux
-dsh --profile web add \
-  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-mcwiki-search-latest.tgz
-```
-
-```powershell
-# Windows PowerShell
-dsh --profile web add `
-  'https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-mcwiki-search-latest.tgz'
-```
-
-全部插件的下载与安装命令见 [Releases](https://github.com/Yinxe/deepseek-harness-plugins/releases) 各预发布说明；**滚动更新 = 重跑同一条命令 + `dsh web` 重启**（`latest` 资产随 main 每次构建滚动重建）。
-
-### 历史版本（兼容旧版 DSH）
-
-main 永远跟随最新 DSH。老版本 DSH 用户装**静态历史版本**：按 [`compat.json`](compat.json) 记录的兼容 tag（「DSH 版本 → 推荐 tag」矩阵），到 [Releases](https://github.com/Yinxe/deepseek-harness-plugins/releases) 找对应版本 Release（`v*` tag 触发，静态存档、永不滚动），资产名 = `dshp-<插件名>-<tag>.tgz`：
-
-```bash
-# 以 v0.1.5-rc.1 为例
-dsh --profile web add \
-  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/v0.1.5-rc.1/dshp-mcwiki-search-v0.1.5-rc.1.tgz
-```
-
-### 卸载
-
-```bash
-dsh plugin --profile web remove "@dshp/<插件名>"
-dsh web   # 重启生效
-```
-
-`remove` 直接转发 pnpm（参数 = 包名），并自动从 `dsh.profile.bundles` 撤下挂载；写入 `settings.yaml` 的配置分节按需手动清理。各插件的详细安装/更新/卸载说明见各自 README。
-
-### 方式二：克隆仓库本地安装（开发 / 定制）
-
-> 包尚未发布到 npm，不能 `pnpm add @dshp/*` / `add github:`。
+### 方式一（推荐）：克隆仓库安装 —— 更新只需 `git pull`，旧版 DSH 可 checkout tag
 
 ```bash
 git clone git@github.com:Yinxe/deepseek-harness-plugins.git
@@ -95,8 +56,85 @@ dsh plugin --profile web add ./plugins/mcp-manager
 dsh web   # 重启生效
 ```
 
+- **更新**：仓库内 `git pull` + `dsh web`（最快——lib 已提交，未改 src 无需 build）；兼容旧版 DSH：按 [`compat.json`](compat.json) 的 tag `git checkout <tag>` 后重跑上面的 add。
+
 `dsh plugin add` 会把包写进 profile 的 `dsh.profile.bundles` —— **无需手动改配置文件**。
 各插件的详细安装说明、配置与常见问题见对应 README（上表）。
+
+### 方式二：从 Release 安装（无需 clone；更新需手动重跑命令）
+
+CI 把每个插件打包成 tgz 发布到 Releases，`latest` 滚动发布固定跟随 main 最新构建（持 Latest 徽标、始终置顶）：
+
+```bash
+# macOS / Linux
+dsh --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-mcwiki-search-latest.tgz
+```
+
+```powershell
+# Windows PowerShell
+dsh --profile web add `
+  'https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-mcwiki-search-latest.tgz'
+```
+
+全部插件的下载与安装命令见 [Releases](https://github.com/Yinxe/deepseek-harness-plugins/releases) 各预发布说明；**滚动更新 = 重跑同一条命令 + `dsh web` 重启**（`latest` 资产随 main 每次构建滚动重建）。
+
+> **两个 pnpm 语义坑**，遇到别绕远路：
+>
+> 1. `dsh plugin … update` 对 tarball URL 直装**无效**——`pnpm update` 只重解析 semver 范围，URL 是精确 spec（且 lockfile 用 integrity 钉住首次内容），永远 "Already up to date"。滚动更新请**重跑同一条 add 命令**（或用下面的 Git tag 安装）；
+> 2. `remove` 后重装同一 URL 若报 `ERR_PNPM_MISSING_TARBALL_INTEGRITY`（lockfile 残留了无 integrity 的条目），删掉 profile 目录里的 `pnpm-lock.yaml` 再 add 即可（lockfile 是可再生的本机状态）。
+
+### 历史版本（兼容旧版 DSH）
+
+main 永远跟随最新 DSH。老版本 DSH 用户装**静态历史版本**：按 [`compat.json`](compat.json) 记录的兼容 tag（「DSH 版本 → 推荐 tag」矩阵），到 [Releases](https://github.com/Yinxe/deepseek-harness-plugins/releases) 找对应版本 Release（`v*` tag 触发，静态存档、永不滚动），资产名 = `dshp-<插件名>-<tag>.tgz`：
+
+```bash
+# 以 v0.1.5-rc.1 为例
+dsh --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/v0.1.5-rc.1/dshp-mcwiki-search-v0.1.5-rc.1.tgz
+```
+
+### 方式三：Git 依赖安装 —— 支持 `update` 一键（可解析较慢，列为备选）
+
+仓库自带一个**随 CI 滚动的 `latest` git tag**（每次 main 构建通过门禁后重置到 main HEAD）。装它 = "永远最新"，且 **`update` 一键跟进**——spec 永不改变，可变性由 git ref 承担，完全绕开 tarball URL 的语义坑：
+
+```bash
+# 安装（一次，此后 spec 永不改）
+dsh plugin --profile web add \
+  "github:Yinxe/deepseek-harness-plugins#latest&path:plugins/<插件名>"
+
+# 之后每次更新就这一条：
+dsh plugin --profile web update @dshp/<插件名>
+dsh web   # 重启生效
+```
+
+**同一机制的两种变体**（换选择器即可）：
+
+- `#semver:^1.0.0&path:plugins/<插件名>` —— 跟发版 tag 走的**受控升级**：只在 push 了匹配范围的新 tag 后 update 才会动；预发布 tag 受 node-semver 元组规则限制，范围必须显式含预发布（如 `^0.1.5-rc.1` 只匹配 0.1.5 系列）；
+- `#main&path:plugins/<插件名>` —— 与 `#latest` 等价的分支滚动。
+
+注意：
+
+- `latest` tag 在门禁**通过后**才移动到 main HEAD，所以 update 拿到的永远是过了门禁的构建；
+- git 解析在你网络慢时可能要 2–4 分钟（`github:` 简写走 HTTPS，慢可换 `git+ssh://git@github.com/…` 形态，前提是配好 GitHub SSH key）；一次 clone 后 pnpm 有本地缓存，重复 update 会快一些；
+- 对比：tarball URL 直装（`…latest.tgz`）的 spec 是精确 URL，`update` 永远 no-op——这正是 git 依赖方案存在的理由。
+
+**多插件统一更新**：`update` 支持一条命令带多个包名（git 与 tarball 混装亦可）：
+
+```bash
+dsh plugin --profile web update "@dshp/*"   # 或显式列出：update @dshp/a @dshp/b …
+```
+
+实测耗时（国内网络、SSH 热缓存）：**约 35 秒/插件、线性增长**（3 个 ≈ 1 分 40 秒；首次冷安装更久，每个都要完整 clone）。插件多且网络差时更新会到分钟级——这是 git 解析的固有成本，根治要等 npm 发布渠道恢复（registry 元数据 + CDN tarball，秒级）。tarball 渠道的多插件重装同样支持一条命令带多个 URL，但在 HTTPS 不稳的网络下可能超时。
+
+### 卸载
+
+```bash
+dsh plugin --profile web remove "@dshp/<插件名>"
+dsh web   # 重启生效
+```
+
+`remove` 直接转发 pnpm（参数 = 包名），并自动从 `dsh.profile.bundles` 撤下挂载；写入 `settings.yaml` 的配置分节按需手动清理。各插件的详细安装/更新/卸载说明见各自 README。
 
 ### 一键 AI 安装
 

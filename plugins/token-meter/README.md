@@ -6,19 +6,7 @@ DeepSeek Harness（DSH）**Token 计量**插件：**额度 + 用量二合一**�
 
 ## 安装
 
-### 方式一：从 Release 安装（推荐，无需 clone）
-
-```bash
-# latest 滚动版（跟随 main 最新构建；滚动更新 = 重跑同一条命令）
-dsh plugin --profile web add \
-  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-token-meter-latest.tgz
-
-dsh web   # 重启生效
-```
-
-### 方式二：克隆 monorepo 本地安装（开发 / 定制）
-
-> 本包尚未发布到 npm（`@dshp/token-meter` 在 npm 上 404），**不要用 `add github:` / `pnpm add`**，唯一入口就是克隆本仓库后本地 `add`。
+### 方式一（推荐）：克隆 monorepo 安装 —— 更新只需 `git pull`，旧版 DSH 可 checkout tag
 
 ```sh
 # 1. 克隆 monorepo（lib/ 构建产物已提交，clone 下来就能用，无需 build）
@@ -38,6 +26,8 @@ dsh plugin --profile web remove "@dshp-inx/token-stats"
 dsh web
 ```
 
+- **更新**：仓库内 `git pull` + `dsh web`（最快——lib 已提交，未改 src 无需 build）；兼容旧版 DSH：按 [`compat.json`](../../compat.json) 的 tag `git checkout <tag>` 后重跑上面的 add。
+
 > DSH 是最新版就到此为止。只有 DSH 停在老版本才需要先 `git checkout <历史tag>`（对照根目录 `compat.json`，现在是空的，不用管）。
 
 `dsh plugin` 会把包写进 profile 的 `dsh.profile.bundles` —— **无需手动改配置文件**。
@@ -56,6 +46,17 @@ dsh web
 4. 打开设置页的 Token 计量，帮我添加一个供应商并刷新一次额度，再告诉我累计 Token 总量和今日用量
 ```
 
+### 方式二：从 Release 安装（无需 clone；更新需手动重跑命令）
+
+latest 滚动版（跟随 main 最新构建；滚动更新 = 重跑同一条 add 命令）：
+
+```bash
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-token-meter-latest.tgz
+
+dsh web   # 重启生效
+```
+
 ### 历史版本（兼容旧版 DSH）
 
 main 永远跟随最新 DSH。老版本 DSH 用户装**静态历史版本**：按 `compat.json` 记录的兼容 tag，到 [Releases](https://github.com/Yinxe/deepseek-harness-plugins/releases) 找对应版本 Release（`v*` tag 触发，静态存档、永不滚动），资产名 = `dshp-token-meter-<tag>.tgz`：
@@ -70,31 +71,13 @@ dsh web   # 重启生效
 
 ## 更新
 
-### 滚动更新（Release 安装，推荐）
+### 三种安装方式对应的更新方式
 
-`latest` 资产随 main 每次构建滚动重建，**重跑同一条安装命令 + 重启**即滚到最新：
-
-```bash
-dsh plugin --profile web add \
-  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-token-meter-latest.tgz
-
-dsh web   # 重启生效
-```
-
-### 本地更新（克隆安装）
-
-```sh
-cd deepseek-harness-plugins
-git pull
-pnpm install
-# 改过源码才需要：pnpm --filter @dshp/token-meter build
-dsh plugin --profile web update "@dshp/token-meter"
-dsh web
-```
-
-> ⚠️ **不要直接编辑 `node_modules/@dshp/token-meter/`**：pnpm store 硬链接，改坏 store。只改 monorepo 里的 `plugins/token-meter/src`。
-
-> **v0.2.0 破坏性变更**：不再读取旧命名空间（`dshp-inx-token-quota` / `dshp-inx-token-stats`）与旧 `storages/token-quota.json`，也不再把供应商参数 `auth` 改写成 `cookie`。老配置需手工并到 `dshp-token-meter`（步骤见「常见问题」）；旧 `auth` 字段在读取时仍按旧值识别，无需改。
+| 安装方式             | 更新命令                                                    | 说明                                                      |
+| -------------------- | ----------------------------------------------------------- | --------------------------------------------------------- |
+| 方式一 clone（推荐） | 仓库内 `git pull` + `dsh web`                               | 最快；未改 src 免 build；旧版 DSH 用 `git checkout <tag>` |
+| 方式二 Release       | 重跑同一条 `add` 命令 + `dsh web`                           | URL 直装对 `update` 免疫；两个 pnpm 坑见根 README         |
+| 方式三 git 依赖      | `dsh plugin --profile web update @dshp/\<pkg\>` + `dsh web` | 一条命令；git 解析约 35s/插件（实测）                     |
 
 ## 界面预览
 

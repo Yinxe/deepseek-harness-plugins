@@ -10,17 +10,7 @@ DeepSeek Harness（DSH）MCP 服务器管理器：在设置页里列出、新建
 
 ## 安装
 
-### 方式一：从 Release 安装（推荐，无需 clone）
-
-```bash
-# latest 滚动版（跟随 main 最新构建；滚动更新 = 重跑同一条命令）
-dsh plugin --profile web add \
-  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-mcp-manager-latest.tgz
-
-dsh web   # 重启生效
-```
-
-### 方式二：克隆 monorepo 本地安装（开发 / 定制）
+### 方式一（推荐）：克隆 monorepo 安装 —— 更新只需 `git pull`，旧版 DSH 可 checkout tag
 
 ```bash
 git clone git@github.com:Yinxe/deepseek-harness-plugins.git
@@ -33,6 +23,8 @@ dsh plugin --profile web add ./plugins/mcp-manager
 dsh web   # 重启生效
 ```
 
+- **更新**：仓库内 `git pull` + `dsh web`（最快——lib 已提交，未改 src 无需 build）；兼容旧版 DSH：按 [`compat.json`](../../compat.json) 的 tag `git checkout <tag>` 后重跑上面的 add。
+
 - 包尚未发布到 npm，不能 `pnpm add @dshp/mcp-manager`。
 - 改了源码：`pnpm --filter @dshp/mcp-manager build` 重打 `lib/` 后重跑上面的 add + `dsh web`。
 - 验证：设置页出现「MCP」分节，显示 patch 文件路径与（若有）条目列表。
@@ -44,6 +36,17 @@ dsh web   # 重启生效
 1. git clone https://github.com/Yinxe/deepseek-harness-plugins.git && cd deepseek-harness-plugins && pnpm install
 2. dsh plugin --profile web add ./plugins/mcp-manager
 3. 重启 dsh web，确认设置页出现 MCP 分节
+```
+
+### 方式二：从 Release 安装（无需 clone；更新需手动重跑命令）
+
+latest 滚动版（跟随 main 最新构建；滚动更新 = 重跑同一条 add 命令）：
+
+```bash
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-mcp-manager-latest.tgz
+
+dsh web   # 重启生效
 ```
 
 ### 历史版本（兼容旧版 DSH）
@@ -60,21 +63,13 @@ dsh web   # 重启生效
 
 ## 更新
 
-### 滚动更新（Release 安装，推荐）
+### 三种安装方式对应的更新方式
 
-`latest` 资产随 main 每次构建滚动重建，**重跑同一条安装命令 + 重启**即滚到最新：
-
-```bash
-dsh plugin --profile web add \
-  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-mcp-manager-latest.tgz
-
-dsh web   # 重启生效
-```
-
-### 本地更新（克隆安装）
-
-重跑安装命令同一条 `dsh plugin --profile web add ./plugins/mcp-manager`（覆盖安装）+ `dsh web` 重启。
-版本历史见根 README 与 git log；本插件遵循 semver，条目路由协议变化会升 minor，合并语义破坏性变化升 major。
+| 安装方式             | 更新命令                                                    | 说明                                                      |
+| -------------------- | ----------------------------------------------------------- | --------------------------------------------------------- |
+| 方式一 clone（推荐） | 仓库内 `git pull` + `dsh web`                               | 最快；未改 src 免 build；旧版 DSH 用 `git checkout <tag>` |
+| 方式二 Release       | 重跑同一条 `add` 命令 + `dsh web`                           | URL 直装对 `update` 免疫；两个 pnpm 坑见根 README         |
+| 方式三 git 依赖      | `dsh plugin --profile web update @dshp/\<pkg\>` + `dsh web` | 一条命令；git 解析约 35s/插件（实测）                     |
 
 ## 功能
 

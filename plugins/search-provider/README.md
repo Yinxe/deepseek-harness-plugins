@@ -8,19 +8,7 @@ DeepSeek Harness（DSH）AI 搜索提供方中枢：用可插拔的第三方搜�
 
 ## 安装
 
-### 方式一：从 Release 安装（推荐，无需 clone）
-
-```bash
-# latest 滚动版（跟随 main 最新构建；滚动更新 = 重跑同一条命令）
-dsh plugin --profile web add \
-  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-search-provider-latest.tgz
-
-dsh web   # 重启生效
-```
-
-### 方式二：克隆 monorepo 本地安装（开发 / 定制）
-
-> 本包尚未发布到 npm，**不要用 `add github:` / `pnpm add`**，唯一入口就是克隆本仓库后本地 `add`。
+### 方式一（推荐）：克隆 monorepo 安装 —— 更新只需 `git pull`，旧版 DSH 可 checkout tag
 
 ```sh
 # 1. 克隆 monorepo（lib/ 构建产物已提交，clone 下来就能用，无需 build）
@@ -34,6 +22,8 @@ dsh plugin --profile web add ./plugins/search-provider
 # 3. 重启生效
 dsh web
 ```
+
+- **更新**：仓库内 `git pull` + `dsh web`（最快——lib 已提交，未改 src 无需 build）；兼容旧版 DSH：按 [`compat.json`](../../compat.json) 的 tag `git checkout <tag>` 后重跑上面的 add。
 
 `dsh plugin` 会把包写进 profile 的 `dsh.profile.bundles` —— **无需手动改配置文件**。
 
@@ -65,6 +55,17 @@ dsh web
 
 **验证**：重启 `dsh web` → 打开 web 页面 → 设置 → AI 搜索，能看到「搜索引擎」行显示「Tavily · 当前生效」即安装成功。
 
+### 方式二：从 Release 安装（无需 clone；更新需手动重跑命令）
+
+latest 滚动版（跟随 main 最新构建；滚动更新 = 重跑同一条 add 命令）：
+
+```bash
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-search-provider-latest.tgz
+
+dsh web   # 重启生效
+```
+
 ### 历史版本（兼容旧版 DSH）
 
 main 永远跟随最新 DSH。老版本 DSH 用户装**静态历史版本**：按 `compat.json` 记录的兼容 tag，到 [Releases](https://github.com/Yinxe/deepseek-harness-plugins/releases) 找对应版本 Release（`v*` tag 触发，静态存档、永不滚动），资产名 = `dshp-search-provider-<tag>.tgz`：
@@ -79,41 +80,13 @@ dsh web   # 重启生效
 
 ## 更新
 
-### 滚动更新（Release 安装，推荐）
+### 三种安装方式对应的更新方式
 
-`latest` 资产随 main 每次构建滚动重建，**重跑同一条安装命令 + 重启**即滚到最新：
-
-```bash
-dsh plugin --profile web add \
-  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-search-provider-latest.tgz
-
-dsh web   # 重启生效
-```
-
-### 本地更新（克隆安装）
-
-```sh
-cd deepseek-harness-plugins && git pull && pnpm install
-pnpm --filter @dshp/search-provider build   # lib/ 提交为最新时可不跑，badge 见仓库门禁
-dsh web
-```
-
-> `lib/` 已提交在 git 里，clone 下来就能用；改了 src 才需要在本地重打 bundle。
-
-> **v0.2.0 破坏性变更**：不再从旧插件分节 `dshp-inx-tavily-search` 采用 `searchDepth` / `maxResults`。需要沿用旧值时请手工抄到 `dshp-search-provider`（见「从 dsh-tavily-search 迁移」）。
-
-**一键 AI 安装**：把下面这段直接发给你的 DSH AI（复制即用，无需修改）：
-
-```text
-帮我安装 AI 搜索插件（仓库 deepseek-harness-plugins，包名 @dshp/search-provider）：
-1. cd ~/project/deepseek-harness-plugins && dsh plugin --profile web add ./plugins/search-provider
-2. 检查 ~/.dsh/profiles/web/cordis.patch.yml：若已有 id: web 且带 config 的条目，确认其 searchProvider 为 tavily（本插件提供方）；若没有该条目，在文件末尾追加：
-   - id: web
-     config:
-       searchProvider: tavily
-3. 重启 web 服务（dsh web），确认重启无报错
-4. 打开 设置 → AI 搜索：粘贴 Tavily API Key（tvly-…）→ 保存密钥 → 运行连接测试
-```
+| 安装方式             | 更新命令                                                    | 说明                                                      |
+| -------------------- | ----------------------------------------------------------- | --------------------------------------------------------- |
+| 方式一 clone（推荐） | 仓库内 `git pull` + `dsh web`                               | 最快；未改 src 免 build；旧版 DSH 用 `git checkout <tag>` |
+| 方式二 Release       | 重跑同一条 `add` 命令 + `dsh web`                           | URL 直装对 `update` 免疫；两个 pnpm 坑见根 README         |
+| 方式三 git 依赖      | `dsh plugin --profile web update @dshp/\<pkg\>` + `dsh web` | 一条命令；git 解析约 35s/插件（实测）                     |
 
 ## 从 dsh-tavily-search 迁移（手工，插件不自动采用配置）
 

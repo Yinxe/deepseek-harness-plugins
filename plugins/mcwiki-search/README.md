@@ -6,19 +6,7 @@ DeepSeek Harness（DSH）工具插件：查询**中文 Minecraft Wiki**（MediaW
 
 ## 安装
 
-### 方式一：从 Release 安装（推荐，无需 clone）
-
-```bash
-# latest 滚动版（跟随 main 最新构建；滚动更新 = 重跑同一条命令）
-dsh plugin --profile web add \
-  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-mcwiki-search-latest.tgz
-
-dsh web   # 重启生效
-```
-
-### 方式二：克隆 monorepo 本地安装（开发 / 定制）
-
-> 本包尚未发布到 npm（`@dshp/mcwiki-search` 在 npm 上 404），**不要用 `add github:` / `pnpm add`**，唯一入口就是克隆本仓库后本地 `add`。
+### 方式一（推荐）：克隆 monorepo 安装 —— 更新只需 `git pull`，旧版 DSH 可 checkout tag
 
 ```sh
 # 1. 克隆 monorepo（lib/ 构建产物已提交，clone 下来就能用，无需 build）
@@ -32,6 +20,8 @@ dsh plugin --profile web add ./plugins/mcwiki-search
 # 3. 重启生效
 dsh web
 ```
+
+- **更新**：仓库内 `git pull` + `dsh web`（最快——lib 已提交，未改 src 无需 build）；兼容旧版 DSH：按 [`compat.json`](../../compat.json) 的 tag `git checkout <tag>` 后重跑上面的 add。
 
 > DSH 是最新版就到此为止。只有 DSH 停在老版本才需要先 `git checkout <历史tag>`（对照根目录 `compat.json`，现在是空的，不用管）。
 
@@ -51,6 +41,17 @@ dsh web
 4. 用 mcwiki_search 帮我查一下「苦力怕」，展示一条结果确认链路通畅
 ```
 
+### 方式二：从 Release 安装（无需 clone；更新需手动重跑命令）
+
+latest 滚动版（跟随 main 最新构建；滚动更新 = 重跑同一条 add 命令）：
+
+```bash
+dsh plugin --profile web add \
+  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-mcwiki-search-latest.tgz
+
+dsh web   # 重启生效
+```
+
 ### 历史版本（兼容旧版 DSH）
 
 main 永远跟随最新 DSH。老版本 DSH 用户装**静态历史版本**：按 `compat.json` 记录的兼容 tag，到 [Releases](https://github.com/Yinxe/deepseek-harness-plugins/releases) 找对应版本 Release（`v*` tag 触发，静态存档、永不滚动），资产名 = `dshp-mcwiki-search-<tag>.tgz`：
@@ -65,29 +66,13 @@ dsh web   # 重启生效
 
 ## 更新
 
-### 滚动更新（Release 安装，推荐）
+### 三种安装方式对应的更新方式
 
-`latest` 资产随 main 每次构建滚动重建，**重跑同一条安装命令 + 重启**即滚到最新：
-
-```bash
-dsh plugin --profile web add \
-  https://github.com/Yinxe/deepseek-harness-plugins/releases/download/latest/dshp-mcwiki-search-latest.tgz
-
-dsh web   # 重启生效
-```
-
-### 本地更新（克隆安装）
-
-```sh
-cd deepseek-harness-plugins
-git pull
-pnpm install
-# 改过源码才需要：pnpm --filter @dshp/mcwiki-search build
-dsh plugin --profile web update "@dshp/mcwiki-search"
-dsh web
-```
-
-> ⚠️ **不要直接编辑 `node_modules/@dshp/mcwiki-search/`**：pnpm store 硬链接，改坏 store。只改 monorepo 里的 `plugins/mcwiki-search/src`。
+| 安装方式             | 更新命令                                                    | 说明                                                      |
+| -------------------- | ----------------------------------------------------------- | --------------------------------------------------------- |
+| 方式一 clone（推荐） | 仓库内 `git pull` + `dsh web`                               | 最快；未改 src 免 build；旧版 DSH 用 `git checkout <tag>` |
+| 方式二 Release       | 重跑同一条 `add` 命令 + `dsh web`                           | URL 直装对 `update` 免疫；两个 pnpm 坑见根 README         |
+| 方式三 git 依赖      | `dsh plugin --profile web update @dshp/\<pkg\>` + `dsh web` | 一条命令；git 解析约 35s/插件（实测）                     |
 
 ## 功能
 
