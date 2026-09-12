@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       suffix:
-        description: '包名后缀（如 latest 或 v0.1.5-rc1）；构建自 main 且后缀为 latest 时会更新滚动 latest 预发布，其余情况只产出 Artifacts'
+        description: '包名后缀（如 latest 或 v0.1.5-rc1）；latest 且构建自 main 时滚动更新 latest 预发布，其他后缀自动创建同名 tag 与预发布'
         required: false
         default: 'latest'
 
@@ -47,8 +47,8 @@ jobs:
           else
             suffix="${INPUT_SUFFIX:-latest}"
           fi
-          if [[ ! "$suffix" =~ ^[A-Za-z0-9._-]+$ ]]; then
-            echo "::error::suffix 仅允许字母、数字和 . _ -，实际收到：$suffix"
+          if [[ ! "$suffix" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ || "$suffix" == *..* ]]; then
+            echo "::error::suffix 仅允许字母数字与 . _ -（不得以 . - 开头或含 ..，需可作为 git tag），实际收到：$suffix"
             exit 1
           fi
           echo "suffix=$suffix" >> "$GITHUB_OUTPUT"
@@ -109,14 +109,68 @@ jobs:
 
       - name: Create versioned GitHub release
         if: github.ref_type == 'tag'
-        run: gh release create "$GITHUB_REF_NAME" dist/*.tgz --generate-notes
+        run: |
+          # tag 可能由 web 端发布 release 时先行创建，此时追加资产；否则新建并生成 notes
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/*.tgz --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/*.tgz --generate-notes
+          fi
+
+      - name: Create suffix prerelease (manual dispatch with custom suffix)
+        if: github.event_name == 'workflow_dispatch' && inputs.suffix != 'latest'
+        env:
+          SUFFIX: ${{ needs.check.outputs.suffix }}
+        run: |
+          # 已存在的同名预发布（含自动 tag）整体重建；同名正式 release 拒绝覆盖
+          if gh release view "$SUFFIX" >/dev/null 2>&1; then
+            if ! gh release view "$SUFFIX" --json isPrerelease -q '.isPrerelease' | grep -q true; then
+              echo "::error::已存在同名正式 release，拒绝覆盖（suffix=$SUFFIX）"
+              exit 1
+            fi
+            gh release delete "$SUFFIX" --yes --cleanup-tag
+          fi
+          {
+            echo "手动触发的测试构建（${GITHUB_SHA::7}）。同名 tag 为 workflow 自动创建。"
+            printf '正式发版前请先删除：`gh release delete %s --cleanup-tag --yes`\n' "$SUFFIX"
+            echo
+            echo "## 插件下载与安装"
+            echo
+            for f in dist/*.tgz; do
+              base=$(basename "$f")
+              echo "- [$base](https://github.com/$GITHUB_REPOSITORY/releases/download/$SUFFIX/$base)"
+              echo '  ```bash'
+              echo "  dsh --profile web add $base"
+              echo '  ```'
+              echo
+            done
+          } > notes.md
+          gh release create "$SUFFIX" dist/*.tgz \
+            --target "$GITHUB_SHA" \
+            --title "$SUFFIX" \
+            --notes-file notes.md \
+            --prerelease
 
       - name: Refresh rolling "latest" prerelease
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.suffix == 'latest')
         run: |
           gh release delete latest --yes --cleanup-tag || true
+          {
+            echo "滚动构建自 main 分支（${GITHUB_SHA::7}），每次推送自动整体替换。"
+            echo
+            echo "## 插件下载与安装（固定地址）"
+            echo
+            for f in dist/*.tgz; do
+              base=$(basename "$f")
+              echo "- [$base](https://github.com/$GITHUB_REPOSITORY/releases/download/latest/$base)"
+              echo '  ```bash'
+              echo "  dsh --profile web add $base"
+              echo '  ```'
+              echo
+            done
+          } > notes.md
           gh release create latest dist/*.tgz \
             --target "$GITHUB_SHA" \
             --title "latest (main@${GITHUB_SHA::7})" \
-            --notes "滚动构建自 main 分支（${GITHUB_SHA::7}），每次推送自动整体替换。固定下载地址：https://github.com/${GITHUB_REPOSITORY}/releases/download/latest/dshp-<插件名>-latest.tgz" \
+            --notes-file notes.md \
             --prerelease
