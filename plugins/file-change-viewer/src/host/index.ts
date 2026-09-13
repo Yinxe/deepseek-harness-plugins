@@ -30,6 +30,7 @@
  * @module @dshp/file-change-viewer
  */
 import { applyPatch, ConfigSchema, DEFAULT_CONFIG, NS, sanitizePatchConfig } from './config.js';
+import { registerPatchTool } from './patch-tool.js';
 import { registerRoutes } from './routes.js';
 import type { AnyCtx, PluginConfig } from './types.js';
 
@@ -40,6 +41,12 @@ export const inject: string[] = ['webServer'];
 
 export { NS, ConfigSchema };
 
+/**
+ * 测试 seam：纯函数（unified diff 解析 / 应用）从产物里再导出一次，
+ * `scripts/check-patch.mjs` 直接断言它们，不必去戳 `tools.register` 的内部。
+ */
+export { applyFilePatch, hunkDiffsOf, parseUnifiedPatch, patchTotals } from '../shared/patch.js';
+export { assertWritable, writableRootsUnder } from './sandbox-escalation.js';
 
 /**
  * 挂载 Host 半：合并 composition 补丁 → 注册 settings 命名空间 → 挂两条设置路由 → 注册 patch 工具。
@@ -102,10 +109,23 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
     console.error('[dshp-file-change-viewer] 注册设置路由失败，设置节将只能读默认值：', error);
   }
 
+  // ── ⑤ patch 工具（tools + fs 都在才注册；缺任一个只是少一个工具，不影响渲染） ──
+  try {
+    ctx.inject(['tools', 'fs'], (sctx: AnyCtx) => {
+      try {
+        registerPatchTool(sctx);
+      } catch (error) {
+        console.error('[dshp-file-change-viewer] 注册 patch 工具失败：', error);
+      }
+    });
+  } catch (error) {
+    console.error('[dshp-file-change-viewer] 注入 tools / fs 失败，patch 工具不可用：', error);
+  }
+
   // 启动路径上只留一行日志，顺带把当前生效值打出来便于排查。
   const config = getConfig();
   console.info(
-    '[dshp-file-change-viewer] Host 半已就绪：渲染逻辑在 Client 半；显示偏好命名空间 ' +
+    '[dshp-file-change-viewer] Host 半已就绪：渲染逻辑在 Client 半，另注册 patch 工具；显示偏好命名空间 ' +
       NS +
       '（view=' +
       config.view +

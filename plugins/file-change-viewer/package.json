@@ -33,7 +33,7 @@
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf lib *.tsbuildinfo",
-    "test": "node --check lib/host.js && node --check lib/client.js && node scripts/check-client.mjs && echo \"syntax ok\"",
+    "test": "node --check lib/host.js && node --check lib/client.js && node scripts/check-host.mjs && node scripts/check-patch.mjs && node scripts/check-client.mjs && echo \"syntax ok\"",
     "prepublishOnly": "pnpm typecheck && pnpm build",
     "lint": "oxlint --deny-warnings --config ../../.oxlintrc.json src tsup.config.ts"
   },
