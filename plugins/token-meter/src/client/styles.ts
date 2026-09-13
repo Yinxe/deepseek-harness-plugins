@@ -29,7 +29,7 @@ export const CSS: string = `
 .tm-inputReadonly{background:var(--dsw-alias-bg-layer-2);border-style:dashed;cursor:not-allowed}
 .tm-inputReadonly .tm-ninput{color:var(--dsw-alias-label-secondary)}
 .tm-rowControl{flex:1;min-width:0;display:flex;justify-content:flex-end}
-.tm-card{background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l1);border-radius:10px;padding:14px 16px;margin:0 0 8px}
+.tm-card{background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l1);border-radius:12px;padding:14px 16px;margin:0 0 8px}
 .tm-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-primary);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;flex:none}
 .tm-btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);border-color:color-mix(in srgb,var(--dsw-alias-state-business-primary) 55%,var(--dsw-alias-border-l2))}
 .tm-btn:disabled{opacity:.4;cursor:default}
@@ -49,19 +49,19 @@ export const CSS: string = `
 .tm-selector:disabled{cursor:default;opacity:.4}
 .tm-selectorLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tm-chevron{flex:none}
-.tm-tabs{display:inline-flex;gap:2px;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;padding:2px;margin:8px 0 4px}
-.tm-tab{border:none;background:transparent;color:var(--dsw-alias-label-tertiary);font-size:13px;font-family:inherit;padding:4px 14px;border-radius:7px;cursor:pointer;line-height:20px}
+.tm-tabs{display:inline-flex;gap:2px;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;padding:2px;margin:8px 0 4px}
+.tm-tab{border:none;background:transparent;color:var(--dsw-alias-label-tertiary);font-size:13px;font-family:inherit;padding:4px 14px;border-radius:8px;cursor:pointer;line-height:20px}
 .tm-tab:hover{color:var(--dsw-alias-label-primary)}
 .tm-tabOn{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
 .tm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px}
 .tm-statGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0}
-.tm-stat{background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l1);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;transition:border-color .15s;position:relative}
+.tm-stat{background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l1);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;transition:border-color .15s;position:relative;overflow:hidden}
 .tm-stat:hover{border-color:var(--dsw-alias-state-business-primary)}
 .tm-stat-label{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}
 .tm-stat-value{color:var(--dsw-alias-label-primary);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;line-height:24px}
 .tm-stat[data-tint="1"] .tm-stat-value{background:linear-gradient(100deg,var(--dsw-alias-state-business-primary),color-mix(in srgb,var(--dsw-alias-state-business-primary) 52%,#34d399));-webkit-background-clip:text;background-clip:text;color:transparent}
 .tm-stat-sub{color:var(--dsw-alias-label-secondary);font-size:11px;line-height:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tm-pop{position:fixed;z-index:50;pointer-events:none;background:var(--dsw-specific-menu);border:1px solid var(--dsw-alias-border-l2);border-radius:10px;box-shadow:var(--dsw-shadow-lv3);padding:10px 12px;font-size:12px;line-height:1.5;max-width:300px;color:var(--dsw-alias-label-primary)}
+.tm-pop{position:fixed;z-index:50;pointer-events:none;background:var(--dsw-specific-menu);border:1px solid var(--dsw-alias-border-l2);border-radius:12px;box-shadow:var(--dsw-shadow-lv3);padding:10px 12px;font-size:12px;line-height:1.5;max-width:300px;color:var(--dsw-alias-label-primary)}
 .tm-pop-title{font-weight:600;margin-bottom:6px;font-size:12.5px}
 .tm-pop-row{display:flex;align-items:center;gap:6px;white-space:nowrap;margin:2px 0}
 .tm-pop-row .tm-dot{width:8px;height:8px;border-radius:2.5px;flex:none}
@@ -93,7 +93,7 @@ export const CSS: string = `
 .tm-cacheRow{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:11px;color:var(--dsw-alias-label-secondary);flex-wrap:wrap;line-height:16px}
 .tm-cacheSep{color:var(--dsw-alias-label-tertiary)}
 /* ── 峰谷定价提示（额度面板置顶）：北京时间工作日两个峰段，其余为谷 ── */
-.tm-peak{position:relative;display:flex;flex-direction:column;gap:6px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);border-radius:var(--tm-r-card);padding:10px 12px;margin:0 0 8px;cursor:default}
+.tm-peak{position:relative;display:flex;flex-direction:column;gap:6px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);border-radius:12px;padding:10px 12px;margin:0 0 8px;cursor:default}
 .tm-peak:focus{outline:none}
 .tm-peak:focus-visible{box-shadow:0 0 0 2px color-mix(in srgb,var(--dsw-alias-state-business-primary) 55%,transparent)}
 .tm-peakHead{display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap;row-gap:4px}
@@ -102,7 +102,7 @@ export const CSS: string = `
 .tm-peakDot.valley{background:var(--dsw-alias-state-success-primary)}
 /* 标题压到 4 字，状态独立成 chip；时间 flex:none + nowrap —— 三处都不再走省略号裁切 */
 .tm-peakTitle{font-size:12px;font-weight:600;color:var(--dsw-alias-label-primary);white-space:nowrap;flex:none}
-.tm-peakChip{flex:none;font-size:10.5px;line-height:16px;font-weight:600;padding:0 7px;border-radius:99px;white-space:nowrap}
+.tm-peakChip{flex:none;font-size:10.5px;line-height:16px;font-weight:600;padding:0 7px;border-radius:999px;white-space:nowrap}
 .tm-peakChip.peak{color:var(--dsw-alias-state-warn-label);background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 16%,transparent)}
 .tm-peakChip.valley{color:var(--dsw-alias-state-success-primary);background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 14%,transparent)}
 .tm-peakTime{flex:none;margin-left:auto;text-align:right;font-size:11px;line-height:16px;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -130,7 +130,6 @@ export const CSS: string = `
 .tm-mc-name{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tm-heatwrap{position:relative}
 .tm-heatrow{display:flex;flex:1 1 auto;min-width:0}
-.tm-heat{display:flex;gap:2px;margin:6px 0}
 .tm-hcell{border-radius:2.5px;flex:1 1 0;min-width:0;aspect-ratio:1;cursor:default}
 .tm-hcell[data-lv="0"]{background:var(--dsw-alias-interactive-bg-hover);opacity:.45}
 .tm-cell{width:9px;height:9px;border-radius:2.5px;display:inline-block;margin:0 2px;flex:none}
@@ -163,7 +162,7 @@ export const CSS: string = `
 .tm-gridln{stroke:var(--dsw-alias-border-l1);stroke-width:1}
 .tm-bar{align-items:center;gap:8px;display:flex;flex-wrap:wrap;padding:12px 0;border-bottom:.5px solid var(--dsw-alias-border-l2)}
 /* 额度卡 */
-.tm-side{background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l1);border-radius:10px;padding:8px 10px;margin:2px 0;position:relative;overflow:visible}
+.tm-side{background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l1);border-radius:12px;padding:8px 10px;margin:2px 0;position:relative;overflow:visible}
 .tm-side.loading{animation:tm-pulse 1.2s ease infinite}
 .tm-side.error{border-color:var(--dsw-alias-state-error-primary)}
 .tm-in{animation:tm-in .35s ease}
@@ -173,7 +172,7 @@ export const CSS: string = `
 .tm-vtype{flex:none;font-size:10px;color:var(--dsw-alias-brand-primary)}
 .tm-vcaret{flex:none;font-size:10px;color:var(--dsw-alias-label-secondary)}
 .tm-backdrop{position:fixed;inset:0;z-index:55;background:transparent;border:none;padding:0;margin:0;cursor:default}
-.tm-popmenu{position:fixed;z-index:400;margin:0;min-width:180px;max-width:260px;background:color-mix(in srgb, var(--dsw-alias-bg-layer-1) 78%, transparent);-webkit-backdrop-filter:blur(12px) saturate(1.4);backdrop-filter:blur(12px) saturate(1.4);border:1px solid var(--dsw-alias-border-l2);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.25);padding:6px;max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.tm-popmenu{position:fixed;z-index:400;margin:0;min-width:180px;max-width:260px;background:color-mix(in srgb, var(--dsw-alias-bg-layer-1) 78%, transparent);-webkit-backdrop-filter:blur(12px) saturate(1.4);backdrop-filter:blur(12px) saturate(1.4);border:1px solid var(--dsw-alias-border-l2);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.25);padding:6px;max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:2px}
 .tm-mitem{display:flex;align-items:center;gap:6px;width:100%;background:transparent;border:1px solid transparent;border-radius:6px;padding:4px 6px;cursor:pointer;font-size:12px;color:var(--dsw-alias-label-secondary);text-align:left}
 .tm-mitem:hover{border-color:var(--dsw-alias-border-l1);color:var(--dsw-alias-label-primary)}
 .tm-mitem.active{color:var(--dsw-alias-label-primary);border-color:var(--dsw-alias-brand-primary)}
@@ -182,9 +181,9 @@ export const CSS: string = `
 /* 标签列：定宽让各行的进度条左端对齐；nowrap 保证标签永不换行
    （旧版硬编码 36px，4 字标签如「月度额度」会被挤成两行） */
 .tm-qlabel{flex:none;width:52px;min-width:52px;font-size:11px;line-height:16px;color:var(--dsw-alias-label-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tm-qbar{flex:1;min-width:0;height:6px;border-radius:99px;background:var(--dsw-alias-bg-layer-2);overflow:hidden}
+.tm-qbar{flex:1;min-width:0;height:6px;border-radius:999px;background:var(--dsw-alias-bg-layer-2);overflow:hidden}
 /* 占用四档：ok 蓝 / warn 黄(≥70%) / bad 红"快完了"(≥90%) / over 红+脉冲(≥100%) */
-.tm-qfill{display:block;height:100%;border-radius:99px;background:var(--dsw-alias-brand-primary);transition:width .8s ease}
+.tm-qfill{display:block;height:100%;border-radius:999px;background:var(--dsw-alias-brand-primary);transition:width .8s ease}
 .tm-qfill.warn{background:var(--dsw-alias-state-warn-primary)}
 .tm-qfill.bad{background:var(--dsw-alias-state-error-primary)}
 .tm-qfill.over{background:var(--dsw-alias-state-error-primary);animation:tm-qpulse 1.6s ease-in-out infinite}
@@ -197,7 +196,7 @@ export const CSS: string = `
 .tm-qleft{flex:0 1 auto;min-width:0;font-size:10px;color:var(--dsw-alias-label-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* 窗口状态徽标：上游非 ok（如 opencode 的 rate-limited）时贴在百分比后，
    因为此时 pct 可能还没到 100%（限流 ≠ 用尽），必须单独说清楚 */
-.tm-qstatus{flex:none;font-size:9.5px;line-height:15px;padding:0 6px;border-radius:99px;white-space:nowrap;color:var(--dsw-alias-state-error-primary);background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 14%,transparent)}
+.tm-qstatus{flex:none;font-size:9.5px;line-height:15px;padding:0 6px;border-radius:999px;white-space:nowrap;color:var(--dsw-alias-state-error-primary);background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 14%,transparent)}
 .tm-qbal{display:flex;align-items:baseline;justify-content:space-between;margin-top:6px}
 .tm-qbal b{font-size:15px;color:var(--dsw-alias-label-primary)}
 .tm-qbal span{font-size:10px;color:var(--dsw-alias-label-secondary)}
@@ -208,7 +207,7 @@ export const CSS: string = `
 .tm-payg-amt.neg{color:var(--dsw-alias-state-error-primary)}
 .tm-payg-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .tm-payg-sub{margin-top:2px;font-size:11px;color:var(--dsw-alias-label-secondary)}
-.tm-avail{flex:none;font-size:11px;line-height:1.6;padding:1px 9px;border-radius:99px;border:1px solid}
+.tm-avail{flex:none;font-size:11px;line-height:1.6;padding:1px 9px;border-radius:999px;border:1px solid}
 .tm-avail.ok{color:var(--dsw-alias-state-success-primary);border-color:var(--dsw-alias-state-success-primary)}
 .tm-avail.bad{color:var(--dsw-alias-state-error-primary);border-color:var(--dsw-alias-state-error-primary)}
 .tm-avail.unknown{color:var(--dsw-alias-label-secondary);border-color:var(--dsw-alias-border-l1)}
@@ -234,17 +233,16 @@ export const CSS: string = `
 .tm-payg-compact .tm-payg-sub{margin-top:0}
 .tm-payg-compact .tm-warn{margin-top:4px}
 /* 分组标题：说明「已禁用沉底」是有意排序，不是配置顺序 */
-.tm-grouplabel{margin:2px 0 6px;font-size:11px;font-weight:500;color:var(--dsw-alias-label-tertiary);letter-spacing:.02em}
 .tm-xchart{margin-top:8px}
 .tm-xtitle{font-size:10px;color:var(--dsw-alias-label-secondary);margin-bottom:2px}
-.tm-xsplit{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--dsw-alias-bg-layer-2);margin-top:6px}
+.tm-xsplit{display:flex;height:8px;border-radius:999px;overflow:hidden;background:var(--dsw-alias-bg-layer-2);margin-top:6px}
 .tm-xsplit span{display:block;height:100%}
 .tm-xdot{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:5px}
 .tm-sections{display:flex;flex-direction:column}
 .tm-ui{display:flex;flex-direction:column}
 .tm-xprog{margin-top:8px}
 .tm-vchips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
-.tm-vchip{display:inline-flex;align-items:center;font-size:10.5px;line-height:16px;padding:0 8px;border-radius:99px;border:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-layer-2);white-space:nowrap}
+.tm-vchip{display:inline-flex;align-items:center;font-size:10.5px;line-height:16px;padding:0 8px;border-radius:999px;border:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-layer-2);white-space:nowrap}
 .tm-vchip-ok{color:var(--dsw-alias-state-success-primary);border-color:var(--dsw-alias-state-success-primary)}
 .tm-vchip-warn{color:var(--dsw-alias-state-warn-primary);border-color:var(--dsw-alias-state-warn-primary)}
 .tm-vchip-bad{color:var(--dsw-alias-state-error-primary);border-color:var(--dsw-alias-state-error-primary)}
@@ -294,7 +292,7 @@ export const CSS: string = `
 .tm-ninput:disabled{opacity:.5}
 .tm-textarea{box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-1);font:inherit;color:var(--dsw-alias-label-primary);border-radius:8px;padding:8px 12px;font-size:13px;line-height:20px;outline:none;width:100%;resize:vertical;min-height:64px}
 .tm-textarea:focus-visible{border-color:var(--dsw-alias-brand-primary)}
-.tm-badge{white-space:nowrap;align-items:center;height:20px;border-radius:10px;padding:0 8px;font-size:11px;font-weight:500;line-height:20px;display:inline-flex;flex:none}
+.tm-badge{white-space:nowrap;align-items:center;height:20px;border-radius:999px;padding:0 8px;font-size:11px;font-weight:500;line-height:20px;display:inline-flex;flex:none}
 .tm-badge-ok{background:var(--dsw-alias-state-success-tertiary);color:var(--dsw-alias-state-success-primary)}
 .tm-badge-warn{background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-state-warn-label)}
 .tm-badge-muted{background:var(--dsw-alias-button-ghost-active-fill);color:var(--dsw-alias-label-caption)}
@@ -308,7 +306,7 @@ export const CSS: string = `
 .tm-vendor-row{display:flex;align-items:center;gap:2px}
 .tm-vendor-row .tm-vendor{flex:1;min-width:0;width:auto}
 /* 今日卡 */
-.tm-today{border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);border-radius:10px;padding:10px 12px;margin:8px 0;width:100%;flex:none;cursor:default;box-sizing:border-box;overflow:hidden}
+.tm-today{border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);border-radius:12px;padding:10px 12px;margin:8px 0;width:100%;flex:none;cursor:default;box-sizing:border-box;overflow:hidden}
 .tm-today:hover{border-color:var(--dsw-alias-state-business-primary)}
 .tm-todaylabel{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}
 .tm-todayval{color:var(--dsw-alias-label-primary);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;line-height:24px}
@@ -342,18 +340,15 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 .tm-widget-bd{padding:2px 12px 10px;max-height:calc(72vh - 48px);overflow:auto}
 /* ── widget 浮窗：只做定位，不含任何外框（组件自身卡片即外观，浮出前后视觉一致）。
    统一规格：宽 360px（与 clamp 常量一致）、最大高 60vh、超高内部滚动；
-   自身也是 inline-size 容器 —— 浮窗内的窄栏规则（模型分布上下排列等）与右侧栏一致。 ── */
+   自身也是 inline-size 容器 —— 浮窗内的窄栏规则（模型分布上下排列等）与中心区一致。 ── */
 .tm-widgetFloat{position:fixed;z-index:300;max-width:calc(100vw - 16px);width:360px;max-height:60vh;overflow-y:auto;overscroll-behavior:contain;container-type:inline-size;container-name:tm}
 .tm-widgetFloat>.tm-card,.tm-widgetFloat>.tm-today{margin:0;box-sizing:border-box}
 /* 浮窗内的 Seg 行：可换行居中，窄时各按钮撑整行宽，不溢出组件 */
 .tm-segRow{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin-bottom:8px}
 @container tm (max-width: 420px){.tm-segRow .tm-seg{width:100%;justify-content:center}.tm-segRow .tm-seg-btn{flex:1 1 auto;text-align:center}}
 /* 小组件工具条：标签 + 开关按钮 */
-.tm-widgetBtn{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--dsw-alias-border-l1);border-radius:var(--tm-r-chip);padding:1px 4px 1px 8px;font-size:12px;color:var(--dsw-alias-label-secondary)}
+.tm-widgetBtn{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--dsw-alias-border-l1);border-radius:6px;padding:1px 4px 1px 8px;font-size:12px;color:var(--dsw-alias-label-secondary)}
 .tm-widgetBtn-label{line-height:20px;white-space:nowrap}
-/* 右栏 tab chip：图标 + 文本（图标颜色跟随 chip 文字色） */
-.tm-tabChip{display:inline-flex;align-items:center;gap:5px;min-width:0}
-.tm-tabChip>svg{flex:none;display:block}
 /* 图表标题首段：窄栏省略号，不换行挤高 */
 .tm-chart-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto}
 /* 模型行：名称+数值允许换行；明细行窄栏可换行不截断 */
@@ -365,12 +360,12 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 .tm-swrowText{flex-direction:column;flex:1;gap:4px;min-width:0;padding-right:48px;display:flex}
 .tm-swlabel{font-size:14px;font-weight:400;line-height:22px;color:var(--dsw-alias-label-primary)}
 .tm-swhint{font-size:12px;font-weight:400;line-height:18px;color:var(--dsw-alias-label-tertiary)}
-.tm-switch{box-sizing:border-box;background:var(--dsw-alias-border-l3);cursor:pointer;border:0;border-radius:10px;flex:none;width:36px;height:20px;padding:2px;position:relative}
+.tm-switch{box-sizing:border-box;background:var(--dsw-alias-border-l3);cursor:pointer;border:0;border-radius:999px;flex:none;width:36px;height:20px;padding:2px;position:relative}
 .tm-switch[aria-checked="true"]{background:var(--dsw-alias-brand-primary)}
 .tm-switch:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
 .tm-switchOn{background:var(--dsw-alias-brand-primary)}
 .tm-switch:disabled{cursor:default;opacity:.5}
-.tm-knob,.tm-thumb{corner-shape:round;background:var(--dsw-alias-label-primary-foreground);border-radius:50%;width:16px;height:16px;transition:transform .12s;display:block}
+.tm-knob,.tm-thumb{background:var(--dsw-alias-label-primary-foreground);border-radius:50%;width:16px;height:16px;transition:transform .12s;display:block}
 .tm-switch[aria-checked="true"] .tm-knob,.tm-switchOn .tm-thumb,.tm-switchOn .tm-knob{transform:translate(16px)}
 .tm-dualbars{display:flex;gap:2px;margin-top:4px;width:100%;justify-content:center}
 /* 动画与过渡增强（置于 CSS 末尾：覆盖同特异性前序声明） */
@@ -413,7 +408,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 @keyframes tm-pulse{0%,100%{opacity:1}50%{opacity:.5}}
 @keyframes tm-spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.tm-page *,.tm-today *,.tm-pop,.tm-tip,.tm-tipfixed{animation:none!important;transition:none!important}.tm-spinner{animation:none}.tm-thumb,.tm-knob{transition:none}}
-/* ── 窄栏适配（右栏拉到最窄时）：容器查询，卡片收紧、标题不截断按钮不换行 ── */
+/* ── 窄栏适配（中心区拉到最窄时）：容器查询，卡片收紧、标题不截断按钮不换行 ── */
 @container tm (max-width: 480px){
 .tm-card{padding:10px 12px}
 .tm-intro{font-size:13px}
@@ -446,30 +441,98 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 .tm-modelval{font-size:11px}
 .tm-modelname{font-size:12px}
 }
-/* ── 圆角跟随全局 ───────────────────────────────────────────────
- * 产品没有半径 token（半径由各组件自定），但有全局角形 token：
- * @supports 生效时 :root 下 --dsw-corner-shape:superellipse(1.5)，
- * 并经通用选择器作用于全文档。本插件半径收归下方变量（默认值与现有视觉一致），
- * 卡片/浮窗/图表内元素全部引用；角形显式配对全局（矩形卡片跟随超椭圆，
- * pill/圆形按产品规范配对 round），与官方 UI 同形。后续产品若发布半径 token，
- * 只需在此一处重映射。 */
-:root{--tm-r-card:10px;--tm-r-float:12px;--tm-r-pop:10px;--tm-r-tip:8px;--tm-r-btn:8px;--tm-r-input:8px;--tm-r-chip:6px;--tm-r-tabs:10px;--tm-r-rail:12px}
-.tm-card,.tm-side,.tm-today,.tm-stat{border-radius:var(--tm-r-card)}
-.tm-todayRail{border-radius:var(--tm-r-rail)}
-.tm-float{border-radius:var(--tm-r-float)}
-.tm-pop{border-radius:var(--tm-r-pop)}
-.tm-tip,.tm-tipfixed{border-radius:var(--tm-r-tip)}
-.tm-popmenu{border-radius:var(--tm-r-pop)}
-.tm-errbox{border-radius:var(--tm-r-chip)}
-.tm-btn{border-radius:var(--tm-r-btn)}
-.tm-inputWrap,.tm-ninput,.tm-textarea{border-radius:var(--tm-r-input)}
-.tm-seg{border-radius:var(--tm-r-chip)}
-.tm-seg-btn{border-radius:var(--tm-r-chip)}
-.tm-tabs{border-radius:var(--tm-r-tabs)}
-@supports (corner-shape:superellipse(1.5)){
-.tm-card,.tm-side,.tm-today,.tm-stat,.tm-float,.tm-pop,.tm-tip,.tm-tipfixed,.tm-popmenu,.tm-errbox,.tm-btn,.tm-inputWrap,.tm-textarea,.tm-seg,.tm-tabs{corner-shape:var(--dsw-corner-shape)}
-.tm-modelchip,.tm-qbar,.tm-qfill,.tm-xsplit,.tm-compose,.tm-bartrack,.tm-barfill,.tm-streakbar,.tm-streakfill,.tm-pop-fill,.tm-switch,.tm-badge,.tm-dot,.tm-spinner,.tm-knob,.tm-thumb,.tm-xdot,.tm-cell,.tm-hcell,.tm-selector{corner-shape:round}
-}
+/* ── 圆角：只用产品默认值，不自定义、不覆盖全局角形 ─────────────────────
+ * 两条纪律：
+ *  1) 不设私有半径变量层（旧版有 :root{--tm-r-*} 与 .tm-cview 覆盖）。产品没有
+ *     半径 token，半径由各组件自定；插件直接写与官方组件同一套默认值即可：
+ *       12px 大面（卡片/浮窗/浮出菜单）· 8px 控件（按钮/输入/提示块）
+ *       6px 小件（chip/迷你按钮/分段按钮）· 999px 胶囊 · 50% 圆形
+ *     这样任何调主题/半径的插件用普通规则即可覆盖，不必知道本插件的私有变量。
+ *  2) 不声明 corner-shape。产品主题包（dsh-client-ui-theme/corner-shape.css）已经
+ *     用 *,:before,:after 上的 corner-shape:var(--dsw-corner-shape) 全局接管角形；
+ *     插件再写一遍（哪怕写 round）就会把那层的主题选择顶掉 —— 正是要避免的。
+ * 图表内部的微圆角（点/条/热力格 1.5~4px、圆环 50%）属于图形几何，不在此列。 */
+
+/* ── 分享卡（16:9，内聚真组件）────────────────────────────────────────────
+ * 舞台用 aspect-ratio 锁死 16:9；板子按**逻辑尺寸 1920×1080** 排版（组件在那一层量到的
+ * 宽度就是它的真实布局宽度，响应式分栏照常生效），再用 transform 整体缩进舞台，
+ * 所以卡内版式与窗口尺寸无关。遮罩本身不进入卡片，直接系统截图也只会截到卡。 */
+.tm-shareBtn{flex:none;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;margin-left:6px;border-radius:8px;border:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:12px;cursor:pointer}
+.tm-shareBtn:hover{color:var(--dsw-alias-label-primary);border-color:color-mix(in srgb,var(--dsw-alias-state-business-primary) 55%,var(--dsw-alias-border-l2))}
+.tm-shareBtn>svg{flex:none;display:block}
+.tm-shareVeil{position:fixed;inset:0;z-index:600;display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px;box-sizing:border-box;background:color-mix(in srgb,var(--dsw-alias-bg-base) 88%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);overflow:auto}
+.tm-shareBar{flex:none;width:min(96vw,calc(86vh * 16 / 9));display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tm-shareBarTitle{font-size:13px;font-weight:600;color:var(--dsw-alias-label-primary)}
+.tm-shareBarHint{font-size:12px;color:var(--dsw-alias-label-tertiary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto}
+.tm-shareToggle{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--dsw-alias-label-secondary);white-space:nowrap;cursor:pointer}
+.tm-shareToggle input{accent-color:var(--dsw-alias-state-business-primary)}
+/* 舞台：**一屏大小 + 可滚动**。不锁 16:9 —— 六块内容的自然高度就是一千多像素，
+   硬塞进 1.78 的画幅只能整体缩到 0.55 倍（字糊、两侧大片空白），这正是之前的问题。
+   宽度取 96vw / 1680px 的较小者，高度吃满剩余视口；板子按容器实际宽度 1:1 排版。 */
+.tm-shareStage{flex:1 1 auto;width:min(96vw,1680px);max-height:calc(100vh - 150px);min-height:320px;border-radius:16px;overflow:auto;overscroll-behavior:contain;box-shadow:var(--dsw-shadow-lv3);position:relative;background:var(--dsw-alias-bg-base)}
+.tm-shareLoading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--dsw-alias-label-tertiary);font-size:13px}
+/* 缩放层：板子 1920×1080 → scale(舞台宽/1920)，缩放系数由 ResizeObserver 写进 inline style */
+/* 板子直接铺在舞台里：宽度 100% 跟随容器（组件按真实像素宽度排版，响应式分栏照常生效） */
+.tm-shareZoom{width:100%}
+/* ── 板子本体 ─────────────────────────────────────────────────────────── */
+.tm-shareBoard.tm-shareBoard{width:100%;height:auto;box-sizing:border-box;padding:20px 24px 14px;display:flex;flex-direction:column;align-items:stretch;gap:12px;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);font-size:13px;line-height:1.6;overflow:hidden;min-height:0}
+/* 页头分三层，各自成块，避免"全都堆在右上角"：
+   ① 标题区（左）＋ 作者区（右） ② 细线 ③ 来源信息条（插件/版本/仓库左，生成信息右） */
+.tm-shareHead{flex:none;display:flex;flex-direction:column;gap:8px;padding:0 2px 9px;border-bottom:.5px solid var(--dsw-alias-border-l2)}
+.tm-shareTop{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.tm-shareTitleBox{display:flex;flex-direction:column;gap:2px;min-width:0}
+.tm-shareBrandRow{display:flex;align-items:center;gap:8px;min-width:0}
+.tm-shareLogo{flex:none;display:block;color:var(--dsw-alias-state-business-primary)}
+.tm-shareAuthorBox{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:none;text-align:right}
+.tm-shareAuthor{font-size:15.5px;font-weight:600;line-height:21px;color:var(--dsw-alias-label-primary)}
+.tm-shareMail{font-size:12.5px;line-height:17px;color:var(--dsw-alias-label-caption)}
+/* 来源信息条：左对齐一行，与标题层之间有细线；仓库地址不再和作者挤在一起右对齐 */
+.tm-shareMeta{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding-top:7px;border-top:.5px solid var(--dsw-alias-border-l1)}
+.tm-sharePlug{font-size:14px;font-weight:600;line-height:19px;color:var(--dsw-alias-state-business-primary);white-space:nowrap}
+.tm-sharePlug em{font-style:normal;font-weight:400;font-size:12px;opacity:.8;margin-left:4px}
+.tm-shareMetaSep{font-size:12.5px;color:var(--dsw-alias-label-dimmed)}
+.tm-shareRepo{font-size:12.5px;line-height:18px;color:var(--dsw-alias-label-secondary);white-space:nowrap}
+.tm-shareMetaR{margin-left:auto;font-size:12px;line-height:18px;color:var(--dsw-alias-label-caption)}
+.tm-shareBrand{font-size:21px;font-weight:700;line-height:28px;color:var(--dsw-alias-label-primary)}
+.tm-shareSub{font-size:12.5px;line-height:18px;color:var(--dsw-alias-label-caption)}
+/* 两列栅格：① 用量基础数据（通栏）② 趋势 | 热力图 ③ 每日在线 | 模型分布 ④ 在线三口径（通栏） */
+/* 四栏栅格。为什么不是均分三栏：趋势图与热力图是两块"吃宽度"的图（趋势图高度 = 宽度*0.24
+   且有 230px 上限；热力格子是 1:1 方格，宽度直接决定格子大小），各占半幅（764px）才接近
+   视图里的观感；余下两栏放模型分布与在线三口径。 */
+.tm-shareGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-content:start}
+.tm-shareCell{min-width:0;display:flex;flex-direction:column}
+.tm-shareCell>*{margin:0!important;flex:1 1 auto;min-width:0}
+.tm-sr6{grid-column:1/-1}
+/* 分享卡是静态图：不显示任何档位/小组件开关。组件本身一行没改，只是控件不出现 ——
+   否则卡上会出现一堆点了才有反应的按钮，截图出去更乱，而且会写进用户的偏好存储。 */
+.tm-shareBoard .tm-seg,
+.tm-shareBoard .tm-widgetBtn,
+.tm-shareBoard .tm-toolbar>button{display:none!important}
+/* 栅格列数不再写死：板子根节点自带 .tm-cview（见上），所以 .tm-cview .tm-grid /
+   .tm-cview .tm-statGrid / @container tmc 那一整套响应式规则在板子里同样命中，
+   列数与视图里保持一致 —— 这正是"在分享面板里也应当是响应式的"。 */
+/* 指标卡栅格不写死列数：板宽是跟随容器的，13 张卡在窄容器里自然折成多行才是对的
+   （视图自己就是这么响应的）。写死列数只在"必须塞进固定画幅"时才有意义。 */
+.tm-shareBoard .tm-dash{display:block}
+.tm-shareBoard .tm-card{box-shadow:none}
+
+/* ── 语义图标与卡片底纹（glyphs.ts）────────────────────────────────────────
+ * 同一枚语义图标用两处：
+ *  · .tm-stat-ico / .tm-cico —— 13~14px 小图标，贴在指标标签前、卡片标题前；
+ *  · .tm-stat-bg —— 同一个名字放大到 58px、低透明度，摆在指标卡右下角当水印底纹，
+ *    让「累计 / 缓存 / 连续 / 峰值…」各带一点与数据意境相符的图形，而不是纯色块。
+ * 颜色都走 currentColor，这里只管尺寸、颜色与层级。 */
+.tm-stat-ico,.tm-cico{flex:none;display:block;color:var(--dsw-alias-label-tertiary)}
+.tm-stat[data-tint="1"] .tm-stat-ico{color:color-mix(in srgb,var(--dsw-alias-state-business-primary) 70%,var(--dsw-alias-label-tertiary))}
+/* 水印：卡片第一个子元素 + absolute 右下"出血"，必须在文字之下 */
+.tm-stat-bg{position:absolute;right:-10px;bottom:-12px;z-index:0;pointer-events:none;user-select:none;color:var(--dsw-alias-state-business-primary);opacity:.075}
+.tm-stat[data-tint="1"] .tm-stat-bg{opacity:.12}
+/* 文字层压在底纹之上 */
+.tm-stat-label,.tm-stat-value,.tm-stat-sub,.tm-stat .tm-spark,.tm-stat .tm-compose,.tm-stat .tm-streakbar,.tm-stat .tm-dayscroll{position:relative;z-index:1}
+/* 标题行里的图标 + 文本：文本负责省略号，图标不参与压缩 */
+.tm-chart-name{display:flex;align-items:center;gap:6px;min-width:0;flex:1 1 auto}
+.tm-titledIco{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.tm-cname-txt,.tm-titledIco>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* ── 峰谷氛围（置于末尾以覆盖前序同特异性声明）─────────────────────────
  * 峰（工作日 9:00–18:00）：暖色左缘 + 极缓呼吸光晕 —— 紧张、消耗加速；
  * 谷：冷绿左缘 + 静稳底色 —— 费率低、可从从容容跑量；
@@ -493,6 +556,28 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 .tm-segFieldKey{font-size:12px;color:var(--dsw-alias-label-secondary);min-width:58px;flex:none}
 .tm-segFieldCtl{display:inline-flex;flex:none}
 .tm-segFieldHint{font-size:11px;line-height:15px;color:var(--dsw-alias-label-caption);flex:1 1 190px;min-width:130px}
+/* ── 空闲阈值：完整说明 + 五档对比 ──────────────────────────────────────
+   说明文字比一般 hint 长得多（三条规则 + 五档对比 + 推荐理由），所以这一栏改成纵向排：
+   标题与档位选择器一行，说明整幅在下面，不再挤在右侧那一列里。 */
+.tm-segField:has(.tm-gapHint){align-items:flex-start}
+.tm-segField:has(.tm-gapHint) .tm-segFieldHint{flex:1 1 100%}
+.tm-gapHint{display:flex;flex-direction:column;gap:5px;font-size:11.5px;line-height:17px;color:var(--dsw-alias-label-secondary);min-width:0}
+.tm-gapRules{margin:0;padding-left:17px;display:flex;flex-direction:column;gap:3px;color:var(--dsw-alias-label-tertiary)}
+.tm-gapRules b{color:var(--dsw-alias-label-secondary);font-weight:600}
+.tm-gapRules em{font-style:normal;font-weight:600;color:var(--dsw-alias-state-warn-primary)}
+.tm-gapCmpTitle{color:var(--dsw-alias-label-caption);margin-top:3px}
+.tm-gapCmp{display:flex;gap:8px;flex-wrap:wrap}
+.tm-gapCmpItem{display:flex;flex-direction:column;gap:1px;min-width:88px;padding:5px 9px;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);cursor:pointer;transition:border-color .15s}
+.tm-gapCmpItem:hover{border-color:var(--dsw-alias-border-l3)}
+.tm-gapCmpItem b{font-size:11px;font-weight:600;color:var(--dsw-alias-label-secondary)}
+.tm-gapCmpItem i{font-style:normal;font-size:13px;font-weight:600;color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums}
+.tm-gapCmpItem em{font-style:normal;font-size:10.5px;color:var(--dsw-alias-label-caption)}
+.tm-gapCmpOn{border-color:color-mix(in srgb,var(--dsw-alias-state-business-primary) 55%,var(--dsw-alias-border-l2));background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 10%,var(--dsw-alias-bg-layer-2))}
+.tm-gapCmpOn b,.tm-gapCmpOn i{color:var(--dsw-alias-state-business-primary)}
+/* 推荐档：在标签后面缀一个绿色「推荐」，而不是另起一块说明 */
+.tm-gapCmpRec b:after{content:' · 推荐';color:var(--dsw-alias-state-success-primary)}
+.tm-gapRec{color:var(--dsw-alias-label-tertiary)}
+.tm-gapRec b{color:var(--dsw-alias-state-success-primary);font-weight:600}
 .tm-acc{font-size:10px;line-height:15px;padding:0 4px;border-radius:4px;border:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-caption);flex:none;font-weight:400}
 .tm-acc.exact{color:var(--dsw-alias-state-success-primary);border-color:color-mix(in srgb,var(--dsw-alias-state-success-primary) 45%,transparent);background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 10%,transparent)}
 .tm-acc.estimate{color:var(--dsw-alias-state-warn-primary);border-color:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 45%,transparent);background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 10%,transparent)}
@@ -516,4 +601,183 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 .tm-tip-title{font-weight:600;margin-bottom:3px;color:var(--dsw-alias-label-primary)}
 .tm-tip-text{white-space:normal;max-width:236px;line-height:1.5;margin-top:3px;color:var(--dsw-alias-label-secondary)}
 .tm-tipfixed .tm-tiprow+.tm-tiprow{margin-top:1px}
+/* ══ 中心区视图（conversation.view「Token 总览」）══════════════════════════════
+ * 滚动模型：**只有右半的 .tm-cbody 滚动**，左菜单与分区标题栏在滚动容器之外，
+ * 结构上就不可能跟着滚（不依赖 position:sticky 的可见性）。
+ *
+ * 要做到这点，视图必须先有「确定高度」。会话外壳里这一层是 hashed 类
+ * .wSkVaW_viewArea，且激活态是 flex:1 0 auto + min-height:auto —— 高度由内容
+ * 撑开，子元素的 height:100% 会退化成 auto。所以下面第一条规则用官方**稳定钩子**
+ * （[data-conversation-scroll] / [data-slot="conversation.session"]，不碰哈希类名）
+ * 把那层改成可收缩的确定高度项。选择器刻意把 :has() 的参数写成
+ * [data-slot="conversation.view"] .tm-cview，把特异性抬到 (0,4,0)，**压过**外壳那条
+ * .wSkVaW_root[data-phase=active] .wSkVaW_viewArea 的 (0,3,0) —— 不再依赖
+ * 「插件样式晚于外壳样式注入」这种时序假设；同时仍然只影响本视图，对话/轨迹不受影响。
+ *
+ * 兜底：万一这条没生效（外壳结构变动），.tm-cview 的 height:100% 会退化成 auto，
+ * 于是回到「外层 scrollBody 滚动 + 左菜单/标题栏 sticky 钉住」的老模型，仍然可用。 */
+[data-conversation-scroll]:has([data-slot="conversation.view"] .tm-cview)>[data-slot="conversation.session"]>*{flex:1 1 0;min-height:0;overflow:clip}
+/* overflow:clip（而不是 hidden）——它不会把自己变成滚动容器，鼠标滚轮不会在这里
+ * 被截住，照常落到 .tm-cbody 上。 */
+.tm-cview{box-sizing:border-box;width:100%;height:100%;min-height:0;display:flex;align-items:stretch;overflow:clip;container-type:inline-size;container-name:tmc;background:var(--dsw-alias-bg-base)}
+/* 列宽拖拽条对本视图没有意义（原生轨迹视图同样不显示）——对「有 .tm-cview 后代、
+ * 且直接挂着 [data-width-handle]」的那层（即会话 body）隐藏。 */
+*:has(.tm-cview)>[data-width-handle]{display:none}
+/* 左菜单：整列铺满高度（背景 + 右分隔线覆盖整列）。
+ * ⚠ .tm-cnav 必须保持 overflow:visible —— 一旦给它 overflow:auto/hidden，它自己就
+ * 成了滚动容器，里面 sticky 的 .tm-cnavInner 会「相对 .tm-cnav 定位」而不是相对外层
+ * 会话滚动区；.tm-cnav 自己又永远不滚，于是外层一滚，菜单就跟着滚走了（踩过这个坑）。 */
+.tm-cnav{flex:none;width:190px;min-width:190px;display:flex;flex-direction:column;padding:16px 10px 12px;border-right:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);overflow:visible}
+/* sticky 只是兜底（正常情况下菜单整块都在滚动容器之外，根本不会移动）；菜单比
+ * 视口还高时（极矮窗口）由它自己的 max-height + overflow 兜住。 */
+.tm-cnavInner{position:sticky;top:0;display:flex;flex-direction:column;gap:2px;max-height:100vh;overflow-y:auto}
+.tm-cnavHead{font-size:12px;font-weight:600;line-height:18px;color:var(--dsw-alias-label-secondary);padding:2px 8px 10px;letter-spacing:.02em}
+.tm-cnavList{display:flex;flex-direction:column;gap:2px}
+.tm-cnavItem{display:flex;align-items:center;gap:8px;width:100%;background:transparent;border:none;border-radius:6px;padding:8px 10px;font-family:inherit;font-size:13px;line-height:20px;color:var(--dsw-alias-label-secondary);cursor:pointer;text-align:left}
+.tm-cnavItem:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.tm-cnavItem:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
+.tm-cnavItem>svg{flex:none;display:block}
+.tm-cnavOn,.tm-cnavOn:hover{color:var(--dsw-alias-label-primary);font-weight:500;background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 12%,transparent)}
+.tm-cnavOn>svg{color:var(--dsw-alias-state-business-primary)}
+.tm-cnavLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 「设置」与上面三个数据分区之间画一条分隔线：它不是「看数据」，是「改配置」 */
+.tm-cnavItemSep{margin-top:8px;position:relative}
+.tm-cnavItemSep:before{content:'';position:absolute;left:8px;right:8px;top:-5px;height:1px;background:var(--dsw-alias-border-l2)}
+/* 设置分区沿用设置页的行式表单布局（label + 控件左右成对），宽屏下拉满整幅会很难扫读，
+   所以收窄居中；数据分区才吃满宽度。 */
+.tm-cview .tm-cset .tm-page{max-width:min(920px,100%)}
+/* 右半：固定的分区标题栏 + 唯一的滚动容器 .tm-cbody */
+.tm-cmain{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
+.tm-chead{position:sticky;top:0;z-index:3;flex:none;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:14px 24px 11px;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-base)}
+.tm-cheadTitle{font-size:15px;font-weight:600;line-height:22px;color:var(--dsw-alias-label-primary);flex:none}
+.tm-cheadHint{font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto}
+.tm-cbody{flex:1;min-width:0;min-height:0;overflow-y:auto;overflow-x:clip;scrollbar-gutter:stable;padding:18px 24px 56px;box-sizing:border-box}
+/* 分区组件未装配时的就地提示：把「整个 tab 崩掉」降级成一条可读的说明（见 CenterView.isComponent） */
+.tm-sectMiss{margin:0 auto;max-width:560px;padding:14px 16px;box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-secondary);font-size:13px;line-height:20px}
+/* 中心区比侧栏宽得多：内容吃满可用宽度（只留一个防超宽屏的上限），不再是窄单列 */
+.tm-cview .tm-page{max-width:min(1760px,100%);margin:0 auto;width:100%}
+/* 用量统计面板是「外层 tm-page（工具栏 + 今日卡）+ 内层 tm-page（StatsSettingsPage）」，
+   内层不再重复加宽度约束与居中，避免出现两层容器互相压缩 */
+.tm-page .tm-page{max-width:none;margin:0;width:100%}
+
+/* ── 仪表板栅格：宽屏下把卡片并排，窄了自动落回单列 ─────────────────────── */
+.tm-dash{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;align-items:start;width:100%}
+.tm-dash>*{min-width:0}
+.tm-c12{grid-column:span 12}
+.tm-c8{grid-column:span 8}
+.tm-c7{grid-column:span 7}
+.tm-c6{grid-column:span 6}
+.tm-c5{grid-column:span 5}
+.tm-c4{grid-column:span 4}
+/* 卡片进栅格后不再自己带外边距（间距由 gap 负责） */
+.tm-dash .tm-card{margin:0}
+.tm-dash .tm-statGrid{margin:0}
+/* 模型分布卡（通栏、放最后）：环形图钉在左，模型列表向右分栏铺开 —— 这是纵向结构，
+   横过来只会拉成一条很长的单列。窄了自动落回上下排列。 */
+.tm-donutWide .tm-flexrow{flex-direction:row;align-items:flex-start;gap:24px}
+.tm-donutWide .tm-donutBox{margin:0;flex:none}
+.tm-donutWide .tm-models{flex:1;min-width:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:0 28px;align-content:start}
+.tm-donutWide .tm-models .tm-model:last-child{border-bottom:1px solid var(--dsw-alias-border-l1)}
+@container tmc (max-width:900px){
+.tm-donutWide .tm-flexrow{flex-direction:column;align-items:stretch}
+.tm-donutWide .tm-donutBox{margin:0 auto}
+.tm-donutWide .tm-models{grid-template-columns:minmax(0,1fr)}
+}
+@container tmc (max-width:1180px){
+.tm-c8,.tm-c7,.tm-c6,.tm-c5,.tm-c4{grid-column:span 12}
+}
+
+/* ── 仪表板观感：卡片更宽松、指标更厚实（只在中心区生效，浮窗/设置页保持原样）── */
+.tm-cview .tm-card{padding:16px 18px}
+.tm-cview .tm-toolbar{margin-bottom:12px}
+.tm-cview .tm-page>.tm-toolbar:last-child{margin-bottom:0}
+.tm-cview .tm-statGrid{grid-template-columns:repeat(auto-fill,minmax(198px,1fr));gap:12px;grid-auto-rows:1fr}
+.tm-cview .tm-statGrid>.tm-stat{min-height:92px;padding:12px 14px;gap:3px}
+.tm-cview .tm-statGrid .tm-stat-value{font-size:19px;line-height:26px}
+.tm-cview .tm-chart-title{font-size:13px;margin-bottom:10px}
+.tm-cview .tm-empty{padding:44px 0}
+.tm-cview .tm-segField{padding:5px 0}
+.tm-cview .tm-intro{margin-bottom:10px}
+
+/* ── 基础数据 / 在线时长：同一套「指标卡阵」规格 ──────────────────────────
+ * 用量统计的 .tm-grid 与在线统计的 .tm-statGrid 共用卡片规格：
+ *  grid-auto-rows:1fr  → 同一行卡片等高；
+ *  末行 margin-top:auto → 说明文字/迷你图顶到底部，数值在网格线上对齐；
+ *  说明允许两行       → 不再被 nowrap + 省略号切掉（如「输入 4.1亿 · 输出 185…」）。 */
+.tm-cview .tm-grid,
+.tm-cview .tm-statGrid{grid-auto-rows:1fr;gap:12px;margin:0}
+.tm-cview .tm-grid{grid-template-columns:repeat(auto-fill,minmax(214px,1fr))}
+.tm-cview .tm-statGrid{grid-template-columns:repeat(auto-fill,minmax(198px,1fr))}
+.tm-cview .tm-grid>.tm-stat,
+.tm-cview .tm-statGrid>.tm-stat{min-height:106px;padding:14px 16px;justify-content:flex-start;gap:4px;border-radius:12px}
+.tm-cview .tm-grid>.tm-stat>*:last-child,
+.tm-cview .tm-statGrid>.tm-stat>*:last-child{margin-top:auto}
+.tm-cview .tm-grid .tm-stat-label,
+.tm-cview .tm-statGrid .tm-stat-label{font-size:11.5px;line-height:16px;letter-spacing:.02em;color:var(--dsw-alias-label-caption);flex-wrap:wrap}
+.tm-cview .tm-grid .tm-stat-value,
+.tm-cview .tm-statGrid .tm-stat-value{font-size:22px;line-height:30px;font-weight:600}
+.tm-cview .tm-grid .tm-stat-sub,
+.tm-cview .tm-statGrid .tm-stat-sub{font-size:11.5px;line-height:16px;color:var(--dsw-alias-label-tertiary);white-space:normal;overflow:hidden;text-overflow:clip;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+/* 指标卡里的迷你图/构成条：贴着说明文字下方，留一点空隙 */
+.tm-cview .tm-grid .tm-spark,
+.tm-cview .tm-statGrid .tm-spark{margin-top:4px}
+@container tmc (max-width:1000px){
+.tm-cview .tm-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+.tm-cview .tm-grid .tm-stat-value,
+.tm-cview .tm-statGrid .tm-stat-value{font-size:20px;line-height:28px}
+}
+
+/* 在线时长：固定列数（而不是 auto-fill），最后一行才排得整齐 —— 7 张卡里让
+   「引擎合计」跨 2 列补满。阈值保证每列不窄于约 250px（值是「143 小时 48 分」
+   这种长中文时长串，再窄就得折行）：容器 ≥1320 → 4 列；820~1320 → 2 列；更窄 1 列。 */
+.tm-cview .tm-statGrid.tm-onlineGrid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.tm-cview .tm-onlineGrid>.tm-statWide{grid-column:span 2}
+@container tmc (max-width:1320px){
+.tm-cview .tm-statGrid.tm-onlineGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@container tmc (max-width:820px){
+.tm-cview .tm-statGrid.tm-onlineGrid{grid-template-columns:minmax(0,1fr)}
+.tm-cview .tm-onlineGrid>.tm-statWide{grid-column:auto}
+}
+/* 准确性徽标图例（标题行右侧）：绿=精确 / 黄=估算 / 灰=下界 */
+.tm-accLegend{display:inline-flex;align-items:center;flex-wrap:wrap;gap:4px 12px;flex:none}
+.tm-accLegendItem{display:inline-flex;align-items:center;gap:5px;font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary)}
+.tm-cview .tm-accLegend .tm-acc{font-size:10px}
+/* ── 额度查询：供应商卡片自适应网格（4/3/2/1 列随宽度落） ───────────────
+ * 阈值按「容器宽 - 左菜单 - 左右内边距」反推，保证每列不窄于约 320px
+ * （卡片里有标题+徽标+按钮行、三条进度条、两列指标网格）。 */
+.tm-vgrid{display:grid;gap:12px;align-items:start;width:100%;grid-template-columns:repeat(4,minmax(0,1fr))}
+.tm-vgrid>*{min-width:0}
+/* 卡片进网格后不再自带上/下外边距（行距由 gap 决定），并且**自己成为一个尺寸容器**：
+   卡片里的「账户与用量」两列指标网格必须按卡片宽度收放（3~4 列时卡片只有 300 出头，
+   两列会把标签和数值挤到换行）。旧写法挂在页面级容器 tm 上，中心区页面有一千多像素，
+   于是卡片再窄也不会触发收放。 */
+.tm-vgrid .tm-card{margin:0;container-type:inline-size;container-name:tmvc}
+@container tmvc (max-width:400px){
+.tm-xgridBody{grid-template-columns:minmax(0,1fr)}
+}
+@container tmc (max-width:1560px){.tm-vgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@container tmc (max-width:1240px){.tm-vgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container tmc (max-width:890px){.tm-vgrid{grid-template-columns:minmax(0,1fr)}}
+/* 避免「最后一行只剩一张卡」的孤行：卡数正好比列数多一张时降一档列数重排
+   （3 列 4 张 → 2×2；4 列 5 张 → 3+2；4 列 9 张 → 3×3）。纯 :has() 判定，
+   不需要 JS 量宽度，也不会影响其它卡数。 */
+@container tmc (min-width:1240px) and (max-width:1560px){
+.tm-vgrid:has(>.tm-card:nth-child(4):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@container tmc (min-width:1560px){
+.tm-vgrid:has(>.tm-card:nth-child(5):last-child){grid-template-columns:repeat(3,minmax(0,1fr))}
+.tm-vgrid:has(>.tm-card:nth-child(9):last-child){grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+/* 窄中心区（把中间栏拖窄）：左菜单收成图标轨道，只留 tooltip */
+@container tmc (max-width:620px){
+.tm-cnav{width:46px;min-width:46px;padding:12px 6px;align-items:center}
+.tm-cnavInner{width:100%}
+.tm-cnavHead{display:none}
+.tm-cnavItem{justify-content:center;padding:8px 0;gap:0}
+.tm-cnavLabel{display:none}
+.tm-chead{padding:12px 14px 10px}
+.tm-cheadHint{display:none}
+.tm-cbody{padding:14px 14px 40px}
+}
 `;

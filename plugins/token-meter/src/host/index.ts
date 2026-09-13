@@ -37,6 +37,7 @@ import type { QuotaState } from './quota.js';
 import { createEngine } from './stats/engine.js';
 import { normGapMin } from './stats/online.js';
 import { registerStatsRoutes } from './stats/routes.js';
+import { registerIdentityRoute } from './identity.js';
 import type { AnyCtx, PluginConfig, Vendor } from './types.js';
 
 export const name = '@dshp/token-meter';
@@ -288,6 +289,7 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
 
   try {
     registerStatsRoutes(ctx, engine);
+    registerIdentityRoute(ctx);
   } catch (e) {
     try {
       console.error('[dshp-token-meter] register stats routes failed: ' + String((e as Error)?.message ?? e));

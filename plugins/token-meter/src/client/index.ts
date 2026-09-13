@@ -4,19 +4,20 @@
  *   window.__ModuleLoader__.load({ id, factory: (require) => {...} })
  *
  * - React / P 由 factory 的 require 运行时注入，不打包进 bundle（external）
- * - 自有模块（styles/api/components/QuotaSection/StatsSection/TokenMeterSection）全部内联打包
+ * - 自有模块（styles/api/components/CenterView/QuotaSection/StatsSection/OnlineSection）全部内联打包
  *
- * 合并来源：
- *  - quota：sidebar.footer.action + shell.overlay(供应商菜单+额度浮窗) +
- *    settings.section + tool.view.cordis(self)
- *  - stats：settings.section(order 27) + sidebar.footer.action(today) + shell.overlay(今日浮窗)
- * 新插件收敛为：settings.section(dshp-token-meter, order 27，精简开关+供应商管理) +
- * shell.overlay(额度浮窗+今日浮窗+widget 浮层) + sidebar.right.pane.tab 三个 tab
- * （kind token-meter-quota 额度富卡片 / token-meter-stats 完整图表 /
- * token-meter-online 在线时长估算，官方 inject 模式注册，前两个首次自动打开）。
- * 左栏 sidebar.footer.action 已移除，全部搬到右栏。
+ * 界面收敛为三个入口：
+ *  1. settings.section(dshp-token-meter, order 27)：精简偏好 + 供应商增删改（唯一配置入口）
+ *  2. conversation.view「展示名见 src/name.ts」(order 40)：中心区 tab，与原生「对话 / 轨迹」并列；
+ *     tab 内部用左侧菜单切换 额度查询 / 用量统计 / 在线统计（见 CenterView.ts）
+ *  3. shell.overlay：小组件浮层（把某个图表/额度卡单独拖出来常驻）
+ *
+ * 历史：额度/用量/在线曾各自占一个右侧栏 tab（sidebar.right.pane.tab），2026-09 收敛为
+ * 中心区单 tab + 侧边菜单 —— 三个会话级 tab 会盖过产品自带的 对话/轨迹。
  */
 import { CSS } from './styles.js';
+import { DISPLAY_NAME } from '../name.js';
+import { createCenterView } from './CenterView.js';
 import { createIcons } from './icons.js';
 import { createOnlineSection } from './OnlineSection.js';
 import { createTokenMeterSection } from './TokenMeterSection.js';
@@ -80,12 +81,9 @@ function register(): void {
       const parts = createTokenMeterSection(React, P, ReactDOM);
       const onlineParts = createOnlineSection(React, ReactDOM, parts.statsApi);
       const TokenMeterSettings = parts.TokenMeterSettings;
-      const QuotaRightPane = parts.QuotaRightPane;
-      const StatsRightPane = parts.StatsRightPane;
       const WidgetFloatLayer = parts.WidgetFloatLayer;
       const WidgetsApi = parts.widgetsApi;
-      const OnlineRightPane = onlineParts.OnlineRightPane;
-      const { QuotaIcon, UsageIcon, OnlineIcon } = createIcons(React);
+      const icons = createIcons(React);
 
       function useTmStyles(): void {
         React.useEffect(() => {
@@ -105,10 +103,28 @@ function register(): void {
         }, []);
       }
 
+      // 配置页组件：设置面板（settings.section）与中心区 tab 的「设置」分区共用同一个，
+      // 改一处两边同步；两边都走 useTmStyles 保证样式在屏即有。
+      function TokenMeterSettingsEntry(props: any): any {
+        useTmStyles();
+        return React.createElement(TokenMeterSettings, props);
+      }
+      const TokenMeterCenterView = createCenterView(
+        React,
+        {
+          QuotaView: parts.QuotaView,
+          StatsView: parts.StatsView,
+          OnlineView: onlineParts.OnlineView,
+          OnlineEmbed: onlineParts.OnlineEmbed,
+          SettingsView: TokenMeterSettingsEntry,
+          SharePanel: parts.SharePanel,
+        },
+        icons,
+      );
+
       const exportsObj = exportsShim as { inject?: string[]; apply?: (ctx: any) => void };
-      // 官方右栏模式（对照 dsh-client-ui-sidebar-documentpreview）：
-      // registry 与 controller 由右栏包提供，硬依赖声明后经 ctx 属性访问。
-      exportsObj.inject = ['slots', 'sidebarRightTabs', 'sidebarRight'];
+      // 只依赖 slots：中心区 tab 走 conversation.view 注册，不再需要右侧栏的 registry/controller。
+      exportsObj.inject = ['slots'];
       exportsObj.apply = function apply(ctx: any): void {
         const slots = ctx.get('slots') as any;
         if (slots === undefined) return;
@@ -136,8 +152,8 @@ function register(): void {
           /* ignore */
         }
 
-        // 旧 localStorage 一次性清理：左栏开关已并入右侧栏；旧双浮窗系统已停用（widget 浮窗无外框、原位隐藏），
-        // 旧键直接删掉，避免残留 floatOpen 导致幽灵浮窗。
+        // 旧 localStorage 一次性清理：左栏开关、旧双浮窗系统、右侧栏 tab 自动展开标记
+        // 都已停用，旧键直接删掉，避免残留项影响后续行为。
         try {
           window.localStorage.removeItem('token-stats.sidebar-today');
           window.localStorage.removeItem('tquota.float.open');
@@ -148,25 +164,22 @@ function register(): void {
           window.localStorage.removeItem('ts-today.float.pos');
           window.localStorage.removeItem('tm-today.float.open');
           window.localStorage.removeItem('tm-today.float.pos');
+          window.localStorage.removeItem('tm-righttabs-autoopened');
         } catch {
           /* ignore */
         }
 
-        function SettingsEntry(p: any): any {
-          useTmStyles();
-          return React.createElement(TokenMeterSettings, p);
-        }
-
+        // 设置面板与中心区「设置」分区共用 TokenMeterSettingsEntry（见上）
         slots.inject('settings.section', () =>
           slots.register(
-            { name: 'settings.section', id: 'dshp-token-meter', order: 27, label: 'Token 统计与额度' },
-            SettingsEntry,
+            { name: 'settings.section', id: 'dshp-token-meter', order: 27, label: DISPLAY_NAME },
+            TokenMeterSettingsEntry,
           ),
         );
 
         function TokenMeterFloatEntry(props: any): any {
           useTmStyles();
-          // 统一浮层：只有 widget 浮窗（无外框，原封装卡即外观）。旧额度/今日浮窗已停用。
+          // 统一浮层：只有 widget 浮窗（无外框，原封装卡即外观）。
           return React.createElement(WidgetFloatLayer, props);
         }
 
@@ -174,161 +187,25 @@ function register(): void {
           slots.register({ name: 'shell.overlay', id: 'dshp-token-meter-float' }, TokenMeterFloatEntry),
         );
 
-        // ── 右侧栏双 tab（官方模式：inject 声明 + ctx 属性 + ctx.effect 持有）───
-        // 「额度」：全部供应商展开富卡片；「用量」：完整统计图表。左栏入口已移除，全部搬到右栏。
-        const QUOTA_TAB = '@dshp/token-meter-quota';
-        const STATS_TAB = '@dshp/token-meter-stats';
-        const ONLINE_TAB = '@dshp/token-meter-online';
-        {
-          ctx.effect(
-            () =>
-              ctx.sidebarRightTabs.register({
-                id: QUOTA_TAB,
-                kind: 'token-meter-quota',
-                title: () => 'Token 额度',
-                guide: [
-                  {
-                    order: 20,
-                    title: () => 'Token 额度',
-                    description: () => '全部供应商额度一览',
-                    icon: QuotaIcon,
-                  },
-                ],
-              }),
-            'dshp-token-meter: right tab quota',
-          );
-          ctx.effect(
-            () =>
-              ctx.sidebarRightTabs.register({
-                id: STATS_TAB,
-                kind: 'token-meter-stats',
-                title: () => 'Token 用量',
-                guide: [
-                  {
-                    order: 21,
-                    title: () => 'Token 用量',
-                    description: () => '用量趋势与模型分布',
-                    icon: UsageIcon,
-                  },
-                ],
-              }),
-            'dshp-token-meter: right tab stats',
-          );
-          ctx.effect(
-            () =>
-              ctx.sidebarRightTabs.register({
-                id: ONLINE_TAB,
-                kind: 'token-meter-online',
-                title: () => '在线时长',
-                guide: [
-                  {
-                    order: 22,
-                    title: () => '在线时长',
-                    description: () => '每日/累计在线时长估算',
-                    icon: OnlineIcon,
-                  },
-                ],
-              }),
-            'dshp-token-meter: right tab online',
-          );
-          const QuotaPane = function QuotaPane(p: any): any {
-            useTmStyles();
-            return React.createElement(
-              'div',
-              { style: { height: '100%', minHeight: 0, overflow: 'auto', padding: '12px 14px' } },
-              React.createElement(QuotaRightPane, p),
-            );
-          };
-          const QuotaPaneTitle = function QuotaPaneTitle(): any {
-            return React.createElement(
-              'span',
-              { className: 'tm-tabChip' },
-              React.createElement(QuotaIcon, { size: 14 }),
-              React.createElement('span', null, 'Token 额度'),
-            );
-          };
-          const StatsPane = function StatsPane(p: any): any {
-            useTmStyles();
-            return React.createElement(
-              'div',
-              { style: { height: '100%', minHeight: 0, overflow: 'auto', padding: '12px 14px' } },
-              React.createElement(StatsRightPane, p),
-            );
-          };
-          const StatsPaneTitle = function StatsPaneTitle(): any {
-            return React.createElement(
-              'span',
-              { className: 'tm-tabChip' },
-              React.createElement(UsageIcon, { size: 14 }),
-              React.createElement('span', null, 'Token 用量'),
-            );
-          };
-          const OnlinePane = function OnlinePane(p: any): any {
-            useTmStyles();
-            return React.createElement(
-              'div',
-              { style: { height: '100%', minHeight: 0, overflow: 'auto', padding: '12px 14px' } },
-              React.createElement(OnlineRightPane, p),
-            );
-          };
-          const OnlinePaneTitle = function OnlinePaneTitle(): any {
-            return React.createElement(
-              'span',
-              { className: 'tm-tabChip' },
-              React.createElement(OnlineIcon, { size: 14 }),
-              React.createElement('span', null, '在线时长'),
-            );
-          };
-          slots.inject('sidebar.right.pane.tab', () =>
-            slots.register({ name: 'sidebar.right.pane.tab', key: QUOTA_TAB }, QuotaPane),
-          );
-          slots.inject('sidebar.right.pane.tab.title', () =>
-            slots.register({ name: 'sidebar.right.pane.tab.title', key: QUOTA_TAB }, QuotaPaneTitle),
-          );
-          slots.inject('sidebar.right.pane.tab', () =>
-            slots.register({ name: 'sidebar.right.pane.tab', key: STATS_TAB }, StatsPane),
-          );
-          slots.inject('sidebar.right.pane.tab.title', () =>
-            slots.register({ name: 'sidebar.right.pane.tab.title', key: STATS_TAB }, StatsPaneTitle),
-          );
-          slots.inject('sidebar.right.pane.tab', () =>
-            slots.register({ name: 'sidebar.right.pane.tab', key: ONLINE_TAB }, OnlinePane),
-          );
-          slots.inject('sidebar.right.pane.tab.title', () =>
-            slots.register({ name: 'sidebar.right.pane.tab.title', key: ONLINE_TAB }, OnlinePaneTitle),
-          );
+        // ── 中心区单 tab（官方模式：inject 声明 + slots.inject 持有）───
+        // 与原生「对话 / 轨迹」并列的一个 tab；tab 内用侧边菜单切换三块内容。
+        // order 40：排在内置 chat(0) / trajectory(10) 与第三方视图之后。
+        const CENTER_VIEW = 'dshp-token-meter';
+        function TokenMeterCenterEntry(props: any): any {
+          useTmStyles();
+          return React.createElement(TokenMeterCenterView, props);
         }
-
-        // 首次自动打开双 tab（仅一次；用户关闭后不再打扰）。
-        // 右栏 seat 挂载晚于插件 apply 时重试几次（无 seat 的 openTab 会抛错，此时静默等下一次）。
-        try {
-          let done = false;
-          try {
-            done = window.localStorage.getItem('tm-righttabs-autoopened') === '1';
-          } catch {
-            /* ignore */
-          }
-          if (!done) {
-            let attempts = 0;
-            const tryOpen = (): void => {
-              attempts++;
-              try {
-                ctx.sidebarRight.openTab('token-meter-quota');
-                ctx.sidebarRight.openTab('token-meter-stats');
-                try {
-                  window.localStorage.setItem('tm-righttabs-autoopened', '1');
-                } catch {
-                  /* ignore */
-                }
-              } catch {
-                if (attempts < 5) window.setTimeout(tryOpen, attempts * 2000);
-              }
-            };
-            window.setTimeout(tryOpen, 1500);
-          }
-        } catch {
-          /* ignore */
-        }
+        slots.inject('conversation.view', () =>
+          slots.register(
+            {
+              name: 'conversation.view',
+              id: CENTER_VIEW,
+              order: 40,
+              label: DISPLAY_NAME,
+            },
+            TokenMeterCenterEntry,
+          ),
+        );
       };
 
       return moduleShim.exports;

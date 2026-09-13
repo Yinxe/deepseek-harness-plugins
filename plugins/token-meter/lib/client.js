@@ -1,6 +1,9 @@
 (function () {
   'use strict';
 
+  // <define:__DSHP_TOKEN_METER_PKG__>
+  var define_DSHP_TOKEN_METER_PKG_default = { name: "@dshp/token-meter", version: "0.5.0", repo: "github.com/Yinxe/deepseek-harness-plugins/tree/main/plugins/token-meter" };
+
   // src/client/styles.ts
   var CSS = `
 .tm-page{font-size:13px;line-height:1.6;color:var(--dsw-alias-label-primary);max-width:820px;flex-direction:column;display:flex;container-type:inline-size;container-name:tm}
@@ -32,7 +35,7 @@
 .tm-inputReadonly{background:var(--dsw-alias-bg-layer-2);border-style:dashed;cursor:not-allowed}
 .tm-inputReadonly .tm-ninput{color:var(--dsw-alias-label-secondary)}
 .tm-rowControl{flex:1;min-width:0;display:flex;justify-content:flex-end}
-.tm-card{background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l1);border-radius:10px;padding:14px 16px;margin:0 0 8px}
+.tm-card{background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l1);border-radius:12px;padding:14px 16px;margin:0 0 8px}
 .tm-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-primary);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit;white-space:nowrap;flex:none}
 .tm-btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);border-color:color-mix(in srgb,var(--dsw-alias-state-business-primary) 55%,var(--dsw-alias-border-l2))}
 .tm-btn:disabled{opacity:.4;cursor:default}
@@ -52,19 +55,19 @@
 .tm-selector:disabled{cursor:default;opacity:.4}
 .tm-selectorLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tm-chevron{flex:none}
-.tm-tabs{display:inline-flex;gap:2px;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;padding:2px;margin:8px 0 4px}
-.tm-tab{border:none;background:transparent;color:var(--dsw-alias-label-tertiary);font-size:13px;font-family:inherit;padding:4px 14px;border-radius:7px;cursor:pointer;line-height:20px}
+.tm-tabs{display:inline-flex;gap:2px;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;padding:2px;margin:8px 0 4px}
+.tm-tab{border:none;background:transparent;color:var(--dsw-alias-label-tertiary);font-size:13px;font-family:inherit;padding:4px 14px;border-radius:8px;cursor:pointer;line-height:20px}
 .tm-tab:hover{color:var(--dsw-alias-label-primary)}
 .tm-tabOn{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
 .tm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px}
 .tm-statGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0}
-.tm-stat{background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l1);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;transition:border-color .15s;position:relative}
+.tm-stat{background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l1);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;transition:border-color .15s;position:relative;overflow:hidden}
 .tm-stat:hover{border-color:var(--dsw-alias-state-business-primary)}
 .tm-stat-label{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}
 .tm-stat-value{color:var(--dsw-alias-label-primary);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;line-height:24px}
 .tm-stat[data-tint="1"] .tm-stat-value{background:linear-gradient(100deg,var(--dsw-alias-state-business-primary),color-mix(in srgb,var(--dsw-alias-state-business-primary) 52%,#34d399));-webkit-background-clip:text;background-clip:text;color:transparent}
 .tm-stat-sub{color:var(--dsw-alias-label-secondary);font-size:11px;line-height:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tm-pop{position:fixed;z-index:50;pointer-events:none;background:var(--dsw-specific-menu);border:1px solid var(--dsw-alias-border-l2);border-radius:10px;box-shadow:var(--dsw-shadow-lv3);padding:10px 12px;font-size:12px;line-height:1.5;max-width:300px;color:var(--dsw-alias-label-primary)}
+.tm-pop{position:fixed;z-index:50;pointer-events:none;background:var(--dsw-specific-menu);border:1px solid var(--dsw-alias-border-l2);border-radius:12px;box-shadow:var(--dsw-shadow-lv3);padding:10px 12px;font-size:12px;line-height:1.5;max-width:300px;color:var(--dsw-alias-label-primary)}
 .tm-pop-title{font-weight:600;margin-bottom:6px;font-size:12.5px}
 .tm-pop-row{display:flex;align-items:center;gap:6px;white-space:nowrap;margin:2px 0}
 .tm-pop-row .tm-dot{width:8px;height:8px;border-radius:2.5px;flex:none}
@@ -96,7 +99,7 @@
 .tm-cacheRow{display:flex;align-items:center;gap:5px;margin-top:6px;font-size:11px;color:var(--dsw-alias-label-secondary);flex-wrap:wrap;line-height:16px}
 .tm-cacheSep{color:var(--dsw-alias-label-tertiary)}
 /* \u2500\u2500 \u5CF0\u8C37\u5B9A\u4EF7\u63D0\u793A\uFF08\u989D\u5EA6\u9762\u677F\u7F6E\u9876\uFF09\uFF1A\u5317\u4EAC\u65F6\u95F4\u5DE5\u4F5C\u65E5\u4E24\u4E2A\u5CF0\u6BB5\uFF0C\u5176\u4F59\u4E3A\u8C37 \u2500\u2500 */
-.tm-peak{position:relative;display:flex;flex-direction:column;gap:6px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);border-radius:var(--tm-r-card);padding:10px 12px;margin:0 0 8px;cursor:default}
+.tm-peak{position:relative;display:flex;flex-direction:column;gap:6px;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);border-radius:12px;padding:10px 12px;margin:0 0 8px;cursor:default}
 .tm-peak:focus{outline:none}
 .tm-peak:focus-visible{box-shadow:0 0 0 2px color-mix(in srgb,var(--dsw-alias-state-business-primary) 55%,transparent)}
 .tm-peakHead{display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap;row-gap:4px}
@@ -105,7 +108,7 @@
 .tm-peakDot.valley{background:var(--dsw-alias-state-success-primary)}
 /* \u6807\u9898\u538B\u5230 4 \u5B57\uFF0C\u72B6\u6001\u72EC\u7ACB\u6210 chip\uFF1B\u65F6\u95F4 flex:none + nowrap \u2014\u2014 \u4E09\u5904\u90FD\u4E0D\u518D\u8D70\u7701\u7565\u53F7\u88C1\u5207 */
 .tm-peakTitle{font-size:12px;font-weight:600;color:var(--dsw-alias-label-primary);white-space:nowrap;flex:none}
-.tm-peakChip{flex:none;font-size:10.5px;line-height:16px;font-weight:600;padding:0 7px;border-radius:99px;white-space:nowrap}
+.tm-peakChip{flex:none;font-size:10.5px;line-height:16px;font-weight:600;padding:0 7px;border-radius:999px;white-space:nowrap}
 .tm-peakChip.peak{color:var(--dsw-alias-state-warn-label);background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 16%,transparent)}
 .tm-peakChip.valley{color:var(--dsw-alias-state-success-primary);background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 14%,transparent)}
 .tm-peakTime{flex:none;margin-left:auto;text-align:right;font-size:11px;line-height:16px;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -133,7 +136,6 @@
 .tm-mc-name{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tm-heatwrap{position:relative}
 .tm-heatrow{display:flex;flex:1 1 auto;min-width:0}
-.tm-heat{display:flex;gap:2px;margin:6px 0}
 .tm-hcell{border-radius:2.5px;flex:1 1 0;min-width:0;aspect-ratio:1;cursor:default}
 .tm-hcell[data-lv="0"]{background:var(--dsw-alias-interactive-bg-hover);opacity:.45}
 .tm-cell{width:9px;height:9px;border-radius:2.5px;display:inline-block;margin:0 2px;flex:none}
@@ -166,7 +168,7 @@
 .tm-gridln{stroke:var(--dsw-alias-border-l1);stroke-width:1}
 .tm-bar{align-items:center;gap:8px;display:flex;flex-wrap:wrap;padding:12px 0;border-bottom:.5px solid var(--dsw-alias-border-l2)}
 /* \u989D\u5EA6\u5361 */
-.tm-side{background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l1);border-radius:10px;padding:8px 10px;margin:2px 0;position:relative;overflow:visible}
+.tm-side{background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l1);border-radius:12px;padding:8px 10px;margin:2px 0;position:relative;overflow:visible}
 .tm-side.loading{animation:tm-pulse 1.2s ease infinite}
 .tm-side.error{border-color:var(--dsw-alias-state-error-primary)}
 .tm-in{animation:tm-in .35s ease}
@@ -176,7 +178,7 @@
 .tm-vtype{flex:none;font-size:10px;color:var(--dsw-alias-brand-primary)}
 .tm-vcaret{flex:none;font-size:10px;color:var(--dsw-alias-label-secondary)}
 .tm-backdrop{position:fixed;inset:0;z-index:55;background:transparent;border:none;padding:0;margin:0;cursor:default}
-.tm-popmenu{position:fixed;z-index:400;margin:0;min-width:180px;max-width:260px;background:color-mix(in srgb, var(--dsw-alias-bg-layer-1) 78%, transparent);-webkit-backdrop-filter:blur(12px) saturate(1.4);backdrop-filter:blur(12px) saturate(1.4);border:1px solid var(--dsw-alias-border-l2);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.25);padding:6px;max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.tm-popmenu{position:fixed;z-index:400;margin:0;min-width:180px;max-width:260px;background:color-mix(in srgb, var(--dsw-alias-bg-layer-1) 78%, transparent);-webkit-backdrop-filter:blur(12px) saturate(1.4);backdrop-filter:blur(12px) saturate(1.4);border:1px solid var(--dsw-alias-border-l2);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.25);padding:6px;max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:2px}
 .tm-mitem{display:flex;align-items:center;gap:6px;width:100%;background:transparent;border:1px solid transparent;border-radius:6px;padding:4px 6px;cursor:pointer;font-size:12px;color:var(--dsw-alias-label-secondary);text-align:left}
 .tm-mitem:hover{border-color:var(--dsw-alias-border-l1);color:var(--dsw-alias-label-primary)}
 .tm-mitem.active{color:var(--dsw-alias-label-primary);border-color:var(--dsw-alias-brand-primary)}
@@ -185,9 +187,9 @@
 /* \u6807\u7B7E\u5217\uFF1A\u5B9A\u5BBD\u8BA9\u5404\u884C\u7684\u8FDB\u5EA6\u6761\u5DE6\u7AEF\u5BF9\u9F50\uFF1Bnowrap \u4FDD\u8BC1\u6807\u7B7E\u6C38\u4E0D\u6362\u884C
    \uFF08\u65E7\u7248\u786C\u7F16\u7801 36px\uFF0C4 \u5B57\u6807\u7B7E\u5982\u300C\u6708\u5EA6\u989D\u5EA6\u300D\u4F1A\u88AB\u6324\u6210\u4E24\u884C\uFF09 */
 .tm-qlabel{flex:none;width:52px;min-width:52px;font-size:11px;line-height:16px;color:var(--dsw-alias-label-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tm-qbar{flex:1;min-width:0;height:6px;border-radius:99px;background:var(--dsw-alias-bg-layer-2);overflow:hidden}
+.tm-qbar{flex:1;min-width:0;height:6px;border-radius:999px;background:var(--dsw-alias-bg-layer-2);overflow:hidden}
 /* \u5360\u7528\u56DB\u6863\uFF1Aok \u84DD / warn \u9EC4(\u226570%) / bad \u7EA2"\u5FEB\u5B8C\u4E86"(\u226590%) / over \u7EA2+\u8109\u51B2(\u2265100%) */
-.tm-qfill{display:block;height:100%;border-radius:99px;background:var(--dsw-alias-brand-primary);transition:width .8s ease}
+.tm-qfill{display:block;height:100%;border-radius:999px;background:var(--dsw-alias-brand-primary);transition:width .8s ease}
 .tm-qfill.warn{background:var(--dsw-alias-state-warn-primary)}
 .tm-qfill.bad{background:var(--dsw-alias-state-error-primary)}
 .tm-qfill.over{background:var(--dsw-alias-state-error-primary);animation:tm-qpulse 1.6s ease-in-out infinite}
@@ -200,7 +202,7 @@
 .tm-qleft{flex:0 1 auto;min-width:0;font-size:10px;color:var(--dsw-alias-label-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* \u7A97\u53E3\u72B6\u6001\u5FBD\u6807\uFF1A\u4E0A\u6E38\u975E ok\uFF08\u5982 opencode \u7684 rate-limited\uFF09\u65F6\u8D34\u5728\u767E\u5206\u6BD4\u540E\uFF0C
    \u56E0\u4E3A\u6B64\u65F6 pct \u53EF\u80FD\u8FD8\u6CA1\u5230 100%\uFF08\u9650\u6D41 \u2260 \u7528\u5C3D\uFF09\uFF0C\u5FC5\u987B\u5355\u72EC\u8BF4\u6E05\u695A */
-.tm-qstatus{flex:none;font-size:9.5px;line-height:15px;padding:0 6px;border-radius:99px;white-space:nowrap;color:var(--dsw-alias-state-error-primary);background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 14%,transparent)}
+.tm-qstatus{flex:none;font-size:9.5px;line-height:15px;padding:0 6px;border-radius:999px;white-space:nowrap;color:var(--dsw-alias-state-error-primary);background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 14%,transparent)}
 .tm-qbal{display:flex;align-items:baseline;justify-content:space-between;margin-top:6px}
 .tm-qbal b{font-size:15px;color:var(--dsw-alias-label-primary)}
 .tm-qbal span{font-size:10px;color:var(--dsw-alias-label-secondary)}
@@ -211,7 +213,7 @@
 .tm-payg-amt.neg{color:var(--dsw-alias-state-error-primary)}
 .tm-payg-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .tm-payg-sub{margin-top:2px;font-size:11px;color:var(--dsw-alias-label-secondary)}
-.tm-avail{flex:none;font-size:11px;line-height:1.6;padding:1px 9px;border-radius:99px;border:1px solid}
+.tm-avail{flex:none;font-size:11px;line-height:1.6;padding:1px 9px;border-radius:999px;border:1px solid}
 .tm-avail.ok{color:var(--dsw-alias-state-success-primary);border-color:var(--dsw-alias-state-success-primary)}
 .tm-avail.bad{color:var(--dsw-alias-state-error-primary);border-color:var(--dsw-alias-state-error-primary)}
 .tm-avail.unknown{color:var(--dsw-alias-label-secondary);border-color:var(--dsw-alias-border-l1)}
@@ -237,17 +239,16 @@
 .tm-payg-compact .tm-payg-sub{margin-top:0}
 .tm-payg-compact .tm-warn{margin-top:4px}
 /* \u5206\u7EC4\u6807\u9898\uFF1A\u8BF4\u660E\u300C\u5DF2\u7981\u7528\u6C89\u5E95\u300D\u662F\u6709\u610F\u6392\u5E8F\uFF0C\u4E0D\u662F\u914D\u7F6E\u987A\u5E8F */
-.tm-grouplabel{margin:2px 0 6px;font-size:11px;font-weight:500;color:var(--dsw-alias-label-tertiary);letter-spacing:.02em}
 .tm-xchart{margin-top:8px}
 .tm-xtitle{font-size:10px;color:var(--dsw-alias-label-secondary);margin-bottom:2px}
-.tm-xsplit{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--dsw-alias-bg-layer-2);margin-top:6px}
+.tm-xsplit{display:flex;height:8px;border-radius:999px;overflow:hidden;background:var(--dsw-alias-bg-layer-2);margin-top:6px}
 .tm-xsplit span{display:block;height:100%}
 .tm-xdot{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:5px}
 .tm-sections{display:flex;flex-direction:column}
 .tm-ui{display:flex;flex-direction:column}
 .tm-xprog{margin-top:8px}
 .tm-vchips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
-.tm-vchip{display:inline-flex;align-items:center;font-size:10.5px;line-height:16px;padding:0 8px;border-radius:99px;border:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-layer-2);white-space:nowrap}
+.tm-vchip{display:inline-flex;align-items:center;font-size:10.5px;line-height:16px;padding:0 8px;border-radius:999px;border:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-layer-2);white-space:nowrap}
 .tm-vchip-ok{color:var(--dsw-alias-state-success-primary);border-color:var(--dsw-alias-state-success-primary)}
 .tm-vchip-warn{color:var(--dsw-alias-state-warn-primary);border-color:var(--dsw-alias-state-warn-primary)}
 .tm-vchip-bad{color:var(--dsw-alias-state-error-primary);border-color:var(--dsw-alias-state-error-primary)}
@@ -297,7 +298,7 @@
 .tm-ninput:disabled{opacity:.5}
 .tm-textarea{box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-1);font:inherit;color:var(--dsw-alias-label-primary);border-radius:8px;padding:8px 12px;font-size:13px;line-height:20px;outline:none;width:100%;resize:vertical;min-height:64px}
 .tm-textarea:focus-visible{border-color:var(--dsw-alias-brand-primary)}
-.tm-badge{white-space:nowrap;align-items:center;height:20px;border-radius:10px;padding:0 8px;font-size:11px;font-weight:500;line-height:20px;display:inline-flex;flex:none}
+.tm-badge{white-space:nowrap;align-items:center;height:20px;border-radius:999px;padding:0 8px;font-size:11px;font-weight:500;line-height:20px;display:inline-flex;flex:none}
 .tm-badge-ok{background:var(--dsw-alias-state-success-tertiary);color:var(--dsw-alias-state-success-primary)}
 .tm-badge-warn{background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-state-warn-label)}
 .tm-badge-muted{background:var(--dsw-alias-button-ghost-active-fill);color:var(--dsw-alias-label-caption)}
@@ -311,7 +312,7 @@
 .tm-vendor-row{display:flex;align-items:center;gap:2px}
 .tm-vendor-row .tm-vendor{flex:1;min-width:0;width:auto}
 /* \u4ECA\u65E5\u5361 */
-.tm-today{border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);border-radius:10px;padding:10px 12px;margin:8px 0;width:100%;flex:none;cursor:default;box-sizing:border-box;overflow:hidden}
+.tm-today{border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);border-radius:12px;padding:10px 12px;margin:8px 0;width:100%;flex:none;cursor:default;box-sizing:border-box;overflow:hidden}
 .tm-today:hover{border-color:var(--dsw-alias-state-business-primary)}
 .tm-todaylabel{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}
 .tm-todayval{color:var(--dsw-alias-label-primary);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;line-height:24px}
@@ -345,18 +346,15 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 .tm-widget-bd{padding:2px 12px 10px;max-height:calc(72vh - 48px);overflow:auto}
 /* \u2500\u2500 widget \u6D6E\u7A97\uFF1A\u53EA\u505A\u5B9A\u4F4D\uFF0C\u4E0D\u542B\u4EFB\u4F55\u5916\u6846\uFF08\u7EC4\u4EF6\u81EA\u8EAB\u5361\u7247\u5373\u5916\u89C2\uFF0C\u6D6E\u51FA\u524D\u540E\u89C6\u89C9\u4E00\u81F4\uFF09\u3002
    \u7EDF\u4E00\u89C4\u683C\uFF1A\u5BBD 360px\uFF08\u4E0E clamp \u5E38\u91CF\u4E00\u81F4\uFF09\u3001\u6700\u5927\u9AD8 60vh\u3001\u8D85\u9AD8\u5185\u90E8\u6EDA\u52A8\uFF1B
-   \u81EA\u8EAB\u4E5F\u662F inline-size \u5BB9\u5668 \u2014\u2014 \u6D6E\u7A97\u5185\u7684\u7A84\u680F\u89C4\u5219\uFF08\u6A21\u578B\u5206\u5E03\u4E0A\u4E0B\u6392\u5217\u7B49\uFF09\u4E0E\u53F3\u4FA7\u680F\u4E00\u81F4\u3002 \u2500\u2500 */
+   \u81EA\u8EAB\u4E5F\u662F inline-size \u5BB9\u5668 \u2014\u2014 \u6D6E\u7A97\u5185\u7684\u7A84\u680F\u89C4\u5219\uFF08\u6A21\u578B\u5206\u5E03\u4E0A\u4E0B\u6392\u5217\u7B49\uFF09\u4E0E\u4E2D\u5FC3\u533A\u4E00\u81F4\u3002 \u2500\u2500 */
 .tm-widgetFloat{position:fixed;z-index:300;max-width:calc(100vw - 16px);width:360px;max-height:60vh;overflow-y:auto;overscroll-behavior:contain;container-type:inline-size;container-name:tm}
 .tm-widgetFloat>.tm-card,.tm-widgetFloat>.tm-today{margin:0;box-sizing:border-box}
 /* \u6D6E\u7A97\u5185\u7684 Seg \u884C\uFF1A\u53EF\u6362\u884C\u5C45\u4E2D\uFF0C\u7A84\u65F6\u5404\u6309\u94AE\u6491\u6574\u884C\u5BBD\uFF0C\u4E0D\u6EA2\u51FA\u7EC4\u4EF6 */
 .tm-segRow{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin-bottom:8px}
 @container tm (max-width: 420px){.tm-segRow .tm-seg{width:100%;justify-content:center}.tm-segRow .tm-seg-btn{flex:1 1 auto;text-align:center}}
 /* \u5C0F\u7EC4\u4EF6\u5DE5\u5177\u6761\uFF1A\u6807\u7B7E + \u5F00\u5173\u6309\u94AE */
-.tm-widgetBtn{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--dsw-alias-border-l1);border-radius:var(--tm-r-chip);padding:1px 4px 1px 8px;font-size:12px;color:var(--dsw-alias-label-secondary)}
+.tm-widgetBtn{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--dsw-alias-border-l1);border-radius:6px;padding:1px 4px 1px 8px;font-size:12px;color:var(--dsw-alias-label-secondary)}
 .tm-widgetBtn-label{line-height:20px;white-space:nowrap}
-/* \u53F3\u680F tab chip\uFF1A\u56FE\u6807 + \u6587\u672C\uFF08\u56FE\u6807\u989C\u8272\u8DDF\u968F chip \u6587\u5B57\u8272\uFF09 */
-.tm-tabChip{display:inline-flex;align-items:center;gap:5px;min-width:0}
-.tm-tabChip>svg{flex:none;display:block}
 /* \u56FE\u8868\u6807\u9898\u9996\u6BB5\uFF1A\u7A84\u680F\u7701\u7565\u53F7\uFF0C\u4E0D\u6362\u884C\u6324\u9AD8 */
 .tm-chart-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto}
 /* \u6A21\u578B\u884C\uFF1A\u540D\u79F0+\u6570\u503C\u5141\u8BB8\u6362\u884C\uFF1B\u660E\u7EC6\u884C\u7A84\u680F\u53EF\u6362\u884C\u4E0D\u622A\u65AD */
@@ -368,12 +366,12 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 .tm-swrowText{flex-direction:column;flex:1;gap:4px;min-width:0;padding-right:48px;display:flex}
 .tm-swlabel{font-size:14px;font-weight:400;line-height:22px;color:var(--dsw-alias-label-primary)}
 .tm-swhint{font-size:12px;font-weight:400;line-height:18px;color:var(--dsw-alias-label-tertiary)}
-.tm-switch{box-sizing:border-box;background:var(--dsw-alias-border-l3);cursor:pointer;border:0;border-radius:10px;flex:none;width:36px;height:20px;padding:2px;position:relative}
+.tm-switch{box-sizing:border-box;background:var(--dsw-alias-border-l3);cursor:pointer;border:0;border-radius:999px;flex:none;width:36px;height:20px;padding:2px;position:relative}
 .tm-switch[aria-checked="true"]{background:var(--dsw-alias-brand-primary)}
 .tm-switch:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
 .tm-switchOn{background:var(--dsw-alias-brand-primary)}
 .tm-switch:disabled{cursor:default;opacity:.5}
-.tm-knob,.tm-thumb{corner-shape:round;background:var(--dsw-alias-label-primary-foreground);border-radius:50%;width:16px;height:16px;transition:transform .12s;display:block}
+.tm-knob,.tm-thumb{background:var(--dsw-alias-label-primary-foreground);border-radius:50%;width:16px;height:16px;transition:transform .12s;display:block}
 .tm-switch[aria-checked="true"] .tm-knob,.tm-switchOn .tm-thumb,.tm-switchOn .tm-knob{transform:translate(16px)}
 .tm-dualbars{display:flex;gap:2px;margin-top:4px;width:100%;justify-content:center}
 /* \u52A8\u753B\u4E0E\u8FC7\u6E21\u589E\u5F3A\uFF08\u7F6E\u4E8E CSS \u672B\u5C3E\uFF1A\u8986\u76D6\u540C\u7279\u5F02\u6027\u524D\u5E8F\u58F0\u660E\uFF09 */
@@ -416,7 +414,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 @keyframes tm-pulse{0%,100%{opacity:1}50%{opacity:.5}}
 @keyframes tm-spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.tm-page *,.tm-today *,.tm-pop,.tm-tip,.tm-tipfixed{animation:none!important;transition:none!important}.tm-spinner{animation:none}.tm-thumb,.tm-knob{transition:none}}
-/* \u2500\u2500 \u7A84\u680F\u9002\u914D\uFF08\u53F3\u680F\u62C9\u5230\u6700\u7A84\u65F6\uFF09\uFF1A\u5BB9\u5668\u67E5\u8BE2\uFF0C\u5361\u7247\u6536\u7D27\u3001\u6807\u9898\u4E0D\u622A\u65AD\u6309\u94AE\u4E0D\u6362\u884C \u2500\u2500 */
+/* \u2500\u2500 \u7A84\u680F\u9002\u914D\uFF08\u4E2D\u5FC3\u533A\u62C9\u5230\u6700\u7A84\u65F6\uFF09\uFF1A\u5BB9\u5668\u67E5\u8BE2\uFF0C\u5361\u7247\u6536\u7D27\u3001\u6807\u9898\u4E0D\u622A\u65AD\u6309\u94AE\u4E0D\u6362\u884C \u2500\u2500 */
 @container tm (max-width: 480px){
 .tm-card{padding:10px 12px}
 .tm-intro{font-size:13px}
@@ -449,30 +447,98 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 .tm-modelval{font-size:11px}
 .tm-modelname{font-size:12px}
 }
-/* \u2500\u2500 \u5706\u89D2\u8DDF\u968F\u5168\u5C40 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
- * \u4EA7\u54C1\u6CA1\u6709\u534A\u5F84 token\uFF08\u534A\u5F84\u7531\u5404\u7EC4\u4EF6\u81EA\u5B9A\uFF09\uFF0C\u4F46\u6709\u5168\u5C40\u89D2\u5F62 token\uFF1A
- * @supports \u751F\u6548\u65F6 :root \u4E0B --dsw-corner-shape:superellipse(1.5)\uFF0C
- * \u5E76\u7ECF\u901A\u7528\u9009\u62E9\u5668\u4F5C\u7528\u4E8E\u5168\u6587\u6863\u3002\u672C\u63D2\u4EF6\u534A\u5F84\u6536\u5F52\u4E0B\u65B9\u53D8\u91CF\uFF08\u9ED8\u8BA4\u503C\u4E0E\u73B0\u6709\u89C6\u89C9\u4E00\u81F4\uFF09\uFF0C
- * \u5361\u7247/\u6D6E\u7A97/\u56FE\u8868\u5185\u5143\u7D20\u5168\u90E8\u5F15\u7528\uFF1B\u89D2\u5F62\u663E\u5F0F\u914D\u5BF9\u5168\u5C40\uFF08\u77E9\u5F62\u5361\u7247\u8DDF\u968F\u8D85\u692D\u5706\uFF0C
- * pill/\u5706\u5F62\u6309\u4EA7\u54C1\u89C4\u8303\u914D\u5BF9 round\uFF09\uFF0C\u4E0E\u5B98\u65B9 UI \u540C\u5F62\u3002\u540E\u7EED\u4EA7\u54C1\u82E5\u53D1\u5E03\u534A\u5F84 token\uFF0C
- * \u53EA\u9700\u5728\u6B64\u4E00\u5904\u91CD\u6620\u5C04\u3002 */
-:root{--tm-r-card:10px;--tm-r-float:12px;--tm-r-pop:10px;--tm-r-tip:8px;--tm-r-btn:8px;--tm-r-input:8px;--tm-r-chip:6px;--tm-r-tabs:10px;--tm-r-rail:12px}
-.tm-card,.tm-side,.tm-today,.tm-stat{border-radius:var(--tm-r-card)}
-.tm-todayRail{border-radius:var(--tm-r-rail)}
-.tm-float{border-radius:var(--tm-r-float)}
-.tm-pop{border-radius:var(--tm-r-pop)}
-.tm-tip,.tm-tipfixed{border-radius:var(--tm-r-tip)}
-.tm-popmenu{border-radius:var(--tm-r-pop)}
-.tm-errbox{border-radius:var(--tm-r-chip)}
-.tm-btn{border-radius:var(--tm-r-btn)}
-.tm-inputWrap,.tm-ninput,.tm-textarea{border-radius:var(--tm-r-input)}
-.tm-seg{border-radius:var(--tm-r-chip)}
-.tm-seg-btn{border-radius:var(--tm-r-chip)}
-.tm-tabs{border-radius:var(--tm-r-tabs)}
-@supports (corner-shape:superellipse(1.5)){
-.tm-card,.tm-side,.tm-today,.tm-stat,.tm-float,.tm-pop,.tm-tip,.tm-tipfixed,.tm-popmenu,.tm-errbox,.tm-btn,.tm-inputWrap,.tm-textarea,.tm-seg,.tm-tabs{corner-shape:var(--dsw-corner-shape)}
-.tm-modelchip,.tm-qbar,.tm-qfill,.tm-xsplit,.tm-compose,.tm-bartrack,.tm-barfill,.tm-streakbar,.tm-streakfill,.tm-pop-fill,.tm-switch,.tm-badge,.tm-dot,.tm-spinner,.tm-knob,.tm-thumb,.tm-xdot,.tm-cell,.tm-hcell,.tm-selector{corner-shape:round}
-}
+/* \u2500\u2500 \u5706\u89D2\uFF1A\u53EA\u7528\u4EA7\u54C1\u9ED8\u8BA4\u503C\uFF0C\u4E0D\u81EA\u5B9A\u4E49\u3001\u4E0D\u8986\u76D6\u5168\u5C40\u89D2\u5F62 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+ * \u4E24\u6761\u7EAA\u5F8B\uFF1A
+ *  1) \u4E0D\u8BBE\u79C1\u6709\u534A\u5F84\u53D8\u91CF\u5C42\uFF08\u65E7\u7248\u6709 :root{--tm-r-*} \u4E0E .tm-cview \u8986\u76D6\uFF09\u3002\u4EA7\u54C1\u6CA1\u6709
+ *     \u534A\u5F84 token\uFF0C\u534A\u5F84\u7531\u5404\u7EC4\u4EF6\u81EA\u5B9A\uFF1B\u63D2\u4EF6\u76F4\u63A5\u5199\u4E0E\u5B98\u65B9\u7EC4\u4EF6\u540C\u4E00\u5957\u9ED8\u8BA4\u503C\u5373\u53EF\uFF1A
+ *       12px \u5927\u9762\uFF08\u5361\u7247/\u6D6E\u7A97/\u6D6E\u51FA\u83DC\u5355\uFF09\xB7 8px \u63A7\u4EF6\uFF08\u6309\u94AE/\u8F93\u5165/\u63D0\u793A\u5757\uFF09
+ *       6px \u5C0F\u4EF6\uFF08chip/\u8FF7\u4F60\u6309\u94AE/\u5206\u6BB5\u6309\u94AE\uFF09\xB7 999px \u80F6\u56CA \xB7 50% \u5706\u5F62
+ *     \u8FD9\u6837\u4EFB\u4F55\u8C03\u4E3B\u9898/\u534A\u5F84\u7684\u63D2\u4EF6\u7528\u666E\u901A\u89C4\u5219\u5373\u53EF\u8986\u76D6\uFF0C\u4E0D\u5FC5\u77E5\u9053\u672C\u63D2\u4EF6\u7684\u79C1\u6709\u53D8\u91CF\u3002
+ *  2) \u4E0D\u58F0\u660E corner-shape\u3002\u4EA7\u54C1\u4E3B\u9898\u5305\uFF08dsh-client-ui-theme/corner-shape.css\uFF09\u5DF2\u7ECF
+ *     \u7528 *,:before,:after \u4E0A\u7684 corner-shape:var(--dsw-corner-shape) \u5168\u5C40\u63A5\u7BA1\u89D2\u5F62\uFF1B
+ *     \u63D2\u4EF6\u518D\u5199\u4E00\u904D\uFF08\u54EA\u6015\u5199 round\uFF09\u5C31\u4F1A\u628A\u90A3\u5C42\u7684\u4E3B\u9898\u9009\u62E9\u9876\u6389 \u2014\u2014 \u6B63\u662F\u8981\u907F\u514D\u7684\u3002
+ * \u56FE\u8868\u5185\u90E8\u7684\u5FAE\u5706\u89D2\uFF08\u70B9/\u6761/\u70ED\u529B\u683C 1.5~4px\u3001\u5706\u73AF 50%\uFF09\u5C5E\u4E8E\u56FE\u5F62\u51E0\u4F55\uFF0C\u4E0D\u5728\u6B64\u5217\u3002 */
+
+/* \u2500\u2500 \u5206\u4EAB\u5361\uFF0816:9\uFF0C\u5185\u805A\u771F\u7EC4\u4EF6\uFF09\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+ * \u821E\u53F0\u7528 aspect-ratio \u9501\u6B7B 16:9\uFF1B\u677F\u5B50\u6309**\u903B\u8F91\u5C3A\u5BF8 1920\xD71080** \u6392\u7248\uFF08\u7EC4\u4EF6\u5728\u90A3\u4E00\u5C42\u91CF\u5230\u7684
+ * \u5BBD\u5EA6\u5C31\u662F\u5B83\u7684\u771F\u5B9E\u5E03\u5C40\u5BBD\u5EA6\uFF0C\u54CD\u5E94\u5F0F\u5206\u680F\u7167\u5E38\u751F\u6548\uFF09\uFF0C\u518D\u7528 transform \u6574\u4F53\u7F29\u8FDB\u821E\u53F0\uFF0C
+ * \u6240\u4EE5\u5361\u5185\u7248\u5F0F\u4E0E\u7A97\u53E3\u5C3A\u5BF8\u65E0\u5173\u3002\u906E\u7F69\u672C\u8EAB\u4E0D\u8FDB\u5165\u5361\u7247\uFF0C\u76F4\u63A5\u7CFB\u7EDF\u622A\u56FE\u4E5F\u53EA\u4F1A\u622A\u5230\u5361\u3002 */
+.tm-shareBtn{flex:none;display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;margin-left:6px;border-radius:8px;border:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:12px;cursor:pointer}
+.tm-shareBtn:hover{color:var(--dsw-alias-label-primary);border-color:color-mix(in srgb,var(--dsw-alias-state-business-primary) 55%,var(--dsw-alias-border-l2))}
+.tm-shareBtn>svg{flex:none;display:block}
+.tm-shareVeil{position:fixed;inset:0;z-index:600;display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px;box-sizing:border-box;background:color-mix(in srgb,var(--dsw-alias-bg-base) 88%,transparent);-webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3);overflow:auto}
+.tm-shareBar{flex:none;width:min(96vw,calc(86vh * 16 / 9));display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tm-shareBarTitle{font-size:13px;font-weight:600;color:var(--dsw-alias-label-primary)}
+.tm-shareBarHint{font-size:12px;color:var(--dsw-alias-label-tertiary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto}
+.tm-shareToggle{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--dsw-alias-label-secondary);white-space:nowrap;cursor:pointer}
+.tm-shareToggle input{accent-color:var(--dsw-alias-state-business-primary)}
+/* \u821E\u53F0\uFF1A**\u4E00\u5C4F\u5927\u5C0F + \u53EF\u6EDA\u52A8**\u3002\u4E0D\u9501 16:9 \u2014\u2014 \u516D\u5757\u5185\u5BB9\u7684\u81EA\u7136\u9AD8\u5EA6\u5C31\u662F\u4E00\u5343\u591A\u50CF\u7D20\uFF0C
+   \u786C\u585E\u8FDB 1.78 \u7684\u753B\u5E45\u53EA\u80FD\u6574\u4F53\u7F29\u5230 0.55 \u500D\uFF08\u5B57\u7CCA\u3001\u4E24\u4FA7\u5927\u7247\u7A7A\u767D\uFF09\uFF0C\u8FD9\u6B63\u662F\u4E4B\u524D\u7684\u95EE\u9898\u3002
+   \u5BBD\u5EA6\u53D6 96vw / 1680px \u7684\u8F83\u5C0F\u8005\uFF0C\u9AD8\u5EA6\u5403\u6EE1\u5269\u4F59\u89C6\u53E3\uFF1B\u677F\u5B50\u6309\u5BB9\u5668\u5B9E\u9645\u5BBD\u5EA6 1:1 \u6392\u7248\u3002 */
+.tm-shareStage{flex:1 1 auto;width:min(96vw,1680px);max-height:calc(100vh - 150px);min-height:320px;border-radius:16px;overflow:auto;overscroll-behavior:contain;box-shadow:var(--dsw-shadow-lv3);position:relative;background:var(--dsw-alias-bg-base)}
+.tm-shareLoading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--dsw-alias-label-tertiary);font-size:13px}
+/* \u7F29\u653E\u5C42\uFF1A\u677F\u5B50 1920\xD71080 \u2192 scale(\u821E\u53F0\u5BBD/1920)\uFF0C\u7F29\u653E\u7CFB\u6570\u7531 ResizeObserver \u5199\u8FDB inline style */
+/* \u677F\u5B50\u76F4\u63A5\u94FA\u5728\u821E\u53F0\u91CC\uFF1A\u5BBD\u5EA6 100% \u8DDF\u968F\u5BB9\u5668\uFF08\u7EC4\u4EF6\u6309\u771F\u5B9E\u50CF\u7D20\u5BBD\u5EA6\u6392\u7248\uFF0C\u54CD\u5E94\u5F0F\u5206\u680F\u7167\u5E38\u751F\u6548\uFF09 */
+.tm-shareZoom{width:100%}
+/* \u2500\u2500 \u677F\u5B50\u672C\u4F53 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+.tm-shareBoard.tm-shareBoard{width:100%;height:auto;box-sizing:border-box;padding:20px 24px 14px;display:flex;flex-direction:column;align-items:stretch;gap:12px;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);font-size:13px;line-height:1.6;overflow:hidden;min-height:0}
+/* \u9875\u5934\u5206\u4E09\u5C42\uFF0C\u5404\u81EA\u6210\u5757\uFF0C\u907F\u514D"\u5168\u90FD\u5806\u5728\u53F3\u4E0A\u89D2"\uFF1A
+   \u2460 \u6807\u9898\u533A\uFF08\u5DE6\uFF09\uFF0B \u4F5C\u8005\u533A\uFF08\u53F3\uFF09 \u2461 \u7EC6\u7EBF \u2462 \u6765\u6E90\u4FE1\u606F\u6761\uFF08\u63D2\u4EF6/\u7248\u672C/\u4ED3\u5E93\u5DE6\uFF0C\u751F\u6210\u4FE1\u606F\u53F3\uFF09 */
+.tm-shareHead{flex:none;display:flex;flex-direction:column;gap:8px;padding:0 2px 9px;border-bottom:.5px solid var(--dsw-alias-border-l2)}
+.tm-shareTop{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.tm-shareTitleBox{display:flex;flex-direction:column;gap:2px;min-width:0}
+.tm-shareBrandRow{display:flex;align-items:center;gap:8px;min-width:0}
+.tm-shareLogo{flex:none;display:block;color:var(--dsw-alias-state-business-primary)}
+.tm-shareAuthorBox{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:none;text-align:right}
+.tm-shareAuthor{font-size:15.5px;font-weight:600;line-height:21px;color:var(--dsw-alias-label-primary)}
+.tm-shareMail{font-size:12.5px;line-height:17px;color:var(--dsw-alias-label-caption)}
+/* \u6765\u6E90\u4FE1\u606F\u6761\uFF1A\u5DE6\u5BF9\u9F50\u4E00\u884C\uFF0C\u4E0E\u6807\u9898\u5C42\u4E4B\u95F4\u6709\u7EC6\u7EBF\uFF1B\u4ED3\u5E93\u5730\u5740\u4E0D\u518D\u548C\u4F5C\u8005\u6324\u5728\u4E00\u8D77\u53F3\u5BF9\u9F50 */
+.tm-shareMeta{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding-top:7px;border-top:.5px solid var(--dsw-alias-border-l1)}
+.tm-sharePlug{font-size:14px;font-weight:600;line-height:19px;color:var(--dsw-alias-state-business-primary);white-space:nowrap}
+.tm-sharePlug em{font-style:normal;font-weight:400;font-size:12px;opacity:.8;margin-left:4px}
+.tm-shareMetaSep{font-size:12.5px;color:var(--dsw-alias-label-dimmed)}
+.tm-shareRepo{font-size:12.5px;line-height:18px;color:var(--dsw-alias-label-secondary);white-space:nowrap}
+.tm-shareMetaR{margin-left:auto;font-size:12px;line-height:18px;color:var(--dsw-alias-label-caption)}
+.tm-shareBrand{font-size:21px;font-weight:700;line-height:28px;color:var(--dsw-alias-label-primary)}
+.tm-shareSub{font-size:12.5px;line-height:18px;color:var(--dsw-alias-label-caption)}
+/* \u4E24\u5217\u6805\u683C\uFF1A\u2460 \u7528\u91CF\u57FA\u7840\u6570\u636E\uFF08\u901A\u680F\uFF09\u2461 \u8D8B\u52BF | \u70ED\u529B\u56FE \u2462 \u6BCF\u65E5\u5728\u7EBF | \u6A21\u578B\u5206\u5E03 \u2463 \u5728\u7EBF\u4E09\u53E3\u5F84\uFF08\u901A\u680F\uFF09 */
+/* \u56DB\u680F\u6805\u683C\u3002\u4E3A\u4EC0\u4E48\u4E0D\u662F\u5747\u5206\u4E09\u680F\uFF1A\u8D8B\u52BF\u56FE\u4E0E\u70ED\u529B\u56FE\u662F\u4E24\u5757"\u5403\u5BBD\u5EA6"\u7684\u56FE\uFF08\u8D8B\u52BF\u56FE\u9AD8\u5EA6 = \u5BBD\u5EA6*0.24
+   \u4E14\u6709 230px \u4E0A\u9650\uFF1B\u70ED\u529B\u683C\u5B50\u662F 1:1 \u65B9\u683C\uFF0C\u5BBD\u5EA6\u76F4\u63A5\u51B3\u5B9A\u683C\u5B50\u5927\u5C0F\uFF09\uFF0C\u5404\u5360\u534A\u5E45\uFF08764px\uFF09\u624D\u63A5\u8FD1
+   \u89C6\u56FE\u91CC\u7684\u89C2\u611F\uFF1B\u4F59\u4E0B\u4E24\u680F\u653E\u6A21\u578B\u5206\u5E03\u4E0E\u5728\u7EBF\u4E09\u53E3\u5F84\u3002 */
+.tm-shareGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-content:start}
+.tm-shareCell{min-width:0;display:flex;flex-direction:column}
+.tm-shareCell>*{margin:0!important;flex:1 1 auto;min-width:0}
+.tm-sr6{grid-column:1/-1}
+/* \u5206\u4EAB\u5361\u662F\u9759\u6001\u56FE\uFF1A\u4E0D\u663E\u793A\u4EFB\u4F55\u6863\u4F4D/\u5C0F\u7EC4\u4EF6\u5F00\u5173\u3002\u7EC4\u4EF6\u672C\u8EAB\u4E00\u884C\u6CA1\u6539\uFF0C\u53EA\u662F\u63A7\u4EF6\u4E0D\u51FA\u73B0 \u2014\u2014
+   \u5426\u5219\u5361\u4E0A\u4F1A\u51FA\u73B0\u4E00\u5806\u70B9\u4E86\u624D\u6709\u53CD\u5E94\u7684\u6309\u94AE\uFF0C\u622A\u56FE\u51FA\u53BB\u66F4\u4E71\uFF0C\u800C\u4E14\u4F1A\u5199\u8FDB\u7528\u6237\u7684\u504F\u597D\u5B58\u50A8\u3002 */
+.tm-shareBoard .tm-seg,
+.tm-shareBoard .tm-widgetBtn,
+.tm-shareBoard .tm-toolbar>button{display:none!important}
+/* \u6805\u683C\u5217\u6570\u4E0D\u518D\u5199\u6B7B\uFF1A\u677F\u5B50\u6839\u8282\u70B9\u81EA\u5E26 .tm-cview\uFF08\u89C1\u4E0A\uFF09\uFF0C\u6240\u4EE5 .tm-cview .tm-grid /
+   .tm-cview .tm-statGrid / @container tmc \u90A3\u4E00\u6574\u5957\u54CD\u5E94\u5F0F\u89C4\u5219\u5728\u677F\u5B50\u91CC\u540C\u6837\u547D\u4E2D\uFF0C
+   \u5217\u6570\u4E0E\u89C6\u56FE\u91CC\u4FDD\u6301\u4E00\u81F4 \u2014\u2014 \u8FD9\u6B63\u662F"\u5728\u5206\u4EAB\u9762\u677F\u91CC\u4E5F\u5E94\u5F53\u662F\u54CD\u5E94\u5F0F\u7684"\u3002 */
+/* \u6307\u6807\u5361\u6805\u683C\u4E0D\u5199\u6B7B\u5217\u6570\uFF1A\u677F\u5BBD\u662F\u8DDF\u968F\u5BB9\u5668\u7684\uFF0C13 \u5F20\u5361\u5728\u7A84\u5BB9\u5668\u91CC\u81EA\u7136\u6298\u6210\u591A\u884C\u624D\u662F\u5BF9\u7684
+   \uFF08\u89C6\u56FE\u81EA\u5DF1\u5C31\u662F\u8FD9\u4E48\u54CD\u5E94\u7684\uFF09\u3002\u5199\u6B7B\u5217\u6570\u53EA\u5728"\u5FC5\u987B\u585E\u8FDB\u56FA\u5B9A\u753B\u5E45"\u65F6\u624D\u6709\u610F\u4E49\u3002 */
+.tm-shareBoard .tm-dash{display:block}
+.tm-shareBoard .tm-card{box-shadow:none}
+
+/* \u2500\u2500 \u8BED\u4E49\u56FE\u6807\u4E0E\u5361\u7247\u5E95\u7EB9\uFF08glyphs.ts\uFF09\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+ * \u540C\u4E00\u679A\u8BED\u4E49\u56FE\u6807\u7528\u4E24\u5904\uFF1A
+ *  \xB7 .tm-stat-ico / .tm-cico \u2014\u2014 13~14px \u5C0F\u56FE\u6807\uFF0C\u8D34\u5728\u6307\u6807\u6807\u7B7E\u524D\u3001\u5361\u7247\u6807\u9898\u524D\uFF1B
+ *  \xB7 .tm-stat-bg \u2014\u2014 \u540C\u4E00\u4E2A\u540D\u5B57\u653E\u5927\u5230 58px\u3001\u4F4E\u900F\u660E\u5EA6\uFF0C\u6446\u5728\u6307\u6807\u5361\u53F3\u4E0B\u89D2\u5F53\u6C34\u5370\u5E95\u7EB9\uFF0C
+ *    \u8BA9\u300C\u7D2F\u8BA1 / \u7F13\u5B58 / \u8FDE\u7EED / \u5CF0\u503C\u2026\u300D\u5404\u5E26\u4E00\u70B9\u4E0E\u6570\u636E\u610F\u5883\u76F8\u7B26\u7684\u56FE\u5F62\uFF0C\u800C\u4E0D\u662F\u7EAF\u8272\u5757\u3002
+ * \u989C\u8272\u90FD\u8D70 currentColor\uFF0C\u8FD9\u91CC\u53EA\u7BA1\u5C3A\u5BF8\u3001\u989C\u8272\u4E0E\u5C42\u7EA7\u3002 */
+.tm-stat-ico,.tm-cico{flex:none;display:block;color:var(--dsw-alias-label-tertiary)}
+.tm-stat[data-tint="1"] .tm-stat-ico{color:color-mix(in srgb,var(--dsw-alias-state-business-primary) 70%,var(--dsw-alias-label-tertiary))}
+/* \u6C34\u5370\uFF1A\u5361\u7247\u7B2C\u4E00\u4E2A\u5B50\u5143\u7D20 + absolute \u53F3\u4E0B"\u51FA\u8840"\uFF0C\u5FC5\u987B\u5728\u6587\u5B57\u4E4B\u4E0B */
+.tm-stat-bg{position:absolute;right:-10px;bottom:-12px;z-index:0;pointer-events:none;user-select:none;color:var(--dsw-alias-state-business-primary);opacity:.075}
+.tm-stat[data-tint="1"] .tm-stat-bg{opacity:.12}
+/* \u6587\u5B57\u5C42\u538B\u5728\u5E95\u7EB9\u4E4B\u4E0A */
+.tm-stat-label,.tm-stat-value,.tm-stat-sub,.tm-stat .tm-spark,.tm-stat .tm-compose,.tm-stat .tm-streakbar,.tm-stat .tm-dayscroll{position:relative;z-index:1}
+/* \u6807\u9898\u884C\u91CC\u7684\u56FE\u6807 + \u6587\u672C\uFF1A\u6587\u672C\u8D1F\u8D23\u7701\u7565\u53F7\uFF0C\u56FE\u6807\u4E0D\u53C2\u4E0E\u538B\u7F29 */
+.tm-chart-name{display:flex;align-items:center;gap:6px;min-width:0;flex:1 1 auto}
+.tm-titledIco{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.tm-cname-txt,.tm-titledIco>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* \u2500\u2500 \u5CF0\u8C37\u6C1B\u56F4\uFF08\u7F6E\u4E8E\u672B\u5C3E\u4EE5\u8986\u76D6\u524D\u5E8F\u540C\u7279\u5F02\u6027\u58F0\u660E\uFF09\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
  * \u5CF0\uFF08\u5DE5\u4F5C\u65E5 9:00\u201318:00\uFF09\uFF1A\u6696\u8272\u5DE6\u7F18 + \u6781\u7F13\u547C\u5438\u5149\u6655 \u2014\u2014 \u7D27\u5F20\u3001\u6D88\u8017\u52A0\u901F\uFF1B
  * \u8C37\uFF1A\u51B7\u7EFF\u5DE6\u7F18 + \u9759\u7A33\u5E95\u8272 \u2014\u2014 \u8D39\u7387\u4F4E\u3001\u53EF\u4ECE\u4ECE\u5BB9\u5BB9\u8DD1\u91CF\uFF1B
@@ -496,6 +562,28 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 .tm-segFieldKey{font-size:12px;color:var(--dsw-alias-label-secondary);min-width:58px;flex:none}
 .tm-segFieldCtl{display:inline-flex;flex:none}
 .tm-segFieldHint{font-size:11px;line-height:15px;color:var(--dsw-alias-label-caption);flex:1 1 190px;min-width:130px}
+/* \u2500\u2500 \u7A7A\u95F2\u9608\u503C\uFF1A\u5B8C\u6574\u8BF4\u660E + \u4E94\u6863\u5BF9\u6BD4 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   \u8BF4\u660E\u6587\u5B57\u6BD4\u4E00\u822C hint \u957F\u5F97\u591A\uFF08\u4E09\u6761\u89C4\u5219 + \u4E94\u6863\u5BF9\u6BD4 + \u63A8\u8350\u7406\u7531\uFF09\uFF0C\u6240\u4EE5\u8FD9\u4E00\u680F\u6539\u6210\u7EB5\u5411\u6392\uFF1A
+   \u6807\u9898\u4E0E\u6863\u4F4D\u9009\u62E9\u5668\u4E00\u884C\uFF0C\u8BF4\u660E\u6574\u5E45\u5728\u4E0B\u9762\uFF0C\u4E0D\u518D\u6324\u5728\u53F3\u4FA7\u90A3\u4E00\u5217\u91CC\u3002 */
+.tm-segField:has(.tm-gapHint){align-items:flex-start}
+.tm-segField:has(.tm-gapHint) .tm-segFieldHint{flex:1 1 100%}
+.tm-gapHint{display:flex;flex-direction:column;gap:5px;font-size:11.5px;line-height:17px;color:var(--dsw-alias-label-secondary);min-width:0}
+.tm-gapRules{margin:0;padding-left:17px;display:flex;flex-direction:column;gap:3px;color:var(--dsw-alias-label-tertiary)}
+.tm-gapRules b{color:var(--dsw-alias-label-secondary);font-weight:600}
+.tm-gapRules em{font-style:normal;font-weight:600;color:var(--dsw-alias-state-warn-primary)}
+.tm-gapCmpTitle{color:var(--dsw-alias-label-caption);margin-top:3px}
+.tm-gapCmp{display:flex;gap:8px;flex-wrap:wrap}
+.tm-gapCmpItem{display:flex;flex-direction:column;gap:1px;min-width:88px;padding:5px 9px;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);cursor:pointer;transition:border-color .15s}
+.tm-gapCmpItem:hover{border-color:var(--dsw-alias-border-l3)}
+.tm-gapCmpItem b{font-size:11px;font-weight:600;color:var(--dsw-alias-label-secondary)}
+.tm-gapCmpItem i{font-style:normal;font-size:13px;font-weight:600;color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums}
+.tm-gapCmpItem em{font-style:normal;font-size:10.5px;color:var(--dsw-alias-label-caption)}
+.tm-gapCmpOn{border-color:color-mix(in srgb,var(--dsw-alias-state-business-primary) 55%,var(--dsw-alias-border-l2));background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 10%,var(--dsw-alias-bg-layer-2))}
+.tm-gapCmpOn b,.tm-gapCmpOn i{color:var(--dsw-alias-state-business-primary)}
+/* \u63A8\u8350\u6863\uFF1A\u5728\u6807\u7B7E\u540E\u9762\u7F00\u4E00\u4E2A\u7EFF\u8272\u300C\u63A8\u8350\u300D\uFF0C\u800C\u4E0D\u662F\u53E6\u8D77\u4E00\u5757\u8BF4\u660E */
+.tm-gapCmpRec b:after{content:' \xB7 \u63A8\u8350';color:var(--dsw-alias-state-success-primary)}
+.tm-gapRec{color:var(--dsw-alias-label-tertiary)}
+.tm-gapRec b{color:var(--dsw-alias-state-success-primary);font-weight:600}
 .tm-acc{font-size:10px;line-height:15px;padding:0 4px;border-radius:4px;border:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-caption);flex:none;font-weight:400}
 .tm-acc.exact{color:var(--dsw-alias-state-success-primary);border-color:color-mix(in srgb,var(--dsw-alias-state-success-primary) 45%,transparent);background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 10%,transparent)}
 .tm-acc.estimate{color:var(--dsw-alias-state-warn-primary);border-color:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 45%,transparent);background:color-mix(in srgb,var(--dsw-alias-state-warn-primary) 10%,transparent)}
@@ -519,27 +607,497 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
 .tm-tip-title{font-weight:600;margin-bottom:3px;color:var(--dsw-alias-label-primary)}
 .tm-tip-text{white-space:normal;max-width:236px;line-height:1.5;margin-top:3px;color:var(--dsw-alias-label-secondary)}
 .tm-tipfixed .tm-tiprow+.tm-tiprow{margin-top:1px}
+/* \u2550\u2550 \u4E2D\u5FC3\u533A\u89C6\u56FE\uFF08conversation.view\u300CToken \u603B\u89C8\u300D\uFF09\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+ * \u6EDA\u52A8\u6A21\u578B\uFF1A**\u53EA\u6709\u53F3\u534A\u7684 .tm-cbody \u6EDA\u52A8**\uFF0C\u5DE6\u83DC\u5355\u4E0E\u5206\u533A\u6807\u9898\u680F\u5728\u6EDA\u52A8\u5BB9\u5668\u4E4B\u5916\uFF0C
+ * \u7ED3\u6784\u4E0A\u5C31\u4E0D\u53EF\u80FD\u8DDF\u7740\u6EDA\uFF08\u4E0D\u4F9D\u8D56 position:sticky \u7684\u53EF\u89C1\u6027\uFF09\u3002
+ *
+ * \u8981\u505A\u5230\u8FD9\u70B9\uFF0C\u89C6\u56FE\u5FC5\u987B\u5148\u6709\u300C\u786E\u5B9A\u9AD8\u5EA6\u300D\u3002\u4F1A\u8BDD\u5916\u58F3\u91CC\u8FD9\u4E00\u5C42\u662F hashed \u7C7B
+ * .wSkVaW_viewArea\uFF0C\u4E14\u6FC0\u6D3B\u6001\u662F flex:1 0 auto + min-height:auto \u2014\u2014 \u9AD8\u5EA6\u7531\u5185\u5BB9
+ * \u6491\u5F00\uFF0C\u5B50\u5143\u7D20\u7684 height:100% \u4F1A\u9000\u5316\u6210 auto\u3002\u6240\u4EE5\u4E0B\u9762\u7B2C\u4E00\u6761\u89C4\u5219\u7528\u5B98\u65B9**\u7A33\u5B9A\u94A9\u5B50**
+ * \uFF08[data-conversation-scroll] / [data-slot="conversation.session"]\uFF0C\u4E0D\u78B0\u54C8\u5E0C\u7C7B\u540D\uFF09
+ * \u628A\u90A3\u5C42\u6539\u6210\u53EF\u6536\u7F29\u7684\u786E\u5B9A\u9AD8\u5EA6\u9879\u3002\u9009\u62E9\u5668\u523B\u610F\u628A :has() \u7684\u53C2\u6570\u5199\u6210
+ * [data-slot="conversation.view"] .tm-cview\uFF0C\u628A\u7279\u5F02\u6027\u62AC\u5230 (0,4,0)\uFF0C**\u538B\u8FC7**\u5916\u58F3\u90A3\u6761
+ * .wSkVaW_root[data-phase=active] .wSkVaW_viewArea \u7684 (0,3,0) \u2014\u2014 \u4E0D\u518D\u4F9D\u8D56
+ * \u300C\u63D2\u4EF6\u6837\u5F0F\u665A\u4E8E\u5916\u58F3\u6837\u5F0F\u6CE8\u5165\u300D\u8FD9\u79CD\u65F6\u5E8F\u5047\u8BBE\uFF1B\u540C\u65F6\u4ECD\u7136\u53EA\u5F71\u54CD\u672C\u89C6\u56FE\uFF0C\u5BF9\u8BDD/\u8F68\u8FF9\u4E0D\u53D7\u5F71\u54CD\u3002
+ *
+ * \u515C\u5E95\uFF1A\u4E07\u4E00\u8FD9\u6761\u6CA1\u751F\u6548\uFF08\u5916\u58F3\u7ED3\u6784\u53D8\u52A8\uFF09\uFF0C.tm-cview \u7684 height:100% \u4F1A\u9000\u5316\u6210 auto\uFF0C
+ * \u4E8E\u662F\u56DE\u5230\u300C\u5916\u5C42 scrollBody \u6EDA\u52A8 + \u5DE6\u83DC\u5355/\u6807\u9898\u680F sticky \u9489\u4F4F\u300D\u7684\u8001\u6A21\u578B\uFF0C\u4ECD\u7136\u53EF\u7528\u3002 */
+[data-conversation-scroll]:has([data-slot="conversation.view"] .tm-cview)>[data-slot="conversation.session"]>*{flex:1 1 0;min-height:0;overflow:clip}
+/* overflow:clip\uFF08\u800C\u4E0D\u662F hidden\uFF09\u2014\u2014\u5B83\u4E0D\u4F1A\u628A\u81EA\u5DF1\u53D8\u6210\u6EDA\u52A8\u5BB9\u5668\uFF0C\u9F20\u6807\u6EDA\u8F6E\u4E0D\u4F1A\u5728\u8FD9\u91CC
+ * \u88AB\u622A\u4F4F\uFF0C\u7167\u5E38\u843D\u5230 .tm-cbody \u4E0A\u3002 */
+.tm-cview{box-sizing:border-box;width:100%;height:100%;min-height:0;display:flex;align-items:stretch;overflow:clip;container-type:inline-size;container-name:tmc;background:var(--dsw-alias-bg-base)}
+/* \u5217\u5BBD\u62D6\u62FD\u6761\u5BF9\u672C\u89C6\u56FE\u6CA1\u6709\u610F\u4E49\uFF08\u539F\u751F\u8F68\u8FF9\u89C6\u56FE\u540C\u6837\u4E0D\u663E\u793A\uFF09\u2014\u2014\u5BF9\u300C\u6709 .tm-cview \u540E\u4EE3\u3001
+ * \u4E14\u76F4\u63A5\u6302\u7740 [data-width-handle]\u300D\u7684\u90A3\u5C42\uFF08\u5373\u4F1A\u8BDD body\uFF09\u9690\u85CF\u3002 */
+*:has(.tm-cview)>[data-width-handle]{display:none}
+/* \u5DE6\u83DC\u5355\uFF1A\u6574\u5217\u94FA\u6EE1\u9AD8\u5EA6\uFF08\u80CC\u666F + \u53F3\u5206\u9694\u7EBF\u8986\u76D6\u6574\u5217\uFF09\u3002
+ * \u26A0 .tm-cnav \u5FC5\u987B\u4FDD\u6301 overflow:visible \u2014\u2014 \u4E00\u65E6\u7ED9\u5B83 overflow:auto/hidden\uFF0C\u5B83\u81EA\u5DF1\u5C31
+ * \u6210\u4E86\u6EDA\u52A8\u5BB9\u5668\uFF0C\u91CC\u9762 sticky \u7684 .tm-cnavInner \u4F1A\u300C\u76F8\u5BF9 .tm-cnav \u5B9A\u4F4D\u300D\u800C\u4E0D\u662F\u76F8\u5BF9\u5916\u5C42
+ * \u4F1A\u8BDD\u6EDA\u52A8\u533A\uFF1B.tm-cnav \u81EA\u5DF1\u53C8\u6C38\u8FDC\u4E0D\u6EDA\uFF0C\u4E8E\u662F\u5916\u5C42\u4E00\u6EDA\uFF0C\u83DC\u5355\u5C31\u8DDF\u7740\u6EDA\u8D70\u4E86\uFF08\u8E29\u8FC7\u8FD9\u4E2A\u5751\uFF09\u3002 */
+.tm-cnav{flex:none;width:190px;min-width:190px;display:flex;flex-direction:column;padding:16px 10px 12px;border-right:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);overflow:visible}
+/* sticky \u53EA\u662F\u515C\u5E95\uFF08\u6B63\u5E38\u60C5\u51B5\u4E0B\u83DC\u5355\u6574\u5757\u90FD\u5728\u6EDA\u52A8\u5BB9\u5668\u4E4B\u5916\uFF0C\u6839\u672C\u4E0D\u4F1A\u79FB\u52A8\uFF09\uFF1B\u83DC\u5355\u6BD4
+ * \u89C6\u53E3\u8FD8\u9AD8\u65F6\uFF08\u6781\u77EE\u7A97\u53E3\uFF09\u7531\u5B83\u81EA\u5DF1\u7684 max-height + overflow \u515C\u4F4F\u3002 */
+.tm-cnavInner{position:sticky;top:0;display:flex;flex-direction:column;gap:2px;max-height:100vh;overflow-y:auto}
+.tm-cnavHead{font-size:12px;font-weight:600;line-height:18px;color:var(--dsw-alias-label-secondary);padding:2px 8px 10px;letter-spacing:.02em}
+.tm-cnavList{display:flex;flex-direction:column;gap:2px}
+.tm-cnavItem{display:flex;align-items:center;gap:8px;width:100%;background:transparent;border:none;border-radius:6px;padding:8px 10px;font-family:inherit;font-size:13px;line-height:20px;color:var(--dsw-alias-label-secondary);cursor:pointer;text-align:left}
+.tm-cnavItem:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.tm-cnavItem:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}
+.tm-cnavItem>svg{flex:none;display:block}
+.tm-cnavOn,.tm-cnavOn:hover{color:var(--dsw-alias-label-primary);font-weight:500;background:color-mix(in srgb,var(--dsw-alias-state-business-primary) 12%,transparent)}
+.tm-cnavOn>svg{color:var(--dsw-alias-state-business-primary)}
+.tm-cnavLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* \u300C\u8BBE\u7F6E\u300D\u4E0E\u4E0A\u9762\u4E09\u4E2A\u6570\u636E\u5206\u533A\u4E4B\u95F4\u753B\u4E00\u6761\u5206\u9694\u7EBF\uFF1A\u5B83\u4E0D\u662F\u300C\u770B\u6570\u636E\u300D\uFF0C\u662F\u300C\u6539\u914D\u7F6E\u300D */
+.tm-cnavItemSep{margin-top:8px;position:relative}
+.tm-cnavItemSep:before{content:'';position:absolute;left:8px;right:8px;top:-5px;height:1px;background:var(--dsw-alias-border-l2)}
+/* \u8BBE\u7F6E\u5206\u533A\u6CBF\u7528\u8BBE\u7F6E\u9875\u7684\u884C\u5F0F\u8868\u5355\u5E03\u5C40\uFF08label + \u63A7\u4EF6\u5DE6\u53F3\u6210\u5BF9\uFF09\uFF0C\u5BBD\u5C4F\u4E0B\u62C9\u6EE1\u6574\u5E45\u4F1A\u5F88\u96BE\u626B\u8BFB\uFF0C
+   \u6240\u4EE5\u6536\u7A84\u5C45\u4E2D\uFF1B\u6570\u636E\u5206\u533A\u624D\u5403\u6EE1\u5BBD\u5EA6\u3002 */
+.tm-cview .tm-cset .tm-page{max-width:min(920px,100%)}
+/* \u53F3\u534A\uFF1A\u56FA\u5B9A\u7684\u5206\u533A\u6807\u9898\u680F + \u552F\u4E00\u7684\u6EDA\u52A8\u5BB9\u5668 .tm-cbody */
+.tm-cmain{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
+.tm-chead{position:sticky;top:0;z-index:3;flex:none;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:14px 24px 11px;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-base)}
+.tm-cheadTitle{font-size:15px;font-weight:600;line-height:22px;color:var(--dsw-alias-label-primary);flex:none}
+.tm-cheadHint{font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto}
+.tm-cbody{flex:1;min-width:0;min-height:0;overflow-y:auto;overflow-x:clip;scrollbar-gutter:stable;padding:18px 24px 56px;box-sizing:border-box}
+/* \u5206\u533A\u7EC4\u4EF6\u672A\u88C5\u914D\u65F6\u7684\u5C31\u5730\u63D0\u793A\uFF1A\u628A\u300C\u6574\u4E2A tab \u5D29\u6389\u300D\u964D\u7EA7\u6210\u4E00\u6761\u53EF\u8BFB\u7684\u8BF4\u660E\uFF08\u89C1 CenterView.isComponent\uFF09 */
+.tm-sectMiss{margin:0 auto;max-width:560px;padding:14px 16px;box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-secondary);font-size:13px;line-height:20px}
+/* \u4E2D\u5FC3\u533A\u6BD4\u4FA7\u680F\u5BBD\u5F97\u591A\uFF1A\u5185\u5BB9\u5403\u6EE1\u53EF\u7528\u5BBD\u5EA6\uFF08\u53EA\u7559\u4E00\u4E2A\u9632\u8D85\u5BBD\u5C4F\u7684\u4E0A\u9650\uFF09\uFF0C\u4E0D\u518D\u662F\u7A84\u5355\u5217 */
+.tm-cview .tm-page{max-width:min(1760px,100%);margin:0 auto;width:100%}
+/* \u7528\u91CF\u7EDF\u8BA1\u9762\u677F\u662F\u300C\u5916\u5C42 tm-page\uFF08\u5DE5\u5177\u680F + \u4ECA\u65E5\u5361\uFF09+ \u5185\u5C42 tm-page\uFF08StatsSettingsPage\uFF09\u300D\uFF0C
+   \u5185\u5C42\u4E0D\u518D\u91CD\u590D\u52A0\u5BBD\u5EA6\u7EA6\u675F\u4E0E\u5C45\u4E2D\uFF0C\u907F\u514D\u51FA\u73B0\u4E24\u5C42\u5BB9\u5668\u4E92\u76F8\u538B\u7F29 */
+.tm-page .tm-page{max-width:none;margin:0;width:100%}
+
+/* \u2500\u2500 \u4EEA\u8868\u677F\u6805\u683C\uFF1A\u5BBD\u5C4F\u4E0B\u628A\u5361\u7247\u5E76\u6392\uFF0C\u7A84\u4E86\u81EA\u52A8\u843D\u56DE\u5355\u5217 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+.tm-dash{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px;align-items:start;width:100%}
+.tm-dash>*{min-width:0}
+.tm-c12{grid-column:span 12}
+.tm-c8{grid-column:span 8}
+.tm-c7{grid-column:span 7}
+.tm-c6{grid-column:span 6}
+.tm-c5{grid-column:span 5}
+.tm-c4{grid-column:span 4}
+/* \u5361\u7247\u8FDB\u6805\u683C\u540E\u4E0D\u518D\u81EA\u5DF1\u5E26\u5916\u8FB9\u8DDD\uFF08\u95F4\u8DDD\u7531 gap \u8D1F\u8D23\uFF09 */
+.tm-dash .tm-card{margin:0}
+.tm-dash .tm-statGrid{margin:0}
+/* \u6A21\u578B\u5206\u5E03\u5361\uFF08\u901A\u680F\u3001\u653E\u6700\u540E\uFF09\uFF1A\u73AF\u5F62\u56FE\u9489\u5728\u5DE6\uFF0C\u6A21\u578B\u5217\u8868\u5411\u53F3\u5206\u680F\u94FA\u5F00 \u2014\u2014 \u8FD9\u662F\u7EB5\u5411\u7ED3\u6784\uFF0C
+   \u6A2A\u8FC7\u6765\u53EA\u4F1A\u62C9\u6210\u4E00\u6761\u5F88\u957F\u7684\u5355\u5217\u3002\u7A84\u4E86\u81EA\u52A8\u843D\u56DE\u4E0A\u4E0B\u6392\u5217\u3002 */
+.tm-donutWide .tm-flexrow{flex-direction:row;align-items:flex-start;gap:24px}
+.tm-donutWide .tm-donutBox{margin:0;flex:none}
+.tm-donutWide .tm-models{flex:1;min-width:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:0 28px;align-content:start}
+.tm-donutWide .tm-models .tm-model:last-child{border-bottom:1px solid var(--dsw-alias-border-l1)}
+@container tmc (max-width:900px){
+.tm-donutWide .tm-flexrow{flex-direction:column;align-items:stretch}
+.tm-donutWide .tm-donutBox{margin:0 auto}
+.tm-donutWide .tm-models{grid-template-columns:minmax(0,1fr)}
+}
+@container tmc (max-width:1180px){
+.tm-c8,.tm-c7,.tm-c6,.tm-c5,.tm-c4{grid-column:span 12}
+}
+
+/* \u2500\u2500 \u4EEA\u8868\u677F\u89C2\u611F\uFF1A\u5361\u7247\u66F4\u5BBD\u677E\u3001\u6307\u6807\u66F4\u539A\u5B9E\uFF08\u53EA\u5728\u4E2D\u5FC3\u533A\u751F\u6548\uFF0C\u6D6E\u7A97/\u8BBE\u7F6E\u9875\u4FDD\u6301\u539F\u6837\uFF09\u2500\u2500 */
+.tm-cview .tm-card{padding:16px 18px}
+.tm-cview .tm-toolbar{margin-bottom:12px}
+.tm-cview .tm-page>.tm-toolbar:last-child{margin-bottom:0}
+.tm-cview .tm-statGrid{grid-template-columns:repeat(auto-fill,minmax(198px,1fr));gap:12px;grid-auto-rows:1fr}
+.tm-cview .tm-statGrid>.tm-stat{min-height:92px;padding:12px 14px;gap:3px}
+.tm-cview .tm-statGrid .tm-stat-value{font-size:19px;line-height:26px}
+.tm-cview .tm-chart-title{font-size:13px;margin-bottom:10px}
+.tm-cview .tm-empty{padding:44px 0}
+.tm-cview .tm-segField{padding:5px 0}
+.tm-cview .tm-intro{margin-bottom:10px}
+
+/* \u2500\u2500 \u57FA\u7840\u6570\u636E / \u5728\u7EBF\u65F6\u957F\uFF1A\u540C\u4E00\u5957\u300C\u6307\u6807\u5361\u9635\u300D\u89C4\u683C \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+ * \u7528\u91CF\u7EDF\u8BA1\u7684 .tm-grid \u4E0E\u5728\u7EBF\u7EDF\u8BA1\u7684 .tm-statGrid \u5171\u7528\u5361\u7247\u89C4\u683C\uFF1A
+ *  grid-auto-rows:1fr  \u2192 \u540C\u4E00\u884C\u5361\u7247\u7B49\u9AD8\uFF1B
+ *  \u672B\u884C margin-top:auto \u2192 \u8BF4\u660E\u6587\u5B57/\u8FF7\u4F60\u56FE\u9876\u5230\u5E95\u90E8\uFF0C\u6570\u503C\u5728\u7F51\u683C\u7EBF\u4E0A\u5BF9\u9F50\uFF1B
+ *  \u8BF4\u660E\u5141\u8BB8\u4E24\u884C       \u2192 \u4E0D\u518D\u88AB nowrap + \u7701\u7565\u53F7\u5207\u6389\uFF08\u5982\u300C\u8F93\u5165 4.1\u4EBF \xB7 \u8F93\u51FA 185\u2026\u300D\uFF09\u3002 */
+.tm-cview .tm-grid,
+.tm-cview .tm-statGrid{grid-auto-rows:1fr;gap:12px;margin:0}
+.tm-cview .tm-grid{grid-template-columns:repeat(auto-fill,minmax(214px,1fr))}
+.tm-cview .tm-statGrid{grid-template-columns:repeat(auto-fill,minmax(198px,1fr))}
+.tm-cview .tm-grid>.tm-stat,
+.tm-cview .tm-statGrid>.tm-stat{min-height:106px;padding:14px 16px;justify-content:flex-start;gap:4px;border-radius:12px}
+.tm-cview .tm-grid>.tm-stat>*:last-child,
+.tm-cview .tm-statGrid>.tm-stat>*:last-child{margin-top:auto}
+.tm-cview .tm-grid .tm-stat-label,
+.tm-cview .tm-statGrid .tm-stat-label{font-size:11.5px;line-height:16px;letter-spacing:.02em;color:var(--dsw-alias-label-caption);flex-wrap:wrap}
+.tm-cview .tm-grid .tm-stat-value,
+.tm-cview .tm-statGrid .tm-stat-value{font-size:22px;line-height:30px;font-weight:600}
+.tm-cview .tm-grid .tm-stat-sub,
+.tm-cview .tm-statGrid .tm-stat-sub{font-size:11.5px;line-height:16px;color:var(--dsw-alias-label-tertiary);white-space:normal;overflow:hidden;text-overflow:clip;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+/* \u6307\u6807\u5361\u91CC\u7684\u8FF7\u4F60\u56FE/\u6784\u6210\u6761\uFF1A\u8D34\u7740\u8BF4\u660E\u6587\u5B57\u4E0B\u65B9\uFF0C\u7559\u4E00\u70B9\u7A7A\u9699 */
+.tm-cview .tm-grid .tm-spark,
+.tm-cview .tm-statGrid .tm-spark{margin-top:4px}
+@container tmc (max-width:1000px){
+.tm-cview .tm-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+.tm-cview .tm-grid .tm-stat-value,
+.tm-cview .tm-statGrid .tm-stat-value{font-size:20px;line-height:28px}
+}
+
+/* \u5728\u7EBF\u65F6\u957F\uFF1A\u56FA\u5B9A\u5217\u6570\uFF08\u800C\u4E0D\u662F auto-fill\uFF09\uFF0C\u6700\u540E\u4E00\u884C\u624D\u6392\u5F97\u6574\u9F50 \u2014\u2014 7 \u5F20\u5361\u91CC\u8BA9
+   \u300C\u5F15\u64CE\u5408\u8BA1\u300D\u8DE8 2 \u5217\u8865\u6EE1\u3002\u9608\u503C\u4FDD\u8BC1\u6BCF\u5217\u4E0D\u7A84\u4E8E\u7EA6 250px\uFF08\u503C\u662F\u300C143 \u5C0F\u65F6 48 \u5206\u300D
+   \u8FD9\u79CD\u957F\u4E2D\u6587\u65F6\u957F\u4E32\uFF0C\u518D\u7A84\u5C31\u5F97\u6298\u884C\uFF09\uFF1A\u5BB9\u5668 \u22651320 \u2192 4 \u5217\uFF1B820~1320 \u2192 2 \u5217\uFF1B\u66F4\u7A84 1 \u5217\u3002 */
+.tm-cview .tm-statGrid.tm-onlineGrid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.tm-cview .tm-onlineGrid>.tm-statWide{grid-column:span 2}
+@container tmc (max-width:1320px){
+.tm-cview .tm-statGrid.tm-onlineGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@container tmc (max-width:820px){
+.tm-cview .tm-statGrid.tm-onlineGrid{grid-template-columns:minmax(0,1fr)}
+.tm-cview .tm-onlineGrid>.tm-statWide{grid-column:auto}
+}
+/* \u51C6\u786E\u6027\u5FBD\u6807\u56FE\u4F8B\uFF08\u6807\u9898\u884C\u53F3\u4FA7\uFF09\uFF1A\u7EFF=\u7CBE\u786E / \u9EC4=\u4F30\u7B97 / \u7070=\u4E0B\u754C */
+.tm-accLegend{display:inline-flex;align-items:center;flex-wrap:wrap;gap:4px 12px;flex:none}
+.tm-accLegendItem{display:inline-flex;align-items:center;gap:5px;font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary)}
+.tm-cview .tm-accLegend .tm-acc{font-size:10px}
+/* \u2500\u2500 \u989D\u5EA6\u67E5\u8BE2\uFF1A\u4F9B\u5E94\u5546\u5361\u7247\u81EA\u9002\u5E94\u7F51\u683C\uFF084/3/2/1 \u5217\u968F\u5BBD\u5EA6\u843D\uFF09 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+ * \u9608\u503C\u6309\u300C\u5BB9\u5668\u5BBD - \u5DE6\u83DC\u5355 - \u5DE6\u53F3\u5185\u8FB9\u8DDD\u300D\u53CD\u63A8\uFF0C\u4FDD\u8BC1\u6BCF\u5217\u4E0D\u7A84\u4E8E\u7EA6 320px
+ * \uFF08\u5361\u7247\u91CC\u6709\u6807\u9898+\u5FBD\u6807+\u6309\u94AE\u884C\u3001\u4E09\u6761\u8FDB\u5EA6\u6761\u3001\u4E24\u5217\u6307\u6807\u7F51\u683C\uFF09\u3002 */
+.tm-vgrid{display:grid;gap:12px;align-items:start;width:100%;grid-template-columns:repeat(4,minmax(0,1fr))}
+.tm-vgrid>*{min-width:0}
+/* \u5361\u7247\u8FDB\u7F51\u683C\u540E\u4E0D\u518D\u81EA\u5E26\u4E0A/\u4E0B\u5916\u8FB9\u8DDD\uFF08\u884C\u8DDD\u7531 gap \u51B3\u5B9A\uFF09\uFF0C\u5E76\u4E14**\u81EA\u5DF1\u6210\u4E3A\u4E00\u4E2A\u5C3A\u5BF8\u5BB9\u5668**\uFF1A
+   \u5361\u7247\u91CC\u7684\u300C\u8D26\u6237\u4E0E\u7528\u91CF\u300D\u4E24\u5217\u6307\u6807\u7F51\u683C\u5FC5\u987B\u6309\u5361\u7247\u5BBD\u5EA6\u6536\u653E\uFF083~4 \u5217\u65F6\u5361\u7247\u53EA\u6709 300 \u51FA\u5934\uFF0C
+   \u4E24\u5217\u4F1A\u628A\u6807\u7B7E\u548C\u6570\u503C\u6324\u5230\u6362\u884C\uFF09\u3002\u65E7\u5199\u6CD5\u6302\u5728\u9875\u9762\u7EA7\u5BB9\u5668 tm \u4E0A\uFF0C\u4E2D\u5FC3\u533A\u9875\u9762\u6709\u4E00\u5343\u591A\u50CF\u7D20\uFF0C
+   \u4E8E\u662F\u5361\u7247\u518D\u7A84\u4E5F\u4E0D\u4F1A\u89E6\u53D1\u6536\u653E\u3002 */
+.tm-vgrid .tm-card{margin:0;container-type:inline-size;container-name:tmvc}
+@container tmvc (max-width:400px){
+.tm-xgridBody{grid-template-columns:minmax(0,1fr)}
+}
+@container tmc (max-width:1560px){.tm-vgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@container tmc (max-width:1240px){.tm-vgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container tmc (max-width:890px){.tm-vgrid{grid-template-columns:minmax(0,1fr)}}
+/* \u907F\u514D\u300C\u6700\u540E\u4E00\u884C\u53EA\u5269\u4E00\u5F20\u5361\u300D\u7684\u5B64\u884C\uFF1A\u5361\u6570\u6B63\u597D\u6BD4\u5217\u6570\u591A\u4E00\u5F20\u65F6\u964D\u4E00\u6863\u5217\u6570\u91CD\u6392
+   \uFF083 \u5217 4 \u5F20 \u2192 2\xD72\uFF1B4 \u5217 5 \u5F20 \u2192 3+2\uFF1B4 \u5217 9 \u5F20 \u2192 3\xD73\uFF09\u3002\u7EAF :has() \u5224\u5B9A\uFF0C
+   \u4E0D\u9700\u8981 JS \u91CF\u5BBD\u5EA6\uFF0C\u4E5F\u4E0D\u4F1A\u5F71\u54CD\u5176\u5B83\u5361\u6570\u3002 */
+@container tmc (min-width:1240px) and (max-width:1560px){
+.tm-vgrid:has(>.tm-card:nth-child(4):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@container tmc (min-width:1560px){
+.tm-vgrid:has(>.tm-card:nth-child(5):last-child){grid-template-columns:repeat(3,minmax(0,1fr))}
+.tm-vgrid:has(>.tm-card:nth-child(9):last-child){grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+/* \u7A84\u4E2D\u5FC3\u533A\uFF08\u628A\u4E2D\u95F4\u680F\u62D6\u7A84\uFF09\uFF1A\u5DE6\u83DC\u5355\u6536\u6210\u56FE\u6807\u8F68\u9053\uFF0C\u53EA\u7559 tooltip */
+@container tmc (max-width:620px){
+.tm-cnav{width:46px;min-width:46px;padding:12px 6px;align-items:center}
+.tm-cnavInner{width:100%}
+.tm-cnavHead{display:none}
+.tm-cnavItem{justify-content:center;padding:8px 0;gap:0}
+.tm-cnavLabel{display:none}
+.tm-chead{padding:12px 14px 10px}
+.tm-cheadHint{display:none}
+.tm-cbody{padding:14px 14px 40px}
+}
 `;
+
+  // src/name.ts
+  var DISPLAY_NAME = "Token \u603B\u89C8";
+
+  // src/client/CenterView.ts
+  var STORE_KEY = "tm-center-section";
+  function isComponent(v) {
+    return typeof v === "function" || typeof v === "object" && v !== null && typeof v.$$typeof === "symbol";
+  }
+  var warnedMissing = /* @__PURE__ */ new Set();
+  function warnMissing(name) {
+    if (warnedMissing.has(name)) return;
+    warnedMissing.add(name);
+    try {
+      console.error("[dshp-token-meter] \u4E2D\u5FC3\u533A\u5206\u533A\u672A\u88C5\u914D\uFF1A" + name + "\uFF08\u68C0\u67E5 TokenMeterSection \u7684\u8FD4\u56DE\u503C\uFF09");
+    } catch {
+    }
+  }
+  function createCenterView(React, sections, icons) {
+    const h = React.createElement;
+    const ITEMS = [
+      {
+        id: "quota",
+        label: "\u989D\u5EA6\u67E5\u8BE2",
+        hint: "\u5168\u90E8\u4F9B\u5E94\u5546\u989D\u5EA6\u4E00\u89C8 \xB7 \u589E\u5220\u6539\u4F9B\u5E94\u5546\u5728\u5DE6\u4FA7\u300C\u8BBE\u7F6E\u300D\u91CC",
+        Icon: icons.QuotaIcon
+      },
+      {
+        id: "stats",
+        label: "\u7528\u91CF\u7EDF\u8BA1",
+        hint: "\u4F1A\u8BDD\u65E5\u5FD7\u805A\u5408\u7684\u7528\u91CF\u8D8B\u52BF\u3001\u70ED\u529B\u56FE\u4E0E\u6A21\u578B\u5206\u5E03",
+        Icon: icons.UsageIcon
+      },
+      {
+        id: "online",
+        label: "\u5728\u7EBF\u7EDF\u8BA1",
+        hint: "\u5728\u7EBF / \u5BF9\u8BDD\u8FDB\u884C\u4E2D / \u6A21\u578B + \u5DE5\u5177\u4E09\u53E3\u5F84\u65F6\u957F\u4E0E\u6BCF\u65E5\u6392\u884C",
+        Icon: icons.OnlineIcon
+      },
+      {
+        id: "settings",
+        label: "\u8BBE\u7F6E",
+        hint: "\u504F\u597D\u3001\u4F9B\u5E94\u5546\u589E\u5220\u6539\u3001\u6570\u636E\u6765\u6E90\u4E0E\u7EDF\u8BA1\u7F13\u5B58 \xB7 \u4E0E \u8BBE\u7F6E\u91CC\u7684\u540C\u540D\u5206\u533A\u662F\u540C\u4E00\u4EFD",
+        Icon: icons.SettingsIcon,
+        sep: true
+      }
+    ];
+    const ids = ITEMS.map((i) => i.id);
+    const first = ITEMS[0];
+    function readSaved() {
+      try {
+        const raw = window.localStorage.getItem(STORE_KEY);
+        if (raw && ids.indexOf(raw) >= 0) return raw;
+      } catch {
+      }
+      return first.id;
+    }
+    return function TokenMeterCenterView() {
+      const [cur, setCur] = React.useState(readSaved);
+      const [share, setShare] = React.useState(false);
+      const pick = (id) => {
+        setCur(id);
+        try {
+          window.localStorage.setItem(STORE_KEY, id);
+        } catch {
+        }
+      };
+      const active = ITEMS.filter((i) => i.id === cur)[0] ?? first;
+      const openSettings = () => pick("settings");
+      const box = sections;
+      const section = (name, props) => {
+        const Comp = box[name];
+        if (!isComponent(Comp)) {
+          warnMissing(name);
+          return h("div", { className: "tm-sectMiss" }, "\u300C" + name + "\u300D\u5206\u533A\u672A\u88C5\u914D\uFF0C\u8BF7\u91CD\u65B0\u52A0\u8F7D\u63D2\u4EF6\u3002");
+        }
+        return h(Comp, props);
+      };
+      const icon = (Comp, size) => isComponent(Comp) ? h(Comp, { size }) : null;
+      const canShare = isComponent(sections.SharePanel);
+      if (!canShare) warnMissing("SharePanel");
+      return h(
+        "div",
+        { className: "tm-cview" },
+        h(
+          "nav",
+          { className: "tm-cnav", "aria-label": DISPLAY_NAME },
+          // 整列（背景 + 右分隔线）铺满内容高度，菜单本体 sticky 钉在顶部
+          h(
+            "div",
+            { className: "tm-cnavInner" },
+            h("div", { className: "tm-cnavHead" }, DISPLAY_NAME),
+            h(
+              "div",
+              { className: "tm-cnavList" },
+              ITEMS.map(
+                (item) => h(
+                  "button",
+                  {
+                    key: item.id,
+                    type: "button",
+                    className: "tm-cnavItem" + (cur === item.id ? " tm-cnavOn" : "") + (item.sep ? " tm-cnavItemSep" : ""),
+                    "aria-current": cur === item.id ? "true" : void 0,
+                    title: item.hint,
+                    onClick: () => pick(item.id)
+                  },
+                  icon(item.Icon, 15),
+                  h("span", { className: "tm-cnavLabel" }, item.label)
+                )
+              )
+            )
+          )
+        ),
+        h(
+          "div",
+          { className: "tm-cmain" },
+          h(
+            "header",
+            { className: "tm-chead" },
+            h("span", { className: "tm-cheadTitle" }, active.label),
+            h("span", { className: "tm-cheadHint" }, active.hint),
+            // 分享入口：任何分区都能一键生成整张 16:9 分享卡
+            // 面板没装配就不画按钮 —— 宁可没有入口，也不要一个点了就崩的按钮
+            canShare ? h(
+              "button",
+              {
+                type: "button",
+                className: "tm-shareBtn",
+                title: "\u628A\u7528\u91CF\u7EDF\u8BA1\u4E0E\u5728\u7EBF\u7EDF\u8BA1\u5408\u6210\u4E00\u5F20 16:9 \u5206\u4EAB\u5361",
+                onClick: () => setShare(true)
+              },
+              icon(icons.ShareIcon, 14),
+              h("span", null, "\u5206\u4EAB")
+            ) : null,
+            canShare && share ? h(sections.SharePanel, {
+              onClose: () => setShare(false),
+              // 在线块来自 OnlineSection，这里把它交给分享面板一起内聚
+              OnlineEmbed: sections.OnlineEmbed
+            }) : null
+          ),
+          // 只挂载当前分区的面板：各面板自己会去打接口，全挂载会白拉几份数据。
+          h(
+            "div",
+            { className: "tm-cbody", "data-tm-scroll": "1" },
+            cur === "quota" ? section("QuotaView", { onOpenSettings: openSettings }) : cur === "stats" ? section("StatsView") : cur === "online" ? section("OnlineView") : (
+              // 设置页是行式表单布局，宽屏下收窄居中更好读（数据卡片才吃满宽度）
+              h("div", { className: "tm-cset" }, section("SettingsView"))
+            )
+          )
+        )
+      );
+    };
+  }
+
+  // src/client/glyphs.ts
+  function svgAttrs(props) {
+    const size = props && props.size ? props.size : 16;
+    return {
+      width: size,
+      height: size,
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: 1.8,
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      className: props && props.className || void 0,
+      "aria-hidden": "true",
+      focusable: "false"
+    };
+  }
+  var S = (d, extra) => ["path", extra ? { d, ...extra } : { d }];
+  var C = (cx, cy, r, extra) => [
+    "circle",
+    extra ? { cx, cy, r, ...extra } : { cx, cy, r }
+  ];
+  var GLYPHS = {
+    /* ── 用量统计 · 基础数据 ─────────────────────────────────────────── */
+    /** 累计 Token：三层堆叠（"攒起来的量"） */
+    layers: [
+      S("M12 3.4 20.6 8 12 12.6 3.4 8z"),
+      S("m3.4 12.4 8.6 4.6 8.6-4.6"),
+      S("m3.4 16.6 8.6 4.6 8.6-4.6")
+    ],
+    /** 近 30 天走势：坐标轴 + 折线 */
+    trend: [S("M3.6 3.6v16.8h16.8"), S("m6.6 15.4 4-4.6 3.4 2.8 4.8-6.2")],
+    /** 缓存 Token：数据库圆柱 */
+    database: [
+      S("M4 6.6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3z"),
+      S("M4 6.6v10.8c0 1.7 3.6 3 8 3s8-1.3 8-3V6.6"),
+      S("M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3")
+    ],
+    /** 峰值单次请求：闪电 */
+    bolt: [S("M13.4 2.6 4.6 13.8h5.8l-1.8 7.6 8.6-11.2h-5.8z")],
+    /** 峰值单日：山与旗 */
+    mountain: [
+      S("M2.8 19.4h18.4"),
+      S("m4.6 19.4 5.2-8.6 3.4 4.6 2.2-2.6 4 6.6"),
+      S("M12.6 4.6h3.6l-1 1.8 1 1.8h-3.6z")
+    ],
+    /** 日均消耗：基准线 + 起伏 */
+    wave: [S("M3.4 19.4h17.2"), S("M3.4 13.4c2.4-5.4 4.8-5.4 7.2 0s4.8 5.4 7.2 0")],
+    /** 日消耗中位数：数据点 + 中位线 */
+    median: [S("M3.4 19.4h17.2"), S("M12 6.4v13", { strokeDasharray: "2.4 2.4" }), C(12, 4.2, 1.9)],
+    /** 当前连续使用：火苗 */
+    flame: [
+      S(
+        "M12 2.8c3.4 4.2 6.4 7 6.4 10.9a6.4 6.4 0 0 1-12.8 0c0-2.1 1-3.5 2.2-4.7.5 1.3 1.3 2.1 2.3 2.3-.6-2.7-.2-5.8 1.9-8.5z"
+      )
+    ],
+    /** 最长连续使用：奖杯 */
+    trophy: [
+      S("M8 3.8h8v5a4 4 0 0 1-8 0z"),
+      S("M8 5.4H4.8a3.2 3.2 0 0 0 3.3 3"),
+      S("M16 5.4h3.2a3.2 3.2 0 0 1-3.3 3"),
+      S("M12 12.8v3.6"),
+      S("M8.6 19.8h6.8l-.7-3.4H9.3z")
+    ],
+    /** 活跃天数：日历 */
+    calendar: [
+      S("M3.6 5.6h16.8v14.4H3.6z"),
+      S("M3.6 10.2h16.8"),
+      S("M8 3.4v4"),
+      S("M16 3.4v4"),
+      S("M7.4 14.2h2.2"),
+      S("M14.4 14.2h2.2")
+    ],
+    /** 模型调用次数 / 模型生成：芯片 */
+    chip: [
+      S("M7.4 7.4h9.2v9.2H7.4z"),
+      S("M10.4 3.8v3.6"),
+      S("M13.6 3.8v3.6"),
+      S("M10.4 16.6v3.6"),
+      S("M13.6 16.6v3.6"),
+      S("M3.8 10.4h3.6"),
+      S("M3.8 13.6h3.6"),
+      S("M16.6 10.4h3.6"),
+      S("M16.6 13.6h3.6")
+    ],
+    /** 首次使用：旗杆 */
+    flag: [S("M6 3.4v17.2"), S("M6 4.6h11.6l-2.7 4 2.7 4H6z")],
+    /** 最近使用 / 在线时长：时钟 */
+    clock: [C(12, 12, 8.4), S("M12 7.4V12l3.3 2")],
+    /* ── 在线统计 ─────────────────────────────────────────────────────── */
+    /** 今日在线：太阳 */
+    sun: [
+      C(12, 12, 4.2),
+      S("M12 2.6v2.4"),
+      S("M12 19v2.4"),
+      S("M2.6 12H5"),
+      S("M19 12h2.4"),
+      S("m5.4 5.4 1.7 1.7"),
+      S("m16.9 16.9 1.7 1.7"),
+      S("m18.6 5.4-1.7 1.7"),
+      S("m7.1 16.9-1.7 1.7")
+    ],
+    /** 累计在线：沙漏 */
+    hourglass: [S("M6.6 3.2h10.8v3L13 12l4.4 5.8v3H6.6v-3L11 12 6.6 6.2z"), S("M6.6 3.2h10.8")],
+    /** 对话进行中：对话气泡 */
+    bubble: [S("M3.6 5.8h16.8v10.6h-7.6L8.4 20.4v-4H3.6z")],
+    /** 工具执行：终端提示符 */
+    terminal: [S("M3.6 4.4h16.8v15.2H3.6z"), S("m7.4 9.8 2.7 2.7-2.7 2.7"), S("M13 15.2h4.2")],
+    /** 引擎合计：齿轮 */
+    gear: [
+      C(12, 12, 7.2),
+      C(12, 12, 3),
+      S("M12 2.8v2"),
+      S("M12 19.2v2"),
+      S("M2.8 12h2"),
+      S("M19.2 12h2"),
+      S("m5.5 5.5 1.4 1.4"),
+      S("m17.1 17.1 1.4 1.4"),
+      S("m18.5 5.5-1.4 1.4"),
+      S("m6.9 17.1-1.4 1.4")
+    ],
+    /* ── 图表卡标题 ───────────────────────────────────────────────────── */
+    /** Token 活动热力图：九宫格 */
+    grid: [S("M3.6 3.6h7v7h-7z"), S("M13.4 3.6h7v7h-7z"), S("M3.6 13.4h7v7h-7z"), S("M13.4 13.4h7v7h-7z")],
+    /** 模型用量分布：圆环 */
+    donut: [C(12, 12, 8.4), C(12, 12, 4.2)],
+    /** 每日在线：柱状 */
+    chartBar: [S("M2.8 20.4h18.4"), S("M5 20.4V11"), S("M10 20.4V6.2"), S("M15 20.4v-6.6"), S("M20 20.4V9.4")],
+    /** 每日在线排行：榜单条 */
+    list: [S("M4 6.6h16"), S("M4 12h11.6"), S("M4 17.4h7.2")],
+    /** 分享卡上的作者位：头像剪影 */
+    user: [C(12, 8.6, 3.6), S("M4.8 20.4c1.3-4 3.9-6 7.2-6s5.9 2 7.2 6")],
+    /** 口径与准确性：同心靶 */
+    target: [C(12, 12, 8.4), C(12, 12, 4.6), C(12, 12, 1.4, { fill: "currentColor", stroke: "none" })]
+  };
+  var FALLBACK = [C(12, 12, 3)];
+  function createGlyphs(React) {
+    const h = React.createElement;
+    function Glyph(props) {
+      const els = GLYPHS[props.name] || FALLBACK;
+      return h(
+        "svg",
+        svgAttrs(props),
+        els.map((e, i) => h(e[0], { ...e[1], key: i }))
+      );
+    }
+    return {
+      Glyph,
+      hasGlyph: (name) => Object.prototype.hasOwnProperty.call(GLYPHS, name),
+      names: Object.keys(GLYPHS)
+    };
+  }
 
   // src/client/icons.ts
   function createIcons(React) {
     const h = React.createElement;
-    function svgProps(props) {
-      const size = props && props.size ? props.size : 16;
-      return {
-        width: size,
-        height: size,
-        viewBox: "0 0 24 24",
-        fill: "none",
-        stroke: "currentColor",
-        strokeWidth: 1.8,
-        strokeLinecap: "round",
-        strokeLinejoin: "round",
-        className: props && props.className || void 0,
-        "aria-hidden": "true",
-        focusable: "false"
-      };
-    }
+    const svgProps = svgAttrs;
     function QuotaIcon(props) {
       return h(
         "svg",
@@ -575,7 +1133,31 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         h("path", { key: "hand", d: "M12 7.6V12l3.2 2" })
       );
     }
-    return { QuotaIcon, UsageIcon, OnlineIcon };
+    function SettingsIcon(props) {
+      return h(
+        "svg",
+        svgProps(props),
+        h("path", { key: "a1", d: "M3.6 8h9" }),
+        h("path", { key: "a2", d: "M18.4 8h2" }),
+        h("circle", { key: "a3", cx: 15.5, cy: 8, r: 2.3 }),
+        h("path", { key: "b1", d: "M3.6 16h2" }),
+        h("path", { key: "b2", d: "M11.4 16h9" }),
+        h("circle", { key: "b3", cx: 8.5, cy: 16, r: 2.3 })
+      );
+    }
+    function ShareIcon(props) {
+      return h(
+        "svg",
+        svgProps(props),
+        h("path", {
+          key: "box",
+          d: "M12.6 4.6H5.4a1.8 1.8 0 0 0-1.8 1.8v12.2a1.8 1.8 0 0 0 1.8 1.8h12.2a1.8 1.8 0 0 0 1.8-1.8v-7.2"
+        }),
+        h("path", { key: "arrow", d: "M14.4 3.4h6.2v6.2" }),
+        h("path", { key: "diag", d: "M20.6 3.4 11.4 12.6" })
+      );
+    }
+    return { QuotaIcon, UsageIcon, OnlineIcon, SettingsIcon, ShareIcon };
   }
 
   // src/client/api.ts
@@ -604,13 +1186,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
   }
 
   // src/client/OnlineSection.ts
-  var GAP_LABELS = [
-    [1, "1 \u5206\u949F"],
-    [5, "5 \u5206\u949F"],
-    [15, "15 \u5206\u949F"],
-    [30, "30 \u5206\u949F"],
-    [60, "60 \u5206\u949F"]
-  ];
+  var GAP_RECOMMEND = 15;
   var RANGE_LABELS = [
     [14, "\u8FD1 14 \u5929"],
     [30, "\u8FD1 30 \u5929"],
@@ -752,6 +1328,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     };
   }
   function createOnlineSection(React, ReactDOM, statsApi) {
+    const { Glyph } = createGlyphs(React);
     const h = React.createElement;
     function portal(node) {
       if (node === null || node === void 0) return null;
@@ -886,18 +1463,28 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const picked = map[props.kind];
       return h("span", { className: "tm-badge " + picked[0] }, picked[1]);
     }
+    function cardName(name, text) {
+      return h(
+        "span",
+        { className: "tm-chart-name" },
+        h(Glyph, { name, size: 14, className: "tm-cico" }),
+        h("span", { className: "tm-cname-txt" }, text)
+      );
+    }
     function Stat(props) {
       const t = useTip();
       return h(
         "div",
         {
-          className: "tm-stat",
+          className: "tm-stat" + (props.wide ? " tm-statWide" : ""),
           ...props.tint ? { "data-tint": "1" } : {},
           ...props.tip ? t.bind(props.tip) : {}
         },
+        props.icon ? h(Glyph, { name: props.icon, size: 58, className: "tm-stat-bg" }) : null,
         h(
           "div",
           { className: "tm-stat-label", style: { display: "flex", alignItems: "center", gap: 4 } },
+          props.icon ? h(Glyph, { name: props.icon, size: 13, className: "tm-stat-ico" }) : null,
           props.label,
           props.acc ? h(
             "span",
@@ -907,6 +1494,25 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         ),
         h("div", { className: "tm-stat-value" }, props.value),
         props.sub ? h("div", { className: "tm-stat-sub" }, props.sub) : null
+      );
+    }
+    function AccLegend() {
+      const item = (kind, text) => h(
+        "span",
+        { key: kind, className: "tm-accLegendItem" },
+        h(
+          "span",
+          { className: "tm-acc " + kind },
+          kind === "exact" ? "\u7CBE\u786E" : kind === "estimate" ? "\u4F30\u7B97" : "\u4E0B\u754C"
+        ),
+        h("span", null, text)
+      );
+      return h(
+        "span",
+        { className: "tm-accLegend" },
+        item("exact", "\u65F6\u95F4\u6233\u76F4\u63A5\u7B97\u51FA"),
+        item("estimate", "\u7531\u533A\u95F4\u63A8\u65AD"),
+        item("bound", "\u5B9E\u9645\u53EA\u4F1A\u66F4\u591A")
       );
     }
     function Dot(props) {
@@ -929,13 +1535,25 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     }
     function Chart(props) {
       const items = props.items;
-      const W = CHART_W;
-      const H = CHART_H;
+      const boxRef = React.useRef(null);
+      const [boxW, setBoxW] = React.useState(0);
+      React.useEffect(() => {
+        const el = boxRef.current;
+        if (!el || typeof ResizeObserver === "undefined") return void 0;
+        const ro = new ResizeObserver((entries) => {
+          const w = entries && entries[0] ? Math.round(entries[0].contentRect.width) : 0;
+          if (w > 0) setBoxW(w);
+        });
+        ro.observe(el);
+        return () => ro.disconnect();
+      }, []);
+      const [hover, setHover] = React.useState(null);
+      if (items.length === 0) return h("div", { className: "tm-empty" }, "\u6682\u65E0\u6570\u636E");
+      const W = Math.max(CHART_W, boxW || CHART_W);
+      const H = Math.round(Math.min(260, Math.max(CHART_H, W * 0.22)));
       const padT = 12;
       const padB = 18;
       const innerH = H - padT - padB;
-      const [hover, setHover] = React.useState(null);
-      if (items.length === 0) return h("div", { className: "tm-empty" }, "\u6682\u65E0\u6570\u636E");
       let max = 0;
       for (const it of items) {
         if (it.ms > max) max = it.ms;
@@ -943,9 +1561,10 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       }
       if (max <= 0) max = 1;
       const bw = W / items.length;
-      const barW = Math.max(1.4, Math.min(20, bw * 0.6));
+      const barW = Math.max(2, Math.min(26, bw * 0.6));
       const yOf = (v) => padT + innerH * (1 - v / max);
-      const step = Math.max(1, Math.ceil(items.length / 6));
+      const labelCount = Math.max(6, Math.min(items.length, Math.round(W / 96)));
+      const step = Math.max(1, Math.ceil(items.length / labelCount));
       const today = keyOf(Date.now());
       const children = [];
       children.push(
@@ -1072,7 +1691,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       ) : null;
       return h(
         "div",
-        { className: "tm-svgwrap" },
+        { className: "tm-svgwrap", ref: boxRef },
         h(
           "div",
           { style: { cursor: "crosshair" } },
@@ -1168,7 +1787,12 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       return h(
         "div",
         { className: "tm-card" },
-        h("div", { className: "tm-title" }, "\u53E3\u5F84\u4E0E\u51C6\u786E\u6027"),
+        h(
+          "div",
+          { className: "tm-title tm-titledIco" },
+          h(Glyph, { name: "target", size: 14, className: "tm-cico" }),
+          "\u53E3\u5F84\u4E0E\u51C6\u786E\u6027"
+        ),
         h(ProportionBars, { view: v }),
         h(
           "div",
@@ -1374,55 +1998,132 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       if (!online) {
         return h(
           "div",
-          { className: "tm-card" },
-          h("div", { className: "tm-title" }, "\u5728\u7EBF\u65F6\u957F"),
+          { className: "tm-page" },
           h(
             "div",
-            { className: "tm-desc" },
-            props.err ? "\u8BFB\u53D6\u5931\u8D25\uFF1A" + props.err : data && data.ready ? "\u5F53\u524D Host \u672A\u63D0\u4F9B\u5728\u7EBF\u65F6\u957F\u6570\u636E\uFF08\u63D2\u4EF6\u9700\u91CD\u542F\u4EE5\u52A0\u8F7D\u65B0\u7248 Host \u534A\uFF09\u3002" : "\u7EDF\u8BA1\u5C1A\u672A\u5C31\u7EEA\uFF0C\u6B63\u5728\u626B\u63CF\u4F1A\u8BDD\u65E5\u5FD7\u2026"
-          ),
-          h(
-            "div",
-            { className: "tm-toolbar", style: { marginTop: 8 } },
-            h("button", { type: "button", className: "tm-mini", onClick: props.onReload }, "\u91CD\u8BD5")
+            { className: "tm-card" },
+            h("div", { className: "tm-title" }, "\u5728\u7EBF\u65F6\u957F"),
+            h(
+              "div",
+              { className: "tm-desc" },
+              props.err ? "\u8BFB\u53D6\u5931\u8D25\uFF1A" + props.err : data && data.ready ? "\u5F53\u524D Host \u672A\u63D0\u4F9B\u5728\u7EBF\u65F6\u957F\u6570\u636E\uFF08\u63D2\u4EF6\u9700\u91CD\u542F\u4EE5\u52A0\u8F7D\u65B0\u7248 Host \u534A\uFF09\u3002" : "\u7EDF\u8BA1\u5C1A\u672A\u5C31\u7EEA\uFF0C\u6B63\u5728\u626B\u63CF\u4F1A\u8BDD\u65E5\u5FD7\u2026"
+            ),
+            h(
+              "div",
+              { className: "tm-toolbar", style: { marginTop: 8 } },
+              h("button", { type: "button", className: "tm-mini", onClick: props.onReload }, "\u91CD\u8BD5")
+            )
           )
         );
       }
       const view = deriveOnlineView(online, props.gap, props.rangeDays);
-      const gapSeg = h(Seg, {
-        items: GAP_LABELS.filter(([v]) => online.gaps.indexOf(v) >= 0),
-        value: online.gaps.indexOf(props.gap) >= 0 ? props.gap : online.gaps[0],
-        onPick: props.onGap
-      });
-      const segRow = (label, hint, control, rows) => h(
+      const gapCmp = h(
+        "div",
+        { className: "tm-gapCmp" },
+        online.gaps.map((g, i) => {
+          const ms = online.totalMs[String(g)] ?? 0;
+          const prevMs = i > 0 ? online.totalMs[String(online.gaps[i - 1])] ?? 0 : 0;
+          const on = g === props.gap;
+          return h(
+            "span",
+            Object.assign(
+              {
+                key: String(g),
+                className: "tm-gapCmpItem" + (on ? " tm-gapCmpOn" : "") + (g === GAP_RECOMMEND ? " tm-gapCmpRec" : ""),
+                // 这几张卡本身就是切换入口：五档摆在一起看增量时，顺手就能切过去比
+                onClick: () => props.onGap(g)
+              },
+              tip.bind({
+                k: "gap" + g,
+                title: g + " \u5206\u949F\u6863",
+                rows: [
+                  ["\u7D2F\u8BA1\u5728\u7EBF", fmtDur(ms)],
+                  ["\u6D3B\u8DC3\u6BB5\u6570", String(online.segments[String(g)] ?? 0)],
+                  ["\u6BD4\u4E0A\u4E00\u6863\u591A", i > 0 ? "+" + fmtDur(ms - prevMs) : "\u2014"]
+                ],
+                text: "\u628A\u300C\u76F8\u90BB\u4E8B\u4EF6\u95F4\u9694 \u2264 " + g + " \u5206\u949F\u300D\u7684\u65F6\u95F4\u90FD\u7B97\u4F5C\u5728\u7EBF\u3002\u6863\u4F4D\u8D8A\u5927\uFF0C\u8D8A\u591A\u7684\u9759\u9ED8\u671F\uFF08\u8BFB\u957F\u56DE\u7B54\u3001\u60F3\u9700\u6C42\u3001\u79BB\u5F00\u5EA7\u4F4D\uFF09\u88AB\u7B97\u8FDB\u6765\u3002"
+              })
+            ),
+            h("b", null, g + " \u5206\u949F"),
+            h("i", null, fmtDur(ms)),
+            i > 0 ? h("em", null, "+" + fmtDur(ms - prevMs)) : null
+          );
+        })
+      );
+      const gapExplain = h(
+        "div",
+        { className: "tm-gapHint" },
+        h("div", null, "\u5728\u7EBF = \u65E5\u5FD7\u91CC\u6709\u4E8B\u4EF6\u3001\u4E14\u76F8\u90BB\u4E8B\u4EF6\u95F4\u9694\u4E0D\u8D85\u8FC7\u9608\u503C\u7684\u90A3\u6BB5\u5899\u949F\u65F6\u95F4\u3002\u89C4\u5219\u5C31\u4E09\u6761\uFF1A"),
+        h(
+          "ul",
+          { className: "tm-gapRules" },
+          h(
+            "li",
+            null,
+            h("b", null, "\u95F4\u9694 \u2264 \u9608\u503C \u2192 \u6574\u6BB5\u7B97\u5728\u7EBF"),
+            "\uFF1A10:00 \u4E0E 10:50 \u5404\u6709\u4E00\u4E2A\u4E8B\u4EF6\u3001\u9608\u503C 60 \u5206\u949F\uFF0C\u4E2D\u95F4\u8FD9 50 \u5206\u949F\uFF08\u54EA\u6015\u4F60\u4E0D\u5728\uFF09\u4E00\u5E76\u8BA1\u5165\uFF0C\u5E76\u7D2F\u52A0\u5230\u5F53\u5929\u3002"
+          ),
+          h(
+            "li",
+            null,
+            h("b", null, "\u95F4\u9694 > \u9608\u503C \u2192 \u65AD\u5F00"),
+            "\uFF1A\u4ECE\u4E0A\u4E00\u4E2A\u4E8B\u4EF6\u5904\u6536\u5C3E\uFF0C\u4E2D\u95F4\u90A3\u6BB5\u4E00\u79D2\u90FD\u4E0D\u8BA1\uFF0C\u65B0\u7684\u4E00\u6BB5\u4ECE\u4E0B\u4E00\u4E2A\u4E8B\u4EF6\u91CD\u65B0\u8D77\u7B97\u3002"
+          ),
+          h(
+            "li",
+            null,
+            h("b", null, "\u6BCF\u6BB5\u53EA\u7B97\u5230\u6700\u540E\u4E00\u4E2A\u4E8B\u4EF6"),
+            "\uFF1A\u4E4B\u540E\u7684\u65F6\u95F4\u4E0D\u8BA1\uFF08\u54EA\u6015\u8FC7\u4E86 1 \u5206\u949F\u5C31\u5173\u7A97\u53E3\uFF0C\u6216\u8005\u4F60\u63A5\u7740\u53C8\u8DD1\u4E86 3 \u5C0F\u65F6\u6CA1\u4EA7\u751F\u4E8B\u4EF6\uFF09\u3002\u6240\u4EE5\u4EFB\u4F55\u6863\u4F4D\u7B97\u51FA\u6765\u90FD\u662F",
+            h("em", null, "\u4E0B\u754C"),
+            "\uFF0C\u4E0D\u662F\u300C\u5750\u5728\u7535\u8111\u524D\u300D\u7684\u65F6\u957F\u3002"
+          )
+        ),
+        h("div", { className: "tm-gapCmpTitle" }, "\u540C\u4E00\u4EFD\u65E5\u5FD7\u4E0B\uFF0C\u4E94\u6863\u5206\u522B\u662F\u591A\u5C11\uFF08\u70B9\u6863\u4F4D\u53EF\u5207\u6362\uFF09\uFF1A"),
+        gapCmp,
+        h(
+          "div",
+          { className: "tm-gapRec" },
+          h("b", null, "\u63A8\u8350 15 \u5206\u949F"),
+          "\uFF08\u63D2\u4EF6\u9ED8\u8BA4\u503C\uFF09\uFF1ADSH \u771F\u6B63\u5728\u5E72\u6D3B\u65F6\u65E5\u5FD7\u91CC\u662F\u6709\u4E8B\u4EF6\u7684\uFF08\u6A21\u578B step\u3001\u5DE5\u5177 call/result\u3001\u5B50\u4EE3\u7406\uFF09\uFF0C\u4E0D\u9700\u8981\u9760\u5927\u9608\u503C\u6765\u515C\uFF1B\u9700\u8981\u515C\u7684\u662F\u8BFB\u957F\u56DE\u7B54\u3001\u60F3\u4E0B\u4E00\u4E2A\u9700\u6C42\u8FD9\u7C7B\u9759\u9ED8\u671F\uFF0C\u901A\u5E38\u51E0\u5206\u949F\u91CF\u7EA7\u30025 \u5206\u949F\u4EE5\u4E0B\u4F1A\u628A\u300C\u8BFB\u5B8C\u56DE\u7B54\u518D\u60F3\u4E00\u4E0B\u300D\u4E5F\u5207\u65AD\uFF0C\u504F\u4F4E\uFF1B60 \u5206\u949F\u4F1A\u628A\u300C\u53BB\u5F00\u4F1A/\u5403\u996D\u300D\u6574\u6BB5\u7B97\u6210\u5728\u7EBF\uFF0C\u53EA\u9002\u5408\u56DE\u7B54\u300C\u4ECA\u5929\u5F00\u7740 DSH \u591A\u4E45\u300D\u3002\u5BF9\u7167\u4E0A\u9762\u4E94\u6863\u7684\u589E\u91CF\uFF0C\u591A\u51FA\u6765\u7684\u5C0F\u65F6\u4E3B\u8981\u6765\u81EA\u54EA\u4E00\u6863\uFF0C\u4E00\u773C\u80FD\u770B\u51FA\u6765\u3002"
+        )
+      );
+      const segRow = (label, hint, control, rows, tipText) => h(
         "div",
         { className: "tm-segField" },
         h(
           "div",
           Object.assign(
             { className: "tm-segFieldKey" },
-            tip.bind({ k: label, title: label, text: hint, ...rows ? { rows } : {} })
+            tip.bind({
+              k: label,
+              title: label,
+              text: tipText !== void 0 ? tipText : typeof hint === "string" ? hint : "",
+              ...rows ? { rows } : {}
+            })
           ),
           label
         ),
-        h("div", { className: "tm-segFieldCtl" }, control),
+        control === null || control === void 0 ? null : h("div", { className: "tm-segFieldCtl" }, control),
         h("div", { className: "tm-segFieldHint" }, hint)
       );
       return h(
         "div",
-        null,
+        { className: "tm-page" },
         h(TipHost, null),
         h(
           "div",
           { className: "tm-card", style: { padding: "10px 12px" } },
           segRow(
             "\u7A7A\u95F2\u9608\u503C",
-            "\u76F8\u90BB\u4E8B\u4EF6\u95F4\u9694\u8D85\u8FC7\u5B83\u5C31\u7B97\u300C\u79BB\u5F00\u300D\u3002\u5B83\u662F\u53E3\u5F84\u4E0D\u662F\u7CBE\u5EA6\uFF1A\u8C03\u5927\u5728\u7EBF\u65F6\u957F\u53D8\u591A\uFF0860 \u5206\u949F\u6863\u6BD4 1 \u5206\u949F\u6863\u591A\u7EA6 90h\uFF09\u3002",
-            gapSeg,
+            gapExplain,
+            null,
             [
               ["\u5F53\u524D", props.gap + " \u5206\u949F"],
-              ["\u6D3B\u8DC3\u6BB5\u6570", String(view.segments)]
-            ]
+              ["\u8FD9\u4E2A\u6863\u7B97\u51FA\u7684\u7D2F\u8BA1\u5728\u7EBF", fmtDur(view.total)],
+              ["\u6D3B\u8DC3\u6BB5\u6570", String(view.segments)],
+              ["\u6BD4 1 \u5206\u949F\u6863\u591A", "+" + fmtDur(view.total - (online.totalMs["1"] ?? view.total))]
+            ],
+            "\u5728\u7EBF = \u6709\u4E8B\u4EF6\u3001\u4E14\u76F8\u90BB\u4E8B\u4EF6\u95F4\u9694\u4E0D\u8D85\u8FC7\u9608\u503C\u7684\u5899\u949F\u65F6\u95F4\u3002\u70B9\u4E0B\u9762\u7684\u6863\u4F4D\u5207\u6362\uFF1B\u6863\u4F4D\u8D8A\u5927\uFF0C\u8D8A\u591A\u7684\u9759\u9ED8\u671F\u88AB\u7B97\u8FDB\u6765\u3002"
           ),
           segRow(
             "\u65F6\u95F4\u8303\u56F4",
@@ -1436,10 +2137,29 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             h("span", { className: "tm-hint" }, online.activeDays + " \u4E2A\u6D3B\u8DC3\u65E5 \xB7 \u9ED8\u8BA4\u6309\u5168\u90E8\u663E\u793A")
           )
         ),
+        h(OnlineMetrics, { view, online }),
+        // ── 卡片区：12 栏仪表板栅格（宽屏下排行与口径并排，窄了自动落回单列）──
         h(
           "div",
-          { className: "tm-statGrid" },
+          { className: "tm-dash" },
+          h("div", { className: "tm-c12" }, h(OnlineDaily, { view })),
+          h("div", { className: "tm-c7" }, h(OnlineRank, { view })),
+          h("div", { className: "tm-c5" }, h(Accuracy, { view, snap: data }))
+        )
+      );
+    }
+    function OnlineMetrics(props) {
+      const view = props.view;
+      const online = props.online;
+      return h(
+        "div",
+        { className: "tm-card tm-onlinecards" },
+        h("div", { className: "tm-chart-title" }, cardName("clock", "\u5728\u7EBF\u65F6\u957F"), h(AccLegend, null)),
+        h(
+          "div",
+          { className: "tm-statGrid tm-onlineGrid" },
           h(Stat, {
+            icon: "sun",
             label: "\u4ECA\u65E5\u5728\u7EBF",
             value: fmtDurCn(view.today),
             tint: true,
@@ -1452,6 +2172,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             }
           }),
           h(Stat, {
+            icon: "hourglass",
             label: "\u7D2F\u8BA1\u5728\u7EBF",
             value: fmtDurCn(view.total),
             sub: (online.firstDay ? dispDay(online.firstDay) + " \u8D77" : "") + " \xB7 \u5171 " + view.activeDays + " \u4E2A\u6D3B\u8DC3\u65E5",
@@ -1464,10 +2185,11 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
                 ["\u65E5\u5747", fmtDur(view.avg)],
                 ["\u5F53\u524D\u53E3\u5F84", view.gap + " \u5206\u949F"]
               ],
-              text: "\u53E3\u5F84\u4F9D\u8D56\u9608\u503C\uFF1A60 \u5206\u949F\u6863\u6BD4 1 \u5206\u949F\u6863\u7EA6\u591A 90 \u5C0F\u65F6\u3002"
+              text: '\u8FD9\u4E2A\u6570\u5B57\u4F9D\u8D56\u7A7A\u95F2\u9608\u503C\uFF1A\u9608\u503C\u8D8A\u5927\uFF0C\u8D8A\u591A\u7684\u9759\u9ED8\u671F\u88AB\u7B97\u8FDB\u6765\uFF0C\u6240\u4EE5\u5B83\u540C\u65F6\u662F"\u4E0B\u754C"\u548C"\u9608\u503C\u53E3\u5F84"\u7684\u4EA7\u7269\u3002\u5207\u4E00\u4E0B\u9762\u677F\u9876\u90E8\u7684\u6863\u4F4D\uFF0C\u80FD\u770B\u5230\u540C\u4E00\u4EFD\u65E5\u5FD7\u5728\u4E94\u6863\u4E0B\u7684\u5DEE\u522B\u3002'
             }
           }),
           h(Stat, {
+            icon: "wave",
             label: "\u6D3B\u8DC3\u65E5\u5747",
             value: fmtDurCn(view.avg),
             sub: "\u4EC5\u6309\u6709\u6D3B\u52A8\u7684\u65E5\u5B50\u5E73\u5747",
@@ -1482,6 +2204,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             }
           }),
           h(Stat, {
+            icon: "bubble",
             label: "\u5BF9\u8BDD\u8FDB\u884C\u4E2D",
             value: fmtDurCn(view.turn),
             sub: "\u5360\u5728\u7EBF " + (view.total > 0 ? Math.round(view.turn / view.total * 100) : 0) + "%",
@@ -1495,12 +2218,9 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
               ],
               text: "turn/start\u2192turn/end \u7684\u5E76\u96C6\uFF08\u5899\u949F\u53BB\u91CD\uFF09\uFF1ADSH \u5728\u4E3A\u4F60\u5E72\u6D3B\u7684\u949F\uFF0C\u542B\u5C11\u91CF\u7B49\u4F60\u64CD\u4F5C\u7684\u65F6\u95F4\u3002"
             }
-          })
-        ),
-        h(
-          "div",
-          { className: "tm-statGrid" },
+          }),
           h(Stat, {
+            icon: "chip",
             label: "\u6A21\u578B\u751F\u6210",
             value: fmtDurCn(view.llm),
             sub: "\u5DF2\u4E0E\u5B98\u65B9\u6295\u5F71\u5BF9\u8D26",
@@ -1512,6 +2232,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             }
           }),
           h(Stat, {
+            icon: "terminal",
             label: "\u5DE5\u5177\u6267\u884C",
             value: fmtDurCn(view.tool),
             sub: "call\u2192result",
@@ -1523,9 +2244,11 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             }
           }),
           h(Stat, {
+            icon: "gear",
             label: "\u5F15\u64CE\u5408\u8BA1",
             value: fmtDurCn(view.busy),
             sub: "\u5E76\u884C\u76F8\u52A0\uFF0C\u53EF\u9AD8\u4E8E\u5899\u949F",
+            wide: true,
             acc: "exact",
             tip: {
               k: "busy",
@@ -1537,47 +2260,70 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
               text: "\u4E24\u8005\u76F8\u52A0\uFF1B\u540C\u65F6\u5F00\u591A\u4E2A\u4F1A\u8BDD/\u5B50\u4EE3\u7406\u4F1A\u91CD\u590D\u8BA1\uFF0C\u6240\u4EE5\u53EF\u80FD\u5927\u4E8E\u5899\u949F\u7684\u300C\u5BF9\u8BDD\u8FDB\u884C\u4E2D\u300D\u3002"
             }
           })
-        ),
-        h(
-          "div",
-          { className: "tm-card" },
-          h(
-            "div",
-            { className: "tm-toolbar" },
-            h("span", { className: "tm-title" }, "\u6BCF\u65E5\u5728\u7EBF"),
-            h(
-              "span",
-              { className: "tm-hint" },
-              view.peak ? "\u5CF0\u503C " + cnDate(view.peak.d) + " " + fmtDur(view.peak.ms) : ""
-            )
-          ),
-          h(Chart, { items: view.series, gap: view.gap }),
-          h(Legend, null)
-        ),
-        h(Accuracy, { view, snap: data }),
-        h(
-          "div",
-          { className: "tm-card" },
-          h(
-            "div",
-            { className: "tm-toolbar", style: { margin: "0 0 2px" } },
-            h("span", { className: "tm-title", style: { margin: 0 } }, "\u6BCF\u65E5\u5728\u7EBF\u6392\u884C"),
-            h(
-              "span",
-              { className: "tm-hint" },
-              "\u5F53\u524D\u533A\u95F4 " + view.ranked.length + " \u4E2A\u6D3B\u8DC3\u65E5 \xB7 \u6309\u5728\u7EBF\u65F6\u957F\u6392\u5E8F \xB7 \u9F20\u6807\u60AC\u6D6E\u770B\u5F53\u65E5\u660E\u7EC6"
-            )
-          ),
-          h(RankingList, { ranked: view.ranked, gap: view.gap })
         )
       );
     }
-    function OnlineRightPane() {
+    function OnlineDaily(props) {
+      const view = props.view;
+      return h(
+        "div",
+        { className: "tm-card" },
+        h(
+          "div",
+          { className: "tm-toolbar" },
+          h(
+            "span",
+            { className: "tm-title tm-titledIco" },
+            h(Glyph, { name: "chartBar", size: 14, className: "tm-cico" }),
+            "\u6BCF\u65E5\u5728\u7EBF"
+          ),
+          h(
+            "span",
+            { className: "tm-hint" },
+            view.peak ? "\u5CF0\u503C " + cnDate(view.peak.d) + " " + fmtDur(view.peak.ms) : ""
+          )
+        ),
+        h(Chart, { items: view.series, gap: view.gap }),
+        h(Legend, null)
+      );
+    }
+    function OnlineRank(props) {
+      const view = props.view;
+      return h(
+        "div",
+        { className: "tm-card" },
+        h(
+          "div",
+          { className: "tm-toolbar", style: { margin: "0 0 2px" } },
+          h(
+            "span",
+            { className: "tm-title tm-titledIco", style: { margin: 0 } },
+            h(Glyph, { name: "list", size: 14, className: "tm-cico" }),
+            "\u6BCF\u65E5\u5728\u7EBF\u6392\u884C"
+          ),
+          h(
+            "span",
+            { className: "tm-hint" },
+            "\u5F53\u524D\u533A\u95F4 " + view.ranked.length + " \u4E2A\u6D3B\u8DC3\u65E5 \xB7 \u6309\u5728\u7EBF\u65F6\u957F\u6392\u5E8F \xB7 \u9F20\u6807\u60AC\u6D6E\u770B\u5F53\u65E5\u660E\u7EC6"
+          )
+        ),
+        h(RankingList, { ranked: view.ranked, gap: view.gap })
+      );
+    }
+    function OnlineEmbed(props) {
+      const online = props.data && props.data.ready && props.data.online ? props.data.online : null;
+      if (online === null) return h("div", { className: "tm-desc" }, "\u5F53\u524D Host \u672A\u63D0\u4F9B\u5728\u7EBF\u65F6\u957F\u6570\u636E\u3002");
+      const view = deriveOnlineView(online, props.gap ?? online.defaultGapMin ?? 5, 0);
+      if (props.block === "metrics") return h(OnlineMetrics, { view, online });
+      if (props.block === "rank") return h(OnlineRank, { view });
+      return h(OnlineDaily, { view });
+    }
+    function OnlineView() {
       const [gapState, setGapState] = React.useState(null);
       const [rangeDays, setRangeDays] = React.useState(0);
       const { snap, err, reload } = useSnapshot();
       const online = snap && snap.ready && snap.online ? snap.online : null;
-      const gap = gapState !== null ? gapState : online ? online.defaultGapMin : 5;
+      const gap = gapState !== null ? gapState : online ? online.defaultGapMin : GAP_RECOMMEND;
       const onGap = React.useCallback(
         (g) => {
           setGapState(g);
@@ -1600,7 +2346,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         onReload: reload
       });
     }
-    return { OnlineRightPane };
+    return { OnlineView, OnlineEmbed };
   }
 
   // src/client/ErrorBox.ts
@@ -1896,8 +2642,10 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const granted = b["granted"] !== void 0 && b["granted"] !== null ? num2(b["granted"], 0) : null;
       const topped = b["toppedUp"] !== void 0 && b["toppedUp"] !== null ? num2(b["toppedUp"], 0) : null;
       const avail = b["isAvailable"];
-      const availCls = avail === true ? "ok" : avail === false ? "bad" : "unknown";
-      const availTxt = avail === true ? "\u53EF\u7528" : avail === false ? "\u4E0D\u8DB3" : "\u72B6\u6001\u672A\u77E5";
+      const empty = amt <= 0 || avail === false;
+      const availCls = empty ? "bad" : avail === true ? "ok" : "unknown";
+      const availTxt = availCls === "bad" ? "\u4E0D\u8DB3" : availCls === "ok" ? "\u53EF\u7528" : "\u72B6\u6001\u672A\u77E5";
+      const availTip = "\u53EF\u7528\u6027\u5FBD\u6807\uFF1A\n\xB7 \u53EF\u7528 \u2014\u2014 \u4E0A\u6E38\u660E\u786E\u8BF4\u53EF\u7528\n\xB7 \u4E0D\u8DB3 \u2014\u2014 \u4E0A\u6E38\u660E\u786E\u62A5\u4E0D\u8DB3\uFF0C\u6216\u4F59\u989D\u5DF2 \u2264 0\uFF08\u4E0E\u4E0B\u65B9\u4F59\u989D\u544A\u8B66\u540C\u4E00\u4E2A\u5224\u636E\uFF09\n\xB7 \u72B6\u6001\u672A\u77E5 \u2014\u2014 \u4E0A\u6E38\u6CA1\u6709\u7ED9\u51FA\u53EF\u7528\u6027\u5224\u65AD\uFF0C\u8FD9\u91CC\u53EA\u53CD\u6620\u4F59\u989D\u6570\u5B57\u672C\u8EAB\uFF08\u4F8B\u5982\u624B\u52A8\u8D26\u672C\uFF09";
       const warnLine = b["lowWarn"] !== void 0 && b["lowWarn"] !== null && b["lowWarn"] !== "" ? num2(b["lowWarn"], 0) : null;
       const infos = Array.isArray(b["infos"]) ? b["infos"] : [];
       const kids = [];
@@ -1912,7 +2660,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             h("span", { className: "tm-payg-cur" }, curSymbol(cur) + cur),
             h("span", { className: "tm-payg-amt" + (amt < 0 ? " neg" : "") }, fmt3(amt))
           ),
-          h("span", { className: "tm-avail " + availCls }, availTxt)
+          h("span", { className: "tm-avail " + availCls, title: availTip }, availTxt)
         )
       );
       const parts = [];
@@ -1935,7 +2683,6 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             )
           )
         );
-      const empty = amt <= 0 || avail === false;
       const low = !empty && warnLine !== null && amt <= warnLine;
       if (empty)
         kids.push(
@@ -2372,7 +3119,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     kids.push(
       h(K.NoteLine, {
         key: "note",
-        text: "\u6570\u636E\u6765\u81EA\u672C\u5730\u624B\u586B\uFF08\u975E\u5E73\u53F0\u5B9E\u65F6\u63A5\u53E3\uFF09\uFF1A\u5728\u300C\u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u2192 \u7F16\u8F91\u300D\u91CC\u66F4\u65B0\uFF0C\u6539\u5B8C\u70B9\u300C\u5237\u65B0\u300D\u5373\u53EF\u3002",
+        text: "\u6570\u636E\u6765\u81EA\u672C\u5730\u624B\u586B\uFF08\u975E\u5E73\u53F0\u5B9E\u65F6\u63A5\u53E3\uFF09\uFF1A\u5728\u300C\u8BBE\u7F6E \u2192 " + DISPLAY_NAME + " \u2192 \u7F16\u8F91\u300D\u91CC\u66F4\u65B0\uFF0C\u6539\u5B8C\u70B9\u300C\u5237\u65B0\u300D\u5373\u53EF\u3002",
         tone: "info"
       })
     );
@@ -4157,8 +4904,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       return h(
         "div",
         {
-          className: "tm-card" + (failed && !s.loading ? " tm-side error" : "") + moodClass(off, peakNow),
-          style: { marginBottom: 12 }
+          className: "tm-card" + (failed && !s.loading ? " tm-side error" : "") + moodClass(off, peakNow)
         },
         h(
           "div",
@@ -4422,7 +5168,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         popAt === null ? null : tmPortal(h(PeakPopover, { now, peak, isWeekend, at: popAt }))
       );
     }
-    function QuotaRightPane() {
+    function QuotaView(props) {
+      const Btn = P.Button || (({ children, ...rest }) => h("button", { type: "button", className: "tm-btn", ...rest }, children));
       const s = useStore();
       React.useEffect(() => {
         void ensureLoad();
@@ -4432,13 +5179,6 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       if (!floats.some((w) => w.id === "peak")) {
         kids.push(h(PeakIndicator, { key: "peak", widgets: WG || void 0, widgetId: "peak" }));
       }
-      kids.push(
-        h(
-          "p",
-          { key: "d", className: "tm-intro" },
-          "\u5168\u90E8\u4F9B\u5E94\u5546\u989D\u5EA6\u4E00\u89C8\uFF08\u53F3\u4FA7\u680F\u7A7A\u95F4\u66F4\u5BBD\uFF0C\u56FE\u8868\u5B8C\u6574\u5C55\u5F00\uFF09\u3002\u589E\u5220\u6539\u8BF7\u5230 \u8BBE\u7F6E \u2192 Token \u8BA1\u91CF\u3002"
-        )
-      );
       if (s.error) kids.push(h("p", { key: "err", className: "tm-notice tm-notice-err" }, s.error));
       if (!s.cfg) {
         kids.push(
@@ -4457,33 +5197,44 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           h(
             "div",
             { key: "empty", className: "tm-card tm-empty" },
-            "\u6682\u65E0\u4F9B\u5E94\u5546\uFF0C\u53BB \u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u6DFB\u52A0\u7B2C\u4E00\u4E2A\u3002"
+            h("div", null, "\u8FD8\u6CA1\u6709\u914D\u7F6E\u4EFB\u4F55\u4F9B\u5E94\u5546\u3002"),
+            props.onOpenSettings ? h(
+              Btn,
+              {
+                variant: "outline",
+                size: "sm",
+                style: { marginTop: 10 },
+                onClick: props.onOpenSettings
+              },
+              "\u53BB\u6DFB\u52A0\u4F9B\u5E94\u5546"
+            ) : h(
+              "div",
+              { className: "tm-hint", style: { marginTop: 6 } },
+              "\u53BB \u8BBE\u7F6E \u2192 " + DISPLAY_NAME + " \u6DFB\u52A0\u7B2C\u4E00\u4E2A\u3002"
+            )
           )
         );
         return h("div", { className: "tm-page" }, kids);
       }
       const activeId = s.cfg.activeVendor || "";
-      const activeFirst = (list) => list.filter((v) => v.id === activeId).concat(list.filter((v) => v.id !== activeId));
-      const on = vendors.filter((v) => v.enabled !== false);
-      const off = vendors.filter((v) => v.enabled === false);
-      const ordered = activeFirst(on).concat(activeFirst(off));
-      const bothGroups = on.length > 0 && off.length > 0;
-      let shownOffLabel = false;
-      for (const v of ordered) {
-        if (bothGroups && v.enabled === false && !shownOffLabel) {
-          shownOffLabel = true;
-          kids.push(h("div", { key: "grp-off", className: "tm-grouplabel" }, "\u5DF2\u7981\u7528 \xB7 " + off.length + " \u4E2A"));
-        }
-        if (floats.some((w) => w.id === "quota:" + v.id)) continue;
-        kids.push(h(QuotaVendorWidget, { key: v.id, vendorId: v.id }));
+      const rankOf = (v) => v.id === activeId ? 0 : v.enabled === false ? 2 : 1;
+      const ordered = [];
+      for (const rank of [0, 1, 2]) {
+        for (const v of vendors) if (rankOf(v) === rank) ordered.push(v);
       }
+      const grid = [];
+      for (const v of ordered) {
+        if (floats.some((w) => w.id === "quota:" + v.id)) continue;
+        grid.push(h(QuotaVendorWidget, { key: v.id, vendorId: v.id }));
+      }
+      kids.push(h("div", { key: "grid", className: "tm-vgrid" }, grid));
       return h("div", { className: "tm-page" }, kids);
     }
     return {
       QuotaSettingsPage,
       QuotaSidebar,
       QuotaFloatEntry,
-      QuotaRightPane,
+      QuotaView,
       QuotaVendorWidget,
       PeakIndicator,
       quotaStore: {
@@ -4509,8 +5260,362 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     };
   }
 
+  // src/client/SharePanel.ts
+  var PKG = typeof define_DSHP_TOKEN_METER_PKG_default === "object" && define_DSHP_TOKEN_METER_PKG_default !== null ? define_DSHP_TOKEN_METER_PKG_default : { name: "@dshp/token-meter", version: "", repo: "" };
+  var SHARE_TOKENS = [
+    "--dsw-alias-bg-base",
+    "--dsw-alias-bg-layer-1",
+    "--dsw-alias-bg-layer-2",
+    "--dsw-alias-bg-module-platform",
+    "--dsw-alias-border-l1",
+    "--dsw-alias-border-l2",
+    "--dsw-alias-border-l3",
+    "--dsw-alias-border-l4",
+    "--dsw-alias-brand-primary",
+    "--dsw-alias-button-ghost-active-fill",
+    "--dsw-alias-interactive-bg-hover",
+    "--dsw-alias-label-caption",
+    "--dsw-alias-label-dimmed",
+    "--dsw-alias-label-primary",
+    "--dsw-alias-label-primary-foreground",
+    "--dsw-alias-label-secondary",
+    "--dsw-alias-label-tertiary",
+    "--dsw-alias-state-business-primary",
+    "--dsw-alias-state-business-tertiary",
+    "--dsw-alias-state-error-primary",
+    "--dsw-alias-state-success-primary",
+    "--dsw-alias-state-success-tertiary",
+    "--dsw-alias-state-warn-label",
+    "--dsw-alias-state-warn-primary",
+    "--dsw-alias-state-warn-tertiary",
+    "--dsw-corner-shape",
+    "--dsw-shadow-lv3",
+    "--dsw-specific-menu"
+  ];
+  function createShareBoard(React) {
+    const h = React.createElement;
+    const { Glyph } = createGlyphs(React);
+    const ShareBoard = React.forwardRef(function ShareBoard2(props, ref) {
+      const sections = props.sections;
+      const data = props.data;
+      const aggAll = React.useMemo(() => aggregate(data.records || [], null), [data]);
+      const who = props.showIdentity !== false && props.gitName !== void 0 ? h("b", { className: "tm-shareAuthor" }, props.gitName) : null;
+      return h(
+        "div",
+        // 同时挂 tm-cview：它自带 container-type:inline-size 与 container-name:tmc，组件的响应式
+        // 断点（@container tmc 以及 .tm-cview 前缀的那批规则）于是以**板宽**为准。导出时
+        // foreignObject 里没有 .tm-cview 祖先，若不带这个类，预览与导出会长得不一样。
+        { className: "tm-shareBoard tm-cview", ref },
+        h(
+          "header",
+          { className: "tm-shareHead" },
+          // 第一层：标题区（左）+ 作者区（右）。作者是「谁做的」，与「由什么生成」分开，
+          // 不再把 作者/插件名/版本/邮箱/仓库 全堆在同一两行里右对齐（那会拖出一条长短不齐的长尾巴）。
+          h(
+            "div",
+            { className: "tm-shareTop" },
+            h(
+              "div",
+              { className: "tm-shareTitleBox" },
+              h(
+                "span",
+                { className: "tm-shareBrandRow" },
+                h(Glyph, { name: "layers", size: 19, className: "tm-shareLogo" }),
+                h("span", { className: "tm-shareBrand" }, DISPLAY_NAME)
+              ),
+              h("span", { className: "tm-shareSub" }, "DeepSeek Harness \xB7 \u7528\u91CF\u4E0E\u5728\u7EBF\u65F6\u957F\u603B\u89C8")
+            ),
+            h(
+              "div",
+              { className: "tm-shareAuthorBox" },
+              who,
+              props.showIdentity !== false && props.gitEmail !== void 0 ? h("span", { className: "tm-shareMail" }, props.gitEmail) : null
+            )
+          ),
+          // 第二层：来源信息条 —— 插件名 / 版本 / 仓库**左对齐独占一行**，生成信息靠右。
+          // 与标题层之间有细线分隔，所以「是谁」和「由什么生成」一眼分得开。
+          h(
+            "div",
+            { className: "tm-shareMeta" },
+            h(
+              "span",
+              { className: "tm-sharePlug" },
+              PKG.name,
+              PKG.version !== "" ? h("em", null, "v" + PKG.version) : null
+            ),
+            h("span", { className: "tm-shareMetaSep" }, "\xB7"),
+            h("span", { className: "tm-shareRepo" }, PKG.repo),
+            h(
+              "span",
+              { className: "tm-shareMetaR" },
+              "\u4F1A\u8BDD " + data.sessions + " \u4E2A \xB7 \u8BB0\u5F55 " + aggAll.byDay.size + " \u5929 \xB7 \u751F\u6210\u4E8E " + (/* @__PURE__ */ new Date()).toLocaleString("zh-CN", { hour12: false })
+            )
+          )
+        ),
+        h(
+          "div",
+          { className: "tm-shareGrid" },
+          // ① 用量基础数据：13 张指标卡通栏一行
+          h("div", { className: "tm-shareCell tm-sr6" }, h(sections.StatCardsSection, { aggAll, data })),
+          // ② 用量两张图并排：趋势 | 热力图
+          h("div", { className: "tm-shareCell" }, h(sections.TrendSection, { data, aggAll })),
+          h("div", { className: "tm-shareCell" }, h(sections.HeatSection, { data, aggAll })),
+          // ③ 以下四块各占一整行（宽度给足，图表/列表才铺得开；长图无所谓）
+          // 外面这层 .tm-donutWide 不能省：**宽布局（圆环在左 + 模型列表多列）不是 DonutSection
+          // 自己响应的，而是调用方包出来的**（视图里也是这么调的）。少这层就退回默认窄布局，
+          // 看起来就像"组件在分享面板里不响应式了"。
+          h(
+            "div",
+            { className: "tm-shareCell tm-sr6" },
+            h(
+              "div",
+              { className: "tm-donutWide" },
+              h(sections.DonutSection, { data, agg: aggAll, rangeLabel: rangeText("all") })
+            )
+          ),
+          h("div", { className: "tm-shareCell tm-sr6" }, h(sections.OnlineEmbed, { data, block: "metrics" })),
+          h("div", { className: "tm-shareCell tm-sr6" }, h(sections.OnlineEmbed, { data, block: "daily" })),
+          h("div", { className: "tm-shareCell tm-sr6" }, h(sections.OnlineEmbed, { data, block: "rank" }))
+        )
+      );
+    });
+    ShareBoard.displayName = "TmShareBoard";
+    return ShareBoard;
+  }
+  function collectShareCss() {
+    const vars = [];
+    try {
+      const cs = getComputedStyle(document.body);
+      for (const name of SHARE_TOKENS) {
+        const v = cs.getPropertyValue(name).trim();
+        if (v !== "") vars.push(name + ":" + v);
+      }
+    } catch {
+    }
+    const decl = vars.join(";");
+    return "*,:before,:after{animation:none!important;transition:none!important}body,.tm-shareBoard{" + decl + "}" + CSS;
+  }
+  async function boardToPngBlob(node, w, h, scale = 2) {
+    const pw = Math.max(1, Math.round(w * scale));
+    const ph = Math.max(1, Math.round(h * scale));
+    const rw = pw;
+    const rh = ph;
+    const clone = node.cloneNode(true);
+    clone.style.transform = "none";
+    clone.style.transformOrigin = "0 0";
+    clone.style.left = "0";
+    clone.style.position = "static";
+    const inner = new XMLSerializer().serializeToString(clone);
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + rw + '" height="' + rh + '" viewBox="0 0 ' + w + " " + h + '"><foreignObject x="0" y="0" width="' + w + '" height="' + h + '"><div xmlns="http://www.w3.org/1999/xhtml"><style>' + collectShareCss() + "</style>" + inner + "</div></foreignObject></svg>";
+    const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    const img = new Image();
+    img.decoding = "sync";
+    await new Promise((resolve, reject) => {
+      img.addEventListener("load", () => resolve(), { once: true });
+      img.addEventListener("error", () => reject(new Error("SVG \u6E32\u67D3\u5931\u8D25")), { once: true });
+      img.src = url;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = pw;
+    canvas.height = ph;
+    const ctx = canvas.getContext("2d");
+    if (ctx === null) throw new Error("canvas \u4E0D\u53EF\u7528");
+    try {
+      ctx.fillStyle = getComputedStyle(document.body).getPropertyValue("--dsw-alias-bg-base").trim() || "#0d1015";
+    } catch {
+      ctx.fillStyle = "#0d1015";
+    }
+    ctx.fillRect(0, 0, pw, ph);
+    ctx.drawImage(img, Math.round((pw - rw) / 2), Math.round((ph - rh) / 2), rw, rh);
+    return await new Promise((resolve, reject) => {
+      canvas.toBlob((b) => b === null ? reject(new Error("PNG \u7F16\u7801\u5931\u8D25")) : resolve(b), "image/png");
+    });
+  }
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 4e3);
+  }
+
+  // src/client/ShareShell.ts
+  function createShareShell(React, P) {
+    const h = React.createElement;
+    const ShareBoard = createShareBoard(React);
+    const Btn = P.Button || (({ children, ...rest }) => h("button", { type: "button", className: "tm-btn", ...rest }, children));
+    return function ShareShell(props) {
+      const boardRef = React.useRef(null);
+      const [size, setSize] = React.useState({ w: 0, h: 0 });
+      const [showIdentity, setShowIdentity] = React.useState(true);
+      const [busy, setBusy] = React.useState("");
+      const [msg, setMsg] = React.useState("");
+      const hasIdentity = Boolean(props.gitName || props.gitEmail);
+      const input = {
+        data: props.data,
+        gitName: props.gitName,
+        gitEmail: props.gitEmail,
+        showIdentity: showIdentity && hasIdentity
+      };
+      React.useEffect(() => {
+        const board = boardRef.current;
+        if (board === null) return void 0;
+        const measure = () => {
+          const w = board.offsetWidth;
+          const bh = board.offsetHeight;
+          if (w > 0 && bh > 0) {
+            setSize((prev) => prev.w === w && prev.h === bh ? prev : { w, h: bh });
+          }
+        };
+        measure();
+        if (typeof ResizeObserver === "undefined") return void 0;
+        const ro = new ResizeObserver(measure);
+        ro.observe(board);
+        return () => ro.disconnect();
+      }, [props.loading, props.data]);
+      React.useEffect(() => {
+        const onKey = (e) => {
+          if (e.key === "Escape") props.onClose();
+        };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+      }, [props]);
+      const withBoard = async (fn) => {
+        const node = boardRef.current;
+        if (node === null || node === void 0 || size.h <= 0 || size.w <= 0) {
+          setMsg("\u5361\u7247\u5C1A\u672A\u5C31\u7EEA\uFF0C\u8BF7\u7A0D\u540E\u518D\u8BD5\uFF08\u6216\u76F4\u63A5\u7CFB\u7EDF\u622A\u56FE\uFF09");
+          return;
+        }
+        setBusy("\u5DE5\u4F5C\u2026");
+        setMsg("");
+        await new Promise((resolve) => {
+          let settled = false;
+          const finish = () => {
+            if (!settled) {
+              settled = true;
+              resolve();
+            }
+          };
+          if (typeof requestAnimationFrame === "function")
+            requestAnimationFrame(() => requestAnimationFrame(finish));
+          window.setTimeout(finish, 150);
+        });
+        try {
+          await fn(node);
+        } catch (e) {
+          setMsg("\u5931\u8D25\uFF1A" + String(e?.message ?? e));
+        } finally {
+          setBusy("");
+        }
+      };
+      const onDownload = () => withBoard(async (node) => {
+        const blob = await boardToPngBlob(node, node.offsetWidth, node.offsetHeight);
+        const stamp = (/* @__PURE__ */ new Date()).toISOString().slice(0, 16).replace(/[:T]/g, "-");
+        downloadBlob(blob, `dsh-token-meter-${stamp}.png`);
+        setMsg("\u5DF2\u4E0B\u8F7D PNG");
+      });
+      const onCopy = () => withBoard(async (node) => {
+        const nav = navigator;
+        if (nav.clipboard === void 0 || typeof ClipboardItem === "undefined") {
+          setMsg("\u6B64\u6D4F\u89C8\u5668\u4E0D\u652F\u6301\u590D\u5236\u56FE\u7247\uFF0C\u8BF7\u7528\u300C\u4E0B\u8F7D PNG\u300D");
+          return;
+        }
+        const blob = await boardToPngBlob(node, node.offsetWidth, node.offsetHeight);
+        await nav.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        setMsg("\u5DF2\u590D\u5236\u5230\u526A\u8D34\u677F");
+      });
+      return h(
+        "div",
+        { className: "tm-shareVeil", role: "dialog", "aria-modal": "true", "aria-label": "\u5206\u4EAB\u5361" },
+        h(
+          "div",
+          { className: "tm-shareBar" },
+          h("span", { className: "tm-shareBarTitle" }, "\u5206\u4EAB\u5361 \xB7 16:9"),
+          h(
+            "span",
+            { className: "tm-shareBarHint" },
+            props.loading ? "\u6B63\u5728\u805A\u5408\u4F1A\u8BDD\u65E5\u5FD7\u2026" : props.error ? "\u7EDF\u8BA1\u4E0D\u53EF\u7528\uFF1A" + props.error : msg || "\u4E0B\u8F7D / \u590D\u5236\u4E3A " + (size.w > 0 ? Math.round(size.w) + "\xD7" + Math.round(size.h) : "") + " \u7684 2\xD7 PNG\uFF0C\u6216\u76F4\u63A5\u7CFB\u7EDF\u622A\u56FE"
+          ),
+          hasIdentity ? h(
+            "label",
+            { className: "tm-shareToggle", title: "\u5206\u4EAB\u5361\u4F1A\u5E26\u4E0A git \u91CC\u7684\u7528\u6237\u540D\u4E0E\u90AE\u7BB1" },
+            h("input", {
+              type: "checkbox",
+              checked: showIdentity,
+              onChange: (e) => setShowIdentity(e.target.checked === true)
+            }),
+            "\u663E\u793A\u7528\u6237\u540D / \u90AE\u7BB1"
+          ) : null,
+          h(
+            Btn,
+            {
+              variant: "outline",
+              size: "sm",
+              disabled: props.loading === true || busy !== "",
+              onClick: () => void onDownload()
+            },
+            "\u4E0B\u8F7D PNG"
+          ),
+          h(
+            Btn,
+            {
+              variant: "outline",
+              size: "sm",
+              disabled: props.loading === true || busy !== "",
+              onClick: () => void onCopy()
+            },
+            "\u590D\u5236\u56FE\u7247"
+          ),
+          h(Btn, { variant: "ghost", size: "sm", onClick: props.onClose }, "\u5173\u95ED")
+        ),
+        h(
+          "div",
+          { className: "tm-shareStage" },
+          props.loading === true ? h("div", { className: "tm-shareLoading" }, h("span", { className: "tm-spinner" }), "\u6B63\u5728\u805A\u5408\u2026") : h(
+            "div",
+            { className: "tm-shareFit" },
+            h(
+              "div",
+              { className: "tm-shareZoom", ref: boardRef },
+              h(ShareBoard, { ...input, sections: props.sections })
+            )
+          )
+        )
+      );
+    };
+  }
+
   // src/client/StatsSection.ts
   var BP = "var(--dsw-alias-state-business-primary)";
+  var EMPTY_SNAPSHOT = {
+    ready: false,
+    records: [],
+    models: {},
+    daySessions: {},
+    peakStep: null,
+    range: null,
+    sessions: 0,
+    active: 0,
+    partial: false,
+    scanned: 0,
+    total: 0,
+    errors: 0,
+    storage: "",
+    generatedAt: 0
+  };
+  var HEAT_SPAN_KEY = "tm-heat-span";
+  var HEAT_WIDE_PX = 900;
+  function readHeatSpan() {
+    try {
+      const v = window.localStorage.getItem(HEAT_SPAN_KEY);
+      if (v === "6" || v === "12") return v;
+    } catch {
+    }
+    return "";
+  }
   var PALETTE = [
     "#4c7ef3",
     "#2fb261",
@@ -4778,6 +5883,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     tmTodayEmit();
   }
   function createStatsSection(React, P, ReactDOM) {
+    const { Glyph } = createGlyphs(React);
+    const ShareShell = createShareShell(React, P);
     const h = React.createElement;
     const useState = React.useState;
     function tmPortal(node) {
@@ -4930,6 +6037,14 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         )
       );
     }
+    function cardName(name, text) {
+      return h(
+        "span",
+        { className: "tm-chart-name" },
+        h(Glyph, { name, size: 14, className: "tm-cico" }),
+        h("span", { className: "tm-cname-txt" }, text)
+      );
+    }
     function StatCard(props) {
       const valueNode = props.count !== void 0 ? h(AnimatedNumber, { className: "tm-stat-value", value: props.count, format: props.fmt || fmt2 }) : h("div", { className: "tm-stat-value" }, props.value);
       return h(
@@ -4942,7 +6057,14 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           onMouseMove: props.onHover || void 0,
           onMouseLeave: props.onLeave || void 0
         },
-        h("div", { className: "tm-stat-label" }, props.label),
+        // 底纹：同一个语义图标放大成 58px 低透明度水印（右下角），让卡片不是纯色块
+        props.icon ? h(Glyph, { name: props.icon, size: 58, className: "tm-stat-bg" }) : null,
+        h(
+          "div",
+          { className: "tm-stat-label" },
+          props.icon ? h(Glyph, { name: props.icon, size: 13, className: "tm-stat-ico" }) : null,
+          props.label
+        ),
         valueNode,
         props.sub ? h("div", { className: "tm-stat-sub" }, props.sub) : null,
         ...props.visual || []
@@ -5137,7 +6259,24 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const labels = props.labels;
       const titles = props.titles || labels;
       const emptyText = props.emptyText || "\u5F53\u65E5\u65E0\u6D88\u8017";
-      const W = 780, H = 250, pl = 54, pr = 14, pt = 6, pb = 28;
+      const boxRef = React.useRef(null);
+      const [boxW, setBoxW] = useState(0);
+      React.useEffect(() => {
+        const el = boxRef.current;
+        if (el === null || el === void 0 || typeof ResizeObserver === "undefined") return void 0;
+        const ro = new ResizeObserver((entries) => {
+          const w = entries && entries[0] ? Math.round(entries[0].contentRect.width) : 0;
+          if (w > 0) setBoxW((prev) => prev === w ? prev : w);
+        });
+        ro.observe(el);
+        return () => ro.disconnect();
+      }, []);
+      const W = Math.max(320, boxW || 780);
+      const H = Math.round(Math.min(230, Math.max(150, W * 0.24)));
+      const pl = 54;
+      const pr = 14;
+      const pt = 6;
+      const pb = 28;
       const n = labels.length;
       const vis = seriesList.filter((s) => s.visible);
       const top = niceMax(vis.length > 0 ? Math.max(1, ...vis.flatMap((s) => s.values)) : 1);
@@ -5304,12 +6443,12 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       })() : null;
       return h(
         "div",
-        { className: "tm-svgwrap" },
+        { className: "tm-svgwrap", ref: boxRef },
         h(
           "svg",
           {
             viewBox: "0 0 " + W + " " + H,
-            style: { width: "100%", height: "auto", display: "block" },
+            style: { width: "100%", height: H, display: "block" },
             ref: svgRef
           },
           kids
@@ -5346,8 +6485,9 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       }
       const OPS = [0.16, 0.3, 0.5, 0.72, 0.95];
       const levelOf2 = (v) => v <= 0 ? 0 : v <= max * 0.25 ? 1 : v <= max * 0.5 ? 2 : v <= max * 0.75 ? 3 : 4;
-      const cellGap = months >= 12 ? 2.5 : months >= 6 ? 3 : 4;
-      const rowGap = months >= 12 ? 0 : cellGap;
+      const boxW = props.boxW || 0;
+      const cellGap = boxW >= 1120 ? 4 : boxW >= 860 ? 3 : 2;
+      const rowGap = cellGap;
       const [hover, setHover] = useState(null);
       const onCell = (cell, e) => {
         if (cell === null || cell.day === void 0) {
@@ -5391,7 +6531,9 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
                   color: "var(--dsw-alias-label-caption)",
                   flex: "none",
                   textAlign: "center",
-                  lineHeight: "14px"
+                  // line-height 用 1（≈9px）而不是固定的 14px：窄卡片里格子可能只有
+                  // 11px 高，固定 14px 会把行高顶大、行间隙看起来忽大忽小。
+                  lineHeight: 1
                 }
               },
               r % 2 === 0 ? WL[r] : ""
@@ -5415,17 +6557,25 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         h("span", { style: { width: 14, flex: "none" } }),
         h(
           "div",
-          { style: { display: "flex", gap: cellGap + "px", flex: "1 1 auto", minHeight: 12 } },
+          {
+            style: {
+              display: "grid",
+              gridTemplateColumns: "repeat(" + weeks + ",minmax(0,1fr))",
+              gap: cellGap + "px",
+              flex: "1 1 auto",
+              minHeight: 12
+            }
+          },
           monthLabels.map(
             (m, i) => h(
               "span",
               {
                 key: i,
                 style: {
+                  gridColumn: m.w + 1 + " / span " + Math.max(1, Math.min(4, weeks - m.w)),
                   fontSize: 9.5,
+                  lineHeight: "12px",
                   color: "var(--dsw-alias-label-caption)",
-                  width: (100 / weeks).toFixed(3) + "%",
-                  flex: "none",
                   overflow: "hidden",
                   whiteSpace: "nowrap"
                 }
@@ -5557,7 +6707,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     function Donut(props) {
       const entries = props.entries;
       const total = props.total;
-      const size = 168, cx = 84, cy = 84, r = 57, C = 2 * Math.PI * r;
+      const size = 168, cx = 84, cy = 84, r = 57, C2 = 2 * Math.PI * r;
       const kids = [
         h("circle", {
           key: "bg",
@@ -5571,7 +6721,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       let acc = 0;
       for (let i = 0; i < entries.length; i++) {
         const it = entries[i];
-        const len = total > 0 ? it.t / total * C : 0;
+        const len = total > 0 ? it.t / total * C2 : 0;
         kids.push(
           h("circle", {
             key: "s" + i,
@@ -5580,7 +6730,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             r,
             fill: "none",
             className: "tm-donutseg",
-            strokeDasharray: len.toFixed(2) + " " + (C - len).toFixed(2),
+            strokeDasharray: len.toFixed(2) + " " + (C2 - len).toFixed(2),
             strokeDashoffset: (-acc).toFixed(2),
             style: { stroke: it.color, strokeWidth: 18, animationDelay: i * 70 + "ms" },
             transform: "rotate(-90 " + cx + " " + cy + ")"
@@ -5858,6 +7008,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const cards = [];
       cards.push(
         h(StatCard, {
+          key: "kpi-\u7D2F\u8BA1 Token",
+          icon: "layers",
           label: "\u7D2F\u8BA1 Token",
           count: aggAll.total,
           tint: true,
@@ -5888,6 +7040,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       );
       cards.push(
         h(StatCard, {
+          key: "kpi-\u8FD1 30 \u5929\u8D70\u52BF",
+          icon: "trend",
           label: "\u8FD1 30 \u5929\u8D70\u52BF",
           count: sparkVals.reduce((s, v) => s + v, 0),
           sub: "\u6BCF\u65E5\u7528\u91CF\u8FF7\u4F60\u56FE",
@@ -5897,6 +7051,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       );
       cards.push(
         h(StatCard, {
+          key: "kpi-\u7F13\u5B58 Token",
+          icon: "database",
           label: "\u7F13\u5B58 Token",
           count: aggAll.cr + aggAll.cw,
           sub: "\u547D\u4E2D " + fmt2(aggAll.cr) + " \xB7 \u5199\u5165 " + fmt2(aggAll.cw),
@@ -5925,6 +7081,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       );
       cards.push(
         data.peakStep ? h(StatCard, {
+          key: "kpi-\u5CF0\u503C\u5355\u6B21\u8BF7\u6C42",
+          icon: "bolt",
           label: "\u5CF0\u503C\u5355\u6B21\u8BF7\u6C42",
           count: data.peakStep.tokens,
           sub: data.peakStep.model + " \xB7 " + dispDay2(data.peakStep.d),
@@ -5933,6 +7091,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       );
       cards.push(
         peakDay ? h(StatCard, {
+          key: "kpi-\u5CF0\u503C\u5355\u65E5",
+          icon: "mountain",
           label: "\u5CF0\u503C\u5355\u65E5",
           count: peakDay.t,
           sub: dispDay2(peakDay.d),
@@ -5966,6 +7126,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       );
       cards.push(
         h(StatCard, {
+          key: "kpi-\u65E5\u5747\u6D88\u8017",
+          icon: "wave",
           label: "\u65E5\u5747\u6D88\u8017",
           count: avgDay,
           sub: "\u6309\u6D3B\u8DC3\u65E5\u5E73\u5747",
@@ -5974,10 +7136,19 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         })
       );
       cards.push(
-        h(StatCard, { label: "\u65E5\u6D88\u8017\u4E2D\u4F4D\u6570", count: medDay, sub: "\u6309\u6D3B\u8DC3\u65E5\u53D6\u4E2D\u4F4D", delay: cards.length * 45 })
+        h(StatCard, {
+          key: "kpi-\u65E5\u6D88\u8017\u4E2D\u4F4D\u6570",
+          icon: "median",
+          label: "\u65E5\u6D88\u8017\u4E2D\u4F4D\u6570",
+          count: medDay,
+          sub: "\u6309\u6D3B\u8DC3\u65E5\u53D6\u4E2D\u4F4D",
+          delay: cards.length * 45
+        })
       );
       cards.push(
         h(StatCard, {
+          key: "kpi-\u5F53\u524D\u8FDE\u7EED\u4F7F\u7528",
+          icon: "flame",
           label: "\u5F53\u524D\u8FDE\u7EED\u4F7F\u7528",
           count: st.current,
           fmt: (v) => fmt2(v) + " \u5929",
@@ -5988,6 +7159,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       );
       cards.push(
         h(StatCard, {
+          key: "kpi-\u6700\u957F\u8FDE\u7EED\u4F7F\u7528",
+          icon: "trophy",
           label: "\u6700\u957F\u8FDE\u7EED\u4F7F\u7528",
           count: st.longest,
           fmt: (v) => fmt2(v) + " \u5929",
@@ -5998,6 +7171,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       );
       cards.push(
         h(StatCard, {
+          key: "kpi-\u6D3B\u8DC3\u5929\u6570",
+          icon: "calendar",
           label: "\u6D3B\u8DC3\u5929\u6570",
           count: aggAll.byDay.size,
           fmt: (v) => fmt2(v) + " \u5929",
@@ -6008,23 +7183,43 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       );
       cards.push(
         h(StatCard, {
+          key: "kpi-\u6A21\u578B\u8C03\u7528\u6B21\u6570",
+          icon: "chip",
           label: "\u6A21\u578B\u8C03\u7528\u6B21\u6570",
           count: aggAll.n,
           sub: data.active + " \u4E2A\u4F1A\u8BDD\u6709\u7528\u91CF",
           delay: cards.length * 45
         })
       );
-      cards.push(h(StatCard, { label: "\u9996\u6B21\u4F7F\u7528", value: dispDay2(aggAll.first), sub: aggAll.first }));
-      cards.push(h(StatCard, { label: "\u6700\u8FD1\u4F7F\u7528", value: dispDay2(aggAll.last), sub: aggAll.last }));
-      const toolbar = props.widgets && props.widgetId ? h(
-        "div",
-        { style: { display: "flex", justifyContent: "flex-end", marginBottom: 6 } },
-        widgetBtns(props.widgets, props.widgetId)
-      ) : null;
+      cards.push(
+        h(StatCard, {
+          key: "kpi-\u9996\u6B21\u4F7F\u7528",
+          icon: "flag",
+          label: "\u9996\u6B21\u4F7F\u7528",
+          value: dispDay2(aggAll.first),
+          sub: aggAll.first
+        })
+      );
+      cards.push(
+        h(StatCard, {
+          key: "kpi-\u6700\u8FD1\u4F7F\u7528",
+          icon: "clock",
+          label: "\u6700\u8FD1\u4F7F\u7528",
+          value: dispDay2(aggAll.last),
+          sub: aggAll.last
+        })
+      );
+      const toolbar = props.widgets && props.widgetId ? widgetBtns(props.widgets, props.widgetId) : null;
       return h(
         "div",
-        { className: "tm-card" },
-        toolbar,
+        { className: "tm-card tm-statcards" },
+        h(
+          "div",
+          { className: "tm-chart-title" },
+          cardName("layers", "\u57FA\u7840\u6570\u636E"),
+          h("span", { className: "tm-hint" }, "\u5168\u90E8\u4F1A\u8BDD\u65E5\u5FD7\u805A\u5408 \xB7 \u60AC\u6D6E\u6307\u6807\u5361\u770B\u6784\u6210\u660E\u7EC6"),
+          toolbar
+        ),
         h("div", { className: "tm-grid" }, cards),
         pop !== null ? tmPortal(
           h(
@@ -6157,9 +7352,8 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         h(
           "div",
           { className: "tm-chart-title" },
-          h(
-            "span",
-            { className: "tm-chart-name" },
+          cardName(
+            "trend",
             "Token \u4F7F\u7528\u8D8B\u52BF\uFF08" + (trendRange === "24h" ? "\u8FD124\u5C0F\u65F6\u6309\u5C0F\u65F6" : trendRange === "7d" ? "\u8FD17\u5929\u6309\u5929" : "\u8FD130\u5929\u6309\u5929") + " \xB7 \u60AC\u6D6E\u67E5\u770B\u660E\u7EC6\uFF09"
           ),
           h(
@@ -6213,39 +7407,61 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     function HeatSection(props) {
       const data = props.data;
       const aggAll = props.aggAll;
-      const [heatSpan, setHeatSpan] = useState("6");
+      const [picked, setPicked] = useState(readHeatSpan());
+      const [cardW, setCardW] = useState(0);
+      const cardRef = React.useRef(null);
+      React.useLayoutEffect(() => {
+        const el = cardRef.current;
+        if (!el) return void 0;
+        const read = () => {
+          const w = Math.round(el.getBoundingClientRect().width);
+          setCardW((prev) => prev === w ? prev : w);
+        };
+        read();
+        if (typeof ResizeObserver === "undefined") return void 0;
+        const ro = new ResizeObserver(read);
+        ro.observe(el);
+        return () => ro.disconnect();
+      }, []);
+      const span = picked !== "" ? picked : cardW === 0 || cardW >= HEAT_WIDE_PX ? "12" : "6";
+      const pickSpan = (v) => {
+        setPicked(v);
+        try {
+          window.localStorage.setItem(HEAT_SPAN_KEY, v);
+        } catch {
+        }
+      };
       const open = useWidgetOpen(props.widgets, props.widgetId);
       if (props.inPlace && open) return null;
       const HEAT_OPS = [0.16, 0.3, 0.5, 0.72, 0.95];
       return h(
         "div",
-        { className: "tm-card" },
+        { className: "tm-card", ref: cardRef },
         h(
           "div",
           { className: "tm-chart-title" },
-          h("span", { className: "tm-chart-name" }, "Token \u6D3B\u52A8\u70ED\u529B\u56FE\uFF08\u60AC\u6D6E\u67E5\u770B\u5F53\u65E5\u660E\u7EC6\uFF09"),
+          cardName("grid", "Token \u6D3B\u52A8\u70ED\u529B\u56FE\uFF08\u60AC\u6D6E\u67E5\u770B\u5F53\u65E5\u660E\u7EC6\uFF09"),
           h(
             "span",
             { style: { display: "inline-flex", gap: 6, alignItems: "center" } },
             h(Seg, {
               options: [
-                { v: "1", t: "1\u4E2A\u6708" },
-                { v: "3", t: "3\u4E2A\u6708" },
                 { v: "6", t: "6\u4E2A\u6708" },
                 { v: "12", t: "12\u4E2A\u6708" }
               ],
-              current: heatSpan,
-              onPick: setHeatSpan
+              current: span,
+              onPick: pickSpan
             }),
             widgetBtns(props.widgets, props.widgetId)
           )
         ),
         h(Heatmap, {
-          key: heatSpan,
+          key: span,
           byDay: aggAll.byDay,
           daySessions: data.daySessions || {},
           models: data.models,
-          months: Number(heatSpan),
+          months: Number(span),
+          boxW: cardW,
           above: props.inFloat === true
         }),
         h(
@@ -6324,7 +7540,11 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
               h("span", {
                 className: "tm-barfill",
                 style: {
-                  width: (m.t / arr[0].t * 100).toFixed(1) + "%",
+                  // 进度条与同一行印出的百分比**必须同口径**：都占总量（sc.total），
+                  // 也就是环形图那一段的占比。旧写法除以 `arr[0]`（榜首模型），于是第一名
+                  // 的条永远满格、旁边却写着 53.3%，同一行里两个分母，看着就是"对不上"。
+                  // 顺带：这样每行的条长与上方圆环里对应的扇区长度也一致了。
+                  width: Math.min(100, Math.max(0, pct)).toFixed(1) + "%",
                   background: color,
                   animationDelay: i * 40 + 120 + "ms"
                 }
@@ -6345,7 +7565,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         h(
           "div",
           { className: "tm-chart-title" },
-          h("span", { className: "tm-chart-name" }, "\u6A21\u578B\u7528\u91CF\u5206\u5E03\uFF08" + props.rangeLabel + " \xB7 \u60AC\u6D6E\u67E5\u770B\u6784\u6210\uFF09"),
+          cardName("donut", "\u6A21\u578B\u7528\u91CF\u5206\u5E03\uFF08" + props.rangeLabel + " \xB7 \u60AC\u6D6E\u67E5\u770B\u6784\u6210\uFF09"),
           widgetBtns(props.widgets, props.widgetId)
         ),
         h(
@@ -6378,7 +7598,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         return h(
           "div",
           { className: "tm-hint" },
-          err ? "\u7EDF\u8BA1\u52A0\u8F7D\u5931\u8D25\uFF1A" + err : loading ? "\u6B63\u5728\u805A\u5408\u4F1A\u8BDD\u65E5\u5FD7\u2026" : "\u6682\u65E0\u6570\u636E\uFF08\u6253\u5F00\u53F3\u4FA7\u680F\u7528\u91CF\u9762\u677F\u53EF\u52A0\u901F\u52A0\u8F7D\uFF09"
+          err ? "\u7EDF\u8BA1\u52A0\u8F7D\u5931\u8D25\uFF1A" + err : loading ? "\u6B63\u5728\u805A\u5408\u4F1A\u8BDD\u65E5\u5FD7\u2026" : "\u6682\u65E0\u6570\u636E\uFF08\u6253\u5F00\u4E2D\u5FC3\u533A\u300C\u7528\u91CF\u7EDF\u8BA1\u300D\u53EF\u52A0\u901F\u52A0\u8F7D\uFF09"
         );
       }
       const aa = aggAll;
@@ -6543,7 +7763,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         props.onPrefs();
       };
       const children = [];
-      children.push(h("h3", { className: "tm-title" }, "Token \u7528\u91CF\u7EDF\u8BA1"));
+      if (showPrefs) children.push(h("h3", { className: "tm-title" }, "Token \u7528\u91CF\u7EDF\u8BA1"));
       if (showPrefs) {
         children.push(
           h(
@@ -6678,74 +7898,107 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         );
         return h("div", { className: "tm-page" }, children);
       }
-      children.push(
-        h(StatCardsSection, {
-          aggAll,
-          data,
-          widgets: props.widgets || null,
-          widgetId: "stats:cards",
-          inPlace: true
-        })
-      );
-      children.push(
-        scoped !== null ? h(
-          "div",
-          { className: "tm-card" },
-          h(
-            "div",
-            {
-              style: {
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 12,
-                flexWrap: "wrap"
-              }
-            },
-            h("span", { className: "tm-muted" }, "\u5F53\u524D\u8303\u56F4\uFF08" + rangeText(range) + "\uFF09"),
-            h(
-              "span",
-              { style: { fontVariantNumeric: "tabular-nums" } },
-              fmt2(scoped.total) + " tokens \xB7 \u8F93\u5165 " + fmt2(scoped.i) + " \xB7 \u8F93\u51FA " + fmt2(scoped.o) + " \xB7 " + fmtFull(scoped.n) + " \u6B21\u8C03\u7528"
-            )
-          )
-        ) : null
-      );
-      children.push(
-        h(TrendSection, {
-          data,
-          aggAll,
-          widgets: props.widgets || null,
-          widgetId: "stats:trend",
-          inPlace: true
-        })
-      );
-      children.push(
-        h(HeatSection, {
-          data,
-          aggAll,
-          widgets: props.widgets || null,
-          widgetId: "stats:heat",
-          inPlace: true
-        })
-      );
-      children.push(
-        h(DonutSection, {
-          data,
-          agg: scoped !== null ? scoped : aggAll,
-          rangeLabel: rangeText(range),
-          widgets: props.widgets || null,
-          widgetId: "stats:donut",
-          inPlace: true
-        })
-      );
-      children.push(
-        h(
-          "div",
-          { className: "tm-muted", style: { margin: "4px 2px 0" } },
-          "\u7EDF\u8BA1\u53E3\u5F84\uFF1A\u603B Token = \u8F93\u5165 + \u7F13\u5B58\u8BFB + \u7F13\u5B58\u5199 + \u8F93\u51FA\uFF08reasoning \u5DF2\u542B\u5728\u8F93\u51FA\u5185\uFF09\uFF1B\u540C\u4E00\u8BF7\u6C42\u7684\u91C7\u6837 usage \u88AB\u7EC8\u503C\u8986\u76D6\uFF0C\u4E0D\u91CD\u590D\u7D2F\u8BA1\uFF1Bfork/resume \u79CD\u5B50\u4E8B\u4EF6\u5DF2\u53BB\u91CD\u3002"
+      const span = (cls, key, node) => h("div", { key, className: cls }, node);
+      const cards = [];
+      cards.push(
+        span(
+          "tm-c12",
+          "cards",
+          h(StatCardsSection, {
+            aggAll,
+            data,
+            widgets: props.widgets || null,
+            widgetId: "stats:cards",
+            inPlace: true
+          })
         )
       );
+      if (scoped !== null) {
+        cards.push(
+          span(
+            "tm-c12",
+            "range",
+            h(
+              "div",
+              { className: "tm-card" },
+              h(
+                "div",
+                {
+                  style: {
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    flexWrap: "wrap"
+                  }
+                },
+                h("span", { className: "tm-muted" }, "\u5F53\u524D\u8303\u56F4\uFF08" + rangeText(range) + "\uFF09"),
+                h(
+                  "span",
+                  { style: { fontVariantNumeric: "tabular-nums" } },
+                  fmt2(scoped.total) + " tokens \xB7 \u8F93\u5165 " + fmt2(scoped.i) + " \xB7 \u8F93\u51FA " + fmt2(scoped.o) + " \xB7 " + fmtFull(scoped.n) + " \u6B21\u8C03\u7528"
+                )
+              )
+            )
+          )
+        );
+      }
+      cards.push(
+        span(
+          "tm-c12",
+          "trend",
+          h(TrendSection, {
+            data,
+            aggAll,
+            widgets: props.widgets || null,
+            widgetId: "stats:trend",
+            inPlace: true
+          })
+        )
+      );
+      cards.push(
+        span(
+          "tm-c12",
+          "heat",
+          h(HeatSection, {
+            data,
+            aggAll,
+            widgets: props.widgets || null,
+            widgetId: "stats:heat",
+            inPlace: true
+          })
+        )
+      );
+      cards.push(
+        span(
+          "tm-c12",
+          "donut",
+          h(
+            "div",
+            { className: "tm-donutWide" },
+            h(DonutSection, {
+              data,
+              agg: scoped !== null ? scoped : aggAll,
+              rangeLabel: rangeText(range),
+              widgets: props.widgets || null,
+              widgetId: "stats:donut",
+              inPlace: true
+            })
+          )
+        )
+      );
+      cards.push(
+        span(
+          "tm-c12",
+          "note",
+          h(
+            "div",
+            { className: "tm-muted", style: { margin: "0 2px" } },
+            "\u7EDF\u8BA1\u53E3\u5F84\uFF1A\u603B Token = \u8F93\u5165 + \u7F13\u5B58\u8BFB + \u7F13\u5B58\u5199 + \u8F93\u51FA\uFF08reasoning \u5DF2\u542B\u5728\u8F93\u51FA\u5185\uFF09\uFF1B\u540C\u4E00\u8BF7\u6C42\u7684\u91C7\u6837 usage \u88AB\u7EC8\u503C\u8986\u76D6\uFF0C\u4E0D\u91CD\u590D\u7D2F\u8BA1\uFF1Bfork/resume \u79CD\u5B50\u4E8B\u4EF6\u5DF2\u53BB\u91CD\u3002"
+          )
+        )
+      );
+      children.push(h("div", { className: "tm-dash" }, cards));
       return h("div", { className: "tm-page" }, children);
     }
     function TodayCard(props) {
@@ -6787,7 +8040,12 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
                 onPointerDown: tmFloatDrag,
                 onDoubleClick: () => tmTodaySet(false)
               },
-              h("span", { className: "tm-todaylabel" }, "\u4ECA\u65E5\u7528\u91CF"),
+              h(
+                "span",
+                { className: "tm-todaylabel tm-titledIco" },
+                h(Glyph, { name: "bolt", size: 13, className: "tm-cico" }),
+                "\u4ECA\u65E5\u7528\u91CF"
+              ),
               h("span", { className: "tm-todayval", style: { opacity: 0.5 } }, "\u2026"),
               h(
                 "button",
@@ -6807,7 +8065,12 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         return h(
           "div",
           { className: "tm-today" + (wide ? "" : " tm-todayRail") },
-          h("div", { className: "tm-todaylabel" }, "\u4ECA\u65E5\u7528\u91CF"),
+          h(
+            "div",
+            { className: "tm-todaylabel tm-titledIco" },
+            h(Glyph, { name: "bolt", size: 13, className: "tm-cico" }),
+            "\u4ECA\u65E5\u7528\u91CF"
+          ),
           h("div", { className: "tm-todayval", style: { opacity: 0.5 } }, "\u2026")
         );
       }
@@ -6925,7 +8188,12 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             { className: "tm-grip", title: "\u6309\u4F4F\u62D6\u51FA\u4E3A\u6D6E\u7A97\uFF0C\u70B9\u6309\u76F4\u63A5\u5F39\u51FA", onPointerDown: tmGripDragOut },
             "\u283F"
           ),
-          h("span", { className: "tm-todaylabel" }, props.name || "\u4ECA\u65E5 Token"),
+          h(
+            "span",
+            { className: "tm-todaylabel tm-titledIco" },
+            h(Glyph, { name: "bolt", size: 13, className: "tm-cico" }),
+            props.name || "\u4ECA\u65E5 Token"
+          ),
           h(AnimatedNumber, { className: "tm-todayval", value: todayTotal, format: fmt2 }),
           bare ? widgetBtns(props.widgets, props.widgetId) : h(
             "button",
@@ -7001,8 +8269,57 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
       const pos = tmTodayClamp(fl.pos || tmTodayLoadPos() || tmTodayDefaultPos());
       return h(TodayCard, { wide: true, float: true, floatPos: pos });
     }
+    function SharePanel(props) {
+      const sections = {
+        StatCardsSection,
+        TrendSection,
+        HeatSection,
+        DonutSection,
+        OnlineEmbed: props.OnlineEmbed
+      };
+      const [data, setData] = useState(null);
+      const [error, setError] = useState("");
+      const [ident, setIdent] = useState({ name: "", email: "" });
+      React.useEffect(() => {
+        let alive = true;
+        void fetchStats().then((v) => {
+          if (!alive) return;
+          if (v && v.ready === true) setData(v);
+          else setError(String(v && v.error || "\u7EDF\u8BA1\u670D\u52A1\u4E0D\u53EF\u7528"));
+        }).catch((e) => {
+          if (alive) setError(String(e?.message ?? e));
+        });
+        void fetch("/ext/dshp-token-meter/identity", { cache: "no-store" }).then((r) => r.json()).then((v) => {
+          if (alive && v && v.ok === true)
+            setIdent({ name: String(v.name || ""), email: String(v.email || "") });
+        }).catch(() => {
+        });
+        return () => {
+          alive = false;
+        };
+      }, []);
+      if (data === null)
+        return h(ShareShell, {
+          data: EMPTY_SNAPSHOT,
+          loading: true,
+          error,
+          sections,
+          onClose: props.onClose
+        });
+      return h(ShareShell, {
+        data,
+        loading: false,
+        error,
+        gitName: ident.name,
+        gitEmail: ident.email,
+        sections,
+        onClose: props.onClose
+      });
+    }
     return {
       StatsSettingsPage,
+      /** 分享面板（全屏 16:9 卡片 + 下载/复制 PNG）；数据与聚合复用本文件的辅助函数 */
+      SharePanel,
       TodayCard,
       TodayFloatEntry,
       useTmTodayFloat,
@@ -7632,7 +8949,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           h("div", { className: "tm-sectionHead" }, "\u504F\u597D"),
           h(
             UI.SecRow,
-            { key: "range", label: "\u9ED8\u8BA4\u8303\u56F4", desc: "\u53F3\u4FA7\u680F\u300C\u7528\u91CF\u300D\u9762\u677F\u6253\u5F00\u65F6\u9ED8\u8BA4\u7EDF\u8BA1\u591A\u5C11\u5929\u7684\u6570\u636E\u3002" },
+            { key: "range", label: "\u9ED8\u8BA4\u8303\u56F4", desc: "\u4E2D\u5FC3\u533A\u300C\u7528\u91CF\u7EDF\u8BA1\u300D\u6253\u5F00\u65F6\u9ED8\u8BA4\u7EDF\u8BA1\u591A\u5C11\u5929\u7684\u6570\u636E\u3002" },
             h(UI.PillSelect, {
               disabled: busy,
               value: defRange,
@@ -7651,7 +8968,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             {
               key: "gap",
               label: "\u5728\u7EBF\u65F6\u957F\u7A7A\u95F2\u9608\u503C",
-              desc: "\u300C\u5728\u7EBF\u65F6\u957F\u300D\u9762\u677F\u9ED8\u8BA4\u53E3\u5F84\uFF1A\u76F8\u90BB\u4E8B\u4EF6\u95F4\u9694\u8D85\u8FC7\u5B83\u5C31\u7B97\u300C\u79BB\u5F00\u300D\u3002\u5B83\u662F\u53E3\u5F84\u4E0D\u662F\u7CBE\u5EA6\uFF0C\u8C03\u5927\u5728\u7EBF\u65F6\u957F\u53D8\u591A\u3002"
+              desc: "\u5728\u7EBF = \u6709\u4E8B\u4EF6\u3001\u4E14\u76F8\u90BB\u4E8B\u4EF6\u95F4\u9694\u4E0D\u8D85\u8FC7\u5B83\u7684\u5899\u949F\u65F6\u95F4\uFF1A\u95F4\u9694 \u2264 \u9608\u503C\u5219\u6574\u6BB5\u8BA1\u5165\uFF08\u542B\u4E2D\u95F4\u7A7A\u6863\uFF09\uFF0C\u8D85\u8FC7\u5C31\u65AD\u5F00\u3001\u4E2D\u95F4\u4E0D\u8BA1\uFF1B\u6BCF\u6BB5\u53EA\u7B97\u5230\u6700\u540E\u4E00\u4E2A\u4E8B\u4EF6\uFF0C\u6240\u4EE5\u4EFB\u4F55\u6863\u4F4D\u90FD\u662F\u4E0B\u754C\u3002\u63A8\u8350 15 \u5206\u949F\uFF08\u80FD\u515C\u4F4F\u8BFB\u957F\u56DE\u7B54/\u60F3\u9700\u6C42\u7684\u9759\u9ED8\u671F\uFF0C\u53C8\u4E0D\u4F1A\u628A\u5F00\u4F1A\u5403\u996D\u7B97\u8FDB\u6765\uFF09\uFF1B\u8BE6\u7EC6\u8BF4\u660E\u4E0E\u5404\u6863\u5B9E\u6D4B\u5BF9\u6BD4\u89C1\u300C\u5728\u7EBF\u7EDF\u8BA1\u300D\u9762\u677F\u9876\u90E8\u3002"
             },
             h(UI.PillSelect, {
               disabled: busy,
@@ -7673,7 +8990,7 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
           {
             key: "__active",
             label: "\u5F53\u524D\u4F9B\u5E94\u5546",
-            desc: "\u4FA7\u8FB9\u680F\u4E0E\u53F3\u4FA7\u680F\u989D\u5EA6\u5361\u5C55\u793A\u54EA\u4E00\u5BB6\u7684\u989D\u5EA6\uFF1B\u9009\u300C\u65E0\u300D= \u6781\u7B80\u6A21\u5F0F\uFF08\u4E0D\u5C55\u793A\u3001\u4E5F\u4E0D\u62C9\u53D6\u4EFB\u4F55\u989D\u5EA6\uFF09\u3002"
+            desc: "\u4FA7\u8FB9\u680F\u4E0E\u4E2D\u5FC3\u533A\u989D\u5EA6\u5361\u5C55\u793A\u54EA\u4E00\u5BB6\u7684\u989D\u5EA6\uFF1B\u9009\u300C\u65E0\u300D= \u6781\u7B80\u6A21\u5F0F\uFF08\u4E0D\u5C55\u793A\u3001\u4E5F\u4E0D\u62C9\u53D6\u4EFB\u4F55\u989D\u5EA6\uFF09\u3002"
           },
           h(UI.PillSelect, {
             disabled: busy,
@@ -7910,14 +9227,14 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         h(
           "p",
           { className: "tm-intro" },
-          tab === "stats" ? "\u7EDF\u8BA1\u8BBE\u7F6E\uFF1A\u6570\u636E\u6765\u6E90\u3001\u6D3E\u751F\u7F13\u5B58\u4E0E\u9ED8\u8BA4\u53E3\u5F84\u3002\u8BE6\u7EC6\u56FE\u8868\u5728\u53F3\u4FA7\u680F\u300C\u7528\u91CF / \u5728\u7EBF\u65F6\u957F\u300D\u9762\u677F\u3002" : "\u989D\u5EA6\u914D\u7F6E\uFF1A\u4F9B\u5E94\u5546\u4E0E\u62C9\u53D6\u504F\u597D\u3002\u8BE6\u7EC6\u989D\u5EA6\u5361\u5728\u53F3\u4FA7\u680F\u300C\u989D\u5EA6\u300D\u9762\u677F\u3002\u914D\u7F6E\u6301\u4E45\u5316\u5728 settings.yaml\uFF08",
+          tab === "stats" ? "\u7EDF\u8BA1\u8BBE\u7F6E\uFF1A\u6570\u636E\u6765\u6E90\u3001\u6D3E\u751F\u7F13\u5B58\u4E0E\u9ED8\u8BA4\u53E3\u5F84\u3002\u8BE6\u7EC6\u56FE\u8868\u5728\u4E2D\u5FC3\u533A\u300C" + DISPLAY_NAME + " \u2192 \u7528\u91CF\u7EDF\u8BA1 / \u5728\u7EBF\u7EDF\u8BA1\u300D\u3002" : "\u989D\u5EA6\u914D\u7F6E\uFF1A\u4F9B\u5E94\u5546\u4E0E\u62C9\u53D6\u504F\u597D\u3002\u8BE6\u7EC6\u989D\u5EA6\u5361\u5728\u4E2D\u5FC3\u533A\u300C" + DISPLAY_NAME + " \u2192 \u989D\u5EA6\u67E5\u8BE2\u300D\u3002\u914D\u7F6E\u6301\u4E45\u5316\u5728 settings.yaml\uFF08",
           tab === "stats" ? null : h("code", { className: "tm-mono" }, s.namespace || "dshp-token-meter"),
           tab === "stats" ? null : " \u547D\u540D\u7A7A\u95F4\uFF09\uFF0C\u5916\u90E8\u7F16\u8F91\u70ED\u91CD\u8F7D\u3002"
         ),
         tab === "stats" ? statsKids : quotaKids
       );
     }
-    function StatsRightPane() {
+    function StatsView() {
       const [prefs, setPrefs] = useState({
         showToday: false,
         defaultRange: "all"
@@ -8009,8 +9326,10 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
     }
     return {
       TokenMeterSettings,
-      QuotaRightPane: quota.QuotaRightPane,
-      StatsRightPane,
+      QuotaView: quota.QuotaView,
+      StatsView,
+      // 分享面板：中心区 tab 头部「分享」按钮的实际内容（漏了这一项就是 React #130）
+      SharePanel: stats.SharePanel,
       WidgetFloatLayer,
       widgetsApi: widgets,
       statsApi: stats
@@ -8058,12 +9377,9 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
         const parts = createTokenMeterSection(React, P, ReactDOM);
         const onlineParts = createOnlineSection(React, ReactDOM, parts.statsApi);
         const TokenMeterSettings = parts.TokenMeterSettings;
-        const QuotaRightPane = parts.QuotaRightPane;
-        const StatsRightPane = parts.StatsRightPane;
         const WidgetFloatLayer = parts.WidgetFloatLayer;
         const WidgetsApi = parts.widgetsApi;
-        const OnlineRightPane = onlineParts.OnlineRightPane;
-        const { QuotaIcon, UsageIcon, OnlineIcon } = createIcons(React);
+        const icons = createIcons(React);
         function useTmStyles() {
           React.useEffect(() => {
             const tag = tmEnsureStyles();
@@ -8080,8 +9396,24 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             };
           }, []);
         }
+        function TokenMeterSettingsEntry(props) {
+          useTmStyles();
+          return React.createElement(TokenMeterSettings, props);
+        }
+        const TokenMeterCenterView = createCenterView(
+          React,
+          {
+            QuotaView: parts.QuotaView,
+            StatsView: parts.StatsView,
+            OnlineView: onlineParts.OnlineView,
+            OnlineEmbed: onlineParts.OnlineEmbed,
+            SettingsView: TokenMeterSettingsEntry,
+            SharePanel: parts.SharePanel
+          },
+          icons
+        );
         const exportsObj = exportsShim;
-        exportsObj.inject = ["slots", "sidebarRightTabs", "sidebarRight"];
+        exportsObj.inject = ["slots"];
         exportsObj.apply = function apply(ctx) {
           const slots = ctx.get("slots");
           if (slots === void 0) return;
@@ -8112,17 +9444,14 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             window.localStorage.removeItem("ts-today.float.pos");
             window.localStorage.removeItem("tm-today.float.open");
             window.localStorage.removeItem("tm-today.float.pos");
+            window.localStorage.removeItem("tm-righttabs-autoopened");
           } catch {
-          }
-          function SettingsEntry(p) {
-            useTmStyles();
-            return React.createElement(TokenMeterSettings, p);
           }
           slots.inject(
             "settings.section",
             () => slots.register(
-              { name: "settings.section", id: "dshp-token-meter", order: 27, label: "Token \u7EDF\u8BA1\u4E0E\u989D\u5EA6" },
-              SettingsEntry
+              { name: "settings.section", id: "dshp-token-meter", order: 27, label: DISPLAY_NAME },
+              TokenMeterSettingsEntry
             )
           );
           function TokenMeterFloatEntry(props) {
@@ -8133,156 +9462,23 @@ div:has(> div[data-slot="sidebar.footer.action"]){flex-direction:column;align-it
             "shell.overlay",
             () => slots.register({ name: "shell.overlay", id: "dshp-token-meter-float" }, TokenMeterFloatEntry)
           );
-          const QUOTA_TAB = "@dshp/token-meter-quota";
-          const STATS_TAB = "@dshp/token-meter-stats";
-          const ONLINE_TAB = "@dshp/token-meter-online";
-          {
-            ctx.effect(
-              () => ctx.sidebarRightTabs.register({
-                id: QUOTA_TAB,
-                kind: "token-meter-quota",
-                title: () => "Token \u989D\u5EA6",
-                guide: [
-                  {
-                    order: 20,
-                    title: () => "Token \u989D\u5EA6",
-                    description: () => "\u5168\u90E8\u4F9B\u5E94\u5546\u989D\u5EA6\u4E00\u89C8",
-                    icon: QuotaIcon
-                  }
-                ]
-              }),
-              "dshp-token-meter: right tab quota"
-            );
-            ctx.effect(
-              () => ctx.sidebarRightTabs.register({
-                id: STATS_TAB,
-                kind: "token-meter-stats",
-                title: () => "Token \u7528\u91CF",
-                guide: [
-                  {
-                    order: 21,
-                    title: () => "Token \u7528\u91CF",
-                    description: () => "\u7528\u91CF\u8D8B\u52BF\u4E0E\u6A21\u578B\u5206\u5E03",
-                    icon: UsageIcon
-                  }
-                ]
-              }),
-              "dshp-token-meter: right tab stats"
-            );
-            ctx.effect(
-              () => ctx.sidebarRightTabs.register({
-                id: ONLINE_TAB,
-                kind: "token-meter-online",
-                title: () => "\u5728\u7EBF\u65F6\u957F",
-                guide: [
-                  {
-                    order: 22,
-                    title: () => "\u5728\u7EBF\u65F6\u957F",
-                    description: () => "\u6BCF\u65E5/\u7D2F\u8BA1\u5728\u7EBF\u65F6\u957F\u4F30\u7B97",
-                    icon: OnlineIcon
-                  }
-                ]
-              }),
-              "dshp-token-meter: right tab online"
-            );
-            const QuotaPane = function QuotaPane2(p) {
-              useTmStyles();
-              return React.createElement(
-                "div",
-                { style: { height: "100%", minHeight: 0, overflow: "auto", padding: "12px 14px" } },
-                React.createElement(QuotaRightPane, p)
-              );
-            };
-            const QuotaPaneTitle = function QuotaPaneTitle2() {
-              return React.createElement(
-                "span",
-                { className: "tm-tabChip" },
-                React.createElement(QuotaIcon, { size: 14 }),
-                React.createElement("span", null, "Token \u989D\u5EA6")
-              );
-            };
-            const StatsPane = function StatsPane2(p) {
-              useTmStyles();
-              return React.createElement(
-                "div",
-                { style: { height: "100%", minHeight: 0, overflow: "auto", padding: "12px 14px" } },
-                React.createElement(StatsRightPane, p)
-              );
-            };
-            const StatsPaneTitle = function StatsPaneTitle2() {
-              return React.createElement(
-                "span",
-                { className: "tm-tabChip" },
-                React.createElement(UsageIcon, { size: 14 }),
-                React.createElement("span", null, "Token \u7528\u91CF")
-              );
-            };
-            const OnlinePane = function OnlinePane2(p) {
-              useTmStyles();
-              return React.createElement(
-                "div",
-                { style: { height: "100%", minHeight: 0, overflow: "auto", padding: "12px 14px" } },
-                React.createElement(OnlineRightPane, p)
-              );
-            };
-            const OnlinePaneTitle = function OnlinePaneTitle2() {
-              return React.createElement(
-                "span",
-                { className: "tm-tabChip" },
-                React.createElement(OnlineIcon, { size: 14 }),
-                React.createElement("span", null, "\u5728\u7EBF\u65F6\u957F")
-              );
-            };
-            slots.inject(
-              "sidebar.right.pane.tab",
-              () => slots.register({ name: "sidebar.right.pane.tab", key: QUOTA_TAB }, QuotaPane)
-            );
-            slots.inject(
-              "sidebar.right.pane.tab.title",
-              () => slots.register({ name: "sidebar.right.pane.tab.title", key: QUOTA_TAB }, QuotaPaneTitle)
-            );
-            slots.inject(
-              "sidebar.right.pane.tab",
-              () => slots.register({ name: "sidebar.right.pane.tab", key: STATS_TAB }, StatsPane)
-            );
-            slots.inject(
-              "sidebar.right.pane.tab.title",
-              () => slots.register({ name: "sidebar.right.pane.tab.title", key: STATS_TAB }, StatsPaneTitle)
-            );
-            slots.inject(
-              "sidebar.right.pane.tab",
-              () => slots.register({ name: "sidebar.right.pane.tab", key: ONLINE_TAB }, OnlinePane)
-            );
-            slots.inject(
-              "sidebar.right.pane.tab.title",
-              () => slots.register({ name: "sidebar.right.pane.tab.title", key: ONLINE_TAB }, OnlinePaneTitle)
-            );
+          const CENTER_VIEW = "dshp-token-meter";
+          function TokenMeterCenterEntry(props) {
+            useTmStyles();
+            return React.createElement(TokenMeterCenterView, props);
           }
-          try {
-            let done = false;
-            try {
-              done = window.localStorage.getItem("tm-righttabs-autoopened") === "1";
-            } catch {
-            }
-            if (!done) {
-              let attempts = 0;
-              const tryOpen = () => {
-                attempts++;
-                try {
-                  ctx.sidebarRight.openTab("token-meter-quota");
-                  ctx.sidebarRight.openTab("token-meter-stats");
-                  try {
-                    window.localStorage.setItem("tm-righttabs-autoopened", "1");
-                  } catch {
-                  }
-                } catch {
-                  if (attempts < 5) window.setTimeout(tryOpen, attempts * 2e3);
-                }
-              };
-              window.setTimeout(tryOpen, 1500);
-            }
-          } catch {
-          }
+          slots.inject(
+            "conversation.view",
+            () => slots.register(
+              {
+                name: "conversation.view",
+                id: CENTER_VIEW,
+                order: 40,
+                label: DISPLAY_NAME
+              },
+              TokenMeterCenterEntry
+            )
+          );
         };
         return moduleShim.exports;
       }

@@ -21,6 +21,7 @@ import { fetchOfficialBalance } from './deepseek-api.js';
 import { fetchWebSummary } from './deepseek-web.js';
 import { balanceSection, defaultView, makeView, metricsSection } from './view.js';
 import type { ProviderAdapter, ProviderSection, ProviderView, Vendor, ProviderDeps } from '../types.js';
+import { DISPLAY_NAME } from '../../name.js';
 
 /** 去 Bearer 前缀（分类前归一，大小写不敏感）。 */
 export function stripBearer(v: unknown): string {
@@ -216,7 +217,7 @@ const deepseek: ProviderAdapter = {
     if (lastErr instanceof ProviderError && lastErr.kind === 'auth' && order.length > 1) {
       throw new ProviderError('auth', '两条数据路线都鉴权失败（官方接口与网页接口）：' + lastMsg, {
         hint: '官方 apiKey 与网页会话票据是两套独立凭据、互不通用。请确认：sk- 开头的填 apiKey 栏，登录会话 token（ciYi 开头）填 token 栏，两者都过期时都要更新。',
-        action: '设置 → Token 计量 → 该供应商 →「编辑」',
+        action: '设置 → ' + DISPLAY_NAME + ' → 该供应商 →「编辑」',
       });
     }
     throw lastErr || new ProviderError('unknown', 'DeepSeek 拉取失败');

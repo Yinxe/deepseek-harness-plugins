@@ -47,6 +47,7 @@ const VALUE_KEYS = [
 ];
 
 import { ProviderError } from '../errors.js';
+import { DISPLAY_NAME } from '../../name.js';
 
 function isObj(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -116,7 +117,7 @@ function envelopeThrow(msg: string): never {
     if (/api.?key/i.test(msg)) {
       throw new ProviderError('auth', msg, {
         hint: '官方 sk- 密钥不能用于网页账单接口（两套凭据体系不通用）。请把它改填到 apiKey 栏，或直接用 deepseek 类型让它自动选路。',
-        action: '设置 → Token 计量 → 该供应商 →「编辑」',
+        action: '设置 → ' + DISPLAY_NAME + ' → 该供应商 →「编辑」',
       });
     }
     throw new ProviderError('session', msg, {

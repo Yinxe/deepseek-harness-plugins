@@ -35,6 +35,7 @@ import type {
   Vendor,
   ProviderDeps,
 } from '../types.js';
+import { DISPLAY_NAME } from '../../name.js';
 
 /** alpha 额度接口基址（固定，不可配置；换域名改这里重 build）。 */
 const API_BASE = 'https://api.commandcode.ai/alpha';
@@ -442,7 +443,7 @@ const commandcode: ProviderAdapter = {
           '填的是 $' +
           DEFAULT_ENV_KEY +
           ' 引用，但该环境变量/凭据当前为空。导出变量后需重启 dsh web，或改填明文。',
-        action: '设置 → Token 计量 → 该供应商 →「编辑」',
+        action: '设置 → ' + DISPLAY_NAME + ' → 该供应商 →「编辑」',
         retriable: false,
       });
     const fetchImpl = (deps && deps.fetchImpl) || fetch;

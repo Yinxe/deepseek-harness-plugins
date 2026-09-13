@@ -211,8 +211,18 @@ export function createProviderKit(React: AnyReact, deps: KitDeps): ProviderUIKit
     const granted = b['granted'] !== undefined && b['granted'] !== null ? num(b['granted'], 0) : null;
     const topped = b['toppedUp'] !== undefined && b['toppedUp'] !== null ? num(b['toppedUp'], 0) : null;
     const avail = b['isAvailable'];
-    const availCls = avail === true ? 'ok' : avail === false ? 'bad' : 'unknown';
-    const availTxt = avail === true ? '可用' : avail === false ? '不足' : '状态未知';
+    // 单一判据：余额 ≤ 0 也算「不可用」—— 与下面那条红字余额告警用的是同一个 empty。
+    // 上游多数 provider 在余额非正时只回 null（它们不肯替上游断言「不可用」，见
+    // host/providers/*.ts 的 `isAvailable: balance > 0 ? true : null`），旧代码只读
+    // isAvailable，于是同一张卡会出现「状态未知」顶着「余额不足」红字的自相矛盾。
+    const empty = amt <= 0 || avail === false;
+    const availCls = empty ? 'bad' : avail === true ? 'ok' : 'unknown';
+    const availTxt = availCls === 'bad' ? '不足' : availCls === 'ok' ? '可用' : '状态未知';
+    const availTip =
+      '可用性徽标：\n' +
+      '· 可用 —— 上游明确说可用\n' +
+      '· 不足 —— 上游明确报不足，或余额已 ≤ 0（与下方余额告警同一个判据）\n' +
+      '· 状态未知 —— 上游没有给出可用性判断，这里只反映余额数字本身（例如手动账本）';
     const warnLine =
       b['lowWarn'] !== undefined && b['lowWarn'] !== null && b['lowWarn'] !== ''
         ? num(b['lowWarn'], 0)
@@ -230,7 +240,7 @@ export function createProviderKit(React: AnyReact, deps: KitDeps): ProviderUIKit
           h('span', { className: 'tm-payg-cur' }, curSymbol(cur) + cur),
           h('span', { className: 'tm-payg-amt' + (amt < 0 ? ' neg' : '') }, fmt(amt)),
         ),
-        h('span', { className: 'tm-avail ' + availCls }, availTxt),
+        h('span', { className: 'tm-avail ' + availCls, title: availTip }, availTxt),
       ),
     );
     const parts: string[] = [];
@@ -253,7 +263,7 @@ export function createProviderKit(React: AnyReact, deps: KitDeps): ProviderUIKit
           ),
         ),
       );
-    const empty = amt <= 0 || avail === false;
+    // empty 已在上面算好（徽标与这条告警共用同一个判据，两处不会再打架）
     const low = !empty && warnLine !== null && amt <= warnLine;
     if (empty)
       kids.push(
