@@ -245,6 +245,114 @@ function firstLine(text: string): string | null {
   return null;
 }
 
+/** 一行统一 diff 的语义。 */
+export type UnifiedDiffKind = 'ctx' | 'del' | 'add';
+
+/** 统一 diff 的一行。 */
+export interface UnifiedDiffRow {
+  kind: UnifiedDiffKind;
+  text: string;
+}
+
+/** LCS 动态规划的上限：超过就退化成「先全部删除、再全部新增」，宁可粗也不要卡住渲染。 */
+const DIFF_CELL_LIMIT = 160000;
+const DIFF_LINE_LIMIT = 4000;
+
+/** 按行切分（空串 0 行；末尾换行不算一行），与官方 `DiffBlock` 内部口径一致。 */
+function splitLines(text: string): string[] {
+  if (text === '') return [];
+  const body = text.endsWith('\n') ? text.slice(0, -1) : text;
+  return body.split('\n');
+}
+
+/**
+ * 把「旧文本 → 新文本」算成真正的统一 diff（未变行只出现一次，增删交错）。
+ *
+ * 为什么不能像官方 `DiffBlock` 那样直接「旧行全 `-`、新行全 `+`」：那样每行 3 行上下文
+ * 会在两段里各出现一次（`- 上下文` / `+ 上下文`），读起来像改了两遍。这里用 LCS 找出
+ * 真正未变的行，只输出一次，于是得到 git diff 那种交错结果：
+ *
+ * ```
+ *   ctx
+ * - old
+ * + new
+ *   ctx
+ * ```
+ *
+ * @param oldText - 变更前文本；纯新增（新文件 / 纯插入）为 null。
+ * @param newText - 变更后文本。
+ * @returns 逐行的统一 diff；两侧都空时返回空数组。
+ */
+export function unifiedDiffRows(oldText: string | null, newText: string): UnifiedDiffRow[] {
+  const before = splitLines(oldText === null ? '' : oldText);
+  const after = splitLines(newText);
+  if (before.length === 0) return after.map((text) => ({ kind: 'add', text }));
+  if (after.length === 0) return before.map((text) => ({ kind: 'del', text }));
+
+  const n = before.length;
+  const m = after.length;
+  const naive = (): UnifiedDiffRow[] => [
+    ...before.map((text): UnifiedDiffRow => ({ kind: 'del', text })),
+    ...after.map((text): UnifiedDiffRow => ({ kind: 'add', text })),
+  ];
+  if (n * m > DIFF_CELL_LIMIT || n + m > DIFF_LINE_LIMIT) return naive();
+
+  // 经典 LCS 长度表（自底向上），再顺着表走出一条最短编辑路径。
+  const width = m + 1;
+  const dp: number[] = Array.from({ length: (n + 1) * width }, () => 0);
+  for (let i = n - 1; i >= 0; i -= 1) {
+    for (let j = m - 1; j >= 0; j -= 1) {
+      dp[i * width + j] =
+        before[i] === after[j]
+          ? (dp[(i + 1) * width + (j + 1)] as number) + 1
+          : Math.max(dp[(i + 1) * width + j] as number, dp[i * width + (j + 1)] as number);
+    }
+  }
+
+  const rows: UnifiedDiffRow[] = [];
+  let i = 0;
+  let j = 0;
+  while (i < n && j < m) {
+    if (before[i] === after[j]) {
+      rows.push({ kind: 'ctx', text: before[i] as string });
+      i += 1;
+      j += 1;
+    } else if ((dp[(i + 1) * width + j] as number) >= (dp[i * width + (j + 1)] as number)) {
+      rows.push({ kind: 'del', text: before[i] as string });
+      i += 1;
+    } else {
+      rows.push({ kind: 'add', text: after[j] as string });
+      j += 1;
+    }
+  }
+  while (i < n) {
+    rows.push({ kind: 'del', text: before[i] as string });
+    i += 1;
+  }
+  while (j < m) {
+    rows.push({ kind: 'add', text: after[j] as string });
+    j += 1;
+  }
+  return rows;
+}
+
+/**
+ * 把统一 diff 拼成一段可以喂给 `CodeBlock` 的代码文本。
+ *
+ * **不加 `-` / `+` 行首标记**（这是刻意的）：增删由卡片按行区间上的整行底色表达，标记是多余的
+ * 噪声。不加标记还带来两个好处——高亮器（shiki）拿到的是**原始代码**，行首不会多出一个被当成
+ * 运算符的字符；缩进零偏移，块内代码与文件里逐字一致。
+ *
+ * 唯一的代价：代码块的「复制」复制到的是**不带标记**的增删混合文本（旧行与新行交错但无法区分）。
+ * 需要能直接用的 patch 时，切到 `± 差异` 视图复制（`DiffBlock` 的复制会带 `-` / `+`）。
+ *
+ * @param rows - 统一 diff 行。
+ * @returns 代码文本。
+ */
+export function toDiffText(rows: readonly UnifiedDiffRow[]): string {
+  return rows.map((row) => row.text).join('\n');
+}
+
 /**
  * 失败调用的首行说明：先看结果文本，再看结构化错误。
  *

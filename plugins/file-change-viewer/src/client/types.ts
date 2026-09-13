@@ -31,6 +31,17 @@ export interface FileDiff {
 export type FileChangeState = 'running' | 'ok' | 'error';
 
 /**
+ * 卡片主体视图。
+ *
+ * - `highlight`：官方 `CodeBlock`（真 shiki 着色 + 行号），每个 hunk 拆成「− 旧块 / + 新块」；
+ * - `diff`：官方 `DiffBlock` 的逐行 ± 红绿合并 diff（紧凑）。
+ *
+ * 两个视图都是官方组件，差别只在「代码块形态」与「逐行差异形态」——官方高亮器没有
+ * 「只给某一行的着色碎片」这种接口，所以逐行 ± 与真高亮无法同时存在于一个布局里。
+ */
+export type FileChangeView = 'highlight' | 'diff';
+
+/**
  * 这次变更到底有没有落盘——卡片右上角标就是它。
  *
  * - `streaming`：调用进行中，参数还在流式生成（内容可能不完整）；
