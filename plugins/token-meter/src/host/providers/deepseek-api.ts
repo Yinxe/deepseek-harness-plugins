@@ -12,6 +12,7 @@
  */
 import { numStr } from './base.js';
 import { ProviderError } from '../errors.js';
+import { DISPLAY_NAME } from '../../name.js';
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -55,7 +56,7 @@ export async function fetchOfficialBalance(
     throw new ProviderError('auth', 'DeepSeek 密钥无效(401)：' + body.slice(0, 100), {
       status: code,
       hint: '官方余额接口拒绝了这个 apiKey（应 sk- 开头）。请确认它来自 open platform 且未被删除。',
-      action: '设置 → Token 计量 → 该供应商 →「编辑」apiKey',
+      action: '设置 → ' + DISPLAY_NAME + ' → 该供应商 →「编辑」apiKey',
     });
   if (code === 402)
     throw new ProviderError('balance', 'DeepSeek 余额不足(402)：' + body.slice(0, 100), { status: code });

@@ -26,10 +26,22 @@ export const PRESET_GAPS_MIN: number[] = [1, 5, 15, 30, 60];
 /** fold 阶段的基础合并阈值：再小的阈值不保证准确（1 分钟精度）。 */
 export const BASE_GAP_MS = 60_000;
 
-/** 配置阈值归一：钳到 [1, 60] 分钟，并吸附到最近的预设值。 */
+/**
+ * 推荐默认阈值（分钟）= 15。
+ * 依据：DSH 真正在干活时日志里持续有事件（step / tool call-result / 子代理），
+ * 所以「挂机跑任务」那段本来就会被计入，不依赖大阈值；需要靠阈值兜的是
+ * 「读完回答再想一下」「短暂离开」这类几分钟量级的静默期。1~5 分钟会把这些切断（偏低），
+ * 60 分钟则会把开会/吃饭整段算成在线（只适合回答「今天开着 DSH 多久」）。
+ */
+export const DEFAULT_GAP_MIN = 15;
+
+/**
+ * 配置阈值归一：钳到 [1, 60] 分钟，并吸附到最近的预设值。
+ * 非法值兜底用**推荐档 15 分钟**（与 Host 配置默认值一致）。
+ */
 export function normGapMin(raw: unknown): number {
   const n = Math.floor(Number(raw));
-  if (!Number.isFinite(n) || n < 1) return 5;
+  if (!Number.isFinite(n) || n < 1) return DEFAULT_GAP_MIN;
   let best = PRESET_GAPS_MIN[0] as number;
   for (const g of PRESET_GAPS_MIN) if (Math.abs(g - n) < Math.abs(best - n)) best = g;
   return best;

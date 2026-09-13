@@ -30,8 +30,11 @@ export const DEFAULT_CONFIG: PluginConfig = {
   showToday: false,
   // token 统计默认「全部」；热力图另有自己的 6 个月默认（客户端）
   defaultRange: 'all',
-  // 在线时长空闲阈值（分钟）：1/5/15/30/60，缺省 5
-  onlineGapMin: 5,
+  // 在线时长空闲阈值（分钟）：1/5/15/30/60。
+  // 缺省 15：DSH 在干活时日志里本就有事件（模型 step、工具 call/result、子代理），
+  // 不需要靠大阈值兜底；要兜的是「读长回答、想下一个需求」这类几分钟量级的静默期。
+  // 5 分钟以下会把这类静默期切断（偏低），60 分钟会把开会/吃饭整段算成在线。
+  onlineGapMin: 15,
 };
 
 const VendorSchema: any = z.object({
@@ -51,7 +54,7 @@ export const ConfigSchema: any = z.object({
   vendors: z.array(VendorSchema).default([]),
   showToday: z.boolean().default(false),
   defaultRange: z.union([z.const('7'), z.const('30'), z.const('90'), z.const('all')]).default('all'),
-  onlineGapMin: z.number().step(1).min(1).max(60).default(5),
+  onlineGapMin: z.number().step(1).min(1).max(60).default(15),
 });
 
 // ── 类型守卫 ────────────────────────────────────────────────────────────

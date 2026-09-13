@@ -1,5 +1,5 @@
 /**
- * 在线时长面板（右栏独立 tab + 可弹出小组件）
+ * 在线时长面板（中心区「在线统计」分区 + 可弹出小组件）
  *
  * 数据全部来自 Host：GET /ext/dshp-token-meter/stats 的 `snapshot.online`。
  * Host 侧口径见 src/host/stats/online.ts —— 这里只做呈现与阈值切换，
@@ -13,16 +13,13 @@
  *  - 高在线日 Top 8 明细。
  */
 import { fetchStats, saveConfig } from './api.js';
+import { createGlyphs } from './glyphs.js';
 import type { AnyReact, StatsOnline, StatsOnlineDay, StatsSnapshot } from './types.js';
 
 /** 阈值档位（分钟）与文案 */
-const GAP_LABELS: Array<[number, string]> = [
-  [1, '1 分钟'],
-  [5, '5 分钟'],
-  [15, '15 分钟'],
-  [30, '30 分钟'],
-  [60, '60 分钟'],
-];
+/** 推荐的空闲阈值（分钟）：见面板里的推荐理由，同时是 Host 侧 `onlineGapMin` 的默认值 */
+const GAP_RECOMMEND = 15;
+
 /** 图表区间档位（天；0 = 全部活跃日） */
 const RANGE_LABELS: Array<[number, string]> = [
   [14, '近 14 天'],
@@ -119,7 +116,7 @@ function tipPos(mx: number, my: number, w: number, h: number): Record<string, st
 
 /* ---------- 取数 ---------- */
 
-interface SeriesItem {
+export interface SeriesItem {
   d: string;
   ms: number;
   turnMs: number;
@@ -133,7 +130,7 @@ interface SeriesItem {
   actual: boolean;
 }
 
-interface OnlineView {
+export interface OnlineView {
   gap: number;
   total: number;
   turn: number;
@@ -238,9 +235,15 @@ export function createOnlineSection(
   /** 「Token 用量」面板的共享快照（有就复用，避免两套轮询各打一次 /stats） */
   statsApi?: any,
 ): {
-  /** 在线时长面板（不再支持弹出为浮窗 —— 顶栏抓手/回归已移除） */
-  OnlineRightPane: (props: any) => any;
+  /** 在线统计分区面板（不再支持弹出为浮窗 —— 顶栏抓手/回归已移除） */
+  OnlineView: (props: any) => any;
+  /**
+   * 嵌入式在线块：`{ data, block: 'metrics' | 'daily' }`，只渲染指定的一块、
+   * 不自己轮询、不带档位控件 —— 供分享面板把在线的观感原样内聚进 16:9 卡片。
+   */
+  OnlineEmbed: (props: any) => any;
 } {
+  const { Glyph } = createGlyphs(React);
   const h = React.createElement;
 
   function portal(node: any): any {
@@ -424,6 +427,16 @@ export function createOnlineSection(
     return h('span', { className: 'tm-badge ' + picked[0] }, picked[1]);
   }
 
+  /** 卡片标题：前置一枚语义图标 + 文本（与 StatsSection 的 cardName 同款） */
+  function cardName(name: string, text: any): any {
+    return h(
+      'span',
+      { className: 'tm-chart-name' },
+      h(Glyph, { name, size: 14, className: 'tm-cico' }),
+      h('span', { className: 'tm-cname-txt' }, text),
+    );
+  }
+
   function Stat(props: {
     label: string;
     value: string;
@@ -432,18 +445,24 @@ export function createOnlineSection(
     /** 悬浮提示（统一外观，不用原生 title） */
     tip?: TipContent;
     acc?: 'exact' | 'estimate' | 'bound';
+    /** 跨两列（网格里用来补齐最后一行，同时表达「这是前面几项之和」） */
+    wide?: boolean;
+    /** 语义图标名（glyphs.ts）：标签前置小图标 + 卡片右下角同款水印 */
+    icon?: string;
   }): any {
     const t = useTip();
     return h(
       'div',
       {
-        className: 'tm-stat',
+        className: 'tm-stat' + (props.wide ? ' tm-statWide' : ''),
         ...(props.tint ? { 'data-tint': '1' } : {}),
         ...(props.tip ? t.bind(props.tip) : {}),
       },
+      props.icon ? h(Glyph, { name: props.icon, size: 58, className: 'tm-stat-bg' }) : null,
       h(
         'div',
         { className: 'tm-stat-label', style: { display: 'flex', alignItems: 'center', gap: 4 } },
+        props.icon ? h(Glyph, { name: props.icon, size: 13, className: 'tm-stat-ico' }) : null,
         props.label,
         props.acc
           ? h(
@@ -455,6 +474,28 @@ export function createOnlineSection(
       ),
       h('div', { className: 'tm-stat-value' }, props.value),
       props.sub ? h('div', { className: 'tm-stat-sub' }, props.sub) : null,
+    );
+  }
+
+  /** 准确性徽标图例：绿=精确 / 黄=估算 / 灰=下界（首次看不用猜颜色含义） */
+  function AccLegend(): any {
+    const item = (kind: 'exact' | 'estimate' | 'bound', text: string): any =>
+      h(
+        'span',
+        { key: kind, className: 'tm-accLegendItem' },
+        h(
+          'span',
+          { className: 'tm-acc ' + kind },
+          kind === 'exact' ? '精确' : kind === 'estimate' ? '估算' : '下界',
+        ),
+        h('span', null, text),
+      );
+    return h(
+      'span',
+      { className: 'tm-accLegend' },
+      item('exact', '时间戳直接算出'),
+      item('estimate', '由区间推断'),
+      item('bound', '实际只会更多'),
     );
   }
 
@@ -481,13 +522,28 @@ export function createOnlineSection(
   /** 每日柱线混合图：堆叠柱（对话中 + 空档）+ 引擎合计虚线，带悬浮数据提示 */
   function Chart(props: { items: SeriesItem[]; gap: number }): any {
     const items = props.items;
-    const W = CHART_W;
-    const H = CHART_H;
+    // 视图坐标系 = 实际像素：viewBox 宽度取容器实测宽度。
+    // 固定 viewBox + width:100% 的写法在宽屏下会被 preserveAspectRatio 等比缩到
+    // 320px 居中（"图表只占很小一块"），所以这里按容器宽度重算 W，另按宽度微调高度。
+    const boxRef = React.useRef(null as any);
+    const [boxW, setBoxW] = React.useState(0);
+    React.useEffect(() => {
+      const el = boxRef.current;
+      if (!el || typeof ResizeObserver === 'undefined') return undefined;
+      const ro = new ResizeObserver((entries: any[]) => {
+        const w = entries && entries[0] ? Math.round(entries[0].contentRect.width) : 0;
+        if (w > 0) setBoxW(w);
+      });
+      ro.observe(el);
+      return () => ro.disconnect();
+    }, []);
+    const [hover, setHover] = React.useState(null as { i: number; mx: number; my: number } | null);
+    if (items.length === 0) return h('div', { className: 'tm-empty' }, '暂无数据');
+    const W = Math.max(CHART_W, boxW || CHART_W);
+    const H = Math.round(Math.min(260, Math.max(CHART_H, W * 0.22)));
     const padT = 12;
     const padB = 18;
     const innerH = H - padT - padB;
-    const [hover, setHover] = React.useState(null as { i: number; mx: number; my: number } | null);
-    if (items.length === 0) return h('div', { className: 'tm-empty' }, '暂无数据');
     let max = 0;
     for (const it of items) {
       if (it.ms > max) max = it.ms;
@@ -495,9 +551,12 @@ export function createOnlineSection(
     }
     if (max <= 0) max = 1;
     const bw = W / items.length;
-    const barW = Math.max(1.4, Math.min(20, bw * 0.6));
+    // 柱子别随屏幕无限变粗（宽屏下宁可留白），也没必要细到看不见
+    const barW = Math.max(2, Math.min(26, bw * 0.6));
     const yOf = (v: number): number => padT + innerH * (1 - v / max);
-    const step = Math.max(1, Math.ceil(items.length / 6));
+    // 轴标签数量随宽度增加，宽屏下不再只有 6 个
+    const labelCount = Math.max(6, Math.min(items.length, Math.round(W / 96)));
+    const step = Math.max(1, Math.ceil(items.length / labelCount));
     const today = keyOf(Date.now());
     const children: any[] = [];
     children.push(
@@ -631,7 +690,7 @@ export function createOnlineSection(
         : null;
     return h(
       'div',
-      { className: 'tm-svgwrap' },
+      { className: 'tm-svgwrap', ref: boxRef },
       h(
         'div',
         { style: { cursor: 'crosshair' } },
@@ -735,7 +794,12 @@ export function createOnlineSection(
     return h(
       'div',
       { className: 'tm-card' },
-      h('div', { className: 'tm-title' }, '口径与准确性'),
+      h(
+        'div',
+        { className: 'tm-title tm-titledIco' },
+        h(Glyph, { name: 'target', size: 14, className: 'tm-cico' }),
+        '口径与准确性',
+      ),
       h(ProportionBars, { view: v }),
       h(
         'div',
@@ -981,32 +1045,128 @@ export function createOnlineSection(
     if (!online) {
       return h(
         'div',
-        { className: 'tm-card' },
-        h('div', { className: 'tm-title' }, '在线时长'),
+        { className: 'tm-page' },
         h(
           'div',
-          { className: 'tm-desc' },
-          props.err
-            ? '读取失败：' + props.err
-            : data && data.ready
-              ? '当前 Host 未提供在线时长数据（插件需重启以加载新版 Host 半）。'
-              : '统计尚未就绪，正在扫描会话日志…',
-        ),
-        h(
-          'div',
-          { className: 'tm-toolbar', style: { marginTop: 8 } },
-          h('button', { type: 'button', className: 'tm-mini', onClick: props.onReload }, '重试'),
+          { className: 'tm-card' },
+          h('div', { className: 'tm-title' }, '在线时长'),
+          h(
+            'div',
+            { className: 'tm-desc' },
+            props.err
+              ? '读取失败：' + props.err
+              : data && data.ready
+                ? '当前 Host 未提供在线时长数据（插件需重启以加载新版 Host 半）。'
+                : '统计尚未就绪，正在扫描会话日志…',
+          ),
+          h(
+            'div',
+            { className: 'tm-toolbar', style: { marginTop: 8 } },
+            h('button', { type: 'button', className: 'tm-mini', onClick: props.onReload }, '重试'),
+          ),
         ),
       );
     }
     const view = deriveOnlineView(online, props.gap, props.rangeDays);
-    const gapSeg = h(Seg, {
-      items: GAP_LABELS.filter(([v]) => online.gaps.indexOf(v) >= 0),
-      value: online.gaps.indexOf(props.gap) >= 0 ? props.gap : (online.gaps[0] as number),
-      onPick: props.onGap,
-    });
+    /**
+     * 五档阈值对比。**用快照里已有的 per-gap 累计值直接摆出来**，理由：
+     * 阈值是「口径」不是「精度」——同一份日志 1 分钟档与 60 分钟档能差近一倍，只给当前档
+     * 的一个数字，用户没法判断该选哪个；把五档 + 边际增量摆在一起，「多出来的那些小时是从哪来的」
+     * 才看得见。（旧文案里写死过一句「60 分钟档比 1 分钟档多约 90h」，那是某个人的数据，
+     * 对别人就是错的 —— 现在一律取自当前快照。）
+     */
+    const gapCmp = h(
+      'div',
+      { className: 'tm-gapCmp' },
+      online.gaps.map((g, i) => {
+        const ms = online.totalMs[String(g)] ?? 0;
+        const prevMs = i > 0 ? (online.totalMs[String(online.gaps[i - 1])] ?? 0) : 0;
+        const on = g === props.gap;
+        return h(
+          'span',
+          Object.assign(
+            {
+              key: String(g),
+              className:
+                'tm-gapCmpItem' + (on ? ' tm-gapCmpOn' : '') + (g === GAP_RECOMMEND ? ' tm-gapCmpRec' : ''),
+              // 这几张卡本身就是切换入口：五档摆在一起看增量时，顺手就能切过去比
+              onClick: () => props.onGap(g),
+            },
+            tip.bind({
+              k: 'gap' + g,
+              title: g + ' 分钟档',
+              rows: [
+                ['累计在线', fmtDur(ms)],
+                ['活跃段数', String(online.segments[String(g)] ?? 0)],
+                ['比上一档多', i > 0 ? '+' + fmtDur(ms - prevMs) : '—'],
+              ],
+              text:
+                '把「相邻事件间隔 ≤ ' +
+                g +
+                ' 分钟」的时间都算作在线。档位越大，越多的静默期（读长回答、想需求、离开座位）被算进来。',
+            }),
+          ),
+          h('b', null, g + ' 分钟'),
+          h('i', null, fmtDur(ms)),
+          i > 0 ? h('em', null, '+' + fmtDur(ms - prevMs)) : null,
+        );
+      }),
+    );
+
+    /** 空闲阈值这一栏的完整说明（常驻显示，不再只藏在 tooltip 里） */
+    const gapExplain = h(
+      'div',
+      { className: 'tm-gapHint' },
+      h('div', null, '在线 = 日志里有事件、且相邻事件间隔不超过阈值的那段墙钟时间。规则就三条：'),
+      h(
+        'ul',
+        { className: 'tm-gapRules' },
+        h(
+          'li',
+          null,
+          h('b', null, '间隔 ≤ 阈值 → 整段算在线'),
+          '：10:00 与 10:50 各有一个事件、阈值 60 分钟，中间这 50 分钟（哪怕你不在）一并计入，并累加到当天。',
+        ),
+        h(
+          'li',
+          null,
+          h('b', null, '间隔 > 阈值 → 断开'),
+          '：从上一个事件处收尾，中间那段一秒都不计，新的一段从下一个事件重新起算。',
+        ),
+        h(
+          'li',
+          null,
+          h('b', null, '每段只算到最后一个事件'),
+          '：之后的时间不计（哪怕过了 1 分钟就关窗口，或者你接着又跑了 3 小时没产生事件）。所以任何档位算出来都是',
+          h('em', null, '下界'),
+          '，不是「坐在电脑前」的时长。',
+        ),
+      ),
+      h('div', { className: 'tm-gapCmpTitle' }, '同一份日志下，五档分别是多少（点档位可切换）：'),
+      gapCmp,
+      h(
+        'div',
+        { className: 'tm-gapRec' },
+        h('b', null, '推荐 15 分钟'),
+        '（插件默认值）：DSH 真正在干活时日志里是有事件的（模型 step、工具 call/result、子代理），' +
+          '不需要靠大阈值来兜；需要兜的是读长回答、想下一个需求这类静默期，通常几分钟量级。' +
+          '5 分钟以下会把「读完回答再想一下」也切断，偏低；60 分钟会把「去开会/吃饭」整段算成在线，' +
+          '只适合回答「今天开着 DSH 多久」。对照上面五档的增量，多出来的小时主要来自哪一档，一眼能看出来。',
+      ),
+    );
+
     /** 两个档位组各自带标题 + 说明（此前只有 tooltip，看不出来是干什么的） */
-    const segRow = (label: string, hint: string, control: any, rows?: Array<[string, string]>): any =>
+    /**
+     * @param control 传 null 表示这一栏没有独立的选择器（选择器就在 hint 里，例如空闲阈值的对比卡）
+     * @param tipText 悬浮提示用的短文案；hint 可能是很长的节点，整个塞进 tooltip 会又长又乱
+     */
+    const segRow = (
+      label: string,
+      hint: any,
+      control: any,
+      rows?: Array<[string, string]>,
+      tipText?: string,
+    ): any =>
       h(
         'div',
         { className: 'tm-segField' },
@@ -1014,28 +1174,36 @@ export function createOnlineSection(
           'div',
           Object.assign(
             { className: 'tm-segFieldKey' },
-            tip.bind({ k: label, title: label, text: hint, ...(rows ? { rows } : {}) }),
+            tip.bind({
+              k: label,
+              title: label,
+              text: tipText !== undefined ? tipText : typeof hint === 'string' ? hint : '',
+              ...(rows ? { rows } : {}),
+            }),
           ),
           label,
         ),
-        h('div', { className: 'tm-segFieldCtl' }, control),
+        control === null || control === undefined ? null : h('div', { className: 'tm-segFieldCtl' }, control),
         h('div', { className: 'tm-segFieldHint' }, hint),
       );
     return h(
       'div',
-      null,
+      { className: 'tm-page' },
       h(TipHost, null),
       h(
         'div',
         { className: 'tm-card', style: { padding: '10px 12px' } },
         segRow(
           '空闲阈值',
-          '相邻事件间隔超过它就算「离开」。它是口径不是精度：调大在线时长变多（60 分钟档比 1 分钟档多约 90h）。',
-          gapSeg,
+          gapExplain,
+          null,
           [
             ['当前', props.gap + ' 分钟'],
+            ['这个档算出的累计在线', fmtDur(view.total)],
             ['活跃段数', String(view.segments)],
+            ['比 1 分钟档多', '+' + fmtDur(view.total - (online.totalMs['1'] ?? view.total))],
           ],
+          '在线 = 有事件、且相邻事件间隔不超过阈值的墙钟时间。点下面的档位切换；档位越大，越多的静默期被算进来。',
         ),
         segRow(
           '时间范围',
@@ -1049,10 +1217,36 @@ export function createOnlineSection(
           h('span', { className: 'tm-hint' }, online.activeDays + ' 个活跃日 · 默认按全部显示'),
         ),
       ),
+      h(OnlineMetrics, { view, online }),
+      // ── 卡片区：12 栏仪表板栅格（宽屏下排行与口径并排，窄了自动落回单列）──
       h(
         'div',
-        { className: 'tm-statGrid' },
+        { className: 'tm-dash' },
+        h('div', { className: 'tm-c12' }, h(OnlineDaily, { view })),
+        h('div', { className: 'tm-c7' }, h(OnlineRank, { view })),
+        h('div', { className: 'tm-c5' }, h(Accuracy, { view, snap: data })),
+      ),
+    );
+  }
+
+  /**
+   * 在线三口径基础数据卡（7 张指标卡）。
+   *
+   * 从 OnlineView 里抽出来成为独立组件：**在线视图与分享面板共用同一份 JSX**。
+   * 分享面板要把这些块内聚进一张 16:9 卡片，若复制一份出来改，两边必然逐渐走样。
+   */
+  function OnlineMetrics(props: { view: OnlineView; online: StatsOnline }): any {
+    const view = props.view;
+    const online = props.online;
+    return h(
+      'div',
+      { className: 'tm-card tm-onlinecards' },
+      h('div', { className: 'tm-chart-title' }, cardName('clock', '在线时长'), h(AccLegend, null)),
+      h(
+        'div',
+        { className: 'tm-statGrid tm-onlineGrid' },
         h(Stat, {
+          icon: 'sun',
           label: '今日在线',
           value: fmtDurCn(view.today),
           tint: true,
@@ -1065,6 +1259,7 @@ export function createOnlineSection(
           },
         }),
         h(Stat, {
+          icon: 'hourglass',
           label: '累计在线',
           value: fmtDurCn(view.total),
           sub:
@@ -1081,10 +1276,13 @@ export function createOnlineSection(
               ['日均', fmtDur(view.avg)],
               ['当前口径', view.gap + ' 分钟'],
             ],
-            text: '口径依赖阈值：60 分钟档比 1 分钟档约多 90 小时。',
+            text:
+              '这个数字依赖空闲阈值：阈值越大，越多的静默期被算进来，所以它同时是"下界"和"阈值口径"的产物。' +
+              '切一下面板顶部的档位，能看到同一份日志在五档下的差别。',
           },
         }),
         h(Stat, {
+          icon: 'wave',
           label: '活跃日均',
           value: fmtDurCn(view.avg),
           sub: '仅按有活动的日子平均',
@@ -1099,6 +1297,7 @@ export function createOnlineSection(
           },
         }),
         h(Stat, {
+          icon: 'bubble',
           label: '对话进行中',
           value: fmtDurCn(view.turn),
           sub: '占在线 ' + (view.total > 0 ? Math.round((view.turn / view.total) * 100) : 0) + '%',
@@ -1113,11 +1312,8 @@ export function createOnlineSection(
             text: 'turn/start→turn/end 的并集（墙钟去重）：DSH 在为你干活的钟，含少量等你操作的时间。',
           },
         }),
-      ),
-      h(
-        'div',
-        { className: 'tm-statGrid' },
         h(Stat, {
+          icon: 'chip',
           label: '模型生成',
           value: fmtDurCn(view.llm),
           sub: '已与官方投影对账',
@@ -1129,6 +1325,7 @@ export function createOnlineSection(
           },
         }),
         h(Stat, {
+          icon: 'terminal',
           label: '工具执行',
           value: fmtDurCn(view.tool),
           sub: 'call→result',
@@ -1140,9 +1337,11 @@ export function createOnlineSection(
           },
         }),
         h(Stat, {
+          icon: 'gear',
           label: '引擎合计',
           value: fmtDurCn(view.busy),
           sub: '并行相加，可高于墙钟',
+          wide: true,
           acc: 'exact',
           tip: {
             k: 'busy',
@@ -1155,48 +1354,90 @@ export function createOnlineSection(
           },
         }),
       ),
-      h(
-        'div',
-        { className: 'tm-card' },
-        h(
-          'div',
-          { className: 'tm-toolbar' },
-          h('span', { className: 'tm-title' }, '每日在线'),
-          h(
-            'span',
-            { className: 'tm-hint' },
-            view.peak ? '峰值 ' + cnDate(view.peak.d) + ' ' + fmtDur(view.peak.ms) : '',
-          ),
-        ),
-        h(Chart, { items: view.series, gap: view.gap }),
-        h(Legend, null),
-      ),
-      h(Accuracy, { view, snap: data }),
-      h(
-        'div',
-        { className: 'tm-card' },
-        h(
-          'div',
-          { className: 'tm-toolbar', style: { margin: '0 0 2px' } },
-          h('span', { className: 'tm-title', style: { margin: 0 } }, '每日在线排行'),
-          h(
-            'span',
-            { className: 'tm-hint' },
-            '当前区间 ' + view.ranked.length + ' 个活跃日 · 按在线时长排序 · 鼠标悬浮看当日明细',
-          ),
-        ),
-        h(RankingList, { ranked: view.ranked, gap: view.gap }),
-      ),
     );
   }
 
-  /** 右栏「在线时长」面板 */
-  function OnlineRightPane(): any {
+  /**
+   * 每日在线图卡（Chart + Legend）。
+   * 同样供在线视图与分享面板共用，避免分享卡里出现第二份画法。
+   */
+  function OnlineDaily(props: { view: OnlineView }): any {
+    const view = props.view;
+    return h(
+      'div',
+      { className: 'tm-card' },
+      h(
+        'div',
+        { className: 'tm-toolbar' },
+        h(
+          'span',
+          { className: 'tm-title tm-titledIco' },
+          h(Glyph, { name: 'chartBar', size: 14, className: 'tm-cico' }),
+          '每日在线',
+        ),
+        h(
+          'span',
+          { className: 'tm-hint' },
+          view.peak ? '峰值 ' + cnDate(view.peak.d) + ' ' + fmtDur(view.peak.ms) : '',
+        ),
+      ),
+      h(Chart, { items: view.series, gap: view.gap }),
+      h(Legend, null),
+    );
+  }
+
+  /**
+   * 每日在线排行卡（柱状图 + 列表合体）。
+   * 与 OnlineMetrics / OnlineDaily 同理：在线视图与分享面板共用同一份 JSX。
+   */
+  function OnlineRank(props: { view: OnlineView }): any {
+    const view = props.view;
+    return h(
+      'div',
+      { className: 'tm-card' },
+      h(
+        'div',
+        { className: 'tm-toolbar', style: { margin: '0 0 2px' } },
+        h(
+          'span',
+          { className: 'tm-title tm-titledIco', style: { margin: 0 } },
+          h(Glyph, { name: 'list', size: 14, className: 'tm-cico' }),
+          '每日在线排行',
+        ),
+        h(
+          'span',
+          { className: 'tm-hint' },
+          '当前区间 ' + view.ranked.length + ' 个活跃日 · 按在线时长排序 · 鼠标悬浮看当日明细',
+        ),
+      ),
+      h(RankingList, { ranked: view.ranked, gap: view.gap }),
+    );
+  }
+
+  /**
+   * 分享面板用的嵌入式在线块：数据由调用方传入（分享面板已经拿着同一份 /stats 快照），
+   * 因此不自己轮询、不渲染档位控件 —— 静态卡上不该出现可点的开关。
+   */
+  function OnlineEmbed(props: {
+    data: StatsSnapshot;
+    block: 'metrics' | 'daily' | 'rank';
+    gap?: number;
+  }): any {
+    const online = props.data && props.data.ready && props.data.online ? props.data.online : null;
+    if (online === null) return h('div', { className: 'tm-desc' }, '当前 Host 未提供在线时长数据。');
+    const view = deriveOnlineView(online, props.gap ?? online.defaultGapMin ?? 5, 0);
+    if (props.block === 'metrics') return h(OnlineMetrics, { view, online });
+    if (props.block === 'rank') return h(OnlineRank, { view });
+    return h(OnlineDaily, { view });
+  }
+
+  /** 中心区「在线统计」分区面板 */
+  function OnlineView(): any {
     const [gapState, setGapState] = React.useState(null as number | null);
     const [rangeDays, setRangeDays] = React.useState(0); // 默认「全部」
     const { snap, err, reload } = useSnapshot();
     const online = snap && snap.ready && snap.online ? snap.online : null;
-    const gap = gapState !== null ? gapState : online ? online.defaultGapMin : 5;
+    const gap = gapState !== null ? gapState : online ? online.defaultGapMin : GAP_RECOMMEND;
     const onGap = React.useCallback(
       (g: number) => {
         setGapState(g);
@@ -1220,5 +1461,5 @@ export function createOnlineSection(
     });
   }
 
-  return { OnlineRightPane };
+  return { OnlineView, OnlineEmbed };
 }

@@ -1,21 +1,22 @@
 /**
- * TokenMeter 设置页（精简版）+ 右侧栏双面板
+ * TokenMeter 设置页（精简版）+ 中心区「用量统计 / 在线统计」面板
  *
  * 布局分工：
- *  - 设置页（settings.section）：偏好（自动刷新/默认范围）+ 供应商添加与管理
- *    （当前选择/拉取/编辑/存凭据/删除）。图表与展示全部搬到右侧栏，
+ *  - 设置页（settings.section）：偏好（自动刷新/默认范围/在线阈值）+ 供应商添加与管理
+ *    （当前选择/拉取/编辑/存凭据/删除）。图表与展示全部搬到中心区，
  *    设置页不再展示趋势/热力/模型分布；失效的侧边栏显示开关已移除。
- *  - 右侧栏 tab「额度」：全部供应商展开富卡片（空间更宽，图表完整展开）。
- *  - 右侧栏 tab「用量」：完整用量统计（StatsSettingsPage，开关行隐藏，收归设置页）。
+ *  - 中心区 tab（conversation.view，见 CenterView.ts）：左侧菜单切换
+ *    额度查询 / 用量统计 / 在线统计；本文件提供其中「用量统计」面板。
  *
- * 状态经 quota 共享 store 即时同步（设置/右栏同一数据源）；偏好变更后广播
- * tm-prefs-changed，右栏用量面板跟进重载。
+ * 状态经 quota 共享 store 即时同步（设置/中心区同一数据源）；偏好变更后广播
+ * tm-prefs-changed，中心区用量面板跟进重载。
  */
 import { clearStatsCache, fetchState, fetchStats } from './api.js';
 import { createQuotaSection } from './QuotaSection.js';
 import { createStatsSection } from './StatsSection.js';
 import { createWidgetSystem } from './widgets.js';
 import type { AnyPrimitives, AnyReact } from './types.js';
+import { DISPLAY_NAME } from '../name.js';
 
 const STATS_WIDGET_BTNS: Array<[string, string]> = [
   ['cards', '指标卡'],
@@ -31,7 +32,34 @@ function secLabel(n: number): string {
 }
 const NEW_VENDOR = { id: '', name: '', type: 'opencode', params: { workspaceId: '', cookie: '' } };
 
-export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, ReactDOM: any): any {
+/**
+ * 装配产出面。**显式声明，不要 `any`**：
+ * 这份对象是中心区 tab 唯一的来源，漏掉一个字段不会报错，只会在渲染时才炸成 React #130
+ * （分享面板正是这么崩的：`parts.SharePanel` 为 undefined，一打开分享就把整个 tab 打崩）。
+ * 有显式接口之后，漏字段在 `pnpm typecheck` 阶段就会被拦下。
+ */
+export interface TokenMeterSectionParts {
+  /** 设置页组件（settings.section 与中心区「设置」分区共用同一个） */
+  TokenMeterSettings: any;
+  /** 额度查询视图（中心区分区） */
+  QuotaView: any;
+  /** 用量统计视图（中心区分区） */
+  StatsView: any;
+  /** 分享面板（中心区 tab 头部「分享」按钮渲染它） */
+  SharePanel: any;
+  /** 全局小组件浮层（shell.overlay） */
+  WidgetFloatLayer: any;
+  /** 小组件注册表 */
+  widgetsApi: any;
+  /** 统计接口（在线统计复用同一份快照） */
+  statsApi: any;
+}
+
+export function createTokenMeterSection(
+  React: AnyReact,
+  P: AnyPrimitives,
+  ReactDOM: any,
+): TokenMeterSectionParts {
   const h = React.createElement;
   const useState = React.useState as <T>(init: T) => [T, (v: T | ((prev: T) => T)) => void];
   const widgets = createWidgetSystem(React, ReactDOM);
@@ -332,7 +360,7 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
         h('div', { className: 'tm-sectionHead' }, '偏好'),
         h(
           UI.SecRow,
-          { key: 'range', label: '默认范围', desc: '右侧栏「用量」面板打开时默认统计多少天的数据。' },
+          { key: 'range', label: '默认范围', desc: '中心区「用量统计」打开时默认统计多少天的数据。' },
           h(UI.PillSelect, {
             disabled: busy,
             value: defRange,
@@ -351,7 +379,10 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
           {
             key: 'gap',
             label: '在线时长空闲阈值',
-            desc: '「在线时长」面板默认口径：相邻事件间隔超过它就算「离开」。它是口径不是精度，调大在线时长变多。',
+            desc:
+              '在线 = 有事件、且相邻事件间隔不超过它的墙钟时间：间隔 ≤ 阈值则整段计入（含中间空档），' +
+              '超过就断开、中间不计；每段只算到最后一个事件，所以任何档位都是下界。推荐 15 分钟' +
+              '（能兜住读长回答/想需求的静默期，又不会把开会吃饭算进来）；详细说明与各档实测对比见「在线统计」面板顶部。',
           },
           h(UI.PillSelect, {
             disabled: busy,
@@ -375,7 +406,7 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
         {
           key: '__active',
           label: '当前供应商',
-          desc: '侧边栏与右侧栏额度卡展示哪一家的额度；选「无」= 极简模式（不展示、也不拉取任何额度）。',
+          desc: '侧边栏与中心区额度卡展示哪一家的额度；选「无」= 极简模式（不展示、也不拉取任何额度）。',
         },
         h(UI.PillSelect, {
           disabled: busy,
@@ -630,8 +661,12 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
         'p',
         { className: 'tm-intro' },
         tab === 'stats'
-          ? '统计设置：数据来源、派生缓存与默认口径。详细图表在右侧栏「用量 / 在线时长」面板。'
-          : '额度配置：供应商与拉取偏好。详细额度卡在右侧栏「额度」面板。配置持久化在 settings.yaml（',
+          ? '统计设置：数据来源、派生缓存与默认口径。详细图表在中心区「' +
+              DISPLAY_NAME +
+              ' → 用量统计 / 在线统计」。'
+          : '额度配置：供应商与拉取偏好。详细额度卡在中心区「' +
+              DISPLAY_NAME +
+              ' → 额度查询」。配置持久化在 settings.yaml（',
         tab === 'stats'
           ? null
           : h('code', { className: 'tm-mono' }, (s.namespace as string) || 'dshp-token-meter'),
@@ -641,8 +676,8 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
     );
   }
 
-  /** 右侧栏「用量」面板：完整统计图表（开关行隐藏，收归设置页） */
-  function StatsRightPane(): any {
+  /** 中心区「用量统计」面板：完整统计图表（开关行隐藏，收归设置页） */
+  function StatsView(): any {
     const [prefs, setPrefs] = useState<{ showToday: boolean; defaultRange: string }>({
       showToday: false,
       defaultRange: 'all',
@@ -740,8 +775,10 @@ export function createTokenMeterSection(React: AnyReact, P: AnyPrimitives, React
 
   return {
     TokenMeterSettings,
-    QuotaRightPane: quota.QuotaRightPane,
-    StatsRightPane,
+    QuotaView: quota.QuotaView,
+    StatsView,
+    // 分享面板：中心区 tab 头部「分享」按钮的实际内容（漏了这一项就是 React #130）
+    SharePanel: stats.SharePanel,
     WidgetFloatLayer,
     widgetsApi: widgets,
     statsApi: stats,

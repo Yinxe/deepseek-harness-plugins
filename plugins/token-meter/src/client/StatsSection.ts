@@ -8,10 +8,44 @@
  */
 import { fetchStats, saveConfig } from './api.js';
 import { createComponents } from './components.js';
+import { createGlyphs } from './glyphs.js';
+import { createShareShell } from './ShareShell.js';
 import type { AnyPrimitives, AnyReact, StatsRecord, StatsSnapshot } from './types.js';
 
 const BP = 'var(--dsw-alias-state-business-primary)';
-const PALETTE = [
+/** 分享面板加载态的占位快照（只有 loading=true 时会用到） */
+const EMPTY_SNAPSHOT = {
+  ready: false,
+  records: [],
+  models: {},
+  daySessions: {},
+  peakStep: null,
+  range: null,
+  sessions: 0,
+  active: 0,
+  partial: false,
+  scanned: 0,
+  total: 0,
+  errors: 0,
+  storage: '',
+  generatedAt: 0,
+} as unknown as StatsSnapshot;
+/** 热力图手动选择的时间跨度（localStorage 键；只有「用户手动选过」才写） */
+const HEAT_SPAN_KEY = 'tm-heat-span';
+/** 卡片宽度达到此值才默认铺 12 个月（再窄就退回 6 个月，保证格子不被压成细条） */
+const HEAT_WIDE_PX = 900;
+
+/** 读用户手动选过的热力图跨度；没选过返回 ''（= 交给宽度自动决定） */
+function readHeatSpan(): string {
+  try {
+    const v = window.localStorage.getItem(HEAT_SPAN_KEY);
+    if (v === '6' || v === '12') return v;
+  } catch {
+    /* 无 localStorage */
+  }
+  return '';
+}
+export const PALETTE = [
   '#4c7ef3',
   '#2fb261',
   '#f5a623',
@@ -25,30 +59,30 @@ const PALETTE = [
   '#f472b6',
   '#a3e635',
 ];
-const RANGES = [
+export const RANGES = [
   { v: '7', t: '近7天' },
   { v: '30', t: '近30天' },
   { v: '90', t: '近90天' },
   { v: 'all', t: '全部' },
 ];
-const rangeText = (rv: string): string => {
+export const rangeText = (rv: string): string => {
   for (const r of RANGES) if (r.v === rv) return r.t;
   return '';
 };
 
 /* ---------- util ---------- */
-const keyOf = (t: number): string => {
+export const keyOf = (t: number): string => {
   const d = new Date(t);
   const M = String(d.getMonth() + 1);
   const D = String(d.getDate());
   return d.getFullYear() + '-' + (M.length < 2 ? '0' + M : M) + '-' + (D.length < 2 ? '0' + D : D);
 };
-const fromKey = (k: string): number => {
+export const fromKey = (k: string): number => {
   const p = k.split('-');
   return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]), 12).getTime();
 };
-const dispDay = (k: string): string => (k ? k.slice(5).replace('-', '/') : '');
-const cnDate = (k: string): string => {
+export const dispDay = (k: string): string => (k ? k.slice(5).replace('-', '/') : '');
+export const cnDate = (k: string): string => {
   const p = k.split('-');
   return Number(p[0]) + '年' + Number(p[1]) + '月' + Number(p[2]) + '日';
 };
@@ -60,20 +94,20 @@ const hhmm = (t: number): string => {
 };
 const tok = (r: { i?: number; o?: number; cr?: number; cw?: number }): number =>
   (r.i || 0) + (r.o || 0) + (r.cr || 0) + (r.cw || 0);
-const fmt = (n: number): string => {
+export const fmt = (n: number): string => {
   n = Math.round(n || 0);
   if (n >= 1e8) return (n / 1e8).toFixed(1).replace(/\.0$/, '') + '亿';
   if (n >= 1e4) return (n / 1e4).toFixed(1).replace(/\.0$/, '') + '万';
   return n.toLocaleString('en-US');
 };
-const fmtFull = (n: number): string => Math.round(n || 0).toLocaleString('en-US');
+export const fmtFull = (n: number): string => Math.round(n || 0).toLocaleString('en-US');
 const fmtRail = (n: number): string => {
   n = Math.round(n || 0);
   if (n >= 1e8) return (n / 1e8).toFixed(1).replace(/\.0$/, '') + '亿';
   if (n >= 1e4) return String(Math.round(n / 1e4)) + '万';
   return String(n);
 };
-const niceMax = (m: number): number => {
+export const niceMax = (m: number): number => {
   if (m <= 0) return 1;
   const p = Math.pow(10, Math.floor(Math.log(m) / Math.LN10));
   // 候选更密（1/1.1/1.2/1.25…）：贴近实际峰值，减少曲线上方的大片空白
@@ -82,18 +116,18 @@ const niceMax = (m: number): number => {
   return 10 * p;
 };
 /** 新鲜拷贝排序（oxlint unicorn/no-array-sort 要求不原地 sort；此处入参均为调用处新鲜数组，拷贝后排序语义与原实现一致） */
-function sorted<T>(arr: T[], cmp?: (a: T, b: T) => number): T[] {
+export function sorted<T>(arr: T[], cmp?: (a: T, b: T) => number): T[] {
   // eslint-disable-next-line unicorn/no-array-sort
   return [...arr].sort(cmp);
 }
-const median = (arr: number[]): number => {
+export const median = (arr: number[]): number => {
   if (!arr.length) return 0;
   const s = sorted(arr, (a, b) => a - b);
   const mid = Math.floor(s.length / 2);
   return s.length % 2 ? (s[mid] as number) : ((s[mid - 1] as number) + (s[mid] as number)) / 2;
 };
 
-interface DayAgg {
+export interface DayAgg {
   d: string;
   i: number;
   o: number;
@@ -103,7 +137,7 @@ interface DayAgg {
   t: number;
   byModel: Record<string, number>;
 }
-interface ModelAgg {
+export interface ModelAgg {
   m: string;
   i: number;
   o: number;
@@ -112,7 +146,7 @@ interface ModelAgg {
   n: number;
   t: number;
 }
-interface Agg {
+export interface Agg {
   byDay: Map<string, DayAgg>;
   byModel: Map<string, ModelAgg>;
   byHour: number[];
@@ -126,7 +160,7 @@ interface Agg {
   last: string | null;
 }
 
-function aggregate(records: StatsRecord[], cutoff: string | null): Agg {
+export function aggregate(records: StatsRecord[], cutoff: string | null): Agg {
   const byDay = new Map<string, DayAgg>();
   const byModel = new Map<string, ModelAgg>();
   const byHour: number[] = [];
@@ -210,7 +244,7 @@ function streaks(byDay: Map<string, unknown>): { current: number; longest: numbe
   return { current: cur, longest };
 }
 
-function buildDayList(startKey: string, endKey: string): string[] {
+export function buildDayList(startKey: string, endKey: string): string[] {
   const out: string[] = [];
   let c = startKey;
   let guard = 0;
@@ -223,12 +257,12 @@ function buildDayList(startKey: string, endKey: string): string[] {
 }
 
 let MODEL_COLORS = new Map<string, string>();
-function buildModelColors(models: Record<string, unknown>): void {
+export function buildModelColors(models: Record<string, unknown>): void {
   const map = new Map<string, string>();
   sorted(Object.keys(models || {})).forEach((k, i) => map.set(k, PALETTE[i % PALETTE.length] as string));
   MODEL_COLORS = map;
 }
-const modelColor = (mk: string): string => MODEL_COLORS.get(mk) || '#8a94a6';
+export const modelColor = (mk: string): string => MODEL_COLORS.get(mk) || '#8a94a6';
 
 /** fixed 定位 tooltip 坐标：跟随鼠标 + 视口边缘四向翻转 */
 function tipPos(mx: number, my: number, w: number, h: number): Record<string, string | undefined> {
@@ -245,7 +279,7 @@ function tipPos(mx: number, my: number, w: number, h: number): Record<string, st
 }
 
 /** 平滑路径（Catmull-Rom → 三次 Bezier） */
-function smoothPath(pts: Array<[number, number]>): string {
+export function smoothPath(pts: Array<[number, number]>): string {
   const n = pts.length;
   if (n === 0) return '';
   if (n === 1) return 'M ' + (pts[0] as [number, number])[0] + ' ' + (pts[0] as [number, number])[1];
@@ -366,6 +400,8 @@ export function tmTodaySet(open: boolean): void {
 
 export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: any): Record<string, any> {
   const { Badge } = createComponents(React, P);
+  const { Glyph } = createGlyphs(React);
+  const ShareShell = createShareShell(React, P);
   const h = React.createElement;
   const useState = React.useState as <T>(init: T) => [T, (v: T | ((prev: T) => T)) => void];
 
@@ -555,6 +591,16 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     );
   }
 
+  /** 卡片标题：前置一枚语义图标 + 文本（文本仍按需省略号截断） */
+  function cardName(name: string, text: any): any {
+    return h(
+      'span',
+      { className: 'tm-chart-name' },
+      h(Glyph, { name, size: 14, className: 'tm-cico' }),
+      h('span', { className: 'tm-cname-txt' }, text),
+    );
+  }
+
   function StatCard(props: any): any {
     const valueNode =
       props.count !== undefined
@@ -570,7 +616,14 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
         onMouseMove: props.onHover || undefined,
         onMouseLeave: props.onLeave || undefined,
       },
-      h('div', { className: 'tm-stat-label' }, props.label),
+      // 底纹：同一个语义图标放大成 58px 低透明度水印（右下角），让卡片不是纯色块
+      props.icon ? h(Glyph, { name: props.icon, size: 58, className: 'tm-stat-bg' }) : null,
+      h(
+        'div',
+        { className: 'tm-stat-label' },
+        props.icon ? h(Glyph, { name: props.icon, size: 13, className: 'tm-stat-ico' }) : null,
+        props.label,
+      ),
       valueNode,
       props.sub ? h('div', { className: 'tm-stat-sub' }, props.sub) : null,
       ...((props.visual as any[]) || []),
@@ -818,12 +871,30 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     const labels = props.labels;
     const titles = props.titles || labels;
     const emptyText = props.emptyText || '当日无消耗';
-    const W = 780,
-      H = 250,
-      pl = 54,
-      pr = 14,
-      pt = 6,
-      pb = 28;
+    // 视图坐标系 = 实际像素：viewBox 宽度取容器实测宽度，高度按宽度定档并夹在 [150, 230]。
+    // 旧写法是固定 viewBox 780×250 配 width:100% / height:auto —— SVG 会按 viewBox 的
+    // 宽高比等比放大：卡片铺满中心区（约 1166px）时整幅图被放大到 374px 高，连 10.5px 的
+    // 轴标签、1px 网格线一起被放大到约 1.5 倍，表现就是「图太大、太高、字太大」。
+    // 改成 1:1 之后高度不再随宽度增长，字号/线宽回到设计尺寸，30 天也拿到更多横向像素。
+    const boxRef = React.useRef(null as any);
+    const [boxW, setBoxW] = useState(0);
+    React.useEffect(() => {
+      const el = boxRef.current;
+      if (el === null || el === undefined || typeof ResizeObserver === 'undefined') return undefined;
+      const ro = new ResizeObserver((entries: any[]) => {
+        const w = entries && entries[0] ? Math.round(entries[0].contentRect.width) : 0;
+        if (w > 0) setBoxW((prev: number) => (prev === w ? prev : w));
+      });
+      ro.observe(el);
+      return () => ro.disconnect();
+    }, []);
+    const W = Math.max(320, boxW || 780);
+    // 上限 230：宽屏下不再无限变高；下限 150：浮窗等窄容器里也还看得出趋势
+    const H = Math.round(Math.min(230, Math.max(150, W * 0.24)));
+    const pl = 54;
+    const pr = 14;
+    const pt = 6;
+    const pb = 28;
     const n = labels.length;
     const vis = seriesList.filter((s) => s.visible);
     const top = niceMax(vis.length > 0 ? Math.max(1, ...vis.flatMap((s) => s.values)) : 1);
@@ -1003,12 +1074,12 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
         : null;
     return h(
       'div',
-      { className: 'tm-svgwrap' },
+      { className: 'tm-svgwrap', ref: boxRef },
       h(
         'svg',
         {
           viewBox: '0 0 ' + W + ' ' + H,
-          style: { width: '100%', height: 'auto', display: 'block' },
+          style: { width: '100%', height: H, display: 'block' },
           ref: svgRef,
         },
         kids,
@@ -1023,6 +1094,8 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     models?: Record<string, { model: string }>;
     months?: number;
     above?: boolean;
+    /** 卡片实测宽度：决定格子间隙（宽了给更多呼吸，窄了收紧） */
+    boxW?: number;
   }): any {
     const byDay = props.byDay;
     const daySessions = props.daySessions || {};
@@ -1053,8 +1126,11 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     const OPS = [0.16, 0.3, 0.5, 0.72, 0.95];
     const levelOf = (v: number): number =>
       v <= 0 ? 0 : v <= max * 0.25 ? 1 : v <= max * 0.5 ? 2 : v <= max * 0.75 ? 3 : 4;
-    const cellGap = months >= 12 ? 2.5 : months >= 6 ? 3 : 4;
-    const rowGap = months >= 12 ? 0 : cellGap;
+    // 格子间隙：横竖用同一个值（旧版 12 个月时行距被压成 0，7 行糊成一片竖条）。
+    // 宽度越大给越多呼吸 —— 宽度来自卡片实测宽度。
+    const boxW = props.boxW || 0;
+    const cellGap = boxW >= 1120 ? 4 : boxW >= 860 ? 3 : 2;
+    const rowGap = cellGap;
     const [hover, setHover] = useState<{
       k: string;
       day: DayAgg;
@@ -1117,7 +1193,9 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
                 color: 'var(--dsw-alias-label-caption)',
                 flex: 'none',
                 textAlign: 'center',
-                lineHeight: '14px',
+                // line-height 用 1（≈9px）而不是固定的 14px：窄卡片里格子可能只有
+                // 11px 高，固定 14px 会把行高顶大、行间隙看起来忽大忽小。
+                lineHeight: 1,
               },
             },
             r % 2 === 0 ? WL[r] : '',
@@ -1135,23 +1213,34 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
         prevM = mo;
       }
     }
+    // 月份标签：与格子共用同一个网格（按周列数切分），每个标签钉在自己那个月的
+    // 第一周列上并向右侧跨几列。旧写法是「每个标签定宽 100/weeks% + flex:none」，
+    // 于是十几个标签只会挤在左边四分之一处，和下面的月份列对不上。
     const monthRow = h(
       'div',
       { style: { display: 'flex', gap: 4, marginBottom: 3 } },
       h('span', { style: { width: 14, flex: 'none' } }),
       h(
         'div',
-        { style: { display: 'flex', gap: cellGap + 'px', flex: '1 1 auto', minHeight: 12 } },
+        {
+          style: {
+            display: 'grid',
+            gridTemplateColumns: 'repeat(' + weeks + ',minmax(0,1fr))',
+            gap: cellGap + 'px',
+            flex: '1 1 auto',
+            minHeight: 12,
+          },
+        },
         monthLabels.map((m, i) =>
           h(
             'span',
             {
               key: i,
               style: {
+                gridColumn: m.w + 1 + ' / span ' + Math.max(1, Math.min(4, weeks - m.w)),
                 fontSize: 9.5,
+                lineHeight: '12px',
                 color: 'var(--dsw-alias-label-caption)',
-                width: (100 / weeks).toFixed(3) + '%',
-                flex: 'none',
                 overflow: 'hidden',
                 whiteSpace: 'nowrap',
               },
@@ -1518,7 +1607,7 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     });
   }
 
-  /* ---------- 跨组件共享统计快照（右栏面板与 widget 浮窗共用一次拉取，60s 可见即刷） ---------- */
+  /* ---------- 跨组件共享统计快照（中心区面板与 widget 浮窗共用一次拉取，60s 可见即刷） ---------- */
   const shared: {
     data: StatsSnapshot | null;
     err: string;
@@ -1614,7 +1703,7 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     return props.children === undefined ? null : props.children;
   }
 
-  /* ---------- 独立 section 组件（右栏面板与 widget 浮窗共用） ---------- */
+  /* ---------- 独立 section 组件（中心区面板与 widget 浮窗共用） ---------- */
 
   /** 指标卡组（全量 + 可视化 + 悬浮构成） */
   function StatCardsSection(props: {
@@ -1654,6 +1743,8 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     const cards: any[] = [];
     cards.push(
       h(StatCard, {
+        key: 'kpi-累计 Token',
+        icon: 'layers',
         label: '累计 Token',
         count: aggAll.total,
         tint: true,
@@ -1685,6 +1776,8 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     );
     cards.push(
       h(StatCard, {
+        key: 'kpi-近 30 天走势',
+        icon: 'trend',
         label: '近 30 天走势',
         count: sparkVals.reduce((s, v) => s + v, 0),
         sub: '每日用量迷你图',
@@ -1694,6 +1787,8 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     );
     cards.push(
       h(StatCard, {
+        key: 'kpi-缓存 Token',
+        icon: 'database',
         label: '缓存 Token',
         count: aggAll.cr + aggAll.cw,
         sub: '命中 ' + fmt(aggAll.cr) + ' · 写入 ' + fmt(aggAll.cw),
@@ -1726,6 +1821,8 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     cards.push(
       data.peakStep
         ? h(StatCard, {
+            key: 'kpi-峰值单次请求',
+            icon: 'bolt',
             label: '峰值单次请求',
             count: (data.peakStep as { tokens: number }).tokens,
             sub:
@@ -1739,6 +1836,8 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     cards.push(
       peakDay
         ? h(StatCard, {
+            key: 'kpi-峰值单日',
+            icon: 'mountain',
             label: '峰值单日',
             count: (peakDay as DayAgg).t,
             sub: dispDay((peakDay as DayAgg).d),
@@ -1779,6 +1878,8 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     );
     cards.push(
       h(StatCard, {
+        key: 'kpi-日均消耗',
+        icon: 'wave',
         label: '日均消耗',
         count: avgDay,
         sub: '按活跃日平均',
@@ -1787,10 +1888,19 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
       }),
     );
     cards.push(
-      h(StatCard, { label: '日消耗中位数', count: medDay, sub: '按活跃日取中位', delay: cards.length * 45 }),
+      h(StatCard, {
+        key: 'kpi-日消耗中位数',
+        icon: 'median',
+        label: '日消耗中位数',
+        count: medDay,
+        sub: '按活跃日取中位',
+        delay: cards.length * 45,
+      }),
     );
     cards.push(
       h(StatCard, {
+        key: 'kpi-当前连续使用',
+        icon: 'flame',
         label: '当前连续使用',
         count: st.current,
         fmt: (v: number) => fmt(v) + ' 天',
@@ -1801,6 +1911,8 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     );
     cards.push(
       h(StatCard, {
+        key: 'kpi-最长连续使用',
+        icon: 'trophy',
         label: '最长连续使用',
         count: st.longest,
         fmt: (v: number) => fmt(v) + ' 天',
@@ -1811,6 +1923,8 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     );
     cards.push(
       h(StatCard, {
+        key: 'kpi-活跃天数',
+        icon: 'calendar',
         label: '活跃天数',
         count: aggAll.byDay.size,
         fmt: (v: number) => fmt(v) + ' 天',
@@ -1821,27 +1935,45 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     );
     cards.push(
       h(StatCard, {
+        key: 'kpi-模型调用次数',
+        icon: 'chip',
         label: '模型调用次数',
         count: aggAll.n,
         sub: data.active + ' 个会话有用量',
         delay: cards.length * 45,
       }),
     );
-    cards.push(h(StatCard, { label: '首次使用', value: dispDay(aggAll.first as string), sub: aggAll.first }));
-    cards.push(h(StatCard, { label: '最近使用', value: dispDay(aggAll.last as string), sub: aggAll.last }));
-    const toolbar =
-      props.widgets && props.widgetId
-        ? h(
-            'div',
-            { style: { display: 'flex', justifyContent: 'flex-end', marginBottom: 6 } },
-            widgetBtns(props.widgets, props.widgetId),
-          )
-        : null;
-    // 外层卡片容器：浮窗/右侧栏内指标卡组都是"一张不透明卡片"（内部各指标卡自带层次）
+    cards.push(
+      h(StatCard, {
+        key: 'kpi-首次使用',
+        icon: 'flag',
+        label: '首次使用',
+        value: dispDay(aggAll.first as string),
+        sub: aggAll.first,
+      }),
+    );
+    cards.push(
+      h(StatCard, {
+        key: 'kpi-最近使用',
+        icon: 'clock',
+        label: '最近使用',
+        value: dispDay(aggAll.last as string),
+        sub: aggAll.last,
+      }),
+    );
+    // 悬浮/小组件按钮直接进标题行，不再单独占一行
+    const toolbar = props.widgets && props.widgetId ? widgetBtns(props.widgets, props.widgetId) : null;
+    // 外层卡片容器：浮窗/中心区内指标卡组都是"一张不透明卡片"（内部各指标卡自带层次）
     return h(
       'div',
-      { className: 'tm-card' },
-      toolbar,
+      { className: 'tm-card tm-statcards' },
+      h(
+        'div',
+        { className: 'tm-chart-title' },
+        cardName('layers', '基础数据'),
+        h('span', { className: 'tm-hint' }, '全部会话日志聚合 · 悬浮指标卡看构成明细'),
+        toolbar,
+      ),
       h('div', { className: 'tm-grid' }, cards),
       pop !== null
         ? tmPortal(
@@ -1985,9 +2117,8 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
       h(
         'div',
         { className: 'tm-chart-title' },
-        h(
-          'span',
-          { className: 'tm-chart-name' },
+        cardName(
+          'trend',
           'Token 使用趋势（' +
             (trendRange === '24h' ? '近24小时按小时' : trendRange === '7d' ? '近7天按天' : '近30天按天') +
             ' · 悬浮查看明细）',
@@ -2054,39 +2185,65 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
   }): any {
     const data = props.data;
     const aggAll = props.aggAll;
-    const [heatSpan, setHeatSpan] = useState('6');
+    // 只保留 6 / 12 个月。默认值由卡片实测宽度决定（够宽给 12 个月，窄了给 6 个月），
+    // 但**用户手动选过就以手动为准**并持久化 —— 一旦手动切换，宽度变化不再改写它。
+    const [picked, setPicked] = useState(readHeatSpan());
+    const [cardW, setCardW] = useState(0);
+    const cardRef = React.useRef(null as any);
+    React.useLayoutEffect(() => {
+      const el = cardRef.current;
+      if (!el) return undefined;
+      const read = (): void => {
+        const w = Math.round(el.getBoundingClientRect().width);
+        setCardW((prev: number) => (prev === w ? prev : w));
+      };
+      read();
+      if (typeof ResizeObserver === 'undefined') return undefined;
+      const ro = new ResizeObserver(read);
+      ro.observe(el);
+      return () => ro.disconnect();
+    }, []);
+    // 测量前按 12 个月渲染（这一步在首帧绘制之前完成，看不到跳变）
+    const span = picked !== '' ? picked : cardW === 0 || cardW >= HEAT_WIDE_PX ? '12' : '6';
+    const pickSpan = (v: string): void => {
+      setPicked(v);
+      try {
+        window.localStorage.setItem(HEAT_SPAN_KEY, v);
+      } catch {
+        /* ignore */
+      }
+    };
     const open = useWidgetOpen(props.widgets, props.widgetId);
     if (props.inPlace && open) return null;
     const HEAT_OPS = [0.16, 0.3, 0.5, 0.72, 0.95];
     return h(
       'div',
-      { className: 'tm-card' },
+      { className: 'tm-card', ref: cardRef },
       h(
         'div',
         { className: 'tm-chart-title' },
-        h('span', { className: 'tm-chart-name' }, 'Token 活动热力图（悬浮查看当日明细）'),
+        cardName('grid', 'Token 活动热力图（悬浮查看当日明细）'),
         h(
           'span',
           { style: { display: 'inline-flex', gap: 6, alignItems: 'center' } },
           h(Seg, {
             options: [
-              { v: '1', t: '1个月' },
-              { v: '3', t: '3个月' },
               { v: '6', t: '6个月' },
               { v: '12', t: '12个月' },
             ],
-            current: heatSpan,
-            onPick: setHeatSpan,
+            current: span,
+            onPick: pickSpan,
           }),
           widgetBtns(props.widgets, props.widgetId),
         ),
       ),
       h(Heatmap, {
-        key: heatSpan,
+        key: span,
         byDay: aggAll.byDay,
         daySessions: data.daySessions || {},
         models: data.models,
-        months: Number(heatSpan),
+        months: Number(span),
+        boxW: cardW,
         above: props.inFloat === true,
       }),
       h(
@@ -2179,7 +2336,11 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
             h('span', {
               className: 'tm-barfill',
               style: {
-                width: ((m.t / (arr[0] as ModelAgg).t) * 100).toFixed(1) + '%',
+                // 进度条与同一行印出的百分比**必须同口径**：都占总量（sc.total），
+                // 也就是环形图那一段的占比。旧写法除以 `arr[0]`（榜首模型），于是第一名
+                // 的条永远满格、旁边却写着 53.3%，同一行里两个分母，看着就是"对不上"。
+                // 顺带：这样每行的条长与上方圆环里对应的扇区长度也一致了。
+                width: Math.min(100, Math.max(0, pct)).toFixed(1) + '%',
                 background: color,
                 animationDelay: i * 40 + 120 + 'ms',
               },
@@ -2209,7 +2370,7 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
       h(
         'div',
         { className: 'tm-chart-title' },
-        h('span', { className: 'tm-chart-name' }, '模型用量分布（' + props.rangeLabel + ' · 悬浮查看构成）'),
+        cardName('donut', '模型用量分布（' + props.rangeLabel + ' · 悬浮查看构成）'),
         widgetBtns(props.widgets, props.widgetId),
       ),
       h(
@@ -2251,7 +2412,7 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
           ? '统计加载失败：' + err
           : loading
             ? '正在聚合会话日志…'
-            : '暂无数据（打开右侧栏用量面板可加速加载）',
+            : '暂无数据（打开中心区「用量统计」可加速加载）',
       );
     }
     const aa = aggAll as Agg;
@@ -2291,7 +2452,7 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     return h(StatCardsSection, { aggAll: aa, data, inFloat: true, ...w });
   }
 
-  /* ---------- 设置页主体（showPrefs=false 时隐藏顶部开关行，供右栏富面板使用；开关收归设置页） ---------- */
+  /* ---------- 设置页主体（showPrefs=false 时隐藏顶部开关行，供中心区富面板使用；开关收归设置页） ---------- */
   function StatsSettingsPage(props: {
     defaultRange: string;
     showToday: boolean;
@@ -2450,8 +2611,9 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     };
 
     const children: any[] = [];
-    children.push(h('h3', { className: 'tm-title' }, 'Token 用量统计'));
-    // 右栏模式（showPrefs=false）隐藏长描述，压缩与上方今日消耗卡的间距
+    // 中心区模式（showPrefs=false）由视图顶栏给出分区标题，这里不再重复一遍 h3
+    if (showPrefs) children.push(h('h3', { className: 'tm-title' }, 'Token 用量统计'));
+    // 中心区模式隐藏长描述，压缩与上方今日消耗卡的间距
     if (showPrefs) {
       children.push(
         h(
@@ -2617,19 +2779,32 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
       return h('div', { className: 'tm-page' }, children);
     }
 
-    // ── 指标卡组（独立组件，右栏与 widget 浮窗复用）─────────────────
-    children.push(
-      h(StatCardsSection, {
-        aggAll,
-        data: data as StatsSnapshot,
-        widgets: (props as any).widgets || null,
-        widgetId: 'stats:cards',
-        inPlace: true,
-      }),
+    // ── 卡片区：12 栏仪表板栅格 ─────────────────────────────────────
+    // 排布按「谁吃横向空间」定：基础数据（指标卡网格）→ 趋势（通栏）→ 热力图（通栏）
+    // → 模型分布（通栏、但内部是纵向列表，放最后并分栏铺开）。趋势与热力图都是越宽越好读，
+    // 与别人并排只会各自被压窄；模型分布是「环形图 + 逐个模型一行」的纵向结构，压窄无损失。
+    const span = (cls: string, key: string, node: any): any => h('div', { key, className: cls }, node);
+    const cards: any[] = [];
+    // 基础数据（独立组件，中心区与 widget 浮窗复用）
+    cards.push(
+      span(
+        'tm-c12',
+        'cards',
+        h(StatCardsSection, {
+          aggAll,
+          data: data as StatsSnapshot,
+          widgets: (props as any).widgets || null,
+          widgetId: 'stats:cards',
+          inPlace: true,
+        }),
+      ),
     );
-    children.push(
-      scoped !== null
-        ? h(
+    if (scoped !== null) {
+      cards.push(
+        span(
+          'tm-c12',
+          'range',
+          h(
             'div',
             { className: 'tm-card' },
             h(
@@ -2657,46 +2832,69 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
                   ' 次调用',
               ),
             ),
-          )
-        : null,
-    );
-
-    // ── 趋势 / 热力 / 模型分布（独立组件，右栏与 widget 浮窗复用）───
-    children.push(
-      h(TrendSection, {
-        data: data as StatsSnapshot,
-        aggAll,
-        widgets: (props as any).widgets || null,
-        widgetId: 'stats:trend',
-        inPlace: true,
-      }),
-    );
-    children.push(
-      h(HeatSection, {
-        data: data as StatsSnapshot,
-        aggAll,
-        widgets: (props as any).widgets || null,
-        widgetId: 'stats:heat',
-        inPlace: true,
-      }),
-    );
-    children.push(
-      h(DonutSection, {
-        data: data as StatsSnapshot,
-        agg: scoped !== null ? scoped : aggAll,
-        rangeLabel: rangeText(range),
-        widgets: (props as any).widgets || null,
-        widgetId: 'stats:donut',
-        inPlace: true,
-      }),
-    );
-    children.push(
-      h(
-        'div',
-        { className: 'tm-muted', style: { margin: '4px 2px 0' } },
-        '统计口径：总 Token = 输入 + 缓存读 + 缓存写 + 输出（reasoning 已含在输出内）；同一请求的采样 usage 被终值覆盖，不重复累计；fork/resume 种子事件已去重。',
+          ),
+        ),
+      );
+    }
+    // 趋势（通栏，独立组件，中心区与 widget 浮窗复用）
+    cards.push(
+      span(
+        'tm-c12',
+        'trend',
+        h(TrendSection, {
+          data: data as StatsSnapshot,
+          aggAll,
+          widgets: (props as any).widgets || null,
+          widgetId: 'stats:trend',
+          inPlace: true,
+        }),
       ),
     );
+    // 热力图（通栏，紧跟趋势 —— 同样是月份越宽越好读的横向图形）
+    cards.push(
+      span(
+        'tm-c12',
+        'heat',
+        h(HeatSection, {
+          data: data as StatsSnapshot,
+          aggAll,
+          widgets: (props as any).widgets || null,
+          widgetId: 'stats:heat',
+          inPlace: true,
+        }),
+      ),
+    );
+    // 模型分布（最后；通栏但走纵向分栏布局，见 .tm-donutWide）
+    cards.push(
+      span(
+        'tm-c12',
+        'donut',
+        h(
+          'div',
+          { className: 'tm-donutWide' },
+          h(DonutSection, {
+            data: data as StatsSnapshot,
+            agg: scoped !== null ? scoped : aggAll,
+            rangeLabel: rangeText(range),
+            widgets: (props as any).widgets || null,
+            widgetId: 'stats:donut',
+            inPlace: true,
+          }),
+        ),
+      ),
+    );
+    cards.push(
+      span(
+        'tm-c12',
+        'note',
+        h(
+          'div',
+          { className: 'tm-muted', style: { margin: '0 2px' } },
+          '统计口径：总 Token = 输入 + 缓存读 + 缓存写 + 输出（reasoning 已含在输出内）；同一请求的采样 usage 被终值覆盖，不重复累计；fork/resume 种子事件已去重。',
+        ),
+      ),
+    );
+    children.push(h('div', { className: 'tm-dash' }, cards));
     return h('div', { className: 'tm-page' }, children);
   }
 
@@ -2744,7 +2942,12 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
               onPointerDown: tmFloatDrag,
               onDoubleClick: () => tmTodaySet(false),
             },
-            h('span', { className: 'tm-todaylabel' }, '今日用量'),
+            h(
+              'span',
+              { className: 'tm-todaylabel tm-titledIco' },
+              h(Glyph, { name: 'bolt', size: 13, className: 'tm-cico' }),
+              '今日用量',
+            ),
             h('span', { className: 'tm-todayval', style: { opacity: 0.5 } }, '…'),
             h(
               'button',
@@ -2764,7 +2967,12 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
       return h(
         'div',
         { className: 'tm-today' + (wide ? '' : ' tm-todayRail') },
-        h('div', { className: 'tm-todaylabel' }, '今日用量'),
+        h(
+          'div',
+          { className: 'tm-todaylabel tm-titledIco' },
+          h(Glyph, { name: 'bolt', size: 13, className: 'tm-cico' }),
+          '今日用量',
+        ),
         h('div', { className: 'tm-todayval', style: { opacity: 0.5 } }, '…'),
       );
     }
@@ -2900,7 +3108,12 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
               { className: 'tm-grip', title: '按住拖出为浮窗，点按直接弹出', onPointerDown: tmGripDragOut },
               '⠿',
             ),
-        h('span', { className: 'tm-todaylabel' }, props.name || '今日 Token'),
+        h(
+          'span',
+          { className: 'tm-todaylabel tm-titledIco' },
+          h(Glyph, { name: 'bolt', size: 13, className: 'tm-cico' }),
+          props.name || '今日 Token',
+        ),
         h(AnimatedNumber, { className: 'tm-todayval', value: todayTotal, format: fmt }),
         bare
           ? widgetBtns(props.widgets, props.widgetId)
@@ -2995,8 +3208,70 @@ export function createStatsSection(React: AnyReact, P: AnyPrimitives, ReactDOM: 
     return h(TodayCard, { wide: true, float: true, floatPos: pos });
   }
 
+  /**
+   * 分享面板：拉一次统计快照 + git 身份，然后交给 ShareShell 画那张 16:9 卡片。
+   * 身份取不到（无 shell 服务、无 git、无 ~/.gitconfig）时静默省略，不挡分享。
+   */
+  function SharePanel(props: { onClose: () => void; OnlineEmbed?: any }): any {
+    // 内聚到分享卡上的组件：四个分区由本文件提供，在线块由 CenterView 注入
+    // （在线块来自 OnlineSection，两个工厂在 index.ts 才汇合，这里拿不到)。
+    const sections = {
+      StatCardsSection,
+      TrendSection,
+      HeatSection,
+      DonutSection,
+      OnlineEmbed: props.OnlineEmbed,
+    };
+    const [data, setData] = useState(null as StatsSnapshot | null);
+    const [error, setError] = useState('');
+    const [ident, setIdent] = useState({ name: '', email: '' } as { name: string; email: string });
+    React.useEffect(() => {
+      let alive = true;
+      void fetchStats()
+        .then((v) => {
+          if (!alive) return;
+          if (v && (v as StatsSnapshot).ready === true) setData(v as StatsSnapshot);
+          else setError(String((v && (v as { error?: string }).error) || '统计服务不可用'));
+        })
+        .catch((e: unknown) => {
+          if (alive) setError(String((e as Error)?.message ?? e));
+        });
+      void fetch('/ext/dshp-token-meter/identity', { cache: 'no-store' })
+        .then((r) => r.json())
+        .then((v: { ok?: boolean; name?: string; email?: string }) => {
+          if (alive && v && v.ok === true)
+            setIdent({ name: String(v.name || ''), email: String(v.email || '') });
+        })
+        .catch(() => {
+          /* 身份是锦上添花，取不到就算了 */
+        });
+      return () => {
+        alive = false;
+      };
+    }, []);
+    if (data === null)
+      return h(ShareShell, {
+        data: EMPTY_SNAPSHOT,
+        loading: true,
+        error,
+        sections,
+        onClose: props.onClose,
+      });
+    return h(ShareShell, {
+      data,
+      loading: false,
+      error,
+      gitName: ident.name,
+      gitEmail: ident.email,
+      sections,
+      onClose: props.onClose,
+    });
+  }
+
   return {
     StatsSettingsPage,
+    /** 分享面板（全屏 16:9 卡片 + 下载/复制 PNG）；数据与聚合复用本文件的辅助函数 */
+    SharePanel,
     TodayCard,
     TodayFloatEntry,
     useTmTodayFloat,

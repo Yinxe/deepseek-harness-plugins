@@ -1,6 +1,6 @@
 import { homedir } from 'os';
 import { join } from 'path';
-import { readdirSync, statSync, openSync, fstatSync, readSync, closeSync, readFileSync } from 'fs';
+import { readdirSync, statSync, readFileSync, openSync, fstatSync, readSync, closeSync } from 'fs';
 import zlib from 'zlib';
 
 // src/host/index.ts
@@ -82,8 +82,8 @@ function clone(source, refs = /* @__PURE__ */ new Map()) {
   if (is("RegExp", source)) return new RegExp(source.source, source.flags);
   if (isArrayBufferLike(source)) return source.slice(0);
   if (ArrayBuffer.isView(source)) return source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength);
-  const cached = refs.get(source);
-  if (cached) return cached;
+  const cached2 = refs.get(source);
+  if (cached2) return cached2;
   if (Array.isArray(source)) {
     const result2 = [];
     refs.set(source, result2);
@@ -931,6 +931,9 @@ function createSecretResolver(ctx) {
   };
 }
 
+// src/name.ts
+var DISPLAY_NAME = "Token \u603B\u89C8";
+
 // src/host/errors.ts
 var ProviderError = class extends Error {
   kind;
@@ -958,14 +961,14 @@ var GUIDANCE = {
   auth: {
     title: "\u5BC6\u94A5\u65E0\u6548\u6216\u5DF2\u5931\u6548",
     hint: "\u5E73\u53F0\u62D2\u7EDD\u4E86\u8FD9\u628A\u5BC6\u94A5\uFF1A\u53EF\u80FD\u5DF2\u88AB\u5220\u9664\u3001\u8F6E\u6362\uFF0C\u6216\u590D\u5236\u65F6\u7F3A\u4E86\u5B57\u7B26\u3002\u6362\u6210\u6709\u6548\u7684\u5BC6\u94A5\u5373\u53EF\u6062\u590D\u3002",
-    action: "\u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
+    action: "\u8BBE\u7F6E \u2192 " + DISPLAY_NAME + " \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
     tone: "bad",
     retriable: false
   },
   session: {
     title: "\u767B\u5F55\u72B6\u6001\u5DF2\u8FC7\u671F",
     hint: "\u7F51\u9875\u4F1A\u8BDD\u7968\u636E\uFF08Cookie / Bearer\uFF09\u5DF2\u5931\u6548\uFF0C\u5E73\u53F0\u8BA4\u4E3A\u4F60\u6CA1\u767B\u5F55\u3002\u91CD\u65B0\u6293\u53D6\u6700\u65B0\u503C\u8986\u76D6\u5373\u53EF\u3002",
-    action: "\u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
+    action: "\u8BBE\u7F6E \u2192 " + DISPLAY_NAME + " \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
     tone: "bad",
     retriable: false
   },
@@ -1007,7 +1010,7 @@ var GUIDANCE = {
   config: {
     title: "\u4F9B\u5E94\u5546\u914D\u7F6E\u4E0D\u5B8C\u6574",
     hint: "\u8FD8\u7F3A\u5C11\u5FC5\u8981\u7684\u51ED\u636E\u6216\u53C2\u6570\uFF0C\u63D2\u4EF6\u65E0\u6CD5\u53D1\u8D77\u8BF7\u6C42\u3002",
-    action: "\u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
+    action: "\u8BBE\u7F6E \u2192 " + DISPLAY_NAME + " \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
     tone: "warn",
     retriable: false
   },
@@ -1028,7 +1031,7 @@ var GUIDANCE = {
 };
 var STEPS = {
   auth: [
-    "\u6253\u5F00\u8BBE\u7F6E\u9875 \u2192 Token \u8BA1\u91CF \u2192 \u627E\u5230\u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
+    "\u6253\u5F00\u8BBE\u7F6E\u9875 \u2192 " + DISPLAY_NAME + " \u2192 \u627E\u5230\u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
     "\u5230\u5E73\u53F0\u91CD\u65B0\u751F\u6210\u5BC6\u94A5\u5E76\u7C98\u8D34\u8FDB\u6765\uFF08\u63A8\u8350\u70B9\u300C\u5B58\u51ED\u636E\u300D\u8F6C\u6210 $NAME \u5F15\u7528\uFF09",
     "\u82E5\u5B57\u6BB5\u91CC\u586B\u7684\u662F $NAME\uFF1A\u5148\u66F4\u65B0\u5BF9\u5E94\u7684\u51ED\u636E\u6216\u73AF\u5883\u53D8\u91CF\uFF0C\u6539\u5B8C\u91CD\u542F dsh web",
     "\u4FDD\u5B58\u540E\u70B9\u300C\u5237\u65B0\u300D\u9A8C\u8BC1"
@@ -1068,7 +1071,7 @@ var STEPS = {
     "\u786E\u8BA4\u63D2\u4EF6\u4E0E DSH \u90FD\u5DF2\u66F4\u65B0\u5230\u6700\u65B0\u7248\u672C"
   ],
   config: [
-    "\u6253\u5F00\u8BBE\u7F6E\u9875 \u2192 Token \u8BA1\u91CF \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
+    "\u6253\u5F00\u8BBE\u7F6E\u9875 \u2192 " + DISPLAY_NAME + " \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
     "\u8865\u9F50\u6807 * \u7684\u5FC5\u586B\u5B57\u6BB5",
     "\u82E5\u7528 $NAME \u5F15\u7528\uFF1A\u786E\u8BA4\u51ED\u636E\u6216\u73AF\u5883\u53D8\u91CF\u91CC\u786E\u5B9E\u6709\u8FD9\u4E2A\u952E\uFF08$ \u5F15\u7528\u8BFB\u4E0D\u5230\u4F1A\u76F4\u63A5\u62A5\u9519\uFF09",
     "\u4FDD\u5B58\u540E\u70B9\u300C\u5237\u65B0\u300D\u9A8C\u8BC1"
@@ -1525,7 +1528,7 @@ async function fetchOfficialBalance(params, secret, fetchImpl) {
     throw new ProviderError("auth", "DeepSeek \u5BC6\u94A5\u65E0\u6548(401)\uFF1A" + body.slice(0, 100), {
       status: code,
       hint: "\u5B98\u65B9\u4F59\u989D\u63A5\u53E3\u62D2\u7EDD\u4E86\u8FD9\u4E2A apiKey\uFF08\u5E94 sk- \u5F00\u5934\uFF09\u3002\u8BF7\u786E\u8BA4\u5B83\u6765\u81EA open platform \u4E14\u672A\u88AB\u5220\u9664\u3002",
-      action: "\u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300DapiKey"
+      action: "\u8BBE\u7F6E \u2192 " + DISPLAY_NAME + " \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300DapiKey"
     });
   if (code === 402)
     throw new ProviderError("balance", "DeepSeek \u4F59\u989D\u4E0D\u8DB3(402)\uFF1A" + body.slice(0, 100), { status: code });
@@ -1687,7 +1690,7 @@ function envelopeThrow(msg) {
     if (/api.?key/i.test(msg)) {
       throw new ProviderError("auth", msg, {
         hint: "\u5B98\u65B9 sk- \u5BC6\u94A5\u4E0D\u80FD\u7528\u4E8E\u7F51\u9875\u8D26\u5355\u63A5\u53E3\uFF08\u4E24\u5957\u51ED\u636E\u4F53\u7CFB\u4E0D\u901A\u7528\uFF09\u3002\u8BF7\u628A\u5B83\u6539\u586B\u5230 apiKey \u680F\uFF0C\u6216\u76F4\u63A5\u7528 deepseek \u7C7B\u578B\u8BA9\u5B83\u81EA\u52A8\u9009\u8DEF\u3002",
-        action: "\u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D"
+        action: "\u8BBE\u7F6E \u2192 " + DISPLAY_NAME + " \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D"
       });
     }
     throw new ProviderError("session", msg, {
@@ -2251,7 +2254,7 @@ var deepseek = {
     if (lastErr instanceof ProviderError && lastErr.kind === "auth" && order.length > 1) {
       throw new ProviderError("auth", "\u4E24\u6761\u6570\u636E\u8DEF\u7EBF\u90FD\u9274\u6743\u5931\u8D25\uFF08\u5B98\u65B9\u63A5\u53E3\u4E0E\u7F51\u9875\u63A5\u53E3\uFF09\uFF1A" + lastMsg, {
         hint: "\u5B98\u65B9 apiKey \u4E0E\u7F51\u9875\u4F1A\u8BDD\u7968\u636E\u662F\u4E24\u5957\u72EC\u7ACB\u51ED\u636E\u3001\u4E92\u4E0D\u901A\u7528\u3002\u8BF7\u786E\u8BA4\uFF1Ask- \u5F00\u5934\u7684\u586B apiKey \u680F\uFF0C\u767B\u5F55\u4F1A\u8BDD token\uFF08ciYi \u5F00\u5934\uFF09\u586B token \u680F\uFF0C\u4E24\u8005\u90FD\u8FC7\u671F\u65F6\u90FD\u8981\u66F4\u65B0\u3002",
-        action: "\u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D"
+        action: "\u8BBE\u7F6E \u2192 " + DISPLAY_NAME + " \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D"
       });
     }
     throw lastErr || new ProviderError("unknown", "DeepSeek \u62C9\u53D6\u5931\u8D25");
@@ -2558,7 +2561,7 @@ var commandcode = {
     if (!r.value)
       throw new ProviderError("config", "apiKey \u7F3A\u5C11\u6709\u6548\u503C\uFF08\u5F15\u7528\u89E3\u6790\u4E3A\u7A7A\uFF09", {
         hint: "\u586B\u7684\u662F $" + DEFAULT_ENV_KEY + " \u5F15\u7528\uFF0C\u4F46\u8BE5\u73AF\u5883\u53D8\u91CF/\u51ED\u636E\u5F53\u524D\u4E3A\u7A7A\u3002\u5BFC\u51FA\u53D8\u91CF\u540E\u9700\u91CD\u542F dsh web\uFF0C\u6216\u6539\u586B\u660E\u6587\u3002",
-        action: "\u8BBE\u7F6E \u2192 Token \u8BA1\u91CF \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
+        action: "\u8BBE\u7F6E \u2192 " + DISPLAY_NAME + " \u2192 \u8BE5\u4F9B\u5E94\u5546 \u2192\u300C\u7F16\u8F91\u300D",
         retriable: false
       });
     const fetchImpl = deps && deps.fetchImpl || fetch;
@@ -2856,9 +2859,10 @@ registerAlias("deepseek-web", "deepseek");
 // src/host/stats/online.ts
 var PRESET_GAPS_MIN = [1, 5, 15, 30, 60];
 var BASE_GAP_MS = 6e4;
+var DEFAULT_GAP_MIN = 15;
 function normGapMin(raw) {
   const n = Math.floor(Number(raw));
-  if (!Number.isFinite(n) || n < 1) return 5;
+  if (!Number.isFinite(n) || n < 1) return DEFAULT_GAP_MIN;
   let best = PRESET_GAPS_MIN[0];
   for (const g of PRESET_GAPS_MIN) if (Math.abs(g - n) < Math.abs(best - n)) best = g;
   return best;
@@ -3017,8 +3021,11 @@ var DEFAULT_CONFIG = {
   showToday: false,
   // token 统计默认「全部」；热力图另有自己的 6 个月默认（客户端）
   defaultRange: "all",
-  // 在线时长空闲阈值（分钟）：1/5/15/30/60，缺省 5
-  onlineGapMin: 5
+  // 在线时长空闲阈值（分钟）：1/5/15/30/60。
+  // 缺省 15：DSH 在干活时日志里本就有事件（模型 step、工具 call/result、子代理），
+  // 不需要靠大阈值兜底；要兜的是「读长回答、想下一个需求」这类几分钟量级的静默期。
+  // 5 分钟以下会把这类静默期切断（偏低），60 分钟会把开会/吃饭整段算成在线。
+  onlineGapMin: 15
 };
 var VendorSchema = Schema.object({
   id: Schema.string().required(),
@@ -3036,7 +3043,7 @@ var ConfigSchema = Schema.object({
   vendors: Schema.array(VendorSchema).default([]),
   showToday: Schema.boolean().default(false),
   defaultRange: Schema.union([Schema.const("7"), Schema.const("30"), Schema.const("90"), Schema.const("all")]).default("all"),
-  onlineGapMin: Schema.number().step(1).min(1).max(60).default(5)
+  onlineGapMin: Schema.number().step(1).min(1).max(60).default(15)
 });
 function isRecord5(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
@@ -4776,6 +4783,99 @@ function registerStatsRoutes(ctx, engine) {
     "dshp-token-meter: clear cache route"
   );
 }
+var cached = null;
+function parseGitConfig(text, key) {
+  let section = "";
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (line === "" || line.startsWith("#") || line.startsWith(";")) continue;
+    const sec = /^\[([^\]]+)\]/.exec(line);
+    if (sec) {
+      section = (sec[1] || "").trim().toLowerCase();
+      continue;
+    }
+    if (section !== "user") continue;
+    const kv = /^([A-Za-z0-9_.-]+)\s*=\s*(.*)$/.exec(line);
+    if (!kv) continue;
+    if ((kv[1] || "").toLowerCase() !== key) continue;
+    return (kv[2] || "").trim().replace(/^"(.*)"$/, "$1");
+  }
+  return "";
+}
+function fromConfigFiles(key) {
+  const xdg = process.env["XDG_CONFIG_HOME"];
+  const candidates = [
+    xdg ? join(xdg, "git", "config") : join(homedir(), ".config", "git", "config"),
+    join(homedir(), ".gitconfig")
+  ];
+  let found = "";
+  for (const file of candidates) {
+    try {
+      const v = parseGitConfig(readFileSync(file, "utf8"), key);
+      if (v !== "") found = v;
+    } catch {
+    }
+  }
+  return found;
+}
+async function gitIdentity(ctx, cwd) {
+  if (cached !== null) return cached;
+  const envName = process.env["DSHP_TOKEN_METER_GIT_NAME"];
+  const envEmail = process.env["DSHP_TOKEN_METER_GIT_EMAIL"];
+  if (envName !== void 0 || envEmail !== void 0) {
+    cached = { name: envName || "", email: envEmail || "", via: "env" };
+    return cached;
+  }
+  let name2 = "";
+  let email = "";
+  let via = "none";
+  const shell = ctx.get("shell");
+  if (shell !== void 0 && shell !== null && typeof shell.run === "function") {
+    const run = async (cmd) => {
+      try {
+        const spec = shell.resolve({
+          command: cmd,
+          ...cwd ? { workdir: cwd } : {},
+          timeoutMs: 4e3
+        });
+        const r = await shell.run(spec);
+        if (r && r.exitCode === 0 && r.stdout && typeof r.stdout.text === "string") {
+          return r.stdout.text.trim();
+        }
+      } catch {
+      }
+      return "";
+    };
+    name2 = await run("git config --get user.name");
+    email = await run("git config --get user.email");
+    if (name2 !== "" || email !== "") via = "git";
+  }
+  if (name2 === "" && email === "") {
+    name2 = fromConfigFiles("name");
+    email = fromConfigFiles("email");
+    if (name2 !== "" || email !== "") via = "config-file";
+  }
+  cached = { name: name2, email, via };
+  return cached;
+}
+function registerIdentityRoute(ctx) {
+  ctx.effect(
+    () => ctx.webServer.register({
+      kind: "exact",
+      path: "/ext/dshp-token-meter/identity",
+      handler: async (req, res) => {
+        if (!sameOrigin(req)) return json(res, 403, { ok: false, error: "forbidden" });
+        try {
+          const id = await gitIdentity(ctx);
+          return json(res, 200, { ok: true, ...id });
+        } catch (error) {
+          return json(res, 200, { ok: false, error: String(error?.message ?? error) });
+        }
+      }
+    }),
+    "dshp-token-meter: identity route"
+  );
+}
 
 // src/host/index.ts
 var name = "@dshp/token-meter";
@@ -4976,6 +5076,7 @@ function apply(ctx, rawConfig) {
   }
   try {
     registerStatsRoutes(ctx, engine);
+    registerIdentityRoute(ctx);
   } catch (e) {
     try {
       console.error("[dshp-token-meter] register stats routes failed: " + String(e?.message ?? e));

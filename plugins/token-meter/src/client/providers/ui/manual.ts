@@ -8,6 +8,7 @@
  * 专属表达：明确标注「本地手填，非实时」，避免用户误以为这是从平台拉来的真实额度。
  */
 import type { ProviderUIKit, RenderCtx } from '../kit.js';
+import { DISPLAY_NAME } from '../../../name.js';
 
 export function manualUI(ctx: RenderCtx, K: ProviderUIKit): any {
   const h = K.h;
@@ -39,7 +40,10 @@ export function manualUI(ctx: RenderCtx, K: ProviderUIKit): any {
   kids.push(
     h(K.NoteLine, {
       key: 'note',
-      text: '数据来自本地手填（非平台实时接口）：在「设置 → Token 计量 → 编辑」里更新，改完点「刷新」即可。',
+      text:
+        '数据来自本地手填（非平台实时接口）：在「设置 → ' +
+        DISPLAY_NAME +
+        ' → 编辑」里更新，改完点「刷新」即可。',
       tone: 'info',
     }),
   );

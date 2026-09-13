@@ -15,6 +15,8 @@
  */
 
 /** 失败原因分类。 */
+import { DISPLAY_NAME } from '../name.js';
+
 export type ErrorKind =
   | 'auth' // 密钥无效/被撤销/复制不全
   | 'session' // 网页登录态、Cookie/Bearer 票据过期
@@ -99,14 +101,14 @@ const GUIDANCE: Record<
   auth: {
     title: '密钥无效或已失效',
     hint: '平台拒绝了这把密钥：可能已被删除、轮换，或复制时缺了字符。换成有效的密钥即可恢复。',
-    action: '设置 → Token 计量 → 该供应商 →「编辑」',
+    action: '设置 → ' + DISPLAY_NAME + ' → 该供应商 →「编辑」',
     tone: 'bad',
     retriable: false,
   },
   session: {
     title: '登录状态已过期',
     hint: '网页会话票据（Cookie / Bearer）已失效，平台认为你没登录。重新抓取最新值覆盖即可。',
-    action: '设置 → Token 计量 → 该供应商 →「编辑」',
+    action: '设置 → ' + DISPLAY_NAME + ' → 该供应商 →「编辑」',
     tone: 'bad',
     retriable: false,
   },
@@ -148,7 +150,7 @@ const GUIDANCE: Record<
   config: {
     title: '供应商配置不完整',
     hint: '还缺少必要的凭据或参数，插件无法发起请求。',
-    action: '设置 → Token 计量 → 该供应商 →「编辑」',
+    action: '设置 → ' + DISPLAY_NAME + ' → 该供应商 →「编辑」',
     tone: 'warn',
     retriable: false,
   },
@@ -171,7 +173,7 @@ const GUIDANCE: Record<
 /** 各分类的排查步骤（客户端「详情」区展示）。 */
 const STEPS: Record<ErrorKind, string[]> = {
   auth: [
-    '打开设置页 → Token 计量 → 找到该供应商 →「编辑」',
+    '打开设置页 → ' + DISPLAY_NAME + ' → 找到该供应商 →「编辑」',
     '到平台重新生成密钥并粘贴进来（推荐点「存凭据」转成 $NAME 引用）',
     '若字段里填的是 $NAME：先更新对应的凭据或环境变量，改完重启 dsh web',
     '保存后点「刷新」验证',
@@ -211,7 +213,7 @@ const STEPS: Record<ErrorKind, string[]> = {
     '确认插件与 DSH 都已更新到最新版本',
   ],
   config: [
-    '打开设置页 → Token 计量 → 该供应商 →「编辑」',
+    '打开设置页 → ' + DISPLAY_NAME + ' → 该供应商 →「编辑」',
     '补齐标 * 的必填字段',
     '若用 $NAME 引用：确认凭据或环境变量里确实有这个键（$ 引用读不到会直接报错）',
     '保存后点「刷新」验证',

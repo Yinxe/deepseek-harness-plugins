@@ -1,7 +1,7 @@
 /**
  * 通用小组件浮窗系统
  *
- * 右栏/左栏的独立组件（供应商额度卡 `quota:<vendorId>`、统计图表 `stats:<kind>`）
+ * 中心区面板里的独立组件（供应商额度卡 `quota:<vendorId>`、统计图表 `stats:<kind>`）
  * 都可以拖出为全局浮窗（shell.overlay），坐标与开关持久化到 localStorage。
  * 与额度/今日卡旧浮窗并存（旧浮窗跟随当前供应商/今日，widget 浮窗绑定固定组件）。
  */

@@ -11,6 +11,7 @@
  * 「provider 专属渲染器 → 声明式区块 → legacy 兜底」由 providers 层负责。
  */
 import { createProviderKit, createProviderRenderers, fallbackErrorInfo } from './providers/index.js';
+import { DISPLAY_NAME } from '../name.js';
 import type { AnyPrimitives, AnyReact, ProviderMeta, Vendor, VendorSnapshot } from './types.js';
 
 const BASE = '/ext/dshp-token-meter';
@@ -369,7 +370,7 @@ export function createQuotaSection(
     store.set({ floatOpen: open, floatPos: pos });
     saveFloat(open, pos);
   }
-  /** 通用偏好补丁（showToday/defaultRange 等）：经 POST /config，成功后合入本地 cfg，侧栏/右栏即时同步 */
+  /** 通用偏好补丁（showToday/defaultRange 等）：经 POST /config，成功后合入本地 cfg，侧栏/中心区即时同步 */
   async function savePrefs(patch: Record<string, unknown>): Promise<{ ok: boolean; error?: string }> {
     try {
       const r = await call('config.save', patch);
@@ -1904,8 +1905,8 @@ export function createQuotaSection(
     return h('div', { className: 'tm-page' }, kids);
   }
 
-  /* ---------- 右侧栏富面板：全部供应商展开卡（只读为主 + 切换/拉取/浮窗；增删改去设置页） ---------- */
-  /* ---------- 独立供应商小组件（右栏卡片与 widget 浮窗共用同一渲染，样式一致） ----------
+  /* ---------- 额度查询面板：全部供应商展开卡（只读为主 + 切换/拉取/浮窗；增删改去设置页） ---------- */
+  /* ---------- 独立供应商小组件（中心区卡片与 widget 浮窗共用同一渲染，样式一致） ----------
    * 自带 tm-card 外框；标题栏的 WidgetToggle 在侧栏显示 ⧉弹出，浮出后同一位置显示 回归。
    * 绑定固定供应商，不跟随“当前供应商”切换。 */
   function QuotaVendorWidget(props: { vendorId: string }): any {
@@ -1918,7 +1919,7 @@ export function createQuotaSection(
     React.useEffect(() => {
       void ensureLoad();
     }, []);
-    // 数据同步（小组件/右栏卡片统一）：Host 每 refreshSec 在服务端拉取上游并写快照，
+    // 数据同步（小组件/中心区卡片统一）：Host 每 refreshSec 在服务端拉取上游并写快照，
     // 客户端只做轻量 GET /state 同步 —— 多客户端/多标签页不会重复 fetch 上游。
     // 客户端轮询取 min(refreshSec, 30s) 以便及时看到 Host 的新快照；refreshSec=0 时不轮询（仅手动刷新）。
     const rawSec = s.cfg ? s.cfg.refreshSec : undefined;
@@ -1953,7 +1954,6 @@ export function createQuotaSection(
       'div',
       {
         className: 'tm-card' + (failed && !s.loading ? ' tm-side error' : '') + moodClass(off, peakNow),
-        style: { marginBottom: 12 },
       },
       h(
         'div',
@@ -2084,7 +2084,7 @@ export function createQuotaSection(
   }
   /**
    * 卡片氛围类：禁用优先（红），其次按峰/谷 —— 峰=暖色+呼吸（消耗加速），
-   * 谷=冷绿+静稳（费率低）。右栏富卡片与左栏紧凑卡片共用同一套观感。
+   * 谷=冷绿+静稳（费率低）。中心区富卡片与左栏紧凑卡片共用同一套观感。
    */
   function moodClass(off: boolean, peak: boolean): string {
     if (off) return ' tm-off';
@@ -2192,7 +2192,7 @@ export function createQuotaSection(
     }
     const curTxt = peak ? '峰' : '谷';
     const nextTxt = (ns.toPeak ? '距峰 ' : '距谷 ') + fmtDurShort(ns.ms);
-    // 悬浮明细卡挂在 body 上（tmPortal）后按视口坐标定位：既不被右侧栏/浮窗的 overflow 裁掉，
+    // 悬浮明细卡挂在 body 上（tmPortal）后按视口坐标定位：既不被中心区/浮窗的 overflow 裁掉，
     // 也不受浮窗 backdrop-filter 形成的包含块影响；放不下时自动翻到卡片上方。
     const openPop = (el: any): void => {
       try {
@@ -2258,7 +2258,12 @@ export function createQuotaSection(
     );
   }
 
-  function QuotaRightPane(): any {
+  /** 额度查询面板。onOpenSettings 由中心区视图注入（跳到同一 tab 的「设置」分区）。 */
+  function QuotaView(props: { onOpenSettings?: () => void }): any {
+    const Btn =
+      P.Button ||
+      (({ children, ...rest }: any) =>
+        h('button', { type: 'button', className: 'tm-btn', ...rest }, children));
     const s = useStore();
     React.useEffect(() => {
       void ensureLoad();
@@ -2267,19 +2272,13 @@ export function createQuotaSection(
     // ⚠ Hooks 规则：任何早退（return）之前必须调用完所有 hooks —— useWidgets 放最前面。
     const floats =
       WG && typeof WG.useWidgets === 'function' ? (WG.useWidgets() as Array<{ id: string }>) : [];
-    // 自动刷新已下沉到每个 QuotaVendorWidget（右栏卡片与小组件浮窗统一按 refreshSec 自刷），此处不再重复。
+    // 自动刷新已下沉到每个 QuotaVendorWidget（中心区卡片与小组件浮窗统一按 refreshSec 自刷），此处不再重复。
+    // 中心区是宽画布：顶部通栏（峰谷横幅 + 提示）之外，供应商卡片走自适应网格（4/3/2/1 列）。
     const kids: any[] = [];
     // 置顶峰谷显示器：工作时间为峰、其余为谷，提醒峰时消耗加速；已浮出为小组件时原位隐藏
     if (!floats.some((w) => w.id === 'peak')) {
       kids.push(h(PeakIndicator, { key: 'peak', widgets: WG || undefined, widgetId: 'peak' }));
     }
-    kids.push(
-      h(
-        'p',
-        { key: 'd', className: 'tm-intro' },
-        '全部供应商额度一览（右侧栏空间更宽，图表完整展开）。增删改请到 设置 → Token 计量。',
-      ),
-    );
     if (s.error) kids.push(h('p', { key: 'err', className: 'tm-notice tm-notice-err' }, s.error));
     if (!s.cfg) {
       kids.push(
@@ -2294,33 +2293,52 @@ export function createQuotaSection(
     }
     const vendors = s.cfg.vendors || [];
     if (!vendors.length) {
+      // 空状态直接给一个「去设置」按钮：在中心区里就能跳到同一 tab 的「设置」分区，
+      // 不用再绕去侧边栏的设置页。
       kids.push(
         h(
           'div',
           { key: 'empty', className: 'tm-card tm-empty' },
-          '暂无供应商，去 设置 → Token 计量 添加第一个。',
+          h('div', null, '还没有配置任何供应商。'),
+          props.onOpenSettings
+            ? h(
+                Btn,
+                {
+                  variant: 'outline',
+                  size: 'sm',
+                  style: { marginTop: 10 },
+                  onClick: props.onOpenSettings,
+                },
+                '去添加供应商',
+              )
+            : h(
+                'div',
+                { className: 'tm-hint', style: { marginTop: 6 } },
+                '去 设置 → ' + DISPLAY_NAME + ' 添加第一个。',
+              ),
         ),
       );
       return h('div', { className: 'tm-page' }, kids);
     }
     const activeId = s.cfg.activeVendor || '';
-    // 卡片顺序：已启用优先 → 组内当前供应商置顶 → 其余保持配置顺序。
-    // 禁用的大多只是留档备查，沉到末尾少占视线；两组都在时才加分隔标题说明这不是配置顺序。
-    const activeFirst = (list: any[]): any[] =>
-      list.filter((v: any) => v.id === activeId).concat(list.filter((v: any) => v.id !== activeId));
-    const on = vendors.filter((v: any) => v.enabled !== false);
-    const off = vendors.filter((v: any) => v.enabled === false);
-    const ordered = activeFirst(on).concat(activeFirst(off));
-    const bothGroups = on.length > 0 && off.length > 0;
-    let shownOffLabel = false;
-    for (const v of ordered) {
-      if (bothGroups && v.enabled === false && !shownOffLabel) {
-        shownOffLabel = true;
-        kids.push(h('div', { key: 'grp-off', className: 'tm-grouplabel' }, '已禁用 · ' + off.length + ' 个'));
-      }
-      if (floats.some((w) => w.id === 'quota:' + v.id)) continue;
-      kids.push(h(QuotaVendorWidget, { key: v.id, vendorId: v.id }));
+    // 卡片顺序：当前供应商 → 已启用 → 已禁用（同档保持 settings.yaml 里的配置顺序，
+    // Array.sort 是稳定排序）。**不再按启用/禁用分组**：卡片自身的左缘色、底色与
+    // 「已禁用」徽标已经足够区分状态，再插一条「已禁用 · N 个」分隔行既多一层视觉噪声，
+    // 又因为它是整行网格项而强行把后面所有卡片挤到下一行、留下半行空洞。
+    const rankOf = (v: any): number => (v.id === activeId ? 0 : v.enabled === false ? 2 : 1);
+    // 按 0/1/2 三档分桶拼接（不排序）：档内自然保持 settings.yaml 的配置顺序，
+    // 也避免依赖 Array#toSorted 这类较新的运行时方法。
+    const ordered: any[] = [];
+    for (const rank of [0, 1, 2]) {
+      for (const v of vendors) if (rankOf(v) === rank) ordered.push(v);
     }
+    const grid: any[] = [];
+    for (const v of ordered) {
+      // 已弹出为浮窗的供应商，原位不再渲染
+      if (floats.some((w) => w.id === 'quota:' + v.id)) continue;
+      grid.push(h(QuotaVendorWidget, { key: v.id, vendorId: v.id }));
+    }
+    kids.push(h('div', { key: 'grid', className: 'tm-vgrid' }, grid));
     return h('div', { className: 'tm-page' }, kids);
   }
 
@@ -2328,7 +2346,7 @@ export function createQuotaSection(
     QuotaSettingsPage,
     QuotaSidebar,
     QuotaFloatEntry,
-    QuotaRightPane,
+    QuotaView,
     QuotaVendorWidget,
     PeakIndicator,
     quotaStore: {
