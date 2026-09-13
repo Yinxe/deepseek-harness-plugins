@@ -1,0 +1,7 @@
+# @dshp/file-change-viewer bundle patch: file change viewer for DeepSeek Harness.
+# Host half: 无服务/工具/路由，只作为 bundle 入口与 `dsh.client` 的发现锚点（详见 src/host/index.ts 头注释）。
+# Client half: 接管 tool.call.toolview 的 edit / write 卡片，默认展开显示文件变更（DiffBlock 渲染）。
+
+- insert:
+    - id: dshp-file-change-viewer
+      name: '@dshp/file-change-viewer'

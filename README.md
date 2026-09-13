@@ -6,15 +6,16 @@ DeepSeek Harness（DSH）插件 Monorepo（pnpm workspaces + TypeScript ESM）�
 
 ## 插件一览
 
-| 插件                                                           | 一句话                                                                                                                                                                                | 文档                                        |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| **[@dshp/token-meter](plugins/token-meter/README.md)**         | Token 额度 + 用量统计 + 在线时长：多供应商额度卡（opencode / DeepSeek / Command Code / 手动） + 本机会话日志聚合（趋势 / 热力图 / 模型分布 / 在线时长与每日排行，增量重算、口径分级） | [README](plugins/token-meter/README.md)     |
-| **[@dshp/vision-bridge](plugins/vision-bridge/README.md)**     | 视觉桥接：让纯文本模型也能“看图”（`vision_describe` 工具 + 主/备模型自动降级）                                                                                                        | [README](plugins/vision-bridge/README.md)   |
-| **[@dshp/mcwiki-search](plugins/mcwiki-search/README.md)**     | Minecraft Wiki 查询工具（搜索 / 引言 / 全文，含模板清理的 AI 可读转换）                                                                                                               | [README](plugins/mcwiki-search/README.md)   |
-| **[@dshp/search-provider](plugins/search-provider/README.md)** | `web_search` 供应商中枢：Tavily 等可插拔接入，动态选型                                                                                                                                | [README](plugins/search-provider/README.md) |
-| **[@dshp/web-style](plugins/web-style/README.md)**             | Web 外观定制：23 套主题画廊一键切换并持久化 + 壁纸取色（Material You）+ 全局圆角                                                                                                      | [README](plugins/web-style/README.md)       |
-| **[@dshp/skill-manager](plugins/skill-manager/README.md)**     | 技能管理：设置页统一管理全局（`~/.dsh/skills`、`~/.agents/skills`）与工作区技能——新建/编辑/启停/复制移动/删除                                                                         | [README](plugins/skill-manager/README.md)   |
-| **[@dshp/mcp-manager](plugins/mcp-manager/README.md)**         | MCP 服务器管理：设置页管理 cordis.patch.yml 里的官方 dsh-mcp-client 实例——新建/编辑/启停/删除/探活，表单+JSON 双模式，回写保注释                                                      | [README](plugins/mcp-manager/README.md)     |
+| 插件                                                                 | 一句话                                                                                                                                                                                | 文档                                           |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| **[@dshp/token-meter](plugins/token-meter/README.md)**               | Token 额度 + 用量统计 + 在线时长：多供应商额度卡（opencode / DeepSeek / Command Code / 手动） + 本机会话日志聚合（趋势 / 热力图 / 模型分布 / 在线时长与每日排行，增量重算、口径分级） | [README](plugins/token-meter/README.md)        |
+| **[@dshp/vision-bridge](plugins/vision-bridge/README.md)**           | 视觉桥接：让纯文本模型也能“看图”（`vision_describe` 工具 + 主/备模型自动降级）                                                                                                        | [README](plugins/vision-bridge/README.md)      |
+| **[@dshp/mcwiki-search](plugins/mcwiki-search/README.md)**           | Minecraft Wiki 查询工具（搜索 / 引言 / 全文，含模板清理的 AI 可读转换）                                                                                                               | [README](plugins/mcwiki-search/README.md)      |
+| **[@dshp/search-provider](plugins/search-provider/README.md)**       | `web_search` 供应商中枢：Tavily 等可插拔接入，动态选型                                                                                                                                | [README](plugins/search-provider/README.md)    |
+| **[@dshp/web-style](plugins/web-style/README.md)**                   | Web 外观定制：23 套主题画廊一键切换并持久化 + 壁纸取色（Material You）+ 全局圆角                                                                                                      | [README](plugins/web-style/README.md)          |
+| **[@dshp/skill-manager](plugins/skill-manager/README.md)**           | 技能管理：设置页统一管理全局（`~/.dsh/skills`、`~/.agents/skills`）与工作区技能——新建/编辑/启停/复制移动/删除                                                                         | [README](plugins/skill-manager/README.md)      |
+| **[@dshp/mcp-manager](plugins/mcp-manager/README.md)**               | MCP 服务器管理：设置页管理 cordis.patch.yml 里的官方 dsh-mcp-client 实例——新建/编辑/启停/删除/探活，表单+JSON 双模式，回写保注释                                                      | [README](plugins/mcp-manager/README.md)        |
+| **[@dshp/file-change-viewer](plugins/file-change-viewer/README.md)** | 文件修改查看器：接管对话流里的 edit / write 工具卡片并**默认展开**，直接显示变更行、文件路径与增删行数（进行中的调用也能看到正在写入的内容）                                          | [README](plugins/file-change-viewer/README.md) |
 
 ## 截图预览
 
@@ -57,6 +58,7 @@ dsh plugin --profile web add ./plugins/search-provider
 dsh plugin --profile web add ./plugins/web-style
 dsh plugin --profile web add ./plugins/skill-manager
 dsh plugin --profile web add ./plugins/mcp-manager
+dsh plugin --profile web add ./plugins/file-change-viewer
 
 dsh web   # 重启生效
 ```
@@ -191,6 +193,11 @@ dsh web   # 重启生效
 │   ├── search-provider/        # @dshp/search-provider（web_search 供应商中枢）
 │   ├── skill-manager/          # @dshp/skill-manager（全局 + 工作区技能管理）
 │   ├── mcp-manager/            # @dshp/mcp-manager（MCP 服务器管理：patch 条目 CRUD + 探活）
+│   ├── file-change-viewer/     # @dshp/file-change-viewer（edit / write 卡片默认展开的文件变更视图）
+│   │   ├── src/host/           #   Host TS：仅 name/inject/apply（bundle 入口 + dsh.client 发现锚点）
+│   │   ├── src/client/         #   Client TS：diff（纯推导）+ FileChangeRow（DiffBlock 渲染）+ styles
+│   │   ├── scripts/            #   check-client.mjs（无头渲染 48 项断言）
+│   │   └── lib/                #   单文件构建产物（已提交）
 │   └── web-style/              # @dshp/web-style（23 套主题画廊 + 壁纸取色 + 全局圆角）
 │       ├── src/host/           #   Host TS：types/http/config + themes/（token 单源，21 个主题模块）
 │       ├── src/client/         #   Client TS：GallerySection/apply-theme/md3/official/radius/themes/api/state
