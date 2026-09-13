@@ -225,6 +225,9 @@ importers:
 
   plugins/file-change-viewer:
     devDependencies:
+      '@deepseek-ai/schemastery':
+        specifier: ^3.18.2
+        version: 3.18.2
       '@types/react':
         specifier: ^19.3.0
         version: 19.3.0

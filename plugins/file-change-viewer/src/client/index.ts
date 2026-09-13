@@ -5,16 +5,22 @@
  *   window.__ModuleLoader__.load({ id, factory: (require) => {...} })
  *
  * - React / primitives 由 factory 的 require 运行时注入，不打包进 bundle（external）
- * - 自有模块（types/diff/styles/FileChangeRow）全部内联打包
+ * - 自有模块（types/api/prefs/styles/FileChangeRow/FileChangeViewerSection）全部内联打包
  *
- * 挂载点：`slots` 服务的 `tool.call.toolview` 槽位（keyed，按线上工具名分发）。
- * 注册 `edit` / `write` 即**替换**官方内置卡片（官方文档：「a key the shipped composition
- * already covers is replaced, not shared」），`str_replace_editor` 是同类文件修改工具的
- * 兼容项——该工具未挂载时这条注册不会渲染任何东西，纯增量。
+ * 两处注册，互不干扰：
+ *
+ * 1. `settings.section`（list 槽位）：设置左侧导航里的「文件修改卡片」一节——本插件**自己的配置区**，
+ *    `id` 用本插件的 settings 命名空间（与本仓其它插件一致），而不是往通用页面里塞控件。
+ * 2. `tool.call.toolview`（keyed 槽位，按线上工具名分发）：注册 `edit` / `write` 即**替换**官方内置
+ *    卡片（官方文档：「a key the shipped composition already covers is replaced, not shared」），
+ *    `str_replace_editor` 是同类文件修改工具的兼容项——该工具未挂载时这条注册不渲染任何东西，纯增量。
  *
  * @module @dshp/file-change-viewer/client
  */
 import { createFileChangeRow } from './FileChangeRow.js';
+import { createLocator } from './locate.js';
+import { createFileChangeViewerSection } from './FileChangeViewerSection.js';
+import { createPrefs } from './prefs.js';
 import { CSS } from './styles.js';
 import type { AnyCtx, DshRequire, SlotsService } from './types.js';
 
@@ -46,8 +52,28 @@ const CONVERSATION_NS = 'conversation';
  */
 const SHADOW_PRIORITY = -1;
 
-/** 接管的卡片键：edit / write 为主目标，str_replace_editor 为同类工具兼容项。 */
-const TOOL_KEYS: readonly string[] = ['edit', 'write', 'str_replace_editor'];
+/**
+ * 接管的行键。
+ *
+ * - `edit` / `write`：官方内置行，本插件用影子优先级替换；
+ * - `str_replace_editor`：同类文件修改工具的兼容项（该工具未挂载时这条注册不渲染任何东西）；
+ * - `patch`：**本插件 Host 半自己注册的工具**（一次改多处 / 多文件），同样用这张卡片渲染。
+ */
+const TOOL_KEYS: readonly string[] = ['edit', 'write', 'str_replace_editor', 'patch'];
+
+/** 设置节 id = settings 命名空间 = cordis 行 id（仓库约定：NS 四处同名）。 */
+const SETTINGS_NS = 'dshp-file-change-viewer';
+
+/**
+ * 设置节的导航排序。
+ *
+ * `settings.section` 的 `order` 要与本仓其它插件错开（vision-bridge 25 / mcwiki-search 26 /
+ * token-meter 27 / search-provider 28 / skill-manager 29 / mcp-manager 30），31 是下一个空位。
+ */
+const SETTINGS_ORDER = 31;
+
+/** 设置节在左侧导航里的标题。 */
+const SETTINGS_LABEL = '文件修改卡片';
 
 function register(): void {
   const loader = (
@@ -63,7 +89,6 @@ function register(): void {
 
       const React = require('react');
       const P = require('@deepseek-ai/dsh-client-ui-primitives');
-      const FileChangeRow = createFileChangeRow(React, P);
 
       const exportsObj = exportsShim as { inject?: string[]; apply?: (ctx: any) => void };
       exportsObj.inject = ['slots'];
@@ -71,18 +96,44 @@ function register(): void {
         const slots = ctx.get('slots') as SlotsService | undefined;
         if (slots === undefined) return;
 
-        // ── 卡片样式（卸载时随 effect 收回） ──
+        // 偏好缓存：设置节与工具行共用同一个（改完偏好，已渲染的文件块同步换视图）。
+        const prefsFace = createPrefs(React);
+        // 真实行号：patch 自带 `@@` 偏移；edit / write 的元数据里没有，靠 locator 问 Host 定位。
+        const locator = createLocator(React);
+        const FileChangeRow = createFileChangeRow(React, P, prefsFace, locator);
+        const FileChangeViewerSection = createFileChangeViewerSection(React, P, prefsFace);
+
+        // ── 样式（卸载时随 effect 收回） ──
         try {
           const style = document.createElement('style');
-          style.setAttribute('data-plugin-css', 'dshp-file-change-viewer/cards.css');
+          style.setAttribute('data-plugin-css', 'dshp-file-change-viewer/settings.css');
           style.textContent = CSS;
           document.head.appendChild(style);
-          ctx.effect(() => () => style.remove(), 'dshp-file-change-viewer: card styles');
+          ctx.effect(() => () => style.remove(), 'dshp-file-change-viewer: styles');
         } catch (error) {
-          console.error('[dshp-file-change-viewer] 注入卡片样式失败，工具卡片将缺少边框与角标样式：', error);
+          console.error('[dshp-file-change-viewer] 注入样式失败，行内统计与差异底色会缺失：', error);
         }
 
-        // ── 工具卡片接管（默认展开的文件变更视图） ──
+        // ── 设置节（设置 → 左侧导航「文件修改卡片」）：展示方式 + 编辑 / 写入是否默认展开 ──
+        try {
+          ctx.effect(
+            () =>
+              slots.inject('settings.section', () =>
+                slots.register(
+                  { name: 'settings.section', id: SETTINGS_NS, order: SETTINGS_ORDER, label: SETTINGS_LABEL },
+                  FileChangeViewerSection,
+                ),
+              ),
+            'dshp-file-change-viewer: settings section',
+          );
+        } catch (error) {
+          console.error(
+            '[dshp-file-change-viewer] 注册设置节失败，两项偏好将只能手改 settings.yaml：',
+            error,
+          );
+        }
+
+        // ── 工具行接管（原生行 + 每个文件块的差异视图） ──
         // 注意：inject 的回调可能在槽位声明时才被调用（异步），所以逐 key 的 try/catch
         // 必须写在回调**内部**——外层 try/catch 只挡得住 inject 本身的同步失败。
         try {
@@ -92,13 +143,18 @@ function register(): void {
                 for (const key of TOOL_KEYS) {
                   try {
                     yield slots.register(
-                      { name: 'tool.call.toolview', key, locale: CONVERSATION_NS, priority: SHADOW_PRIORITY },
+                      {
+                        name: 'tool.call.toolview',
+                        key,
+                        locale: CONVERSATION_NS,
+                        priority: SHADOW_PRIORITY,
+                      },
                       FileChangeRow,
                     );
                   } catch (error) {
-                    // 例如同一 key 的同一优先级被别的插件（动态注册）占了：这一张卡片沿用内置渲染，其余照常接管。
+                    // 例如同一 key 的同一优先级被别的插件（动态注册）占了：这一行沿用内置渲染，其余照常接管。
                     console.error(
-                      '[dshp-file-change-viewer] 接管 ' + key + ' 卡片失败，该工具将沿用内置卡片：',
+                      '[dshp-file-change-viewer] 接管 ' + key + ' 行失败，该工具将沿用内置行：',
                       error,
                     );
                   }
@@ -107,10 +163,7 @@ function register(): void {
             'dshp-file-change-viewer: edit/write tool cards',
           );
         } catch (error) {
-          console.error(
-            '[dshp-file-change-viewer] 注册文件修改卡片失败，edit / write 将回落到内置卡片：',
-            error,
-          );
+          console.error('[dshp-file-change-viewer] 注册文件修改行失败，edit / write 将回落到内置行：', error);
         }
       };
 

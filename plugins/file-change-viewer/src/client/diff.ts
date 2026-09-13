@@ -24,17 +24,25 @@
  *
  * @module @dshp/file-change-viewer/client/diff
  */
+import { parseUnifiedPatch } from '../shared/patch.js';
 import type {
+  ChangeHunk,
   FileChangeBadge,
   FileChangeModel,
   FileChangeState,
   FileDiff,
   ToolResultBlockLike,
+  UnifiedDiffRow,
 } from './types.js';
+
+// 逐行结果的类型住在 types.ts（`ChangeHunk` 要引用它），这里再导出一次供外部沿用旧路径。
+export type { UnifiedDiffKind, UnifiedDiffRow } from './types.js';
 
 const EDIT_TOOL = 'edit';
 const WRITE_TOOL = 'write';
 const STR_REPLACE_TOOL = 'str_replace_editor';
+/** 本插件 Host 半注册的批量补丁工具（unified diff，一次可改多处 / 多文件）。 */
+const PATCH_TOOL = 'patch';
 
 /** 就地类型守卫（AGENT.md §2.2：不跨包共享）。 */
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -92,7 +100,13 @@ export function readAppliedDiffs(meta: unknown): FileDiff[] | null {
     if (typeof path !== 'string') return null;
     if (oldText !== null && typeof oldText !== 'string') return null;
     if (typeof newText !== 'string') return null;
-    out.push({ path, oldText, newText });
+    // `startLine` 是本插件 `patch` 工具额外带的（官方工具没有）；有就用来显示真实行号。
+    const startLine = hunk['startLine'];
+    out.push(
+      typeof startLine === 'number' && startLine > 0
+        ? { path, oldText, newText, startLine }
+        : { path, oldText, newText },
+    );
   }
   return out;
 }
@@ -176,10 +190,11 @@ export interface IntendedChange {
 /**
  * 从调用参数推导「模型打算做的变更」。
  *
- * 支持的三个工具与各自的字段：
+ * 支持的四个工具与各自的字段：
  * - `write`：`content`（整文件写入，`oldText` 恒为 null）；
  * - `edit`：`old_string` / `new_string` / `replace_all`；
- * - `str_replace_editor`：`command: create` + `file_text`，或 `command: str_replace` + `old_str` / `new_str`。
+ * - `str_replace_editor`：`command: create` + `file_text`，或 `command: str_replace` + `old_str` / `new_str`；
+ * - `patch`：`patch`（unified diff 文本；路径与改动都在文本里，可含多个文件）。
  *
  * @param toolName - 线上工具名（分发来源，窗口截断时仍可知）。
  * @param rawArgs - 参数原文，可能半截。
@@ -196,6 +211,22 @@ export function readIntended(toolName: string, rawArgs: string): IntendedChange 
     }
     return readJsonString(rawArgs, key);
   };
+  // `patch` 没有 file_path：路径写在 patch 文本的 --- / +++ 头里，所以先于 path 判定处理。
+  if (toolName === PATCH_TOOL) {
+    const text = readString('patch');
+    if (text === undefined || text.trim() === '') return null;
+    // 宽容解析：流式生成期间 patch 文本是半截的（最后一个 hunk 可能还没写完），
+    // 能解析出几个文件就先预览几个——真正落盘后的内容由 Host 的 meta.diffs 接管。
+    const files = parseUnifiedPatch(text, { tolerant: true });
+    const diffs = files.map((file) => ({
+      path: file.path,
+      oldText: file.oldText,
+      newText: file.newText,
+    }));
+    if (diffs.length === 0) return null;
+    return { diffs, replaceAll: false, complete };
+  }
+
   const path = readString('file_path') ?? readString('path');
   if (path === undefined || path.trim() === '') return null;
 
@@ -245,13 +276,34 @@ function firstLine(text: string): string | null {
   return null;
 }
 
-/** 一行统一 diff 的语义。 */
-export type UnifiedDiffKind = 'ctx' | 'del' | 'add';
+/**
+ * 把 LCS 结果收成「只含真正变化的行」的 hunk。
+ *
+ * 工具原文里为了唯一性圈进来的上下文行（`ctx`）在这里全部丢掉，于是统计与 ± 差异视图给出的
+ * 都是**语义变更**，与高亮视图看到的是同一件事（一次单行替换 = `+1 -1`，不是原文的 `+7 -7`）。
+ * 一条 ctx 都不剩（模型把同一段文本又写了一遍）时两侧都为空，调用方会退回原文口径。
+ *
+ * @param raw - 工具给的原始 hunk（用来保留 path）。
+ * @param rows - 该 hunk 的 LCS 逐行结果。
+ * @returns 只含删除行 / 新增行的 hunk。
+ */
+function changedDiffOf(raw: FileDiff, rows: readonly UnifiedDiffRow[]): FileDiff {
+  const dels: string[] = [];
+  const adds: string[] = [];
+  for (const row of rows) {
+    if (row.kind === 'del') dels.push(row.text);
+    else if (row.kind === 'add') adds.push(row.text);
+  }
+  return {
+    path: raw.path,
+    oldText: dels.length === 0 ? null : dels.join('\n'),
+    newText: adds.join('\n'),
+  };
+}
 
-/** 统一 diff 的一行。 */
-export interface UnifiedDiffRow {
-  kind: UnifiedDiffKind;
-  text: string;
+/** 这个 hunk 有没有**实质**变更（LCS 之后还剩下删除或新增行）。 */
+export function hasChange(hunk: ChangeHunk): boolean {
+  return hunk.changed.oldText !== null || hunk.changed.newText !== '';
 }
 
 /** LCS 动态规划的上限：超过就退化成「先全部删除、再全部新增」，宁可粗也不要卡住渲染。 */
@@ -394,7 +446,11 @@ export function buildModel(toolName: string, block: unknown): FileChangeModel {
   const meta = isRecord(block) ? block['meta'] : undefined;
   const applied = settled && state === 'ok' ? readAppliedDiffs(meta) : null;
   const intended = readIntended(name, rawArgs);
-  const diffs = applied ?? intended?.diffs ?? [];
+  // 每个 hunk 只跑一次 LCS：高亮视图（rows）与统计 / ± 视图（changed）都用它的结果。
+  const hunks: ChangeHunk[] = (applied ?? intended?.diffs ?? []).map((raw) => {
+    const rows = unifiedDiffRows(raw.oldText, raw.newText);
+    return { raw, rows, changed: changedDiffOf(raw, rows) };
+  });
 
   let badge: FileChangeBadge;
   if (state === 'error') badge = 'rejected';
@@ -403,9 +459,9 @@ export function buildModel(toolName: string, block: unknown): FileChangeModel {
 
   return {
     state,
-    diffs,
+    hunks,
     badge,
-    newFile: diffs.length > 0 && diffs.every((diff) => diff.oldText === null),
+    newFile: hunks.length > 0 && hunks.every((hunk) => hunk.raw.oldText === null),
     replaceAll: intended?.replaceAll === true,
     errorText,
     parsedArgs: parseArgs(rawArgs),

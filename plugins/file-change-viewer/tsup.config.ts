@@ -4,8 +4,7 @@ const jsOnly = () => ({ js: '.js' });
 
 export default defineConfig([
   // Host（Node）：src/host/index.ts → lib/host.js（单文件 ESM）
-  // 本插件 Host 半零第三方依赖（无 settings/路由/工具），故无 noExternal 内联项；
-  // dts 暂关（tsup 8 dts 与 TS7 不兼容，后续用 api-extractor 补）
+  // schemastery 内联进 bundle，运行时零依赖；dts 暂关（tsup 8 dts 与 TS7 不兼容，后续用 api-extractor 补）
   {
     entry: { host: 'src/host/index.ts' },
     outDir: 'lib',
@@ -19,6 +18,7 @@ export default defineConfig([
     clean: false,
     minify: false,
     treeshake: true,
+    noExternal: ['@deepseek-ai/schemastery', '@deepseek-ai/cosmokit', '@standard-schema/spec'],
     outExtension: jsOnly,
   },
   // Client（浏览器）：src/client/index.ts → lib/client.js（单文件，内含 __ModuleLoader__.load）

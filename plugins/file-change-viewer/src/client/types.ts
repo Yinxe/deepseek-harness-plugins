@@ -25,6 +25,13 @@ export interface FileDiff {
   path: string;
   oldText: string | null;
   newText: string;
+  /**
+   * 这个 hunk 在新文件里的起始行号（1 起）。
+   *
+   * 官方 `edit` / `write` 的结果元数据**不带**它（`{path, oldText, newText}` 而已），本插件的
+   * `patch` 工具会带上（`@@` 头里就有）。没有时由 `locate.ts` 拿文件内容去定位；都拿不到就退回 1。
+   */
+  startLine?: number | undefined;
 }
 
 /** 调用语义状态（决定卡片配色与角标）。 */
@@ -77,8 +84,8 @@ export type ToolCallBlockLike = RunningToolCallLike | ToolResultBlockLike;
 /** 由一次调用推导出的渲染模型（纯函数产物，diff.ts 负责）。 */
 export interface FileChangeModel {
   state: FileChangeState;
-  /** 要交给 DiffBlock 的 hunk 列表；空数组表示没有可渲染的变更。 */
-  diffs: FileDiff[];
+  /** 要渲染的 hunk 列表（每个 = 一个文件块）；空数组表示没有可渲染的变更。 */
+  hunks: ChangeHunk[];
   badge: FileChangeBadge;
   /** 首 hunk 是纯新增（新文件 / 纯插入）。 */
   newFile: boolean;
@@ -90,6 +97,40 @@ export interface FileChangeModel {
   parsedArgs: Record<string, unknown> | null;
   /** 参数原文，供无 diff 且不可解析时兜底展示。 */
   rawArgs: string;
+}
+
+/** 一行统一 diff 的语义。 */
+export type UnifiedDiffKind = 'ctx' | 'del' | 'add';
+
+/** 统一 diff 的一行。 */
+export interface UnifiedDiffRow {
+  kind: UnifiedDiffKind;
+  text: string;
+}
+
+/**
+ * 一个 hunk 的两种口径——**这是本插件最容易搞错的地方**。
+ *
+ * `edit` 工具写进 `meta.diffs` 的 `oldText` / `newText` 就是模型这次给的 `old_string` /
+ * `new_string` **原文**：为了让 `old_string` 在文件里唯一，模型通常会把上下几行一起圈进来。
+ * 于是同一次「只改一行」的编辑，原文可能是 7 行 vs 7 行——官方 `diffTotals` 与官方 `DiffBlock`
+ * 都按这份原文算，就会报成 `+7 -7` 并在 ± 视图里整段删、整段加。
+ *
+ * | 口径      | 内容                                              | 谁在用                                    |
+ * | --------- | ------------------------------------------------- | ----------------------------------------- |
+ * | `raw`     | 工具原文（含未变的上下文行）                      | 高亮视图的 LCS 输入                       |
+ * | `rows`    | `raw` 的 LCS 逐行结果（未变行只出现一次）          | 高亮视图                                  |
+ * | `changed` | 只留真正变化的行（ctx 全部丢掉）                  | 行头 / 卡头统计、± 差异视图（与高亮一致）  |
+ *
+ * 三个口径同出于一次 LCS，所以统计、高亮视图、± 差异视图永远说同一件事。
+ */
+export interface ChangeHunk {
+  /** 工具给的原始 hunk。 */
+  raw: FileDiff;
+  /** 原始 hunk 的 LCS 逐行结果。 */
+  rows: UnifiedDiffRow[];
+  /** 只含真正变化的行：`oldText` = 删除行（无则 null），`newText` = 新增行（可能为 ''）。 */
+  changed: FileDiff;
 }
 
 /** DiffBlock 的本地化文案契约（字段名与官方 `diffBlockLabels(t)` 一致）。 */
@@ -126,8 +167,71 @@ export interface SlotsService {
   /**
    * 注册一个槽位条目。
    *
-   * `priority` 是 keyed 槽位的影子化开关：同 key 同 priority 会抛错，派发取 priority
-   * 最小的一条（官方内置卡片为 0，接管必须用负数）。
+   * keyed 槽位用 `key`（+ `priority` 影子化：同 key 同 priority 会抛错，派发取 priority 最小的一条，
+   * 官方内置行是 0，接管必须用负数）；list 槽位用 `id`（+ `order`）。`locale` 传了才会注入 `t`。
    */
-  register(spec: { name: string; key: string; locale: string; priority: number }, component: any): unknown;
+  register(spec: SlotRegistrationSpec, component: any): unknown;
+}
+
+/**
+ * 差异展示方式（与 Host 半的 `DiffView`、settings schema 的 `z.const` 联合逐字对齐）。
+ *
+ * - `highlight`：官方 `CodeBlock` 里放完整统一 diff（整行红绿 + 行号 + 真 shiki 语法高亮）；
+ * - `diff`：官方 `DiffBlock` 的逐行 ± 红绿视图，紧凑、超长中部折叠。
+ */
+export type DiffView = 'highlight' | 'diff';
+
+/**
+ * 两项显示偏好（= settings.yaml 的 `dshp-file-change-viewer` 分节）。
+ *
+ * 这是**全局默认值**：每个文件块还能在卡头就地临时覆盖折叠态与展示方式，覆盖只作用于当前会话的
+ * 那一个块，不回写 settings.yaml。
+ */
+export interface ViewerPrefs {
+  /** 差异展示方式。 */
+  view: DiffView;
+  /**
+   * **新渲染**的「编辑 / 写入」操作是否默认展开。
+   *
+   * 键名 `sectionsOpen` 是历史遗留（它一度只表示「行展开后文件块的开合」），含义已收敛为
+   * 「这一行要不要默认展开」：开 = 直接看到改动（行内的文件块也默认展开），
+   * 关 = 与思考 / 读取行一致，点一下才展开。只决定**新渲染**时的初始状态。
+   */
+  sectionsOpen: boolean;
+}
+
+/** 偏好字段名（写回 Host 时用）。 */
+export type PrefField = 'view' | 'sectionsOpen';
+
+/** 偏好的保存态（设置节用它显示「已保存 / 正在保存 / 保存失败」）。 */
+export type SavePhase = 'idle' | 'loading' | 'saving' | 'ready' | 'error';
+
+/** `GET /ext/dshp-file-change-viewer/state` 与 `POST …/config` 的应答。 */
+export interface StateResponse {
+  ok: boolean;
+  config?: unknown;
+  error?: string;
+}
+
+/** `POST /ext/dshp-file-change-viewer/config` 的请求体（只允许这两项）。 */
+export interface ConfigPatch {
+  view?: DiffView | undefined;
+  sectionsOpen?: boolean | undefined;
+}
+
+/** 槽位注册选项（keyed 用 key，list 用 id）。 */
+export interface SlotRegistrationSpec {
+  name: string;
+  /** keyed 槽位的分发键（按线上工具名）。 */
+  key?: string | undefined;
+  /** list 槽位的条目 id。 */
+  id?: string | undefined;
+  /** list 槽位的排序。 */
+  order?: number | undefined;
+  /** list 槽位（`settings.section`）在导航里显示的标题。 */
+  label?: string | undefined;
+  /** 本地化命名空间：传了才会注入 `t`。 */
+  locale?: string | undefined;
+  /** keyed 槽位的影子化优先级（越小越优先渲染）。 */
+  priority?: number | undefined;
 }
