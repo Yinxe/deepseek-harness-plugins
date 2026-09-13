@@ -23,7 +23,12 @@ import { fetchState, saveConfig } from './api.js';
 import type { AnyReact, ConfigPatch, PrefField, SavePhase, ViewerPrefs } from './types.js';
 
 /** 默认值（与 Host 的 `DEFAULT_CONFIG` 同值；Host 读不到时的兜底）。 */
-export const DEFAULT_PREFS: ViewerPrefs = { view: 'highlight', sectionsOpen: false };
+export const DEFAULT_PREFS: ViewerPrefs = {
+  view: 'highlight',
+  sectionsOpen: false,
+  contextLines: 3,
+  patchTool: false,
+};
 
 /** 偏好读写面：设置节与工具行共用。 */
 export interface PrefsFace {
@@ -46,9 +51,14 @@ export interface PrefsFace {
 export function sanitizePrefs(raw: unknown): ViewerPrefs {
   if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return { ...DEFAULT_PREFS };
   const record = raw as Record<string, unknown>;
+  const contextLines = record['contextLines'];
   return {
     view: record['view'] === 'diff' ? 'diff' : 'highlight',
     sectionsOpen: record['sectionsOpen'] === true,
+    // 只认枚举里的四个值；Host 读不到 / 值坏了都回默认 3 行。
+    contextLines: contextLines === 0 || contextLines === 5 || contextLines === 8 ? contextLines : 3,
+    // 测试版能力：只有明确的 true 才算开（Host 读不到 / 值坏了都回默认关）。
+    patchTool: record['patchTool'] === true,
   };
 }
 
@@ -103,7 +113,9 @@ export function createPrefs(React: AnyReact): PrefsFace {
   function write(field: PrefField, previous: ViewerPrefs): void {
     const patch: ConfigPatch = {};
     if (field === 'view') patch.view = prefs.view;
-    else patch.sectionsOpen = prefs.sectionsOpen;
+    else if (field === 'sectionsOpen') patch.sectionsOpen = prefs.sectionsOpen;
+    else if (field === 'contextLines') patch.contextLines = prefs.contextLines;
+    else patch.patchTool = prefs.patchTool;
     saveConfig(patch)
       .then((response) => {
         if (response && response.ok) {

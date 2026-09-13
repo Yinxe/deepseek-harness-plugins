@@ -1,163 +1,183 @@
 (function () {
   'use strict';
 
-  // src/shared/patch.ts
-  var HUNK_HEADER = /^@@+ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@+(.*)$/;
-  function cleanPath(raw) {
-    let text = raw.trim();
-    const tab = text.indexOf("	");
-    if (tab >= 0) text = text.slice(0, tab);
-    if (text === "/dev/null") return "";
-    if (text.startsWith("a/") || text.startsWith("b/")) text = text.slice(2);
-    return text;
+  // src/shared/apply-patch.ts
+  var BEGIN_MARKER = "*** Begin Patch";
+  var END_MARKER = "*** End Patch";
+  var ADD_HEADER = "*** Add File:";
+  var DELETE_HEADER = "*** Delete File:";
+  var UPDATE_HEADER = "*** Update File:";
+  var MOVE_HEADER = "*** Move to:";
+  var END_OF_FILE = "*** End of File";
+  function stripHeredoc(input) {
+    const match = /^(?:cat\s+)?<<['"]?(\w+)['"]?\s*\n([\s\S]*?)\n\1\s*$/.exec(input);
+    return match === null ? input : match[2];
   }
-  function isHeaderNoise(line) {
-    return line.startsWith("diff --git ") || line.startsWith("index ") || line.startsWith("old mode ") || line.startsWith("new mode ") || line.startsWith("similarity index ") || line.startsWith("new file mode ") || line.startsWith("deleted file mode ");
+  function looksLikeUnifiedDiff(lines) {
+    return lines.some((line) => line.startsWith("--- ") || line.startsWith("+++ ") || /^@@+ *-\d/.test(line));
   }
-  function parseUnifiedPatch(text, options = {}) {
-    const tolerant = options.tolerant === true;
-    const raw = text.replace(/\r\n/g, "\n").split("\n");
-    const files = [];
-    let current = null;
-    let hunk = null;
-    let pendingOldPath = null;
-    let sawOldNull = false;
-    let sawNewNull = false;
-    let createFlag = false;
-    let deleteFlag = false;
-    let lastSide = null;
-    const closeHunk = () => {
-      if (current !== null && hunk !== null) current.hunks.push(hunk);
-      hunk = null;
-    };
-    const closeFile = () => {
-      closeHunk();
-      if (current !== null) {
-        if (current.newPath === null) {
-          current.delete = true;
-        }
-        current.create = current.oldPath === null;
-        finalizeFile(current);
-        if (current.oldPath === null && !current.delete && !createFlag && !sawOldNull && !tolerant) {
-          current.oldPath = current.newPath;
-          current.create = false;
-        }
-        files.push(current);
+  function describeEnvelopeProblem(lines, beginAt, endAt) {
+    if (beginAt >= 0 && endAt < 0) {
+      const body = lines.slice(beginAt + 1).filter((line) => line.trim() !== "");
+      if (body.length === 0) {
+        return "patch \u662F\u7A7A\u7684\uFF1A\u4F60\u53EA\u5199\u4E86 `*** Begin Patch`\uFF0C\u91CC\u9762\u6CA1\u6709\u4EFB\u4F55\u6BB5\u843D\u3002\u628A\u8981\u6539\u7684\u6BCF\u4E2A\u6587\u4EF6\u5199\u6210\u4E00\u4E2A\u6BB5\u843D\u518D\u53D1\u4E00\u6B21\uFF1A`*** Update File: \u8DEF\u5F84` / `*** Add File: \u8DEF\u5F84`\uFF0C\u6BCF\u6BB5\u91CC\u7528 `@@` \u5F00\u5934\uFF0C`-` \u662F\u65E7\u884C\u3001`+` \u662F\u65B0\u884C\uFF0C\u6700\u540E\u4EE5 `*** End Patch` \u6536\u5C3E\u3002";
       }
-      current = null;
-    };
-    for (let index = 0; index < raw.length; index += 1) {
-      const line = raw[index];
-      if (isHeaderNoise(line)) {
-        if (line.startsWith("new file mode ")) createFlag = true;
-        if (line.startsWith("deleted file mode ")) deleteFlag = true;
+      return "patch \u7F3A\u6536\u5C3E\uFF1A\u6CA1\u6709\u627E\u5230 `*** End Patch`\uFF08\u8865\u4E01\u662F\u4E0D\u662F\u88AB\u622A\u65AD\u4E86\uFF1F\uFF09\u3002\u4FE1\u5C01\u5FC5\u987B\u4EE5 `*** Begin Patch` \u5F00\u5934\u3001\u4EE5 `*** End Patch` \u7ED3\u675F\u3002";
+    }
+    if (beginAt < 0 && endAt >= 0) {
+      return "patch \u7F3A\u5F00\u5934\uFF1A\u6709 `*** End Patch` \u4F46\u6CA1\u6709 `*** Begin Patch`\u3002\u4FE1\u5C01\u5FC5\u987B\u4E24\u5934\u90FD\u5728\u3002";
+    }
+    if (beginAt >= 0 && endAt >= 0 && beginAt >= endAt) {
+      return "patch \u7684\u987A\u5E8F\u4E0D\u5BF9\uFF1A`*** End Patch` \u51FA\u73B0\u5728 `*** Begin Patch` \u4E4B\u524D\u3002";
+    }
+    if (looksLikeUnifiedDiff(lines)) {
+      return "patch \u683C\u5F0F\u4E0D\u5BF9\uFF1A\u8FD9\u770B\u8D77\u6765\u662F `patch(1)` / git \u7684 unified diff\uFF08`--- a/\u2026` + `@@ -1,3 +1,3 @@`\uFF09\uFF0C\u800C\u672C\u5DE5\u5177\u7528\u7684\u662F Codex \u98CE\u683C\u7684 `*** Begin Patch` \u4FE1\u5C01\uFF0C\u4E24\u8005\u4E0D\u80FD\u6DF7\u7528\u3002\u6539\u5199\u6210\uFF1A\n*** Begin Patch\n*** Update File: <\u8DEF\u5F84>\n@@\n<\u4E0A\u4E0B\u6587\u884C\uFF08\u884C\u9996\u4E00\u4E2A\u7A7A\u683C\uFF09>\n-<\u65E7\u884C>\n+<\u65B0\u884C>\n*** End Patch\n\uFF08\u884C\u53F7\u4E0D\u7528\u5199\uFF1B`@@` \u540E\u9762\u53EF\u4EE5\u8DDF\u4E00\u884C\u6587\u4EF6\u91CC\u771F\u5B9E\u5B58\u5728\u7684\u951A\u70B9\u3002\uFF09\u5982\u679C\u53EA\u662F\u60F3\u6539\u4E00\u5904\u5C0F\u5730\u65B9\uFF0C\u7528 edit \u5DE5\u5177\u66F4\u7701\u4E8B\u3002";
+    }
+    return "patch \u683C\u5F0F\u4E0D\u5BF9\uFF1A\u8865\u4E01\u5FC5\u987B\u5305\u5728 `*** Begin Patch` \u4E0E `*** End Patch` \u4E4B\u95F4\uFF08\u683C\u5F0F\u8BF4\u660E\u89C1\u5DE5\u5177\u63CF\u8FF0\uFF09\u3002";
+  }
+  function collectAddedLines(lines, start, end) {
+    const body = [];
+    let at = start;
+    while (at < end) {
+      const line = lines[at];
+      if (line.startsWith("***")) break;
+      if (line.startsWith("+")) body.push(line.slice(1));
+      at += 1;
+    }
+    return { contents: body.join("\n"), next: at };
+  }
+  function collectChunks(lines, start, end) {
+    const chunks = [];
+    let at = start;
+    while (at < end) {
+      const line = lines[at];
+      if (line.startsWith("***")) break;
+      if (!line.startsWith("@@")) {
+        at += 1;
         continue;
       }
-      if (line.startsWith("--- ")) {
-        closeFile();
-        pendingOldPath = cleanPath(line.slice(4));
-        sawOldNull = pendingOldPath === "";
-        continue;
-      }
-      if (line.startsWith("+++ ")) {
-        const newPath = cleanPath(line.slice(4));
-        sawNewNull = newPath === "";
-        current = {
-          path: newPath !== "" ? newPath : pendingOldPath ?? "",
-          oldPath: sawOldNull ? null : pendingOldPath,
-          newPath: sawNewNull ? null : newPath,
-          create: sawOldNull || createFlag,
-          delete: sawNewNull || deleteFlag,
-          hunks: [],
-          oldText: null,
-          newText: "",
-          added: 0,
-          removed: 0
-        };
-        lastSide = null;
-        continue;
-      }
-      const header = HUNK_HEADER.exec(line);
-      if (header !== null) {
-        closeHunk();
-        if (current === null) {
-          if (tolerant) continue;
-          throw new Error(`patch \u7B2C ${index + 1} \u884C\uFF1A\u51FA\u73B0\u4E86 @@ \u5C0F\u8282\uFF0C\u4F46\u5B83\u524D\u9762\u6CA1\u6709 --- / +++ \u6587\u4EF6\u5934`);
+      const context = line.slice(2).trim();
+      const oldLines = [];
+      const newLines = [];
+      let added = 0;
+      let removed = 0;
+      let endOfFile = false;
+      at += 1;
+      while (at < end) {
+        const inner = lines[at];
+        if (inner === END_OF_FILE) {
+          endOfFile = true;
+          at += 1;
+          break;
         }
-        hunk = {
-          oldStart: Number(header[1]),
-          oldCount: header[2] === void 0 ? 1 : Number(header[2]),
-          newStart: Number(header[3]),
-          newCount: header[4] === void 0 ? 1 : Number(header[4]),
-          heading: (header[5] ?? "").trim(),
-          lines: [],
-          oldNoNewline: false,
-          newNoNewline: false
-        };
-        continue;
-      }
-      if (hunk !== null) {
-        const marker = line.charAt(0);
-        if (line.startsWith("\\")) {
-          if (lastSide === "old") hunk.oldNoNewline = true;
-          else if (lastSide === "new") hunk.newNoNewline = true;
-          continue;
-        }
-        if (line === "") {
-          if (index === raw.length - 1) continue;
-          hunk.lines.push({ kind: "ctx", text: "" });
-          lastSide = null;
-          continue;
-        }
+        if (inner.startsWith("@@") || inner.startsWith("***")) break;
+        const marker = inner.charAt(0);
         if (marker === " ") {
-          hunk.lines.push({ kind: "ctx", text: line.slice(1) });
-          lastSide = null;
-          continue;
-        }
-        if (marker === "-") {
-          hunk.lines.push({ kind: "del", text: line.slice(1) });
-          lastSide = "old";
-          continue;
-        }
-        if (marker === "+") {
-          hunk.lines.push({ kind: "add", text: line.slice(1) });
-          lastSide = "new";
-          continue;
-        }
-        if (tolerant) {
-          continue;
-        }
-        throw new Error(
-          `patch \u7B2C ${index + 1} \u884C\uFF1Ahunk \u91CC\u7684\u884C\u5FC5\u987B\u4EE5\u7A7A\u683C\u3001- \u6216 + \u5F00\u5934\uFF0C\u5B9E\u9645\u662F ${JSON.stringify(line.slice(0, 20))}`
-        );
-      }
-    }
-    closeFile();
-    return files.filter((file) => file.delete || file.hunks.length > 0);
-  }
-  function finalizeFile(file) {
-    const oldSide = [];
-    const newSide = [];
-    let added = 0;
-    let removed = 0;
-    for (const hunk of file.hunks) {
-      for (const line of hunk.lines) {
-        if (line.kind === "del") {
-          oldSide.push(line.text);
+          const text = inner.slice(1);
+          oldLines.push(text);
+          newLines.push(text);
+        } else if (marker === "-") {
+          oldLines.push(inner.slice(1));
           removed += 1;
-        } else if (line.kind === "add") {
-          newSide.push(line.text);
+        } else if (marker === "+") {
+          newLines.push(inner.slice(1));
           added += 1;
-        } else {
-          oldSide.push(line.text);
-          newSide.push(line.text);
         }
+        at += 1;
+      }
+      const chunk = { oldLines, newLines, added, removed };
+      if (context !== "") chunk.context = context;
+      if (endOfFile) chunk.endOfFile = true;
+      chunks.push(chunk);
+    }
+    return { chunks, next: at };
+  }
+  function parseApplyPatch(text, options = {}) {
+    const tolerant = options.tolerant === true;
+    const cleaned = stripHeredoc(text.replace(/\r\n/g, "\n").trim());
+    const lines = cleaned.split("\n");
+    const beginAt = lines.findIndex((line) => line.trim() === BEGIN_MARKER);
+    const endAt = lines.findIndex((line) => line.trim() === END_MARKER);
+    if ((beginAt < 0 || endAt < 0 || beginAt >= endAt) && !tolerant) {
+      throw new Error(describeEnvelopeProblem(lines, beginAt, endAt));
+    }
+    const from = beginAt < 0 ? 0 : beginAt + 1;
+    const to = endAt < 0 ? lines.length : Math.max(endAt, from);
+    const ops = [];
+    let at = from;
+    while (at < to) {
+      const line = lines[at];
+      if (line.startsWith(ADD_HEADER)) {
+        const path = line.slice(ADD_HEADER.length).trim();
+        if (path === "") {
+          at += 1;
+          continue;
+        }
+        const collected = collectAddedLines(lines, at + 1, to);
+        ops.push({ type: "add", path, contents: collected.contents });
+        at = collected.next;
+        continue;
+      }
+      if (line.startsWith(DELETE_HEADER)) {
+        const path = line.slice(DELETE_HEADER.length).trim();
+        if (path !== "") ops.push({ type: "delete", path });
+        at += 1;
+        continue;
+      }
+      if (line.startsWith(UPDATE_HEADER)) {
+        const path = line.slice(UPDATE_HEADER.length).trim();
+        if (path === "") {
+          at += 1;
+          continue;
+        }
+        let next = at + 1;
+        const moveLine = lines[next];
+        let moveTo;
+        if (moveLine !== void 0 && moveLine.startsWith(MOVE_HEADER)) {
+          const value = moveLine.slice(MOVE_HEADER.length).trim();
+          if (value !== "") moveTo = value;
+          next += 1;
+        }
+        const collected = collectChunks(lines, next, to);
+        ops.push(
+          moveTo === void 0 ? { type: "update", path, chunks: collected.chunks } : { type: "update", path, moveTo, chunks: collected.chunks }
+        );
+        at = collected.next;
+        continue;
+      }
+      at += 1;
+    }
+    return ops;
+  }
+  function previewDiffsOf(ops) {
+    const out = [];
+    for (const op of ops) {
+      if (op.type === "add") {
+        out.push({ path: op.path, oldText: null, newText: op.contents });
+        continue;
+      }
+      if (op.type === "delete") {
+        out.push({ path: op.path, oldText: "", newText: "" });
+        continue;
+      }
+      const path = op.moveTo ?? op.path;
+      const move = op.moveTo;
+      if (op.chunks.length === 0) {
+        out.push(
+          move === void 0 ? { path, oldText: "", newText: "" } : { path, oldPath: op.path, oldText: "", newText: "" }
+        );
+        continue;
+      }
+      for (const chunk of op.chunks) {
+        const diff = {
+          path,
+          oldText: chunk.oldLines.join("\n"),
+          newText: chunk.newLines.join("\n")
+        };
+        out.push(move === void 0 ? diff : { ...diff, oldPath: op.path });
       }
     }
-    file.oldText = oldSide.length === 0 ? null : oldSide.join("\n");
-    file.newText = newSide.join("\n");
-    file.added = added;
-    file.removed = removed;
+    return out;
   }
 
   // src/client/diff.ts
@@ -196,9 +216,14 @@
       if (oldText !== null && typeof oldText !== "string") return null;
       if (typeof newText !== "string") return null;
       const startLine = hunk["startLine"];
-      out.push(
-        typeof startLine === "number" && startLine > 0 ? { path, oldText, newText, startLine } : { path, oldText, newText }
-      );
+      const oldPath = hunk["oldPath"];
+      out.push({
+        path,
+        oldText,
+        newText,
+        ...typeof startLine === "number" && startLine > 0 ? { startLine } : {},
+        ...typeof oldPath === "string" && oldPath !== "" && oldPath !== path ? { oldPath } : {}
+      });
     }
     return out;
   }
@@ -254,6 +279,19 @@
     }
     return out;
   }
+  function previewPatch(text) {
+    try {
+      return previewDiffsOf(parseApplyPatch(text, { tolerant: true })).map((diff) => ({
+        path: diff.path,
+        oldText: diff.oldText,
+        newText: diff.newText,
+        ...diff.oldPath === void 0 ? {} : { oldPath: diff.oldPath },
+        ...diff.startLine === void 0 ? {} : { startLine: diff.startLine }
+      }));
+    } catch {
+      return [];
+    }
+  }
   function readIntended(toolName, rawArgs) {
     if (rawArgs === "") return null;
     const args = parseArgs(rawArgs);
@@ -268,12 +306,7 @@
     if (toolName === PATCH_TOOL) {
       const text = readString("patch");
       if (text === void 0 || text.trim() === "") return null;
-      const files = parseUnifiedPatch(text, { tolerant: true });
-      const diffs = files.map((file) => ({
-        path: file.path,
-        oldText: file.oldText,
-        newText: file.newText
-      }));
+      const diffs = previewPatch(text);
       if (diffs.length === 0) return null;
       return { diffs, replaceAll: false, complete };
     }
@@ -594,7 +627,7 @@
   }
   function createFileChangeRow(React, P, prefsFace, locator) {
     const { usePrefs } = prefsFace;
-    const { lineOf: lineOf2, useLines } = locator;
+    const { locateOf: locateOf2, useLines } = locator;
     function diffLabels(t) {
       return {
         copy: t("copy"),
@@ -628,11 +661,32 @@
       const totals = P.diffTotals(statDiffs);
       const first = model.hunks[0];
       const rawPath = first === void 0 ? void 0 : first.raw.path;
-      const startLines = model.hunks.map((hunk) => {
+      const locatedHunks = model.hunks.map(
+        (hunk) => locateOf2(hunk.raw.path, hunk.raw.newText, hunk.raw.oldText, props.cwd)
+      );
+      const startLines = model.hunks.map((hunk, index) => {
         if (typeof hunk.raw.startLine === "number" && hunk.raw.startLine > 0) return hunk.raw.startLine;
-        const located = lineOf2(hunk.raw.path, hunk.raw.newText, props.cwd);
-        return typeof located === "number" && located > 0 ? located : 1;
+        const located = locatedHunks[index];
+        const line = located === null || located === void 0 ? null : located.line;
+        return typeof line === "number" && line > 0 ? line : 1;
       });
+      const contexts = model.hunks.map((_hunk, index) => {
+        const located = locatedHunks[index];
+        const want = prefs.contextLines;
+        if (located === null || located === void 0 || want === 0) return { before: [], after: [] };
+        return { before: located.before.slice(-want), after: located.after.slice(0, want) };
+      });
+      const rowsOf = (index) => {
+        const hunk = model.hunks[index];
+        if (hunk === void 0) return [];
+        const context = contexts[index] ?? { before: [], after: [] };
+        return [
+          ...context.before.map((text) => ({ kind: "ctx", text })),
+          ...hunk.rows,
+          ...context.after.map((text) => ({ kind: "ctx", text }))
+        ];
+      };
+      const startOf = (index) => Math.max(1, (startLines[index] ?? 1) - (contexts[index]?.before.length ?? 0));
       const stopKeyToggle = (event) => {
         if (event.key === "Enter" || event.key === " ") event.stopPropagation();
       };
@@ -722,8 +776,9 @@
         model.replaceAll ? React.createElement("span", { className: "fcv-stat fcv-note" }, REPLACE_ALL_LABEL) : null
       ];
       const cardKey = cardKeyOf(props.callId);
-      const highlightHunks = model.hunks.map((hunk, index) => {
-        const rows = hunk.rows;
+      const highlightHunks = model.hunks.map((_hunk, index) => {
+        const rows = rowsOf(index);
+        const startLine = startOf(index);
         const overflow = rows.length > HIGHLIGHT_MAX_LINES;
         const shown = overflow ? rows.slice(0, HIGHLIGHT_MAX_LINES) : rows;
         const codeClass = "fcv-lines-" + cardKey + "-" + index;
@@ -732,9 +787,9 @@
           shown,
           overflow,
           codeClass,
-          language: languageOf(hunk.raw.path),
-          startLine: startLines[index] ?? 1,
-          css: rows.length === 0 ? "" : tintRules(codeClass, shown, startLines[index] ?? 1)
+          language: languageOf(model.hunks[index]?.raw.path ?? ""),
+          startLine,
+          css: rows.length === 0 ? "" : tintRules(codeClass, shown, startLine)
         };
       });
       const tintCss = highlightHunks.map((hunk) => hunk.css).filter((css) => css !== "").join("\n");
@@ -758,12 +813,28 @@
           ) : null
         ];
       };
-      const renderDiff = (index, fallback2) => React.createElement(P.DiffBlock, {
-        diffs: [statDiffs[index] ?? fallback2],
-        labels: diffLabels(t),
-        maxLines: DIFF_MAX_LINES,
-        className: "fcv-diff"
-      });
+      const renderContext = (lines, key) => lines.length === 0 ? null : React.createElement(
+        "div",
+        { className: "fcv-ctx", key },
+        lines.map(
+          (text, at) => React.createElement("div", { className: "fcv-ctxLine", key: at }, text === "" ? " " : text)
+        )
+      );
+      const renderDiff = (index, fallback2) => {
+        const context = contexts[index] ?? { before: [], after: [] };
+        return React.createElement(
+          "div",
+          { className: "fcv-diffWrap", key: "diff" + index },
+          renderContext(context.before, "before"),
+          React.createElement(P.DiffBlock, {
+            diffs: [statDiffs[index] ?? fallback2],
+            labels: diffLabels(t),
+            maxLines: DIFF_MAX_LINES,
+            className: "fcv-diff"
+          }),
+          renderContext(context.after, "after")
+        );
+      };
       const renderSections = () => {
         const nodes = [];
         const viewOf = (index) => {
@@ -800,7 +871,9 @@
                     React.createElement(
                       "span",
                       { className: "fcv-cardNameText" },
-                      displayPath(hunk.raw.path, props.cwd, props.home)
+                      // 改名 / 移动（本插件 patch 的 `*** Move to:`）显示成「旧 → 新」；
+                      // 其余工具没有 oldPath，行为与以前完全一样。
+                      hunk.raw.oldPath === void 0 ? displayPath(hunk.raw.path, props.cwd, props.home) : displayPath(hunk.raw.oldPath, props.cwd, props.home) + " \u2192 " + displayPath(hunk.raw.path, props.cwd, props.home)
                     )
                   ),
                   open,
@@ -874,6 +947,7 @@
   // src/client/locate.ts
   var BASE = "/ext/dshp-file-change-viewer/locate";
   var MAX_BATCH = 20;
+  var EMPTY_HUNK = { line: null, before: [], after: [] };
   var cache = /* @__PURE__ */ new Map();
   var listeners = /* @__PURE__ */ new Set();
   var pending = [];
@@ -901,27 +975,47 @@
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           ...currentCwd === void 0 ? {} : { cwd: currentCwd },
-          items: batch.map((item) => ({ path: item.path, newText: item.newText }))
+          items: batch.map((item) => ({
+            path: item.path,
+            newText: item.newText,
+            ...item.oldText === "" ? {} : { oldText: item.oldText }
+          }))
         })
       });
       const payload = await response.json();
-      const lines = Array.isArray(payload?.lines) ? payload.lines : [];
+      const results = Array.isArray(payload?.results) ? payload.results : [];
       batch.forEach((item, index) => {
-        const value = lines[index];
-        cache.set(item.key, typeof value === "number" && value > 0 ? value : null);
+        cache.set(item.key, sanitizeHunk(results[index]));
       });
     } catch {
       for (const item of batch) cache.set(item.key, null);
     }
     notify();
   }
-  function lineOf(path, newText, cwd) {
-    if (path === "" || newText === "") return null;
+  function sanitizeHunk(raw) {
+    if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return EMPTY_HUNK;
+    const record = raw;
+    const line = record["line"];
+    const strings = (value) => Array.isArray(value) ? value.filter((item) => typeof item === "string") : [];
+    return {
+      line: typeof line === "number" && line > 0 ? line : null,
+      before: strings(record["before"]),
+      after: strings(record["after"])
+    };
+  }
+  function locateOf(path, newText, oldText, cwd) {
+    const anchor = newText === "" ? oldText ?? "" : newText;
+    if (path === "" || anchor === "") return null;
     if (cwd !== void 0) currentCwd = cwd;
-    const key = keyOf(path, newText);
+    const key = keyOf(path, anchor);
     if (cache.has(key)) return cache.get(key) ?? null;
     if (!pending.some((item) => item.key === key) && pending.length < MAX_BATCH) {
-      pending.push({ key, path, newText });
+      pending.push({
+        key,
+        path,
+        newText: anchor,
+        oldText: newText === "" ? "" : oldText ?? ""
+      });
       if (!scheduled) {
         scheduled = true;
         setTimeout(() => {
@@ -930,6 +1024,11 @@
       }
     }
     return void 0;
+  }
+  function lineOf(path, newText, oldText, cwd) {
+    const hit = locateOf(path, newText, oldText, cwd);
+    if (hit === void 0) return void 0;
+    return hit === null ? null : hit.line;
   }
   function subscribeLines(listener) {
     listeners.add(listener);
@@ -944,18 +1043,28 @@
       }, []);
       return 0;
     }
-    return { lineOf, useLines };
+    return { locateOf, lineOf, useLines };
   }
 
   // src/client/FileChangeViewerSection.ts
-  var INTRO = "\u300C\u7F16\u8F91 / \u5199\u5165\u300D\u5DE5\u5177\u884C\u7684\u9ED8\u8BA4\u5F62\u6001\u4E0E\u5DEE\u5F02\u89C6\u56FE\u3002\u8FD9\u91CC\u6539\u7684\u662F\u5168\u5C40\u9ED8\u8BA4\u503C\uFF0C\u7ACB\u5373\u5199\u5165 settings.yaml \u7684 dshp-file-change-viewer \u5206\u8282\uFF0C\u5E76\u53EA\u5F71\u54CD**\u4E4B\u540E\u65B0\u6E32\u67D3**\u7684\u7F16\u8F91 / \u5199\u5165\u884C\uFF1B\u5DF2\u7ECF\u5728\u4F1A\u8BDD\u91CC\u7684\u884C\u4FDD\u6301\u5B83\u5F53\u524D\u7684\u6837\u5B50\uFF0C\u5355\u884C\u3001\u5355\u5757\u968F\u65F6\u53EF\u4EE5\u4E34\u65F6\u70B9\u5F00 / \u6536\u8D77\uFF08\u4E0D\u5199\u56DE\uFF09\u3002";
+  var INTRO = "\u300C\u7F16\u8F91 / \u5199\u5165\u300D\u5DE5\u5177\u884C\u7684\u9ED8\u8BA4\u5F62\u6001\u4E0E\u5DEE\u5F02\u89C6\u56FE\uFF0C\u4EE5\u53CA\u672C\u63D2\u4EF6\u9644\u5E26\u7684 patch \u5DE5\u5177\u5F00\u5173\u3002\u8FD9\u91CC\u6539\u7684\u662F\u5168\u5C40\u9ED8\u8BA4\u503C\uFF0C\u7ACB\u5373\u5199\u5165 settings.yaml \u7684 dshp-file-change-viewer \u5206\u8282\uFF1A\u663E\u793A\u504F\u597D\u53EA\u5F71\u54CD**\u4E4B\u540E\u65B0\u6E32\u67D3**\u7684\u7F16\u8F91 / \u5199\u5165\u884C\uFF08\u5DF2\u7ECF\u5728\u4F1A\u8BDD\u91CC\u7684\u884C\u4FDD\u6301\u5B83\u5F53\u524D\u7684\u6837\u5B50\uFF0C\u5355\u884C\u3001\u5355\u5757\u968F\u65F6\u53EF\u4EE5\u4E34\u65F6\u70B9\u5F00 / \u6536\u8D77\uFF0C\u4E0D\u5199\u56DE\uFF09\uFF1Bpatch \u5DE5\u5177\u5F00\u5173\u5219\u662F\u5373\u65F6\u751F\u6548\u7684\u6CE8\u518C\u5F00\u5173\u3002";
   var EXPAND_LABEL = "\u7F16\u8F91 / \u5199\u5165\u9ED8\u8BA4\u5C55\u5F00";
   var EXPAND_HINT = "\u5F00\uFF1A\u65B0\u6E32\u67D3\u7684\u7F16\u8F91 / \u5199\u5165\u884C\u76F4\u63A5\u5C55\u5F00\u663E\u793A\u6539\u52A8\uFF1B\u5173\uFF1A\u4E0E\u601D\u8003 / \u8BFB\u53D6\u884C\u4E00\u81F4\uFF0C\u9ED8\u8BA4\u6536\u8D77\u3001\u70B9\u4E00\u4E0B\u624D\u5C55\u5F00\u3002\u53EA\u51B3\u5B9A\u65B0\u6E32\u67D3\u65F6\u7684\u521D\u59CB\u72B6\u6001\uFF0C\u884C\u5185\u6587\u4EF6\u5757\u4E0E\u5355\u5757\u6298\u53E0\u90FD\u53EF\u4E34\u65F6\u70B9\u3002";
+  var PATCH_LABEL = "\u542F\u7528 patch \u5DE5\u5177\uFF08\u6D4B\u8BD5\u7248\uFF09";
+  var PATCH_HINT = "\u5F00\uFF1A\u6A21\u578B\u591A\u51FA\u4E00\u4E2A patch \u5DE5\u5177\uFF0C\u4E00\u6B21\u8C03\u7528\u6539\u591A\u5904 / \u591A\u6587\u4EF6\uFF08*** Begin Patch \u4FE1\u5C01\uFF0C\u53EA\u505A\u65B0\u5EFA\u4E0E\u4FEE\u6539\uFF0C\u5220\u9664 / \u6539\u540D\u4ECD\u8D70 bash\uFF09\u3002\u5173\uFF08\u9ED8\u8BA4\uFF09\uFF1A\u4E0D\u6CE8\u518C\u8FD9\u4E2A\u5DE5\u5177\uFF0C\u6A21\u578B\u53EA\u7528\u5B98\u65B9\u7684 read / write / edit\u3002\u6539\u5B8C\u7ACB\u5373\u751F\u6548\uFF0C\u4E0D\u5FC5\u91CD\u542F dsh web\uFF1B\u53D6\u6D88\u65F6\u6B63\u5728\u8FDB\u884C\u7684\u8C03\u7528\u4E0D\u53D7\u5F71\u54CD\u3002";
   var VIEW_LABEL = "\u5C55\u793A\u65B9\u5F0F";
   var VIEW_HINT = "\u9AD8\u4EAE\uFF1A\u5355\u4E2A\u4EE3\u7801\u5757\u91CC\u653E\u5B8C\u6574\u7EDF\u4E00 diff\uFF08\u6574\u884C\u7EA2\u7EFF + \u884C\u53F7 + \u8BED\u6CD5\u9AD8\u4EAE\uFF09\uFF1B\xB1 \u5DEE\u5F02\uFF1A\u5B98\u65B9\u9010\u884C \xB1 \u89C6\u56FE\uFF0C\u7D27\u51D1\u3001\u8D85\u957F\u4E2D\u90E8\u6298\u53E0\u3002";
+  var CONTEXT_LABEL = "\u4E0A\u4E0B\u6587\u884C\u6570";
+  var CONTEXT_HINT = "\u6539\u52A8\u4E24\u4FA7\u5404\u591A\u663E\u793A\u51E0\u884C**\u6CA1\u53D7\u5F71\u54CD**\u7684\u4EE3\u7801\u3002\u8FD9\u51E0\u884C\u53D6\u81EA\u6587\u4EF6\u5F53\u524D\u5185\u5BB9\uFF08\u4E0D\u662F\u6A21\u578B\u5728 old_string / \u8865\u4E01\u7247\u6BB5\u91CC\u5E26\u7684\u90A3\u51E0\u884C\uFF09\uFF0C\u6240\u4EE5\u6A21\u578B\u53EA\u5708 1 \u884C\u4E0A\u4E0B\u6587\u65F6\u4E5F\u80FD\u770B\u6E05\u6539\u52A8\u843D\u5728\u54EA\u91CC\uFF1B0 = \u53EA\u663E\u793A\u6A21\u578B\u7ED9\u7684\u5185\u5BB9\u3002\u6587\u4EF6\u8BFB\u4E0D\u5230\u3001\u6216\u8FD9\u6BB5\u6539\u52A8\u4E4B\u540E\u53C8\u88AB\u6539\u8FC7\u65F6\uFF0C\u5C31\u4E0D\u8865\u4E0A\u4E0B\u6587\uFF08\u4E0D\u7F16\u5185\u5BB9\uFF09\u3002";
   var VIEW_OPTIONS = [
     { id: "highlight", label: "\u9AD8\u4EAE" },
     { id: "diff", label: "\xB1 \u5DEE\u5F02" }
+  ];
+  var CONTEXT_OPTIONS = [
+    { id: "0", label: "\u4E0D\u663E\u793A" },
+    { id: "3", label: "3 \u884C" },
+    { id: "5", label: "5 \u884C" },
+    { id: "8", label: "8 \u884C" }
   ];
   function createFileChangeViewerSection(React, P, prefsFace) {
     const { usePrefs, setPref, useSaveState, reload } = prefsFace;
@@ -1028,6 +1137,7 @@
       const prefs = usePrefs();
       const save = useSaveState();
       const picked = VIEW_OPTIONS.filter((option) => option.id === prefs.view)[0];
+      const pickedContext = CONTEXT_OPTIONS.filter((option) => option.id === String(prefs.contextLines))[0];
       const busy = save.phase === "loading" || save.phase === "saving";
       const children = [
         React.createElement("p", { className: "fcv-intro" }, INTRO),
@@ -1047,11 +1157,35 @@
           ),
           React.createElement(
             Row,
+            { label: CONTEXT_LABEL, desc: CONTEXT_HINT },
+            React.createElement(Select, {
+              value: String(prefs.contextLines),
+              selectedLabel: pickedContext === void 0 ? String(prefs.contextLines) + " \u884C" : pickedContext.label,
+              options: CONTEXT_OPTIONS,
+              onSelect: (id) => setPref("contextLines", Number(id))
+            })
+          ),
+          React.createElement(
+            Row,
             { label: EXPAND_LABEL, desc: EXPAND_HINT },
             React.createElement(Switch, {
               checked: prefs.sectionsOpen,
               label: EXPAND_LABEL,
               onChange: () => setPref("sectionsOpen", !prefs.sectionsOpen)
+            })
+          )
+        ),
+        React.createElement(
+          "div",
+          { className: "fcv-section" },
+          React.createElement("div", { className: "fcv-sectionHead" }, "\u5DE5\u5177"),
+          React.createElement(
+            Row,
+            { label: PATCH_LABEL, desc: PATCH_HINT },
+            React.createElement(Switch, {
+              checked: prefs.patchTool,
+              label: PATCH_LABEL,
+              onChange: () => setPref("patchTool", !prefs.patchTool)
             })
           )
         ),
@@ -1089,13 +1223,23 @@
   }
 
   // src/client/prefs.ts
-  var DEFAULT_PREFS = { view: "highlight", sectionsOpen: false };
+  var DEFAULT_PREFS = {
+    view: "highlight",
+    sectionsOpen: false,
+    contextLines: 3,
+    patchTool: false
+  };
   function sanitizePrefs(raw) {
     if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return { ...DEFAULT_PREFS };
     const record = raw;
+    const contextLines = record["contextLines"];
     return {
       view: record["view"] === "diff" ? "diff" : "highlight",
-      sectionsOpen: record["sectionsOpen"] === true
+      sectionsOpen: record["sectionsOpen"] === true,
+      // 只认枚举里的四个值；Host 读不到 / 值坏了都回默认 3 行。
+      contextLines: contextLines === 0 || contextLines === 5 || contextLines === 8 ? contextLines : 3,
+      // 测试版能力：只有明确的 true 才算开（Host 读不到 / 值坏了都回默认关）。
+      patchTool: record["patchTool"] === true
     };
   }
   function createPrefs(React) {
@@ -1136,7 +1280,9 @@
     function write(field, previous) {
       const patch = {};
       if (field === "view") patch.view = prefs.view;
-      else patch.sectionsOpen = prefs.sectionsOpen;
+      else if (field === "sectionsOpen") patch.sectionsOpen = prefs.sectionsOpen;
+      else if (field === "contextLines") patch.contextLines = prefs.contextLines;
+      else patch.patchTool = prefs.patchTool;
       saveConfig(patch).then((response) => {
         if (response && response.ok) {
           prefs = sanitizePrefs(response.config);
@@ -1230,6 +1376,13 @@
 .fcv-card .fcv-code pre{background:none!important;padding:8px 0;border-radius:0}
 /* \xB1 \u5DEE\u5F02\u89C6\u56FE\u540C\u6837\u644A\u5E73\u8FDB\u8FD9\u5F20\u5361\uFF1A\u53BB\u6389\u5B83\u81EA\u5DF1\u7684\u5916\u8FB9\u8DDD\u4E0E\u5706\u89D2\uFF0C\u5E95\u8272\u4E0E\u5361\u7247\u4E00\u81F4 */
 .fcv-card .fcv-diff{margin:0;border-radius:0}
+/* \xB1 \u89C6\u56FE\u7684\u4E0A\u4E0B\u6587\u884C\uFF1A\u5B98\u65B9 DiffBlock \u53EA\u753B\u5F97\u51FA del / add \u4E24\u79CD\u884C\uFF08\u89C1 FileChangeRow.renderContext\uFF09\uFF0C
+   \u6240\u4EE5\u6CA1\u53D7\u5F71\u54CD\u7684\u4E0A\u4E0B\u6587\u7531\u672C\u63D2\u4EF6\u5355\u72EC\u6E32\u67D3\u6210\u4E2D\u6027\u884C\uFF0C\u8D34\u5728 DiffBlock \u4E0A\u4E0B\uFF0C\u989C\u8272/\u884C\u9AD8\u4E0E\u5B83\u4FDD\u6301\u4E00\u81F4\u3002 */
+.fcv-diffWrap{display:flex;flex-direction:column}
+.fcv-ctx{font-family:var(--ds-font-family-code);font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary);padding:0 10px;white-space:pre;overflow-x:auto}
+.fcv-ctxLine{white-space:pre}
+.fcv-card .fcv-ctx:first-child{padding-top:8px}
+.fcv-card .fcv-ctx:last-child{padding-bottom:8px}
 .fcv-muted{margin:0;padding:6px 10px 8px;color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
 
 /* \u2500\u2500 \u2462 \u8BBE\u7F6E\u8282\u300C\u6587\u4EF6\u4FEE\u6539\u5361\u7247\u300D\uFF08settings.section\uFF09 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */

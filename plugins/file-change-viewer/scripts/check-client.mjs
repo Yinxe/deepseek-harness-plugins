@@ -143,9 +143,12 @@ globalThis.window = {
 // 假 /ext 路由：记录请求，模拟 Host 的「写 settings.yaml 的 NS 分节 → 回权威值」。
 // 偏好只有一个事实源（Host 路由），所以这里必须假装得完整：GET 回当前值，POST 合并补丁。
 const requests = [];
-let savedConfig = { view: 'highlight', sectionsOpen: true };
+let savedConfig = { view: 'highlight', sectionsOpen: true, patchTool: false };
 let failNextWrite = null;
-/** 真实行号定位的假应答：`"path\u0000newText"` → 行号（没有条目 = 定位不到）。 */
+/**
+ * 真实行号 + 上下文定位的假应答：`"path\u0000newText"` →
+ * 行号（number）或 `{line, before, after}`（对象）；没有条目 = 定位不到。
+ */
 const locateAnswers = new Map();
 
 globalThis.fetch = (url, init = {}) => {
@@ -154,11 +157,13 @@ globalThis.fetch = (url, init = {}) => {
   requests.push({ url: target, method, body: init.body });
   if (target.endsWith('/locate')) {
     const body = JSON.parse(String(init.body ?? '{}'));
-    const lines = (body.items ?? []).map((item) => {
+    const results = (body.items ?? []).map((item) => {
       const answer = locateAnswers.get(item.path + '\u0000' + item.newText);
-      return typeof answer === 'number' ? answer : null;
+      if (typeof answer === 'number') return { line: answer, before: [], after: [] };
+      if (answer !== null && typeof answer === 'object') return answer;
+      return { line: null, before: [], after: [] };
     });
-    return Promise.resolve({ json: () => Promise.resolve({ ok: true, lines }) });
+    return Promise.resolve({ json: () => Promise.resolve({ ok: true, results }) });
   }
   if (failNextWrite !== null) {
     const error = failNextWrite;
@@ -236,6 +241,21 @@ function findAllByName(tree, name) {
     if (typeof node.type === 'function' && node.type.name === name) found.push(node);
   });
   return found;
+}
+
+/**
+ * 设置节里按「行 label」选一个下拉项（一个 Row 里最多一个 Select）。
+ *
+ * @param tree - 设置节的树。
+ * @param rowLabel - 该行的 label（如「上下文行数」）。
+ * @param id - 要选中的选项 id。
+ */
+function settingSelect(tree, rowLabel, id) {
+  const rowElement = findAllByName(tree, 'Row').filter((node) => node.props.label === rowLabel)[0];
+  if (rowElement === undefined) throw new Error('找不到设置行：' + rowLabel);
+  const select = findByName(rowElement, 'Select');
+  if (select === null) throw new Error('这一行没有下拉框：' + rowLabel);
+  findByType(mount(select.type, select.props), PStub.Menu).props.onSelect(id);
 }
 
 /** 设置节里按 aria-label 找某个开关，并把它渲染出来。 */
@@ -659,9 +679,10 @@ ok(
 ok('下拉锚点显示当前选项文案', textOf(menu.props.anchor) === '高亮');
 const rowLabels = findAllByName(settingsTree, 'Row').map((rowElement) => rowElement.props.label);
 ok(
-  '两条设置项都有标签与说明',
+  '三条设置项都有标签与说明',
   rowLabels.includes('展示方式') &&
     rowLabels.includes('编辑 / 写入默认展开') &&
+    rowLabels.includes('启用 patch 工具（测试版）') &&
     treeText(settingsTree).includes('settings.yaml'),
 );
 ok(
@@ -671,10 +692,47 @@ ok(
   ),
 );
 const switchLabels = findAllByName(settingsTree, 'Switch').map((node) => node.props.label);
-ok('只有一个开关（不再有 rowsOpen 那种多余属性）', switchLabels.length === 1);
-ok('开关的名字就是「编辑 / 写入默认展开」', switchLabels[0] === '编辑 / 写入默认展开');
+ok(
+  '两个开关：默认展开 + patch 工具（不再有 rowsOpen 那种多余属性）',
+  switchLabels.length === 2 &&
+    switchLabels.includes('编辑 / 写入默认展开') &&
+    switchLabels.includes('启用 patch 工具（测试版）'),
+);
 const switchButton = settingSwitch(settingsTree, '编辑 / 写入默认展开');
 ok('开关反映 settings.yaml 里的权威值', switchButton.props['aria-checked'] === true);
+
+// patch 工具开关：默认关；点一下要真的 POST 出去（Host 半据此注册 / 反注册工具）
+const patchSwitch = settingSwitch(settingsTree, '启用 patch 工具（测试版）');
+ok('patch 工具开关默认关（测试版，settings.yaml 里是 false）', patchSwitch.props['aria-checked'] === false);
+const sectionHeads = findAllByClass(settingsTree, 'fcv-sectionHead');
+ok('设置节分成两组：显示 / 工具', sectionHeads.length === 2 && textOf(sectionHeads[1]) === '工具');
+const patchRow = findAllByName(settingsTree, 'Row').filter(
+  (rowElement) => rowElement.props.label === '启用 patch 工具（测试版）',
+)[0];
+ok(
+  '工具开关的说明点明「即时生效、不必重启」与「默认关」',
+  patchRow !== undefined &&
+    typeof patchRow.props.desc === 'string' &&
+    patchRow.props.desc.includes('不必重启') &&
+    patchRow.props.desc.includes('默认'),
+);
+const postsBefore = requests.filter(
+  (request) => request.method === 'POST' && request.url === '/ext/dshp-file-change-viewer/config',
+).length;
+patchSwitch.props.onClick();
+ok(
+  '打开 patch 工具开关会 POST { patchTool: true }',
+  requests.some(
+    (request) =>
+      request.method === 'POST' &&
+      request.url === '/ext/dshp-file-change-viewer/config' &&
+      JSON.parse(request.body).patchTool === true,
+  ),
+);
+ok(
+  '打开后开关立刻变成开（乐观更新）',
+  settingSwitch(mount(Section, {}), '启用 patch 工具（测试版）').props['aria-checked'] === true,
+);
 ok(
   '开关是 role=switch 的真按钮（点击回调与视觉态在同一元素上）',
   switchButton.type === 'button' &&
@@ -1093,12 +1151,13 @@ ok('保存失败的原因要如实显示', treeText(failedTree).includes('写盘
 // ── 场景 12：patch 调用（本插件 Host 半注册的工具）走同一张卡片 ───────────────
 
 const PATCH_ARGS = [
-  '--- a/p.ts',
-  '+++ b/p.ts',
-  '@@ -1,2 +1,2 @@',
+  '*** Begin Patch',
+  '*** Update File: p.ts',
+  '@@',
   ' const keep = 1;',
   '-const old = 2;',
   '+const mid = 2;',
+  '*** End Patch',
 ].join('\n');
 const patchArgsRaw = JSON.stringify({ patch: PATCH_ARGS });
 
@@ -1156,7 +1215,7 @@ const patchSettled = render('patch', {
 
 // ── 场景 13：真实行号（不是每段都从 1 开始数） ────────────────────────────────
 
-// ① patch 自带 `@@` 偏移：卡片直接用，不必问 Host
+// ① patch 的 meta.diffs 自带 startLine（落盘时算出的真实落点）：卡片直接用，不必问 Host
 const patchNumbered = render('patch', {
   kind: 'tool-result',
   call: { name: 'patch', argsRaw: patchArgsRaw },
@@ -1187,6 +1246,116 @@ const patchNumbered = render('patch', {
     '行头路径链接带上真实行号（点开落在改动处）',
     requests.length >= 0 && findByType(patchNumbered, PStub.CodeBlock) !== null,
   );
+}
+
+// ③ 改名（`*** Move to:`）：Host 半会拒绝这个补丁，卡片仍然把「本来想做的那次改名」画出来
+//     ——预览来自参数推导（readIntended），卡头渲染成「旧 → 新」，右上角打 rejected 角标。
+const MOVE_ARGS = [
+  '*** Begin Patch',
+  '*** Update File: original.ts',
+  '*** Move to: renamed.ts',
+  '@@',
+  '-const old = 2;',
+  '+const mid = 2;',
+  '*** End Patch',
+].join('\n');
+const patchMoved = render('patch', {
+  kind: 'tool-result',
+  call: { name: 'patch', argsRaw: JSON.stringify({ patch: MOVE_ARGS }) },
+  isError: true,
+  content: [{ type: 'text', text: 'patch 只做「新建 / 修改」，不执行删除与改名' }],
+});
+ok(
+  'patch 改名被拒：卡头显示「旧 → 新」',
+  treeText(patchMoved).includes('original.ts') &&
+    treeText(patchMoved).includes('→') &&
+    treeText(patchMoved).includes('renamed.ts'),
+);
+ok('patch 改名被拒：行头显示失败原因', treeText(patchMoved).includes('不执行删除与改名'));
+ok(
+  'patch 改名被拒：差异仍然画出来（用户要看到它本来打算改什么）',
+  findByType(patchMoved, PStub.CodeBlock) !== null,
+);
+ok('普通改动不会多出一个箭头', !treeText(patchSettled).includes('→'));
+
+// ④ 上下文：Host 回的两侧原文要**真的画出来**，而且行号相应前移
+//    —— 高亮视图把上下文并进同一个代码块；± 视图的官方 DiffBlock 只有 del/add 两种行，
+//    画不了中性上下文，所以上下文单独渲染成中性行贴在它上下。
+{
+  locateAnswers.set('/w/src/ctx.ts\u0000new line', {
+    line: 5,
+    before: ['before 1', 'before 2', 'before 3'],
+    after: ['after 1', 'after 2', 'after 3'],
+  });
+  const ctxBlock = {
+    kind: 'tool-result',
+    call: { name: 'edit', argsRaw: '{"file_path":"/w/src/ctx.ts"}' },
+    isError: false,
+    content: [],
+    meta: { diffs: [{ path: '/w/src/ctx.ts', oldText: 'old line', newText: 'new line' }] },
+  };
+  const ctxRow = mountLive('edit', ctxBlock, { callId: 'c-ctx' });
+  await settle();
+  ctxRow.flush();
+
+  const ctxText = findByType(ctxRow.tree, PStub.CodeBlock).props.code;
+  ok(
+    '高亮视图：上下文行排在新内容上下（文件顺序）',
+    ctxText ===
+      ['before 1', 'before 2', 'before 3', 'old line', 'new line', 'after 1', 'after 2', 'after 3'].join(
+        '\n',
+      ),
+  );
+  const ctxCss = textOf(findAllByType(ctxRow.tree, 'style')[0]);
+  ok(
+    '高亮视图：行号前移，首行就是上文第一行的真实行号（5 - 3 = 2）',
+    ctxCss.includes('counter-reset:source-line 1'),
+  );
+  // 上下文行不参与增删统计：统计仍按语义变更（这里 +1 -1）
+  const ctxCollapsed = { props: {}, children: [rowOf(ctxRow.tree).props.collapsedContent] };
+  ok(
+    '上下文行不参与增删统计',
+    textOf(findAllByClass(ctxCollapsed, 'fcv-add')[0]) === '1' &&
+      textOf(findAllByClass(ctxCollapsed, 'fcv-del')[0]) === '1',
+  );
+  ctxRow.unmount();
+
+  // ± 差异视图：默认偏好是 highlight，这里把该块临时切到 diff（与上面「单块临时切换视图」同一套路）
+  const ctxHighlight = render('edit', ctxBlock, { callId: 'c-ctx' });
+  findAllByClass(findAllByClass(ctxHighlight, 'fcv-card')[0], 'fcv-viewPill')[1].props.onClick({
+    stopPropagation() {},
+  });
+  const ctxDiffTree = rerender('edit', ctxBlock, { callId: 'c-ctx' });
+  const ctxCard = findAllByClass(ctxDiffTree, 'fcv-card')[0];
+  const diffText = treeText(ctxCard);
+  ok(
+    '± 差异视图：上下文也画出来了（官方 DiffBlock 画不了中性行，所以单独渲染）',
+    diffText.includes('before 1') && diffText.includes('after 3'),
+  );
+  ok('± 差异视图：上下文行各 3 行、不带 ± 标记', findAllByClass(ctxCard, 'fcv-ctxLine').length === 6);
+  ok(
+    '± 差异视图：DiffBlock 本身还在（改动仍是官方逐行视图）',
+    findAllByType(ctxCard, PStub.DiffBlock).length === 1,
+  );
+}
+
+// ⑤ 上下文行数 = 0（偏好）时不补任何上下文
+{
+  locateAnswers.set('/w/src/noctx.ts\u0000new', { line: 2, before: ['x'], after: ['y'] });
+  settingSelect(mount(Section, {}), '上下文行数', '0'); // 切到「不显示」
+  const noCtxBlock = {
+    kind: 'tool-result',
+    call: { name: 'edit', argsRaw: '{"file_path":"/w/src/noctx.ts"}' },
+    isError: false,
+    content: [],
+    meta: { diffs: [{ path: '/w/src/noctx.ts', oldText: 'old', newText: 'new' }] },
+  };
+  const noCtxRow = mountLive('edit', noCtxBlock, { callId: 'c-noctx' });
+  await settle();
+  noCtxRow.flush();
+  ok('上下文行数 = 0 时只显示改动本身', findByType(noCtxRow.tree, PStub.CodeBlock).props.code === 'old\nnew');
+  noCtxRow.unmount();
+  settingSelect(mount(Section, {}), '上下文行数', '3'); // 还原默认，免得影响后续断言
 }
 
 // ② edit / write 的元数据没有偏移 → 向 Host 定位；结果回来前先老实从 1 开始

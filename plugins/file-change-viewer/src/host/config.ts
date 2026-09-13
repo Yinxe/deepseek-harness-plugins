@@ -16,12 +16,18 @@ export const NS = 'dshp-file-change-viewer';
 export const DEFAULT_CONFIG: PluginConfig = {
   view: 'highlight',
   sectionsOpen: false,
+  // 改动两侧多显示 3 行上下文（git diff 的同款默认值）。
+  contextLines: 3,
+  // 测试版能力：默认关。开启后 Host 半才注册 `patch` 工具。
+  patchTool: false,
 };
 
 /** settings 服务的命名空间 schema（约束进 schema，设置页与手工编辑 settings.yaml 都走它）。 */
 export const ConfigSchema: any = z.object({
   view: z.union([z.const('highlight'), z.const('diff')]).default('highlight'),
   sectionsOpen: z.boolean().default(false),
+  patchTool: z.boolean().default(false),
+  contextLines: z.union([z.const(0), z.const(3), z.const(5), z.const(8)]).default(3),
 });
 
 /**
@@ -42,6 +48,15 @@ export function sanitizePatchConfig(raw: unknown): PluginConfigPatch {
   if (Object.hasOwn(record, 'sectionsOpen') && typeof record['sectionsOpen'] === 'boolean') {
     patch.sectionsOpen = record['sectionsOpen'];
   }
+  if (Object.hasOwn(record, 'patchTool') && typeof record['patchTool'] === 'boolean') {
+    patch.patchTool = record['patchTool'];
+  }
+  if (Object.hasOwn(record, 'contextLines')) {
+    const contextLines = record['contextLines'];
+    if (contextLines === 0 || contextLines === 3 || contextLines === 5 || contextLines === 8) {
+      patch.contextLines = contextLines;
+    }
+  }
   return patch;
 }
 
@@ -54,4 +69,6 @@ export function sanitizePatchConfig(raw: unknown): PluginConfigPatch {
 export function applyPatch(entry: PluginConfig, patch: PluginConfigPatch): void {
   if (patch.view !== undefined) entry.view = patch.view;
   if (patch.sectionsOpen !== undefined) entry.sectionsOpen = patch.sectionsOpen;
+  if (patch.patchTool !== undefined) entry.patchTool = patch.patchTool;
+  if (patch.contextLines !== undefined) entry.contextLines = patch.contextLines;
 }

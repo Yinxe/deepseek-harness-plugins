@@ -26,10 +26,17 @@ export interface FileDiff {
   oldText: string | null;
   newText: string;
   /**
+   * 改名 / 移动的**源路径**（本插件 `patch` 工具的 `*** Move to:` 段）。
+   *
+   * 官方 `edit` / `write` 永远没有它；有值时卡头渲染成 `旧 → 新`，打开链接仍指向新路径。
+   */
+  oldPath?: string | undefined;
+  /**
    * 这个 hunk 在新文件里的起始行号（1 起）。
    *
    * 官方 `edit` / `write` 的结果元数据**不带**它（`{path, oldText, newText}` 而已），本插件的
-   * `patch` 工具会带上（`@@` 头里就有）。没有时由 `locate.ts` 拿文件内容去定位；都拿不到就退回 1。
+   * `patch` 工具会带上（落盘时算出「片段自己的落点 + 前面片段的行数漂移」）。没有时由
+   * `locate.ts` 拿文件内容去定位；都拿不到就退回 1。
    */
   startLine?: number | undefined;
 }
@@ -181,6 +188,9 @@ export interface SlotsService {
  */
 export type DiffView = 'highlight' | 'diff';
 
+/** 改动两侧多显示几行上下文（与 Host 半的 `ContextLines` 逐字对齐）。 */
+export type ContextLines = 0 | 3 | 5 | 8;
+
 /**
  * 两项显示偏好（= settings.yaml 的 `dshp-file-change-viewer` 分节）。
  *
@@ -198,10 +208,26 @@ export interface ViewerPrefs {
    * 关 = 与思考 / 读取行一致，点一下才展开。只决定**新渲染**时的初始状态。
    */
   sectionsOpen: boolean;
+  /**
+   * 差异卡片在改动两侧**多显示几行没受影响的上下文**（0 / 3 / 5 / 8）。
+   *
+   * 上下文取自文件当前内容（Host 的 `/locate` 路由定位后一并回传），**不是**模型在
+   * `old_string` / 补丁片段里带的那几行——模型只圈 1 行时，卡片照样看得到前后文。
+   * `0` = 只显示模型给的内容（等于旧行为）。
+   */
+  contextLines: ContextLines;
+  /**
+   * 是否启用 **`patch` 工具**（测试版，**默认关**）。
+   *
+   * 这一项与上两项不同：它**不**管渲染，而是决定 Host 半注不注册 `patch` 工具。改完立即经
+   * `/ext/.../config` 写回 settings.yaml，Host 在 settings 的 `onChange` 里重新判定——开启后
+   * 模型立刻多出这个工具，关掉就消失（正在进行的调用不受影响）。
+   */
+  patchTool: boolean;
 }
 
 /** 偏好字段名（写回 Host 时用）。 */
-export type PrefField = 'view' | 'sectionsOpen';
+export type PrefField = 'view' | 'sectionsOpen' | 'patchTool' | 'contextLines';
 
 /** 偏好的保存态（设置节用它显示「已保存 / 正在保存 / 保存失败」）。 */
 export type SavePhase = 'idle' | 'loading' | 'saving' | 'ready' | 'error';
@@ -213,10 +239,12 @@ export interface StateResponse {
   error?: string;
 }
 
-/** `POST /ext/dshp-file-change-viewer/config` 的请求体（只允许这两项）。 */
+/** `POST /ext/dshp-file-change-viewer/config` 的请求体（只允许这三项）。 */
 export interface ConfigPatch {
   view?: DiffView | undefined;
   sectionsOpen?: boolean | undefined;
+  patchTool?: boolean | undefined;
+  contextLines?: ContextLines | undefined;
 }
 
 /** 槽位注册选项（keyed 用 key，list 用 id）。 */

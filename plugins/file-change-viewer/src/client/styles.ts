@@ -64,6 +64,13 @@ export const CSS: string = `
 .fcv-card .fcv-code pre{background:none!important;padding:8px 0;border-radius:0}
 /* ± 差异视图同样摊平进这张卡：去掉它自己的外边距与圆角，底色与卡片一致 */
 .fcv-card .fcv-diff{margin:0;border-radius:0}
+/* ± 视图的上下文行：官方 DiffBlock 只画得出 del / add 两种行（见 FileChangeRow.renderContext），
+   所以没受影响的上下文由本插件单独渲染成中性行，贴在 DiffBlock 上下，颜色/行高与它保持一致。 */
+.fcv-diffWrap{display:flex;flex-direction:column}
+.fcv-ctx{font-family:var(--ds-font-family-code);font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary);padding:0 10px;white-space:pre;overflow-x:auto}
+.fcv-ctxLine{white-space:pre}
+.fcv-card .fcv-ctx:first-child{padding-top:8px}
+.fcv-card .fcv-ctx:last-child{padding-bottom:8px}
 .fcv-muted{margin:0;padding:6px 10px 8px;color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
 
 /* ── ③ 设置节「文件修改卡片」（settings.section） ─────────────────────────────── */

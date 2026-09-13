@@ -191,7 +191,7 @@ export function createFileChangeRow(
   locator: LocatorFace,
 ): (props: ToolViewProps) => any {
   const { usePrefs } = prefsFace;
-  const { lineOf, useLines } = locator;
+  const { locateOf, useLines } = locator;
 
   /** DiffBlock 的本地化文案（字段名与官方 `diffBlockLabels(t)` 一致）。 */
   function diffLabels(t: (key: string, params?: Record<string, unknown>) => string): DiffBlockLabels {
@@ -266,19 +266,56 @@ export function createFileChangeRow(
     const rawPath = first === undefined ? undefined : first.raw.path;
 
     /**
-     * 每个 hunk 的真实起始行号（行头链接与块内编号都用它）。
+     * 每个 hunk 的定位结果（真实起始行号 + 两侧上下文），一次查询两处都用。
      *
-     * 三条来源，优先用最确定的：
-     * 1. `hunk.raw.startLine` —— 本插件 `patch` 工具的 `@@` 头自带；
+     * 行号有三条来源，优先用最确定的：
+     * 1. `hunk.raw.startLine` —— 本插件 `patch` 工具落盘时算出的确切行号；
      * 2. `locate.ts` 的缓存 —— edit / write 的元数据没有偏移，靠 Host 拿文件内容定位（异步，
      *    拿到后经订阅重渲染填上）；
      * 3. 都还没有 → 1（老老实实从 1 开始，不编数字）。
+     *
+     * 上下文则**只**来自第 2 条（文件当前内容），与模型在 `old_string` / 补丁片段里带了多少行无关。
      */
-    const startLines = model.hunks.map((hunk) => {
+    const locatedHunks = model.hunks.map((hunk) =>
+      locateOf(hunk.raw.path, hunk.raw.newText, hunk.raw.oldText, props.cwd),
+    );
+    const startLines = model.hunks.map((hunk, index) => {
       if (typeof hunk.raw.startLine === 'number' && hunk.raw.startLine > 0) return hunk.raw.startLine;
-      const located = lineOf(hunk.raw.path, hunk.raw.newText, props.cwd);
-      return typeof located === 'number' && located > 0 ? located : 1;
+      const located = locatedHunks[index];
+      const line = located === null || located === undefined ? null : located.line;
+      return typeof line === 'number' && line > 0 ? line : 1;
     });
+
+    /**
+     * 每个 hunk 要**额外补**的上下文（按偏好截；0 行 = 不补）。
+     *
+     * Host 一次给足 8 行，这里截成偏好值——所以改「上下文行数」不必重新问 Host，只是重渲染。
+     */
+    const contexts = model.hunks.map((_hunk, index) => {
+      const located = locatedHunks[index];
+      const want = prefs.contextLines;
+      if (located === null || located === undefined || want === 0) return { before: [], after: [] };
+      return { before: located.before.slice(-want), after: located.after.slice(0, want) };
+    });
+
+    /**
+     * 渲染用的行 = 上文 + 本 hunk 的 LCS 结果 + 下文；起始行号相应前移，于是行号仍然是真的。
+     *
+     * 高亮视图与 ± 差异视图共用这一份素材：前者把它当代码块（行号 + 可着色区间），后者把
+     * 上下文单独渲染成中性行（官方 `DiffBlock` 只有 `del` / `add` 两种行，画不了中性上下文）。
+     */
+    const rowsOf = (index: number): UnifiedDiffRow[] => {
+      const hunk = model.hunks[index];
+      if (hunk === undefined) return [];
+      const context = contexts[index] ?? { before: [], after: [] };
+      return [
+        ...context.before.map((text): UnifiedDiffRow => ({ kind: 'ctx', text })),
+        ...hunk.rows,
+        ...context.after.map((text): UnifiedDiffRow => ({ kind: 'ctx', text })),
+      ];
+    };
+    const startOf = (index: number): number =>
+      Math.max(1, (startLines[index] ?? 1) - (contexts[index]?.before.length ?? 0));
 
     // 行内按钮（路径 / 查看）不得触发行点击的折叠：官方 ToolRow 对文件链接做同样处理。
     const stopKeyToggle = (event: { key?: string; stopPropagation: () => void }): void => {
@@ -404,9 +441,15 @@ export function createFileChangeRow(
     // ── 每个文件块：自己的折叠（默认走用户偏好，单块可临时覆盖） ────────────────
     const cardKey = cardKeyOf(props.callId);
 
-    /** 高亮视图每个 hunk 的素材（含它自己的行底色规则）；rows 由 buildModel 的 LCS 提供。 */
-    const highlightHunks = model.hunks.map((hunk, index) => {
-      const rows = hunk.rows;
+    /**
+     * 高亮视图每个 hunk 的素材（含它自己的行底色规则）。
+     *
+     * `rows` = 上文 + buildModel 的 LCS 结果 + 下文；`startLine` 也一并前移，所以代码块左侧的
+     * 行号仍然是文件里的真实行号（上下文行照常占号，删除行不占号）。
+     */
+    const highlightHunks = model.hunks.map((_hunk, index) => {
+      const rows = rowsOf(index);
+      const startLine = startOf(index);
       const overflow = rows.length > HIGHLIGHT_MAX_LINES;
       const shown = overflow ? rows.slice(0, HIGHLIGHT_MAX_LINES) : rows;
       const codeClass = 'fcv-lines-' + cardKey + '-' + index;
@@ -415,9 +458,9 @@ export function createFileChangeRow(
         shown,
         overflow,
         codeClass,
-        language: languageOf(hunk.raw.path),
-        startLine: startLines[index] ?? 1,
-        css: rows.length === 0 ? '' : tintRules(codeClass, shown, startLines[index] ?? 1),
+        language: languageOf(model.hunks[index]?.raw.path ?? ''),
+        startLine,
+        css: rows.length === 0 ? '' : tintRules(codeClass, shown, startLine),
       };
     });
 
@@ -456,14 +499,37 @@ export function createFileChangeRow(
      * 喂给它的是**语义变更**（只有删除行与新增行），所以它给出的 `+A -B` 与高亮视图、行头统计一致；
      * 官方自己的做法是把原文整段列成 `-`、整段列成 `+`（一次单行替换看起来像整段重写）。
      * 每张卡只喂自己那一个 hunk——官方 DiffBlock 会把 `diffs` 里所有文件都渲染出来。
+     *
+     * 上下文单独渲染成中性行贴在它上下：官方 DiffBlock 的行 kind 只有 `path | del | add | gap`
+     * （另外的那个 kind 直接 throw），**画不了中性的上下文行**，所以上下文不能塞进 `diffs`——
+     * 塞进去只会变成绿色的 `+` 或红色的 `-`，把没改的行说成改了。
      */
-    const renderDiff = (index: number, fallback: FileDiff): any =>
-      React.createElement(P.DiffBlock, {
-        diffs: [statDiffs[index] ?? fallback],
-        labels: diffLabels(t),
-        maxLines: DIFF_MAX_LINES,
-        className: 'fcv-diff',
-      });
+    const renderContext = (lines: readonly string[], key: string): any =>
+      lines.length === 0
+        ? null
+        : React.createElement(
+            'div',
+            { className: 'fcv-ctx', key },
+            lines.map((text, at) =>
+              React.createElement('div', { className: 'fcv-ctxLine', key: at }, text === '' ? ' ' : text),
+            ),
+          );
+
+    const renderDiff = (index: number, fallback: FileDiff): any => {
+      const context = contexts[index] ?? { before: [], after: [] };
+      return React.createElement(
+        'div',
+        { className: 'fcv-diffWrap', key: 'diff' + index },
+        renderContext(context.before, 'before'),
+        React.createElement(P.DiffBlock, {
+          diffs: [statDiffs[index] ?? fallback],
+          labels: diffLabels(t),
+          maxLines: DIFF_MAX_LINES,
+          className: 'fcv-diff',
+        }),
+        renderContext(context.after, 'after'),
+      );
+    };
 
     const renderSections = (): any[] => {
       const nodes: any[] = [];
@@ -504,7 +570,13 @@ export function createFileChangeRow(
                   React.createElement(
                     'span',
                     { className: 'fcv-cardNameText' },
-                    displayPath(hunk.raw.path, props.cwd, props.home),
+                    // 改名 / 移动（本插件 patch 的 `*** Move to:`）显示成「旧 → 新」；
+                    // 其余工具没有 oldPath，行为与以前完全一样。
+                    hunk.raw.oldPath === undefined
+                      ? displayPath(hunk.raw.path, props.cwd, props.home)
+                      : displayPath(hunk.raw.oldPath, props.cwd, props.home) +
+                          ' → ' +
+                          displayPath(hunk.raw.path, props.cwd, props.home),
                   ),
                 ),
                 open,
