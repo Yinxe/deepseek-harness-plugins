@@ -21,8 +21,8 @@
  * 用法：`node ../../shared/scripts/check-css-modules.mjs src/client`（目录可给多个，缺省 `src`）。
  */
 
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { dirname, join, relative, resolve as resolvePath } from 'node:path';
 import process from 'node:process';
 
 /** 要扫描的源码扩展名。 */
@@ -106,14 +106,46 @@ for (const file of cssFiles) {
   for (const name of names) defined.add(name);
 }
 
+/**
+ * 这份源码里有没有对 CSS Module 映射的**计算访问**（`styles[expr]`）。
+ *
+ * 必须绑定到真正 import 进来的那个标识符：`arr[i]` / `props['x']` 这类普通下标访问到处都是，
+ * 按「任意 `x[...]`」判定会让所有插件都被标成「有动态访问」。
+ */
+function hasDynamicAccess(code) {
+  const source = blank(code);
+  for (const match of code.matchAll(/import\s+([A-Za-z_$][\w$]*)\s+from\s+['"]([^'"]+\.module\.css)['"]/g)) {
+    if (new RegExp('\\b' + match[1] + '\\s*\\[').test(source)) return true;
+  }
+  return false;
+}
+
 let errors = 0;
 let warnings = 0;
 let checked = 0;
 const used = new Set();
+/** 是否存在 `styles[expr]` 这类**计算访问**（按数据选类名，静态看不出用了哪个）。 */
+let dynamic = false;
 
 for (const file of files) {
   if (!CODE_EXT.test(file)) continue;
-  for (const use of usages(readFileSync(file, 'utf8'))) {
+  const code = readFileSync(file, 'utf8');
+  if (hasDynamicAccess(code)) dynamic = true;
+
+  // 路径必须真的存在。`shared/types/css-modules.d.ts` 是**通配符**声明（任何 `*.module.css` 都能
+  // 通过 tsc），所以 `'../styles.module.css'` 写错层级时类型检查是绿的、只有 build 才炸
+  // （esbuild 的 CSS 插件会去读那个不存在的文件）。这里补上存在性检查。
+  for (const match of code.matchAll(/import\s+([A-Za-z_$][\w$]*)\s+from\s+['"]([^'"]+\.module\.css)['"]/g)) {
+    const target = resolvePath(dirname(file), match[2]);
+    if (!existsSync(target)) {
+      console.error(
+        `✗ ${relative('.', file)} 里 import 了 ${match[2]}，但它指向的路径不存在（应为相对该文件的正确层级）`,
+      );
+      errors += 1;
+    }
+  }
+
+  for (const use of usages(code)) {
     checked += 1;
     used.add(use.name);
     if (perFile.has(use.spec)) {
@@ -139,17 +171,28 @@ for (const file of files) {
   }
 }
 
+/**
+ * 孤儿规则只**提示**，不拦。
+ *
+ * 有计算访问（`styles[expr]`）时这份清单不可靠——静态看不到用了哪些名字——所以只报数量，
+ * 不逐条刷屏（token-meter 那种几百个类名、按等级/热度动态取名的样式表尤其明显）。
+ * 即便没有计算访问，也最多列前 10 条：它的作用是「提醒可能改名漏删」，不是完整的审计。
+ */
+const orphans = [];
 for (const [file, names] of perFile) {
   for (const name of names) {
-    if (!used.has(name)) {
-      console.warn(`· ${relative('.', file)} 定义了 .${name}，但源码里没有用到`);
-      warnings += 1;
-    }
+    if (!used.has(name)) orphans.push(`${relative('.', file)} .${name}`);
   }
+}
+warnings = orphans.length;
+if (!dynamic && warnings > 0) {
+  for (const orphan of orphans.slice(0, 10)) console.warn(`· 定义了但源码里没用到：${orphan}`);
+  if (warnings > 10) console.warn(`· …另有 ${warnings - 10} 条（同上，仅提示）`);
 }
 
 console.log(
   `css-modules: ${cssFiles.length} 个样式表 / ${defined.size} 个类名，源码里 ${checked} 处引用，` +
-    `未定义 ${errors}，未使用 ${warnings}`,
+    `未定义 ${errors}，未使用 ${warnings}${dynamic ? '（存在 styles[动态] 访问，未使用数仅供参考）' : ''}` +
+    (dynamic || warnings === 0 ? '' : '（仅提示，不拦）'),
 );
 process.exit(errors > 0 ? 1 : 0);
