@@ -15,7 +15,7 @@
 ## 结构与职责
 
 - `src/host/themes/`：主题 token **单源**（每包导出 `{ dark?, light?, meta }`，`index.ts` 的 `expand()` 按定义的 scheme 展开进 `THEME_CATALOG`）；Host 经同源路由全量下发，client 只存卡片 meta。
-- `src/client/`：`apply-theme.ts` / `themes.ts`（画廊）/ `md3.ts`（壁纸取色） / `radius.ts` / `state.ts`。
+- `src/client/`：`index.tsx`（**只导出 `inject` / `apply`**，loader 壳由 `shared/tsup.preset.ts` 拼出）/ `GallerySection.tsx`（外观定制节，普通函数组件 + JSX 的范式）/ `apply-theme.ts`（覆盖层）/ `themes.ts`（画廊 meta）/ `md3.ts`（壁纸取色）/ `radius.ts` / `state.ts` / `styles.module.css`（CSS Modules，局部名不再需要前缀）/ `types.ts`（协议 + 领域模型 + 只含实际用到的 `ClientContext` / `SlotsService` 接缝）。
 - 路由面：`GET state` / `GET themes` / `POST theme` / `POST config`。
 
 ## 本插件的局部规则
@@ -28,4 +28,4 @@
 
 ## 自检
 
-`pnpm --filter @dshp/web-style test` = `node --check` 双 bundle + `scripts/check-themes.mjs`。
+`pnpm --filter @dshp/web-style test` = `node --check` 双 bundle + `scripts/check-themes.mjs` + `shared/scripts/check-css-modules.mjs`（`styles.x` 拼错在类型上是合法的，这个静态检查是唯一会自动红的网）。
