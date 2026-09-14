@@ -32,7 +32,8 @@
 8. **失败诊断给「最像的真实行」**：`applyChunksToText` 失败时在文件里找相似度最高的行，回行号 + 原文 + 差在哪（缩进/行内空白/标点），让模型照抄就能过；只在失败路径跑、有行数上限（2 万行以上不扫）。
 9. **三层优先级从高到低：单块点击 > 会话级覆盖 > 全局偏好**。会话级覆盖是页头两个按钮写的（`session.ts`，内存、换会话即失效、**绝不写 settings.yaml**）；`prefs.ts` 才是落盘那一层。行组件靠覆盖的 `rev` 认出「页头动过」并作废自己的临时状态——否则「一键全展开」会被几小时前的一次手动折叠挡回去。
 10. **样张必须复用真渲染**：设置页两张「展示方式」卡里的预览走 `diffView.tsx`（与工具行同一份代码），只有类名不同（`styles.pv*`）。CSS Module 化之后类名是模块作用域的、天然不会串味，但**样张不传 hunk 类名**，所以样张里的 `±` 改动行保持官方原样（行内 `+ `/`- ` 前缀、不与上下文行号对齐）——`check-client.mjs` 有断言守着。
+11. **两个视图共用同一条左侧排版轴（14px）**：行号列 / 改动符号列都从卡片左边框让出 14px——这一档与 `.ctx` 的 `padding:0 14px`、官方 `DiffBlock` 的 `.body{padding:12px 14px}` 同源。高亮视图靠 `.line` 的 `padding-inline-start: calc(行号列宽 + 26px)` 加上 `::before{inset-inline-start:14px}`（官方把行号画在行盒最左缘，而 `pre` 的横向内边距被本条插件的「底色铺满整卡」规则归零了，不让位就贴边框）；± 视图靠改动行 `position:relative`，让 `::after{inset-inline-start:0}` 落在行盒内而不是官方块根的左缘。动其中任何一条，都要保证两个视图的**行号 ink 与正文 ink 落在同一个 x**（无头 Chrome 量得到，见 README「展示方式」节）。
 
 ## 自检
 
-`pnpm --filter @dshp/file-change-viewer test` = `node --check` 双 bundle + `check-host.mjs`（158 项：NS/路由/工具动态开关/全有或全无/locate 单次读）+ `check-patch.mjs`（74 项：五级模糊定位/信封诊断/失败诊断）+ `check-client.mjs`（197 项：无头渲染含迷你 React，验证偏好生命周期、设置页两张样张卡、页头两个快捷开关的会话级覆盖）。
+`pnpm --filter @dshp/file-change-viewer test` = `node --check` 双 bundle + `check-host.mjs`（158 项：NS/路由/工具动态开关/全有或全无/locate 单次读）+ `check-patch.mjs`（74 项：五级模糊定位/信封诊断/失败诊断）+ `check-client.mjs`（207 项：无头渲染含迷你 React，验证偏好生命周期、设置页两张样张卡、页头两个快捷开关的会话级覆盖）。

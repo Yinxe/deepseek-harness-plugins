@@ -588,7 +588,23 @@ ok(
 // min-width:100% 只约束内容宽，背景会多出约一个行号列宽。
 ok(
   '高亮视图行盒随内容撑宽且含行号列整盒计算（底色到行尾不断开、也不多一段）',
-  css.includes('pre code>.line{box-sizing:border-box;width:max-content;min-width:100%}'),
+  css.includes('pre code>.line{box-sizing:border-box;width:max-content;min-width:100%'),
+);
+// 行号列的整体左内边距：官方把行号画在行盒左缘，而本插件为了让底色铺满整卡把 pre 的横向
+// 内边距归零了——不让位的话行号会紧贴卡片左边框（列宽是 max(2, 位数)ch，位数一多就贴死，
+// 数字直接压在边框上）。让出的这一档 14px 与 ± 视图的 `.ctx` / 官方 DiffBlock `.body`
+// 同源，于是两个视图的行号列、正文列严格对齐。
+ok(
+  '高亮视图的行号列让出一档左内边距（行号不贴卡片边框），且与 ± 视图同档',
+  css.includes('padding-inline-start:calc(var(--dsl-code-block-line-number-width) + 26px)') &&
+    css.includes('code>.line:before{inset-inline-start:14px}'),
+);
+// ± 视图的改动行必须是自己的包含块：官方行是 static，不定位的话 `::after` 的
+// `inset-inline-start:0` 落在官方块根（整张卡）的左缘，`+` / `-` 会比上下文行号左出一档、
+// 还紧贴卡片边框（与 README 里「三列严格对齐」的验收口径不符）。
+ok(
+  '± 视图的改动行是 ::after 的包含块（+ / - 与上下文行号同列，不贴卡片边框）',
+  css.includes('[data-diff]>div>div{position:relative}') && css.includes('inset-inline-start:0'),
 );
 ok(
   '设置节用官方设置行版式（720px 页宽 + 行间 .5px 细线）',

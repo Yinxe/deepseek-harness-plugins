@@ -242,6 +242,18 @@
   box-sizing: border-box;
   width: max-content;
   min-width: 100%;
+  /* 行号列整体右移一档（14px，官方 ::before 同步右移，见下一条）：官方把行号画在行盒左缘，
+     而这里为了让底色铺满整卡把 pre 的横向内边距归零了——行号列因此紧贴卡片左边框
+     （`--dsl-code-block-line-number-width` 是 max(2, 位数)ch，行号位数一多就填满整列，
+     数字直接压到边框上）。14px 是本插件另一套版式的同一档（`.ctx` 的 padding 与官方
+     DiffBlock `.body` 的 `padding:12px 14px`），于是两个视图的行号列与正文列严格对齐。
+     26px = 新的 14px 左内边距 + 原有的 12px 行号/正文间隙。 */
+  padding-inline-start: calc(var(--dsl-code-block-line-number-width) + 26px);
+}
+/* 行号（官方绝对定位的 ::before）跟着让位：右对齐在 [14px, 14px + 行号列宽] 这一格，
+   与 ± 视图上下文行号的列完全重合。 */
+.card .code pre code > :global(.line)::before {
+  inset-inline-start: 14px;
 }
 /* ± 差异视图同样摊平进这张卡：去掉它自己的外边距与圆角，底色与卡片一致 */
 .card .diff {
@@ -296,6 +308,13 @@
    几何——与上下文行的行号同宽（3ch）、同右对齐、同淡化；让位用的 `padding-inline-start`、
    `content` 与 `::before{content:none}`（压掉官方行内的 `- `/`+ ` 前缀）都由 diffView 的
    `diffSignRules` 动态喂。两者共用同一列，所以「上下文行号 / 改动符号 / 正文」严格对齐。 */
+.card .diff[data-diff] > div > div {
+  /* 改动行自己就是 ::after（那个 `+` / `-`）的包含块：官方行是 static，不定位的话
+     `inset-inline-start:0` 会落到官方块根（整张卡）的左缘——符号比上下文行号多让出一档
+     左内边距、还紧贴卡片边框。行盒定位后 `0` = 行盒内边距盒左缘 = 正文区最左（已含官方
+     `.body` 的 14px），`3ch` 的行号格与上下文行号严格同列。 */
+  position: relative;
+}
 .card .diff[data-diff] > div > div::after {
   position: absolute;
   inset-inline-start: 0;
@@ -657,6 +676,11 @@
   box-sizing: border-box;
   width: max-content;
   min-width: 100%;
+  /* 与 .code 的行号列同档（见上面 .card .code 那两条）：样张必须画得和真用起来一模一样。 */
+  padding-inline-start: calc(var(--dsl-code-block-line-number-width) + 26px);
+}
+.pvCode pre code > :global(.line)::before {
+  inset-inline-start: 14px;
 }
 .pvDiff {
   margin: 0;
