@@ -716,9 +716,6 @@ ok(
     patchRow.props.desc.includes('不必重启') &&
     patchRow.props.desc.includes('默认'),
 );
-const postsBefore = requests.filter(
-  (request) => request.method === 'POST' && request.url === '/ext/dshp-file-change-viewer/config',
-).length;
 patchSwitch.props.onClick();
 ok(
   '打开 patch 工具开关会 POST { patchTool: true }',

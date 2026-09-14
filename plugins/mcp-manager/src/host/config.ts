@@ -2,7 +2,7 @@
  * 配置：默认值 / schemastery schema / 补丁与服务器条目消毒
  *
  * - 官方 settings 命名空间 `dshp-mcp-manager`（与包名/路由前缀/cordis id 一致）
- * - 只认 NS：不做历史 key 兼容、不做迁移（AGENT.md §7.3）
+ * - 只认 NS：不做历史 key 兼容、不做迁移（docs/settings.md「不做迁移」）
  * - 服务器条目消毒是 create/update 路由的唯一入口：字段逐一校验 + 截断，
  *   `js: ` 前缀字符串表示 `!!js` 表达式（回写时转 tagged 节点）
  *
@@ -47,7 +47,7 @@ export const ConfigSchema: any = z.object({
 /** 官方 dsh-mcp-client 包名（只管理这个包的实例条目） */
 export const MCP_CLIENT_NAME = '@deepseek-ai/dsh-mcp-client';
 
-// ── 消毒上限（AGENT.md §9：一切字符串入库前截断，数字夹范围） ────────────
+// ── 消毒上限（docs/ext-routes.md：一切字符串入库前截断，数字夹范围） ──────
 
 export const LIMITS = {
   id: 120,

@@ -2,7 +2,7 @@
  * Client 半共享类型
  *
  * 数据来源两条，都与官方实现逐字段对齐（不 import 官方类型包——DSH 运行时暂无
- * 官方 npm 类型包，见 AGENT.md §2.2）：
+ * 官方 npm 类型包，见 docs/typescript.md「类型策略」）：
  *
  *  1. `dsh-tool-fs` 的 edit / write 结果元数据 `meta.diffs`（真正落盘的 hunk，每 hunk 带 3 行上下文）；
  *  2. 调用尚未结算时的参数原文 `argsRaw`（模型产出的 JSON，可能只写了一半）。

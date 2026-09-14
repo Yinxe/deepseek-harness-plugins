@@ -276,7 +276,7 @@ dshp-file-change-viewer:
 | 图标                            | primitives                    | `FileTypeIcon` / `IconPlusOutline16` …        | 文件类型、增删、视图切换各用官方图标；官方图标集没有减号，减号用一图元内联 SVG           |
 | `TOOL_KEYS` / `SHADOW_PRIORITY` | `src/client/index.ts`         | `edit` / `write` / `str_replace_editor`，`-1` | 接管哪些工具行、影子化优先级                                                             |
 
-不建自有配置文件、不碰任何用户数据；**唯一的写入是 `settings.yaml` 的 `dshp-file-change-viewer` 分节**（经官方 `settings.update`，AGENT.md §7 / §11）。
+不建自有配置文件、不碰任何用户数据；**唯一的写入是 `settings.yaml` 的 `dshp-file-change-viewer` 分节**（经官方 `settings.update`，docs/settings.md 与 docs/security.md）。
 
 ## 代码结构
 

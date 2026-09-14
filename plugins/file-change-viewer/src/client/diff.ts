@@ -20,7 +20,7 @@
  *    `rejected` 角标：用户要看到的是「它本来打算改什么」。
  *
  * `block` 是运行时 live 对象，形如官方 `RunningToolCall` / `ToolResultNode`，但窗口截断、
- * 版本漂移都可能让它缺字段，因此这里一律按 `unknown` 逐字段收窄（AGENT.md §2.2 / §11）。
+ * 版本漂移都可能让它缺字段，因此这里一律按 `unknown` 逐字段收窄（docs/typescript.md「类型策略」/ docs/security.md）。
  *
  * @module @dshp/file-change-viewer/client/diff
  */
@@ -44,7 +44,7 @@ const STR_REPLACE_TOOL = 'str_replace_editor';
 /** 本插件 Host 半注册的批量补丁工具（unified diff，一次可改多处 / 多文件）。 */
 const PATCH_TOOL = 'patch';
 
-/** 就地类型守卫（AGENT.md §2.2：不跨包共享）。 */
+/** 就地类型守卫（docs/typescript.md「类型策略」：不跨包共享）。 */
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

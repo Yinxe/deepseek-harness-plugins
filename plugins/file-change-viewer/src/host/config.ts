@@ -2,7 +2,7 @@
  * 配置：默认值 / schemastery schema / 补丁消毒
  *
  * - 官方 settings 命名空间 `dshp-file-change-viewer`（与 cordis 行 id 同名，仓库约定）
- * - 只认 NS：不读历史 key、不写自有文件（AGENT.md §7.1 / §7.3）
+ * - 只认 NS：不读历史 key、不写自有文件（docs/settings.md「命名空间」/「不做迁移」）
  *
  * @module @dshp/file-change-viewer
  */
@@ -12,7 +12,7 @@ import type { PluginConfig, PluginConfigPatch } from './types.js';
 /** settings 命名空间，也是「设置 → 插件」配置卡片的槽位 key。 */
 export const NS = 'dshp-file-change-viewer';
 
-/** schema 默认值（与 `DEFAULT_CONFIG` 同值，AGENT.md §7.2）。 */
+/** schema 默认值（与 `DEFAULT_CONFIG` 同值，docs/settings.md「Schema」）。 */
 export const DEFAULT_CONFIG: PluginConfig = {
   view: 'highlight',
   sectionsOpen: false,
@@ -33,7 +33,7 @@ export const ConfigSchema: any = z.object({
 /**
  * 消毒 composition 传来的 `config:` 补丁（或任意外部对象）。
  *
- * 逐字段 `Object.hasOwn` + 类型校验，非法字段静默丢弃（AGENT.md §6.5）。
+ * 逐字段 `Object.hasOwn` + 类型校验，非法字段静默丢弃（docs/cordis-host.md「数据消毒」）。
  *
  * @param raw - 外部补丁。
  * @returns 只含合法字段的补丁。

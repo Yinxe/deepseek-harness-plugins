@@ -1,7 +1,7 @@
 /**
  * 样式（前缀 fcv-）
  *
- * 三块，全部只用官方 token（AGENT.md §10.1：颜色/字号不写死任何值）：
+ * 三块，全部只用官方 token（docs/client-basics.md：颜色/字号不写死任何值）：
  *
  * ① **镜像官方 ToolRow 的行内样式**。官方会把这个行渲染成 `ToolRow + DisclosureRow`：行外壳
  *    （高度、图标位、标题字号/颜色、hover 折叠箭头）来自 `DisclosureRow` 的默认 CSS，本插件直接

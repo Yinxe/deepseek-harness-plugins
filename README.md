@@ -204,7 +204,8 @@ dsh web   # 重启生效
 │       ├── src/client/         #   Client TS：GallerySection/apply-theme/md3/official/radius/themes/api/state
 │       ├── scripts/            #   check-themes.mjs（目录 ↔ 画廊 meta ↔ 产物一致性）
 │       └── lib/                #   单文件构建产物（已提交）
-├── AGENT.md                    # 插件开发规范（新插件必读）
+├── AGENT.md                    # 开发规范·规则版（红线 + 指路）
+├── docs/                       # 规范细节（脚手架 / TS / package.json / 构建 / Cordis / settings / 路由 / Client / provider / 时区 / 安全 / 门禁 / 发布 / 文档）——旧 AGENT.md §1–§14 的完整下沉
 ├── tsconfig.base.json          # 共享 TS 配置（NodeNext + strict）
 ├── tsconfig.json               # solution 引用
 ├── pnpm-workspace.yaml         # packages: plugins/* + storeDir
@@ -212,7 +213,7 @@ dsh web   # 重启生效
 └── .github/workflows/CICD.yml  # 门禁 + 打包发布：main→latest 滚动发布，v* tag→版本 Release，其他分支→同名预发布；dev 与 feature/* 仅门禁
 ```
 
-每个插件内部一律是同一套布局：`src/host/`（Node 半）+ `src/client/`（浏览器半）+ `lib/`（已提交的单文件产物）+ `cordis.patch.yml`。
+每个插件内部一律是同一套布局：`src/host/`（Node 半）+ `src/client/`（浏览器 半）+ `lib/`（已提交的单文件产物）+ `cordis.patch.yml` + `AGENT.md`（本插件的局部规则与事实，指回根规范）。
 
 ### 设置键名约定（全仓统一，改名即 breaking）
 
@@ -225,7 +226,7 @@ dsh web   # 重启生效
 | `cordis.patch.yml` 的 `id`                                     | `dshp-token-meter`        |
 | 设置页 `settings.section` 的 `id`                              | `dshp-token-meter`        |
 
-**插件只读自己的键，不做任何历史键兼容与迁移**：不读 `dshp-inx-*` 等旧命名空间、不读 `storages/*.json`、不改写 `settings.yaml`（规范见 [AGENT.md](AGENT.md) §7.1 / §7.3）。升级时若键名有变，请按各插件 README 的更新日志**手工**把旧分节改名或重配；配置键改名属 breaking 变更。
+**插件只读自己的键，不做任何历史键兼容与迁移**：不读 `dshp-inx-*` 等旧命名空间、不读 `storages/*.json`、不改写 `settings.yaml`（规范见 [docs/settings.md](docs/settings.md)）。升级时若键名有变，请按各插件 README 的更新日志**手工**把旧分节改名或重配；配置键改名属 breaking 变更。
 
 ## 环境
 
@@ -262,4 +263,4 @@ mkdir -p plugins/<name>/src
 pnpm install
 ```
 
-规范细节（目录布局、TS 策略、package.json 逐字段、Cordis 契约、多供应商分层渲染、门禁）见 **[AGENT.md](AGENT.md)**。
+规范分三层：**[AGENT.md](AGENT.md)**（红线规则版）→ **[docs/](docs/)**（主题细节，旧 §1–§14 全部下沉在此）→ 各插件 `AGENT.md`（局部规则与事实）。多供应商分层渲染、接管工具行渲染等专题见 docs/ 对应篇目。

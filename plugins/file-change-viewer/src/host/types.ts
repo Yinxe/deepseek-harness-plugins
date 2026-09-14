@@ -1,7 +1,7 @@
 /**
  * Host 半共享类型
  *
- * DSH 运行时暂无官方类型包，运行时透传对象用 `AnyCtx`（AGENT.md §2.2）；本插件自己的一等公民
+ * DSH 运行时暂无官方类型包，运行时透传对象用 `AnyCtx`（docs/typescript.md「类型策略」）；本插件自己的一等公民
  * （配置与补丁）严格建模。客户端的渲染模型（`FileDiff` / `FileChangeModel`）在
  * `src/client/types.ts`。
  */

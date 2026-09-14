@@ -1,7 +1,7 @@
 /**
  * 设置页样式（CSS 字符串，随 client bundle 内联）
  *
- * 规范（见仓库 AGENT.md §10）：
+ * 规范（见仓库 docs/client-basics.md）：
  *  - 控件样式与官方设置页一致：16px 行距 + .5px 底分割线 + 左标题/描述右控件；
  *  - 颜色/字号只用 `var(--dsw-alias-*)` token（深浅主题自动跟随），不写死色值；
  *  - 类前缀 `sp-`（search-provider）。

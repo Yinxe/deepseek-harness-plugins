@@ -3,7 +3,7 @@
  * 不执行任何工具），证明可达性与协议可用，顺带带回 serverInfo。
  *
  * - `!!js` 标记的请求头无法在本插件里求值（那是 DSH loader 的活），跳过并注明
- * - stdio 不探活：spawn 子进程有副作用（AGENT.md §11 最小暴露）
+ * - stdio 不探活：spawn 子进程有副作用（docs/security.md 最小暴露）
  *
  * @module @dshp/mcp-manager
  */

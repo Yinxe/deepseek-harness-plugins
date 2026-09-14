@@ -57,7 +57,7 @@ const HIGHLIGHT_MAX_LINES = 400;
 /** ± 差异视图交给 `DiffBlock` 的展开上限（超出由它自己折叠中部）。 */
 const DIFF_MAX_LINES = 200;
 
-/** 参数原文兜底展示的截断上限（模型产出的 JSON 不可信，见 AGENT.md §11）。 */
+/** 参数原文兜底展示的截断上限（模型产出的 JSON 不可信，见 docs/security.md）。 */
 const RAW_MAX_CHARS = 4000;
 
 const RAW_ARGS_LABEL = '原始参数';
