@@ -99,8 +99,23 @@ function cssModulesInline(id: string): Plugin {
 
       build.onLoad({ filter: /.*/, namespace: 'dsh-css-module' }, (args) => {
         const assetId = args.path.slice(VIRTUAL_PREFIX.length, -VIRTUAL_SUFFIX.length);
+        /**
+         * 喂给 lightningcss 当 `[hash]` 输入的名字。
+         *
+         * **必须把插件 id 混进去**：8 个插件的样式表相对路径一模一样
+         * （`src/client/styles.module.css`），只拿它当 filename 会让每个插件生成**完全相同**的
+         * `<hash>_<local>`——而 `.card` / `.title` / `.body` / `.stat` / `.desc` 这种局部名在
+         * 插件之间大量重名，于是谁后注入谁覆盖，样式在插件之间互相串味。真实踩过：token-meter 的
+         * `.stat{display:flex;flex-direction:column;border-radius:12px}` 把 file-change-viewer
+         * 行头那对 `+N -M` 统计打成了**上下两行**（而且带上了 token-meter 的卡片边框），
+         * 排查了半天才发现是类名撞车。
+         *
+         * 用 `<包名>/<相对路径>`：按插件唯一，而且仍然是**机器无关**的（不含绝对路径），
+         * 所以 `lib/` 作为提交物在任何人机器上都能重打出同样的类名。
+         */
+        const hashName = id + '/' + assetId;
         const { code, exports } = transform({
-          filename: assetId,
+          filename: hashName,
           code: readFileSync(resolvePath(process.cwd(), assetId)),
           cssModules: { pattern: '[hash]_[local]' },
           minify: true,

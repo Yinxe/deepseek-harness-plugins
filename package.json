@@ -6,7 +6,7 @@
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "clean": "pnpm -r clean",
-    "test": "pnpm -r test",
+    "test": "pnpm -r test && node shared/scripts/check-plugin-css-unique.mjs",
     "lint": "oxlint . --deny-warnings",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
