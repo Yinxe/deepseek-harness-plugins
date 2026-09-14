@@ -428,6 +428,21 @@ export function toDiffText(rows: readonly UnifiedDiffRow[]): string {
 }
 
 /**
+ * 把一个原始 hunk 变成渲染用的三口径（`raw` / `rows` / `changed`）。
+ *
+ * 一次调用只在这里跑**一次** LCS：`rows`（高亮视图）与 `changed`（统计 / ± 视图）同源，所以
+ * 三个地方永远说同一件事。设置页的样张预览（`viewCards.ts`）也走这一个入口，免得「预览里报
+ * `+2 -1`、真卡片报别的」。
+ *
+ * @param raw - 工具给的原始 hunk。
+ * @returns 三口径的 hunk。
+ */
+export function toChangeHunk(raw: FileDiff): ChangeHunk {
+  const rows = unifiedDiffRows(raw.oldText, raw.newText);
+  return { raw, rows, changed: changedDiffOf(raw, rows) };
+}
+
+/**
  * 失败调用的首行说明：先看结果文本，再看结构化错误。
  *
  * @param block - 已结算的调用块（不透明）。
@@ -469,10 +484,7 @@ export function buildModel(toolName: string, block: unknown): FileChangeModel {
   const applied = settled && state === 'ok' ? readAppliedDiffs(meta) : null;
   const intended = readIntended(name, rawArgs);
   // 每个 hunk 只跑一次 LCS：高亮视图（rows）与统计 / ± 视图（changed）都用它的结果。
-  const hunks: ChangeHunk[] = (applied ?? intended?.diffs ?? []).map((raw) => {
-    const rows = unifiedDiffRows(raw.oldText, raw.newText);
-    return { raw, rows, changed: changedDiffOf(raw, rows) };
-  });
+  const hunks: ChangeHunk[] = (applied ?? intended?.diffs ?? []).map((raw) => toChangeHunk(raw));
 
   let badge: FileChangeBadge;
   if (state === 'error') badge = 'rejected';

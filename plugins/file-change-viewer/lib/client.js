@@ -424,6 +424,10 @@
   function toDiffText(rows) {
     return rows.map((row) => row.text).join("\n");
   }
+  function toChangeHunk(raw) {
+    const rows = unifiedDiffRows(raw.oldText, raw.newText);
+    return { raw, rows, changed: changedDiffOf(raw, rows) };
+  }
   function readErrorLine(block) {
     if (!isRecord(block)) return null;
     const content = block["content"];
@@ -449,10 +453,7 @@
     const meta = isRecord(block) ? block["meta"] : void 0;
     const applied = settled && state === "ok" ? readAppliedDiffs(meta) : null;
     const intended = readIntended(name, rawArgs);
-    const hunks = (applied ?? intended?.diffs ?? []).map((raw) => {
-      const rows = unifiedDiffRows(raw.oldText, raw.newText);
-      return { raw, rows, changed: changedDiffOf(raw, rows) };
-    });
+    const hunks = (applied ?? intended?.diffs ?? []).map((raw) => toChangeHunk(raw));
     let badge;
     if (state === "error") badge = "rejected";
     else if (state === "ok") badge = "applied";
@@ -488,6 +489,101 @@
   }
   function displayPath(path, cwd, home) {
     return abbreviateHomePath(relativizeToCwd(path, cwd), home);
+  }
+
+  // src/client/diffView.ts
+  var HIGHLIGHT_MAX_LINES = 400;
+  var DIFF_MAX_LINES = 200;
+  var OVERFLOW_HINT = "\u5207\u6362\u5230 \xB1 \u5DEE\u5F02\u89C6\u56FE\u53EF\u5C55\u5F00";
+  function rangeSelectors(codeClass, rows, kind) {
+    const selectors = [];
+    let start = -1;
+    for (let i = 0; i <= rows.length; i += 1) {
+      const row = rows[i];
+      const matches = row !== void 0 && row.kind === kind;
+      if (matches && start < 0) start = i;
+      if (!matches && start >= 0) {
+        const from = start + 1;
+        const to = i;
+        selectors.push(
+          from === to ? "." + codeClass + " code>.line:nth-child(" + from + ")" : "." + codeClass + " code>.line:nth-child(n+" + from + "):nth-child(-n+" + to + ")"
+        );
+        start = -1;
+      }
+    }
+    return selectors;
+  }
+  function tintRules(codeClass, rows, startLine) {
+    const rules = [];
+    if (startLine > 1) rules.push("." + codeClass + " code{counter-reset:source-line " + (startLine - 1) + "}");
+    const del = rangeSelectors(codeClass, rows, "del");
+    if (del.length > 0) {
+      rules.push(del.join(",") + "{counter-increment:none;background:var(--fcv-del-bg)}");
+      rules.push(del.map((selector) => selector + ":before").join(",") + '{content:""}');
+    }
+    const add = rangeSelectors(codeClass, rows, "add");
+    if (add.length > 0) rules.push(add.join(",") + "{background:var(--fcv-add-bg)}");
+    return rules.join("\n");
+  }
+  function buildHighlight(args) {
+    const overflow = args.rows.length > HIGHLIGHT_MAX_LINES;
+    const shown = overflow ? args.rows.slice(0, HIGHLIGHT_MAX_LINES) : args.rows;
+    return {
+      rows: args.rows,
+      shown,
+      overflow,
+      codeClass: args.codeClass,
+      language: args.language,
+      startLine: args.startLine,
+      css: args.rows.length === 0 ? "" : tintRules(args.codeClass, shown, args.startLine)
+    };
+  }
+  function createDiffBody(React, P, cn) {
+    function context(lines, key) {
+      if (lines.length === 0) return null;
+      return React.createElement(
+        "div",
+        { className: cn.ctx, key },
+        lines.map(
+          (text, at) => React.createElement("div", { className: cn.ctxLine, key: at }, text === "" ? " " : text)
+        )
+      );
+    }
+    return {
+      code(material, copyLabel, copiedLabel) {
+        if (material.rows.length === 0) return [];
+        return [
+          React.createElement(P.CodeBlock, {
+            key: "code",
+            code: toDiffText(material.shown),
+            lang: material.language === null ? void 0 : material.language,
+            className: cn.code + " " + material.codeClass,
+            lineNumbers: true,
+            copyLabel,
+            copiedLabel
+          }),
+          material.overflow ? React.createElement(
+            "div",
+            { className: cn.muted, key: "overflow" },
+            "\u2026 \u5176\u4F59 " + (material.rows.length - HIGHLIGHT_MAX_LINES) + " \u884C\u672A\u663E\u793A\uFF08" + OVERFLOW_HINT + "\uFF09"
+          ) : null
+        ];
+      },
+      lines(args) {
+        return React.createElement(
+          "div",
+          { className: cn.diffWrap, key: args.key },
+          context(args.before, "before"),
+          React.createElement(P.DiffBlock, {
+            diffs: [args.diff],
+            labels: args.labels,
+            maxLines: args.maxLines ?? DIFF_MAX_LINES,
+            className: cn.diff
+          }),
+          context(args.after, "after")
+        );
+      }
+    };
   }
 
   // src/client/lang.ts
@@ -566,12 +662,9 @@
   }
 
   // src/client/FileChangeRow.ts
-  var HIGHLIGHT_MAX_LINES = 400;
-  var DIFF_MAX_LINES = 200;
   var RAW_MAX_CHARS = 4e3;
   var RAW_ARGS_LABEL = "\u539F\u59CB\u53C2\u6570";
   var WAITING_TEXT = "\u7B49\u5F85\u53C2\u6570\u2026";
-  var OVERFLOW_HINT = "\u5207\u6362\u5230 \xB1 \u5DEE\u5F02\u89C6\u56FE\u53EF\u5C55\u5F00";
   var NEW_FILE_LABEL = "\u65B0\u6587\u4EF6";
   var REPLACE_ALL_LABEL = "\u5168\u90E8\u66FF\u6362";
   var PATCH_TITLE = "\u8865\u4E01";
@@ -583,36 +676,6 @@
   var VIEW_DIFF_LABEL = "\xB1 \u5DEE\u5F02";
   var VIEW_HIGHLIGHT_TITLE = "\u5355\u4EE3\u7801\u5757\u7EDF\u4E00 diff\uFF1A\u6574\u884C\u7EA2\u7EFF\u5E95\u8272 + \u884C\u53F7 + \u8BED\u6CD5\u9AD8\u4EAE";
   var VIEW_DIFF_TITLE = "\u5B98\u65B9 \xB1 \u5DEE\u5F02\u89C6\u56FE\uFF1A\u9010\u884C\u7EA2\u7EFF\u6587\u5B57\uFF0C\u7D27\u51D1\uFF0C\u8D85\u957F\u4E2D\u90E8\u6298\u53E0";
-  function tintRules(codeClass, rows, startLine) {
-    const rules = [];
-    if (startLine > 1) rules.push("." + codeClass + " code{counter-reset:source-line " + (startLine - 1) + "}");
-    const del = rangeSelectors(codeClass, rows, "del");
-    if (del.length > 0) {
-      rules.push(del.join(",") + "{counter-increment:none;background:var(--fcv-del-bg)}");
-      rules.push(del.map((selector) => selector + ":before").join(",") + '{content:""}');
-    }
-    const add = rangeSelectors(codeClass, rows, "add");
-    if (add.length > 0) rules.push(add.join(",") + "{background:var(--fcv-add-bg)}");
-    return rules.join("\n");
-  }
-  function rangeSelectors(codeClass, rows, kind) {
-    const selectors = [];
-    let start = -1;
-    for (let i = 0; i <= rows.length; i += 1) {
-      const row = rows[i];
-      const matches = row !== void 0 && row.kind === kind;
-      if (matches && start < 0) start = i;
-      if (!matches && start >= 0) {
-        const from = start + 1;
-        const to = i;
-        selectors.push(
-          from === to ? "." + codeClass + " code>.line:nth-child(" + from + ")" : "." + codeClass + " code>.line:nth-child(n+" + from + "):nth-child(-n+" + to + ")"
-        );
-        start = -1;
-      }
-    }
-    return selectors;
-  }
   var anonymousCardSeq = 0;
   function cardKeyOf(callId) {
     const cleaned = typeof callId === "string" ? callId.replace(/[^A-Za-z0-9_-]/g, "") : "";
@@ -625,9 +688,18 @@
     const body = text.endsWith("\n") ? text.slice(0, -1) : text;
     return body.split("\n").length;
   }
-  function createFileChangeRow(React, P, prefsFace, locator) {
+  function createFileChangeRow(React, P, prefsFace, locator, sessionFace) {
     const { usePrefs } = prefsFace;
     const { locateOf: locateOf2, useLines } = locator;
+    const { useOverride } = sessionFace;
+    const diffBody = createDiffBody(React, P, {
+      code: "fcv-code",
+      diff: "fcv-diff",
+      diffWrap: "fcv-diffWrap",
+      ctx: "fcv-ctx",
+      ctxLine: "fcv-ctxLine",
+      muted: "fcv-muted"
+    });
     function diffLabels(t) {
       return {
         copy: t("copy"),
@@ -639,22 +711,25 @@
         files: (count) => t(count === 1 ? "diff.files.one" : "diff.files.other", { count })
       };
     }
-    function newUiState(callId) {
-      return { callId, row: null, sections: {}, views: {} };
+    function newUiState(callId, rev) {
+      return { callId, rev, row: null, sections: {}, views: {} };
     }
     function FileChangeRow(props) {
       const t = typeof props.t === "function" ? props.t : (key) => key;
       const prefs = usePrefs();
       useLines();
-      const [ui, setUi] = React.useState(() => newUiState(props.callId));
-      const bound = ui.callId === props.callId ? ui : newUiState(props.callId);
+      const override = useOverride(props.sessionId);
+      const rev = override.rev;
+      const [ui, setUi] = React.useState(() => newUiState(props.callId, rev));
+      const bound = ui.callId === props.callId && ui.rev === rev ? ui : newUiState(props.callId, rev);
       const patchUi = (fields) => {
         setUi((prev) => {
-          const base = prev.callId === props.callId ? prev : newUiState(props.callId);
+          const base = prev.callId === props.callId && prev.rev === rev ? prev : newUiState(props.callId, rev);
           return { ...base, ...fields };
         });
       };
-      const rowOpen = bound.row === null ? prefs.sectionsOpen : bound.row;
+      const defaultOpen = override.expanded ?? prefs.sectionsOpen;
+      const rowOpen = bound.row ?? defaultOpen;
       const model = buildModel(props.toolName, props.block);
       const changed = model.hunks.some(hasChange);
       const statDiffs = changed ? model.hunks.map((hunk) => hunk.changed) : model.hunks.map((hunk) => hunk.raw);
@@ -776,78 +851,39 @@
         model.replaceAll ? React.createElement("span", { className: "fcv-stat fcv-note" }, REPLACE_ALL_LABEL) : null
       ];
       const cardKey = cardKeyOf(props.callId);
-      const highlightHunks = model.hunks.map((_hunk, index) => {
-        const rows = rowsOf(index);
-        const startLine = startOf(index);
-        const overflow = rows.length > HIGHLIGHT_MAX_LINES;
-        const shown = overflow ? rows.slice(0, HIGHLIGHT_MAX_LINES) : rows;
-        const codeClass = "fcv-lines-" + cardKey + "-" + index;
-        return {
-          rows,
-          shown,
-          overflow,
-          codeClass,
+      const highlightHunks = model.hunks.map(
+        (_hunk, index) => buildHighlight({
+          rows: rowsOf(index),
+          startLine: startOf(index),
           language: languageOf(model.hunks[index]?.raw.path ?? ""),
-          startLine,
-          css: rows.length === 0 ? "" : tintRules(codeClass, shown, startLine)
-        };
-      });
+          codeClass: "fcv-lines-" + cardKey + "-" + index
+        })
+      );
       const tintCss = highlightHunks.map((hunk) => hunk.css).filter((css) => css !== "").join("\n");
       const renderHighlight = (index) => {
         const hunk = highlightHunks[index];
-        if (hunk === void 0 || hunk.rows.length === 0) return [];
-        return [
-          React.createElement(P.CodeBlock, {
-            key: "code",
-            code: toDiffText(hunk.shown),
-            lang: hunk.language === null ? void 0 : hunk.language,
-            className: "fcv-code " + hunk.codeClass,
-            lineNumbers: true,
-            copyLabel: t("copy"),
-            copiedLabel: t("copied")
-          }),
-          hunk.overflow ? React.createElement(
-            "div",
-            { className: "fcv-muted", key: "overflow" },
-            "\u2026 \u5176\u4F59 " + (hunk.rows.length - HIGHLIGHT_MAX_LINES) + " \u884C\u672A\u663E\u793A\uFF08" + OVERFLOW_HINT + "\uFF09"
-          ) : null
-        ];
+        if (hunk === void 0) return [];
+        return diffBody.code(hunk, t("copy"), t("copied"));
       };
-      const renderContext = (lines, key) => lines.length === 0 ? null : React.createElement(
-        "div",
-        { className: "fcv-ctx", key },
-        lines.map(
-          (text, at) => React.createElement("div", { className: "fcv-ctxLine", key: at }, text === "" ? " " : text)
-        )
-      );
       const renderDiff = (index, fallback2) => {
         const context = contexts[index] ?? { before: [], after: [] };
-        return React.createElement(
-          "div",
-          { className: "fcv-diffWrap", key: "diff" + index },
-          renderContext(context.before, "before"),
-          React.createElement(P.DiffBlock, {
-            diffs: [statDiffs[index] ?? fallback2],
-            labels: diffLabels(t),
-            maxLines: DIFF_MAX_LINES,
-            className: "fcv-diff"
-          }),
-          renderContext(context.after, "after")
-        );
+        return diffBody.lines({
+          diff: statDiffs[index] ?? fallback2,
+          before: context.before,
+          after: context.after,
+          labels: diffLabels(t),
+          key: "diff" + index
+        });
       };
       const renderSections = () => {
         const nodes = [];
-        const viewOf = (index) => {
-          const override = bound.views[index];
-          return override === void 0 ? prefs.view : override;
-        };
+        const viewOf = (index) => bound.views[index] ?? override.view ?? prefs.view;
         if (tintCss !== "" && model.hunks.some((_hunk, index) => viewOf(index) === "highlight")) {
           nodes.push(React.createElement("style", { key: "fcv-tint" }, tintCss));
         }
         model.hunks.forEach((hunk, index) => {
           const shown = statDiffs[index] ?? hunk.raw;
-          const collapseOverride = bound.sections[index];
-          const open = collapseOverride === void 0 ? prefs.sectionsOpen : collapseOverride;
+          const open = bound.sections[index] ?? defaultOpen;
           const view = viewOf(index);
           nodes.push(
             React.createElement(
@@ -1046,20 +1082,126 @@
     return { locateOf, lineOf, useLines };
   }
 
+  // src/client/viewCards.ts
+  var SAMPLE_PATH = "src/greet.ts";
+  var SAMPLE_OLD = ["export function greet(name: string) {", "  return 'Hello, ' + name", "}"].join("\n");
+  var SAMPLE_NEW = [
+    "export function greet(name: string) {",
+    "  const target = name.trim()",
+    "  return `Hello, ${target}!`",
+    "}"
+  ].join("\n");
+  var SAMPLE_RAW = { path: SAMPLE_PATH, oldText: SAMPLE_OLD, newText: SAMPLE_NEW };
+  var SAMPLE_HUNK = toChangeHunk(SAMPLE_RAW);
+  var SAMPLE_HIGHLIGHT = buildHighlight({
+    rows: unifiedDiffRows(SAMPLE_OLD, SAMPLE_NEW),
+    startLine: 1,
+    language: languageOf(SAMPLE_PATH),
+    codeClass: "fcv-pvLines"
+  });
+  var PREVIEW_LABELS = {
+    copy: "\u590D\u5236",
+    copied: "\u5DF2\u590D\u5236",
+    collapseAria: "\u6298\u53E0\u5DEE\u5F02",
+    expandAria: (hidden) => "\u5C55\u5F00\u5176\u4F59 " + hidden + " \u884C",
+    collapse: "\u6298\u53E0",
+    expand: (hidden) => "\u5C55\u5F00\u5176\u4F59 " + hidden + " \u884C",
+    files: (count) => String(count) + " \u4E2A\u6587\u4EF6"
+  };
+  var COPY_LABEL = "\u590D\u5236";
+  var COPIED_LABEL = "\u5DF2\u590D\u5236";
+  var VIEW_OPTIONS = [
+    {
+      id: "highlight",
+      label: "\u9AD8\u4EAE",
+      desc: "\u4E00\u4E2A\u4EE3\u7801\u5757\u91CC\u653E\u5B8C\u6574\u7EDF\u4E00 diff\uFF1A\u6574\u884C\u7EA2\u7EFF\u5E95\u8272 + \u884C\u53F7 + \u8BED\u6CD5\u9AD8\u4EAE\uFF0C\u672A\u53D8\u884C\u53EA\u51FA\u73B0\u4E00\u6B21\u3002"
+    },
+    {
+      id: "diff",
+      label: "\xB1 \u5DEE\u5F02",
+      desc: "\u5B98\u65B9\u9010\u884C \xB1 \u89C6\u56FE\uFF0C\u540C\u6837\u53EA\u5217\u771F\u6B63\u53D8\u5316\u7684\u884C\uFF1B\u7D27\u51D1\uFF0C\u8D85\u957F\u65F6\u4E2D\u90E8\u6298\u53E0\u3002"
+    }
+  ];
+  function createViewCards(React, P) {
+    const body = createDiffBody(React, P, {
+      code: "fcv-pvCode",
+      diff: "fcv-pvDiff",
+      diffWrap: "fcv-pvDiffWrap",
+      ctx: "fcv-pvCtx",
+      ctxLine: "fcv-pvCtxLine",
+      muted: "fcv-pvMuted"
+    });
+    function highlightPreview() {
+      return [
+        React.createElement("style", { key: "pv-tint" }, SAMPLE_HIGHLIGHT.css),
+        React.createElement(
+          "div",
+          { key: "pv-code", className: "fcv-pvCodeBox" },
+          body.code(SAMPLE_HIGHLIGHT, COPY_LABEL, COPIED_LABEL)
+        )
+      ];
+    }
+    function diffPreview() {
+      return body.lines({
+        diff: SAMPLE_HUNK.changed,
+        before: [],
+        after: [],
+        labels: PREVIEW_LABELS
+      });
+    }
+    return function ViewCards(props) {
+      return React.createElement(
+        "div",
+        { className: "fcv-viewCards", role: "radiogroup", "aria-label": "\u5C55\u793A\u65B9\u5F0F" },
+        VIEW_OPTIONS.map((option) => {
+          const selected = props.value === option.id;
+          return React.createElement(
+            "div",
+            {
+              key: option.id,
+              role: "radio",
+              "aria-checked": selected,
+              "aria-label": option.label,
+              tabIndex: 0,
+              className: "fcv-viewCard" + (selected ? " fcv-viewCardOn" : ""),
+              onClick: () => props.onSelect(option.id),
+              onKeyDown: (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  props.onSelect(option.id);
+                }
+              }
+            },
+            React.createElement(
+              "div",
+              { className: "fcv-viewCardHead" },
+              React.createElement("span", { className: "fcv-radio", "aria-hidden": true }),
+              React.createElement("span", { className: "fcv-viewCardName" }, option.label)
+            ),
+            React.createElement("div", { className: "fcv-viewCardDesc" }, option.desc),
+            // 预览整体 `pointer-events:none`（见 styles.ts）：里面的复制按钮不该抢走整卡的点击，
+            // 样张也不需要真去点——点卡片任意位置 = 选中这一种展示方式。
+            React.createElement(
+              "div",
+              { className: "fcv-pvBody" },
+              option.id === "highlight" ? highlightPreview() : diffPreview()
+            )
+          );
+        })
+      );
+    };
+  }
+
   // src/client/FileChangeViewerSection.ts
-  var INTRO = "\u300C\u7F16\u8F91 / \u5199\u5165\u300D\u5DE5\u5177\u884C\u7684\u9ED8\u8BA4\u5F62\u6001\u4E0E\u5DEE\u5F02\u89C6\u56FE\uFF0C\u4EE5\u53CA\u672C\u63D2\u4EF6\u9644\u5E26\u7684 patch \u5DE5\u5177\u5F00\u5173\u3002\u8FD9\u91CC\u6539\u7684\u662F\u5168\u5C40\u9ED8\u8BA4\u503C\uFF0C\u7ACB\u5373\u5199\u5165 settings.yaml \u7684 dshp-file-change-viewer \u5206\u8282\uFF1A\u663E\u793A\u504F\u597D\u53EA\u5F71\u54CD**\u4E4B\u540E\u65B0\u6E32\u67D3**\u7684\u7F16\u8F91 / \u5199\u5165\u884C\uFF08\u5DF2\u7ECF\u5728\u4F1A\u8BDD\u91CC\u7684\u884C\u4FDD\u6301\u5B83\u5F53\u524D\u7684\u6837\u5B50\uFF0C\u5355\u884C\u3001\u5355\u5757\u968F\u65F6\u53EF\u4EE5\u4E34\u65F6\u70B9\u5F00 / \u6536\u8D77\uFF0C\u4E0D\u5199\u56DE\uFF09\uFF1Bpatch \u5DE5\u5177\u5F00\u5173\u5219\u662F\u5373\u65F6\u751F\u6548\u7684\u6CE8\u518C\u5F00\u5173\u3002";
+  var INTRO = "\u300C\u7F16\u8F91 / \u5199\u5165\u300D\u5DE5\u5177\u884C\u7684\u9ED8\u8BA4\u5F62\u6001\u4E0E\u5DEE\u5F02\u89C6\u56FE\uFF0C\u4EE5\u53CA\u672C\u63D2\u4EF6\u9644\u5E26\u7684 patch \u5DE5\u5177\u5F00\u5173\u3002\u8FD9\u91CC\u6539\u7684\u662F**\u5168\u5C40\u9ED8\u8BA4\u503C**\uFF0C\u7ACB\u5373\u5199\u5165 settings.yaml \u7684 dshp-file-change-viewer \u5206\u8282\uFF1A\u663E\u793A\u504F\u597D\u53EA\u5F71\u54CD**\u4E4B\u540E\u65B0\u6E32\u67D3**\u7684\u7F16\u8F91 / \u5199\u5165\u884C\uFF08\u5DF2\u7ECF\u5728\u4F1A\u8BDD\u91CC\u7684\u884C\u4FDD\u6301\u5B83\u5F53\u524D\u7684\u6837\u5B50\uFF0C\u5355\u884C\u3001\u5355\u5757\u968F\u65F6\u53EF\u4EE5\u4E34\u65F6\u70B9\u5F00 / \u6536\u8D77\uFF0C\u4E0D\u5199\u56DE\uFF09\u3002\u53E6\u5916\uFF0C\u4F1A\u8BDD\u9875\u5934\u53F3\u4FA7\u8FD8\u6709\u4E24\u4E2A\u53EA\u4F5C\u7528\u4E8E**\u5F53\u524D\u4F1A\u8BDD**\u7684\u5FEB\u6377\u5F00\u5173\uFF08\u4E00\u952E\u5C55\u5F00 / \u6536\u8D77\u3001\u5207\u6362\u5DEE\u5F02\u89C6\u56FE\uFF09\uFF0C\u5B83\u4EEC\u4E0D\u52A8\u8FD9\u91CC\u7684\u503C\u3002";
   var EXPAND_LABEL = "\u7F16\u8F91 / \u5199\u5165\u9ED8\u8BA4\u5C55\u5F00";
-  var EXPAND_HINT = "\u5F00\uFF1A\u65B0\u6E32\u67D3\u7684\u7F16\u8F91 / \u5199\u5165\u884C\u76F4\u63A5\u5C55\u5F00\u663E\u793A\u6539\u52A8\uFF1B\u5173\uFF1A\u4E0E\u601D\u8003 / \u8BFB\u53D6\u884C\u4E00\u81F4\uFF0C\u9ED8\u8BA4\u6536\u8D77\u3001\u70B9\u4E00\u4E0B\u624D\u5C55\u5F00\u3002\u53EA\u51B3\u5B9A\u65B0\u6E32\u67D3\u65F6\u7684\u521D\u59CB\u72B6\u6001\uFF0C\u884C\u5185\u6587\u4EF6\u5757\u4E0E\u5355\u5757\u6298\u53E0\u90FD\u53EF\u4E34\u65F6\u70B9\u3002";
+  var EXPAND_HINT = "\u5F00\uFF1A\u65B0\u6E32\u67D3\u7684\u7F16\u8F91 / \u5199\u5165\u884C\u76F4\u63A5\u5C55\u5F00\u663E\u793A\u6539\u52A8\uFF1B\u5173\uFF1A\u4E0E\u601D\u8003 / \u8BFB\u53D6\u884C\u4E00\u81F4\uFF0C\u9ED8\u8BA4\u6536\u8D77\u3001\u70B9\u4E00\u4E0B\u624D\u5C55\u5F00\u3002\u53EA\u51B3\u5B9A\u9ED8\u8BA4\u503C\uFF0C\u884C\u5185\u6587\u4EF6\u5757\u4E0E\u5355\u5757\u6298\u53E0\u90FD\u53EF\u4E34\u65F6\u70B9\uFF0C\u4F1A\u8BDD\u9875\u5934\u7684\u300C\u5C55\u5F00 / \u6536\u8D77\u300D\u4E5F\u53EA\u538B\u8FC7\u5F53\u524D\u4F1A\u8BDD\u3002";
   var PATCH_LABEL = "\u542F\u7528 patch \u5DE5\u5177\uFF08\u6D4B\u8BD5\u7248\uFF09";
   var PATCH_HINT = "\u5F00\uFF1A\u6A21\u578B\u591A\u51FA\u4E00\u4E2A patch \u5DE5\u5177\uFF0C\u4E00\u6B21\u8C03\u7528\u6539\u591A\u5904 / \u591A\u6587\u4EF6\uFF08*** Begin Patch \u4FE1\u5C01\uFF0C\u53EA\u505A\u65B0\u5EFA\u4E0E\u4FEE\u6539\uFF0C\u5220\u9664 / \u6539\u540D\u4ECD\u8D70 bash\uFF09\u3002\u5173\uFF08\u9ED8\u8BA4\uFF09\uFF1A\u4E0D\u6CE8\u518C\u8FD9\u4E2A\u5DE5\u5177\uFF0C\u6A21\u578B\u53EA\u7528\u5B98\u65B9\u7684 read / write / edit\u3002\u6539\u5B8C\u7ACB\u5373\u751F\u6548\uFF0C\u4E0D\u5FC5\u91CD\u542F dsh web\uFF1B\u53D6\u6D88\u65F6\u6B63\u5728\u8FDB\u884C\u7684\u8C03\u7528\u4E0D\u53D7\u5F71\u54CD\u3002";
   var VIEW_LABEL = "\u5C55\u793A\u65B9\u5F0F";
-  var VIEW_HINT = "\u9AD8\u4EAE\uFF1A\u5355\u4E2A\u4EE3\u7801\u5757\u91CC\u653E\u5B8C\u6574\u7EDF\u4E00 diff\uFF08\u6574\u884C\u7EA2\u7EFF + \u884C\u53F7 + \u8BED\u6CD5\u9AD8\u4EAE\uFF09\uFF1B\xB1 \u5DEE\u5F02\uFF1A\u5B98\u65B9\u9010\u884C \xB1 \u89C6\u56FE\uFF0C\u7D27\u51D1\u3001\u8D85\u957F\u4E2D\u90E8\u6298\u53E0\u3002";
+  var VIEW_HINT = "\u4E24\u79CD\u89C6\u56FE\u5582\u7ED9\u6E32\u67D3\u5668\u7684\u90FD\u662F**\u540C\u4E00\u4EFD\u8BED\u4E49\u53D8\u66F4**\uFF08\u53EA\u7B97\u771F\u6B63\u53D8\u52A8\u7684\u884C\uFF0C\u672A\u53D8\u884C\u4E0D\u4F1A\u91CD\u590D\u51FA\u73B0\uFF09\uFF0C\u6240\u4EE5\u589E\u5220\u7EDF\u8BA1\u3001\u884C\u53F7\u4E0E\u4E24\u8FB9\u770B\u5230\u7684\u5B8C\u5168\u4E00\u81F4\uFF1B\u4E0B\u9762\u6BCF\u5F20\u5361\u76F4\u63A5\u753B\u51FA\u5BF9\u5E94\u6548\u679C\uFF0C\u9009\u4E2D\u5373\u751F\u6548\u3002\u5355\u5757\u4ECD\u53EF\u5728\u5361\u5934\u4E34\u65F6\u5207\u6362\uFF0C\u4F1A\u8BDD\u9875\u5934\u4E5F\u80FD\u53EA\u7ED9\u5F53\u524D\u4F1A\u8BDD\u6362\u4E00\u79CD\u3002";
   var CONTEXT_LABEL = "\u4E0A\u4E0B\u6587\u884C\u6570";
   var CONTEXT_HINT = "\u6539\u52A8\u4E24\u4FA7\u5404\u591A\u663E\u793A\u51E0\u884C**\u6CA1\u53D7\u5F71\u54CD**\u7684\u4EE3\u7801\u3002\u8FD9\u51E0\u884C\u53D6\u81EA\u6587\u4EF6\u5F53\u524D\u5185\u5BB9\uFF08\u4E0D\u662F\u6A21\u578B\u5728 old_string / \u8865\u4E01\u7247\u6BB5\u91CC\u5E26\u7684\u90A3\u51E0\u884C\uFF09\uFF0C\u6240\u4EE5\u6A21\u578B\u53EA\u5708 1 \u884C\u4E0A\u4E0B\u6587\u65F6\u4E5F\u80FD\u770B\u6E05\u6539\u52A8\u843D\u5728\u54EA\u91CC\uFF1B0 = \u53EA\u663E\u793A\u6A21\u578B\u7ED9\u7684\u5185\u5BB9\u3002\u6587\u4EF6\u8BFB\u4E0D\u5230\u3001\u6216\u8FD9\u6BB5\u6539\u52A8\u4E4B\u540E\u53C8\u88AB\u6539\u8FC7\u65F6\uFF0C\u5C31\u4E0D\u8865\u4E0A\u4E0B\u6587\uFF08\u4E0D\u7F16\u5185\u5BB9\uFF09\u3002";
-  var VIEW_OPTIONS = [
-    { id: "highlight", label: "\u9AD8\u4EAE" },
-    { id: "diff", label: "\xB1 \u5DEE\u5F02" }
-  ];
   var CONTEXT_OPTIONS = [
     { id: "0", label: "\u4E0D\u663E\u793A" },
     { id: "3", label: "3 \u884C" },
@@ -1068,6 +1210,7 @@
   ];
   function createFileChangeViewerSection(React, P, prefsFace) {
     const { usePrefs, setPref, useSaveState, reload } = prefsFace;
+    const ViewCards = createViewCards(React, P);
     function Row(props) {
       return React.createElement(
         "div",
@@ -1075,6 +1218,19 @@
         React.createElement(
           "div",
           { className: "fcv-rowText" },
+          React.createElement("div", { className: "fcv-title" }, props.label),
+          React.createElement("div", { className: "fcv-desc" }, props.desc)
+        ),
+        props.children
+      );
+    }
+    function Block(props) {
+      return React.createElement(
+        "div",
+        { className: "fcv-settingBlock" },
+        React.createElement(
+          "div",
+          { className: "fcv-blockText" },
           React.createElement("div", { className: "fcv-title" }, props.label),
           React.createElement("div", { className: "fcv-desc" }, props.desc)
         ),
@@ -1136,7 +1292,6 @@
     return function FileChangeViewerSection() {
       const prefs = usePrefs();
       const save = useSaveState();
-      const picked = VIEW_OPTIONS.filter((option) => option.id === prefs.view)[0];
       const pickedContext = CONTEXT_OPTIONS.filter((option) => option.id === String(prefs.contextLines))[0];
       const busy = save.phase === "loading" || save.phase === "saving";
       const children = [
@@ -1146,12 +1301,10 @@
           { className: "fcv-section" },
           React.createElement("div", { className: "fcv-sectionHead" }, "\u663E\u793A"),
           React.createElement(
-            Row,
+            Block,
             { label: VIEW_LABEL, desc: VIEW_HINT },
-            React.createElement(Select, {
+            React.createElement(ViewCards, {
               value: prefs.view,
-              selectedLabel: picked === void 0 ? prefs.view : picked.label,
-              options: VIEW_OPTIONS,
               onSelect: (id) => setPref("view", id)
             })
           ),
@@ -1331,6 +1484,157 @@
     };
   }
 
+  // src/client/SessionControls.ts
+  var GROUP_LABEL = "\u6587\u4EF6\u6539\u52A8\u7684\u5C55\u5F00\u4E0E\u5DEE\u5F02\u89C6\u56FE\uFF08\u4EC5\u5F53\u524D\u4F1A\u8BDD\uFF09";
+  var EXPAND_TEXT = "\u5C55\u5F00\u6539\u52A8";
+  var COLLAPSE_TEXT = "\u6536\u8D77\u6539\u52A8";
+  var EXPAND_TITLE = "\u5C55\u5F00\u672C\u4F1A\u8BDD\u7684\u6240\u6709\u6587\u4EF6\u6539\u52A8\uFF08\u53EA\u5F71\u54CD\u5F53\u524D\u4F1A\u8BDD\uFF0C\u4E0D\u6539\u5168\u5C40\u504F\u597D\uFF09";
+  var COLLAPSE_TITLE = "\u6536\u8D77\u672C\u4F1A\u8BDD\u7684\u6240\u6709\u6587\u4EF6\u6539\u52A8\uFF08\u53EA\u5F71\u54CD\u5F53\u524D\u4F1A\u8BDD\uFF0C\u4E0D\u6539\u5168\u5C40\u504F\u597D\uFF09";
+  var VIEW_HIGHLIGHT_TEXT = "\u9AD8\u4EAE";
+  var VIEW_DIFF_TEXT = "\xB1 \u5DEE\u5F02";
+  var VIEW_TITLE = "\u5207\u6362\u672C\u4F1A\u8BDD\u6587\u4EF6\u6539\u52A8\u7684\u5C55\u793A\u65B9\u5F0F\uFF08\u9AD8\u4EAE = \u5355\u4EE3\u7801\u5757\u7EDF\u4E00 diff\uFF0C\xB1 \u5DEE\u5F02 = \u5B98\u65B9\u9010\u884C\u89C6\u56FE\uFF1B\u53EA\u5F71\u54CD\u5F53\u524D\u4F1A\u8BDD\uFF09";
+  var RESET_TEXT = "\u6062\u590D\u8DDF\u968F\u504F\u597D";
+  var RESET_TITLE = "\u64A4\u6389\u672C\u4F1A\u8BDD\u7684\u4E34\u65F6\u8BBE\u7F6E\uFF0C\u56DE\u5230\u8BBE\u7F6E\u9875\u91CC\u7684\u5168\u5C40\u9ED8\u8BA4";
+  var ICON_SIZE2 = 11;
+  function createSessionControls(React, P, prefsFace, sessionFace) {
+    const { usePrefs } = prefsFace;
+    const { useOverride, setExpanded, setView, reset } = sessionFace;
+    return function SessionControls(props) {
+      const prefs = usePrefs();
+      const override = useOverride(props.sessionId);
+      const expanded = override.expanded ?? prefs.sectionsOpen;
+      const view = override.view ?? prefs.view;
+      const overridden = override.expanded !== null || override.view !== null;
+      const button = (key, onClick, title, children2) => React.createElement(
+        "button",
+        {
+          key,
+          type: "button",
+          className: "fcv-headBtn",
+          title,
+          "aria-label": title,
+          onClick
+        },
+        children2
+      );
+      const children = [
+        button(
+          "expand",
+          () => setExpanded(props.sessionId, !expanded),
+          expanded ? COLLAPSE_TITLE : EXPAND_TITLE,
+          [
+            React.createElement(P.IconChevronDownOutline14, {
+              key: "icon",
+              size: ICON_SIZE2,
+              className: "fcv-headChevron" + (expanded ? "" : " fcv-headChevronShut")
+            }),
+            React.createElement(
+              "span",
+              { key: "text", className: "fcv-headLabel" },
+              expanded ? COLLAPSE_TEXT : EXPAND_TEXT
+            )
+          ]
+        ),
+        React.createElement("span", { key: "sep", className: "fcv-headSep" }),
+        button(
+          "view",
+          () => setView(props.sessionId, view === "highlight" ? "diff" : "highlight"),
+          VIEW_TITLE,
+          [
+            view === "highlight" ? React.createElement(P.IconCodeOutline16, { key: "icon", size: ICON_SIZE2 }) : React.createElement(P.IconBranchOutline16, { key: "icon", size: ICON_SIZE2 }),
+            React.createElement(
+              "span",
+              { key: "text", className: "fcv-headLabel" },
+              view === "highlight" ? VIEW_HIGHLIGHT_TEXT : VIEW_DIFF_TEXT
+            )
+          ]
+        )
+      ];
+      if (overridden) {
+        children.push(
+          React.createElement(
+            "button",
+            {
+              key: "reset",
+              type: "button",
+              className: "fcv-headReset",
+              title: RESET_TITLE,
+              "aria-label": RESET_TEXT,
+              onClick: () => reset(props.sessionId)
+            },
+            React.createElement(P.IconRefreshOutline14, { size: ICON_SIZE2 })
+          )
+        );
+      }
+      return React.createElement(
+        "div",
+        {
+          className: "fcv-headCtl" + (overridden ? " fcv-headCtlOverridden" : ""),
+          role: "group",
+          "aria-label": GROUP_LABEL
+        },
+        children
+      );
+    };
+  }
+
+  // src/client/session.ts
+  var NO_OVERRIDE = { expanded: null, view: null, rev: 0 };
+  function createSessionOverrides(React) {
+    const overrides = /* @__PURE__ */ new Map();
+    const listeners2 = /* @__PURE__ */ new Set();
+    let rev = 0;
+    function keyOf2(sessionId) {
+      return typeof sessionId === "string" ? sessionId : "";
+    }
+    function notify2() {
+      for (const listener of Array.from(listeners2)) {
+        try {
+          listener();
+        } catch {
+        }
+      }
+    }
+    function write(sessionId, next) {
+      const key = keyOf2(sessionId);
+      if (key === "") return;
+      const prev = overrides.get(key) ?? NO_OVERRIDE;
+      rev += 1;
+      const merged = {
+        expanded: next.expanded === void 0 ? prev.expanded : next.expanded,
+        view: next.view === void 0 ? prev.view : next.view,
+        rev
+      };
+      overrides.set(key, merged);
+      notify2();
+    }
+    return {
+      useOverride(sessionId) {
+        const [, bump] = React.useState(0);
+        React.useEffect(() => {
+          const listener = () => bump((tick) => tick + 1);
+          listeners2.add(listener);
+          return () => {
+            listeners2.delete(listener);
+          };
+        }, []);
+        return overrides.get(keyOf2(sessionId)) ?? NO_OVERRIDE;
+      },
+      setExpanded(sessionId, expanded) {
+        write(sessionId, { expanded });
+      },
+      setView(sessionId, view) {
+        write(sessionId, { view });
+      },
+      reset(sessionId) {
+        const key = keyOf2(sessionId);
+        if (key === "" || !overrides.delete(key)) return;
+        rev += 1;
+        notify2();
+      }
+    };
+  }
+
   // src/client/styles.ts
   var CSS = `
 
@@ -1385,7 +1689,7 @@
 .fcv-card .fcv-ctx:last-child{padding-bottom:8px}
 .fcv-muted{margin:0;padding:6px 10px 8px;color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
 
-/* \u2500\u2500 \u2462 \u8BBE\u7F6E\u8282\u300C\u6587\u4EF6\u4FEE\u6539\u5361\u7247\u300D\uFF08settings.section\uFF09 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+/* \u2500\u2500 \u2462 \u8BBE\u7F6E\u8282\u300CFile Change View\u300D\uFF08settings.section\uFF09 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
 /* \u7248\u5F0F\u7167\u6284\u5B98\u65B9\u8BBE\u7F6E\u8282\u7684\u300C\u884C\u300D\u89C4\u683C\uFF0C\u503C\u53D6\u81EA\u672C\u4ED3\u6807\u6746 vision-bridge / mcwiki-search\uFF1A\u4E00\u9875
    max-width 720px\uFF0C\u6BCF\u8282\u4E00\u5C0F\u6BB5\u6807\u9898\uFF0C\u884C\u5185\u5DE6\u5217 label 14px + desc 12px\u3001\u53F3\u4FA7\u63A7\u4EF6\uFF0C\u884C\u95F4 .5px \u7EC6\u7EBF\u3002 */
 .fcv-page{max-width:720px;color:var(--dsw-alias-label-primary);flex-direction:column;display:flex}
@@ -1396,6 +1700,10 @@
 .fcv-settingRow{border-bottom:.5px solid var(--dsw-alias-border-l2);align-items:center;gap:8px;padding:16px 0;display:flex}
 .fcv-section .fcv-settingRow:last-child{border-bottom:none}
 .fcv-rowText{flex-direction:column;flex:1;gap:4px;min-width:0;padding-right:48px;display:flex}
+/* \u6574\u5E45\u8BBE\u7F6E\u5757\uFF08label / desc \u5728\u4E0A\u3001\u63A7\u4EF6\u5360\u6EE1\u6574\u884C\u5728\u4E0B\uFF09\uFF1A\u5C55\u793A\u65B9\u5F0F\u7684\u9884\u89C8\u5361\u585E\u4E0D\u8FDB Row \u53F3\u4FA7\u90A3\u4E2A\u7A84\u5217 */
+.fcv-settingBlock{border-bottom:.5px solid var(--dsw-alias-border-l2);flex-direction:column;gap:12px;padding:16px 0;display:flex}
+.fcv-section .fcv-settingBlock:last-child{border-bottom:none}
+.fcv-blockText{flex-direction:column;gap:4px;display:flex}
 .fcv-title{color:var(--dsw-alias-label-primary);font-size:14px;font-weight:400;line-height:22px}
 .fcv-desc{color:var(--dsw-alias-label-tertiary);font-size:12px;font-weight:400;line-height:18px}
 .fcv-barEnd{align-items:center;gap:8px;display:flex;flex-wrap:wrap;padding:12px 0;justify-content:flex-end}
@@ -1418,6 +1726,53 @@
 .fcv-thumb{background:var(--dsw-alias-label-primary-foreground);border-radius:50%;width:16px;height:16px;transition:transform .12s;display:block}
 .fcv-switchOn .fcv-thumb{transform:translate(16px)}
 @media (prefers-reduced-motion:reduce){.fcv-thumb{transition:none}}
+
+/* \u2500\u2500 \u2462b \u5C55\u793A\u65B9\u5F0F\uFF1A\u4E24\u5F20\u5E26\u771F\u5B9E\u6837\u5F20\u7684\u5355\u9009\u5361 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+/* \u7A84\u5C4F\uFF08<2\xD7240px + gap\uFF09\u81EA\u52A8\u843D\u6210\u5355\u5217\uFF1B\u8BBE\u7F6E\u9875\u672C\u8EAB max-width 720px\uFF0C\u6240\u4EE5\u5E38\u6001\u662F\u5E76\u6392\u4E24\u5F20\u3002 */
+.fcv-viewCards{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;display:grid}
+.fcv-viewCard{background:var(--dsw-alias-bg-base);cursor:pointer;border:.5px solid var(--dsw-alias-border-l2);border-radius:12px;flex-direction:column;gap:8px;padding:12px;display:flex;transition:border-color .12s,background .12s}
+.fcv-viewCard:hover{border-color:var(--dsw-alias-border-l4);background:var(--dsw-alias-interactive-bg-hover)}
+.fcv-viewCardOn,.fcv-viewCardOn:hover{border-color:var(--dsw-alias-brand-primary)}
+.fcv-viewCard:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
+.fcv-viewCardHead{align-items:center;gap:8px;display:flex}
+.fcv-viewCardName{color:var(--dsw-alias-label-primary);font-size:14px;font-weight:500;line-height:22px}
+.fcv-viewCardDesc{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
+.fcv-radio{box-sizing:border-box;border:1.5px solid var(--dsw-alias-border-l4);border-radius:50%;flex:none;width:16px;height:16px;position:relative}
+.fcv-viewCardOn .fcv-radio{border-color:var(--dsw-alias-brand-primary)}
+.fcv-viewCardOn .fcv-radio:after{content:"";background:var(--dsw-alias-brand-primary);border-radius:50%;position:absolute;inset:3px}
+/* \u6837\u5F20\u6574\u5757\u4E0D\u54CD\u5E94\u6307\u9488\u4E8B\u4EF6\uFF1A\u70B9\u5B83\u4EFB\u610F\u4F4D\u7F6E\u90FD\u7B97\u300C\u9009\u8FD9\u5F20\u5361\u300D\uFF0C\u800C\u5B98\u65B9\u4EE3\u7801\u5757 / \u5DEE\u5F02\u5757\u81EA\u5E26\u7684\u590D\u5236\u3001\u6298\u53E0
+   \u7B49\u6309\u94AE\u5728\u6837\u5F20\u91CC\u6CA1\u6709\u610F\u4E49\uFF0C\u4E5F\u4E0D\u8BE5\u628A\u6574\u5361\u7684\u70B9\u51FB\u5403\u6389\u3002 */
+.fcv-pvBody{pointer-events:none;--fcv-del-bg:var(--dsw-alias-interactive-bg-hover-danger);--fcv-add-bg:var(--dsw-alias-state-success-tertiary);background:var(--dsw-alias-markdown-code-block);border:.5px solid var(--dsw-alias-border-l1);border-radius:8px;flex-direction:column;overflow:hidden;display:flex}
+.fcv-pvCodeBox{flex-direction:column;display:flex}
+/* \u6837\u5F20\u91CC\u7684\u4E24\u4E2A\u5B98\u65B9\u7EC4\u4EF6\u90FD\u644A\u5E73\u8FDB .fcv-pvBody\uFF1A\u76D2\u5B50\u7531\u5B83\u7ED9\uFF0C\u8BED\u8A00\u680F\uFF08\u590D\u5236\u5728\u5176\u4E2D\uFF09\u7167\u65E7\u9690\u85CF\u3002
+   \u7C7B\u540D\u523B\u610F\u4E0D\u590D\u7528\u5DE5\u5177\u884C\u7684 fcv-code / fcv-diff \u2014\u2014 \u4E24\u5957\u7248\u5F0F\u7684\u7C7B\u540D\u96C6\u5408\u5FC5\u987B\u4E0D\u76F8\u4EA4\u3002 */
+.fcv-pvCode{--dsl-code-block-line-white-space:pre;background:none!important;border-radius:0;margin:0}
+.fcv-pvCode>div:has([data-code-block-banner]){display:none}
+.fcv-pvCode [data-code-block-banner]{display:none}
+.fcv-pvCode pre{background:none!important;padding:8px 0;border-radius:0}
+.fcv-pvDiff{margin:0;border-radius:0}
+.fcv-pvDiffWrap{flex-direction:column;display:flex}
+.fcv-pvCtx{font-family:var(--ds-font-family-code);font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary);padding:0 10px;white-space:pre}
+.fcv-pvCtxLine{white-space:pre}
+.fcv-pvMuted{margin:0;padding:6px 10px 8px;color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
+
+/* \u2500\u2500 \u2463 \u4F1A\u8BDD\u9875\u5934\u5FEB\u6377\u5F00\u5173\uFF08conversation.session.header.utilities\uFF09 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */
+/* \u5F62\u6001\u7167\u6284\u540C\u4E00\u69FD\u4F4D\u4E0A\u7684\u5B98\u65B9 open-in-app\uFF1A.5px \u8FB9\u6846 + 14px \u5706\u89D2\u7684\u80F6\u56CA\u300111px \u5B57\u53F7\u3002
+   \u53EA\u6709\u300C\u5F53\u524D\u4F1A\u8BDD\u5DF2\u88AB\u8986\u76D6\u300D\u65F6\u624D\u628A\u8FB9\u6846\u6362\u6210\u54C1\u724C\u8272\uFF0C\u5E76\u591A\u51FA\u4E00\u4E2A\u300C\u6062\u590D\u8DDF\u968F\u504F\u597D\u300D\u6309\u94AE\u3002 */
+.fcv-headCtl{border:.5px solid var(--dsw-alias-border-l4);border-radius:14px;align-items:stretch;height:28px;display:inline-flex;overflow:hidden}
+.fcv-headCtlOverridden{border-color:var(--dsw-alias-brand-primary)}
+.fcv-headBtn{color:var(--dsw-alias-label-primary);cursor:pointer;white-space:nowrap;background:0 0;border:0;align-items:center;gap:5px;padding:5px 8px;font-family:var(--dsw-font-family);font-size:11px;font-weight:400;line-height:16px;display:inline-flex}
+.fcv-headBtn:hover,.fcv-headBtn:focus-visible{background:var(--dsw-alias-interactive-bg-hover)}
+.fcv-headBtn:focus-visible{outline:none}
+.fcv-headSep{background:var(--dsw-alias-border-l4);flex:none;width:.5px}
+.fcv-headLabel{color:var(--dsw-alias-label-secondary)}
+.fcv-headChevron{flex:none;transition:transform .12s}
+/* \u300C\u5C55\u5F00\u300D\u6001\u628A\u6298\u53E0\u7BAD\u5934\u8F6C\u6210\u671D\u53F3\uFF0C\u4E00\u4E2A\u56FE\u6807\u8868\u8FBE\u4E24\u79CD\u72B6\u6001 */
+.fcv-headChevronShut{transform:rotate(-90deg)}
+.fcv-headReset{color:var(--dsw-alias-label-secondary);cursor:pointer;background:0 0;border:0;border-left:.5px solid var(--dsw-alias-border-l4);align-items:center;padding:5px 7px;display:inline-flex}
+.fcv-headReset:hover,.fcv-headReset:focus-visible{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.fcv-headReset:focus-visible{outline:none}
+@media (prefers-reduced-motion:reduce){.fcv-headChevron{transition:none}}
 `;
 
   // src/client/index.ts
@@ -1427,7 +1782,9 @@
   var TOOL_KEYS = ["edit", "write", "str_replace_editor", "patch"];
   var SETTINGS_NS = "dshp-file-change-viewer";
   var SETTINGS_ORDER = 31;
-  var SETTINGS_LABEL = "\u6587\u4EF6\u4FEE\u6539\u5361\u7247";
+  var SETTINGS_LABEL = "File Change View";
+  var HEADER_SLOT = "conversation.session.header.utilities";
+  var HEADER_ORDER = 20;
   function register() {
     const loader = typeof window !== "undefined" ? window.__ModuleLoader__ : void 0;
     if (!loader || typeof loader.load !== "function") return;
@@ -1445,9 +1802,11 @@
           const slots = ctx.get("slots");
           if (slots === void 0) return;
           const prefsFace = createPrefs(React);
+          const sessionFace = createSessionOverrides(React);
           const locator = createLocator(React);
-          const FileChangeRow = createFileChangeRow(React, P, prefsFace, locator);
+          const FileChangeRow = createFileChangeRow(React, P, prefsFace, locator, sessionFace);
           const FileChangeViewerSection = createFileChangeViewerSection(React, P, prefsFace);
+          const SessionControls = createSessionControls(React, P, prefsFace, sessionFace);
           try {
             const style = document.createElement("style");
             style.setAttribute("data-plugin-css", "dshp-file-change-viewer/settings.css");
@@ -1473,6 +1832,17 @@
               "[dshp-file-change-viewer] \u6CE8\u518C\u8BBE\u7F6E\u8282\u5931\u8D25\uFF0C\u4E24\u9879\u504F\u597D\u5C06\u53EA\u80FD\u624B\u6539 settings.yaml\uFF1A",
               error
             );
+          }
+          try {
+            ctx.effect(
+              () => slots.inject(
+                HEADER_SLOT,
+                () => slots.register({ name: HEADER_SLOT, id: SETTINGS_NS, order: HEADER_ORDER }, SessionControls)
+              ),
+              "dshp-file-change-viewer: session header controls"
+            );
+          } catch (error) {
+            console.error("[dshp-file-change-viewer] \u6CE8\u518C\u4F1A\u8BDD\u9875\u5934\u5FEB\u6377\u5F00\u5173\u5931\u8D25\uFF0C\u8BBE\u7F6E\u9875\u4ECD\u7136\u53EF\u7528\uFF1A", error);
           }
           try {
             ctx.effect(

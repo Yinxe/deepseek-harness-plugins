@@ -12,13 +12,19 @@
  *
  * ② **差异本体的两处覆盖**：删/增行的整行底色变量、以及代码块在行内的外边距与换行策略。
  *
- * ③ **设置节「文件修改卡片」**（`settings.section`）：官方设置节的「行」版式。
+ * ③ **设置节「File Change View」**（`settings.section`）：官方设置节的「行」版式 + 「展示方式」两张
+ *    带真实样张的单选卡。
  *
- * ⚠️ 三段版式的**类名集合必须两两不相交**：本文件里的规则是全局作用域，工具行元素上的类名由
+ * ④ **会话页头的两个快捷开关**（`conversation.session.header.utilities`）：照抄同一槽位上官方
+ *    `open-in-app` 的胶囊尺寸。
+ *
+ * ⚠️ 各段版式的**类名集合必须两两不相交**：本文件里的规则是全局作用域，工具行元素上的类名由
  *    `FileChangeRow.ts` 以字符串传下去（`className` / `rowClassName`），一旦与设置节的类名重名，
  *    设置节的布局就会打到工具行上——曾经设置节的 `.fcv-row{padding:16px 0}` 就把「编辑 / 写入」
- *    行撑高了 32px 并加了一条底边线。工具行用 `fcv-toolRow` / `fcv-rowRoot` / `fcv-cardRow`，
- *    设置节一律用 `fcv-setting*` / `fcv-section*` / `fcv-page`，`scripts/check-client.mjs` 有断言守着。
+ *    行撑高了 32px 并加了一条底边线。工具行用 `fcv-toolRow` / `fcv-rowRoot` / `fcv-card` 等，
+ *    设置节一律用 `fcv-setting*` / `fcv-section*` / `fcv-page` / `fcv-viewCard*` / `fcv-pv*`
+ *    （样张预览刻意**不**复用工具行那套类名，见下），页头用 `fcv-head*`，
+ *    `scripts/check-client.mjs` 有断言守着。
  */
 export const CSS: string = `
 
@@ -73,7 +79,7 @@ export const CSS: string = `
 .fcv-card .fcv-ctx:last-child{padding-bottom:8px}
 .fcv-muted{margin:0;padding:6px 10px 8px;color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
 
-/* ── ③ 设置节「文件修改卡片」（settings.section） ─────────────────────────────── */
+/* ── ③ 设置节「File Change View」（settings.section） ─────────────────────────────── */
 /* 版式照抄官方设置节的「行」规格，值取自本仓标杆 vision-bridge / mcwiki-search：一页
    max-width 720px，每节一小段标题，行内左列 label 14px + desc 12px、右侧控件，行间 .5px 细线。 */
 .fcv-page{max-width:720px;color:var(--dsw-alias-label-primary);flex-direction:column;display:flex}
@@ -84,6 +90,10 @@ export const CSS: string = `
 .fcv-settingRow{border-bottom:.5px solid var(--dsw-alias-border-l2);align-items:center;gap:8px;padding:16px 0;display:flex}
 .fcv-section .fcv-settingRow:last-child{border-bottom:none}
 .fcv-rowText{flex-direction:column;flex:1;gap:4px;min-width:0;padding-right:48px;display:flex}
+/* 整幅设置块（label / desc 在上、控件占满整行在下）：展示方式的预览卡塞不进 Row 右侧那个窄列 */
+.fcv-settingBlock{border-bottom:.5px solid var(--dsw-alias-border-l2);flex-direction:column;gap:12px;padding:16px 0;display:flex}
+.fcv-section .fcv-settingBlock:last-child{border-bottom:none}
+.fcv-blockText{flex-direction:column;gap:4px;display:flex}
 .fcv-title{color:var(--dsw-alias-label-primary);font-size:14px;font-weight:400;line-height:22px}
 .fcv-desc{color:var(--dsw-alias-label-tertiary);font-size:12px;font-weight:400;line-height:18px}
 .fcv-barEnd{align-items:center;gap:8px;display:flex;flex-wrap:wrap;padding:12px 0;justify-content:flex-end}
@@ -106,4 +116,51 @@ export const CSS: string = `
 .fcv-thumb{background:var(--dsw-alias-label-primary-foreground);border-radius:50%;width:16px;height:16px;transition:transform .12s;display:block}
 .fcv-switchOn .fcv-thumb{transform:translate(16px)}
 @media (prefers-reduced-motion:reduce){.fcv-thumb{transition:none}}
+
+/* ── ③b 展示方式：两张带真实样张的单选卡 ─────────────────────────────────────── */
+/* 窄屏（<2×240px + gap）自动落成单列；设置页本身 max-width 720px，所以常态是并排两张。 */
+.fcv-viewCards{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;display:grid}
+.fcv-viewCard{background:var(--dsw-alias-bg-base);cursor:pointer;border:.5px solid var(--dsw-alias-border-l2);border-radius:12px;flex-direction:column;gap:8px;padding:12px;display:flex;transition:border-color .12s,background .12s}
+.fcv-viewCard:hover{border-color:var(--dsw-alias-border-l4);background:var(--dsw-alias-interactive-bg-hover)}
+.fcv-viewCardOn,.fcv-viewCardOn:hover{border-color:var(--dsw-alias-brand-primary)}
+.fcv-viewCard:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}
+.fcv-viewCardHead{align-items:center;gap:8px;display:flex}
+.fcv-viewCardName{color:var(--dsw-alias-label-primary);font-size:14px;font-weight:500;line-height:22px}
+.fcv-viewCardDesc{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
+.fcv-radio{box-sizing:border-box;border:1.5px solid var(--dsw-alias-border-l4);border-radius:50%;flex:none;width:16px;height:16px;position:relative}
+.fcv-viewCardOn .fcv-radio{border-color:var(--dsw-alias-brand-primary)}
+.fcv-viewCardOn .fcv-radio:after{content:"";background:var(--dsw-alias-brand-primary);border-radius:50%;position:absolute;inset:3px}
+/* 样张整块不响应指针事件：点它任意位置都算「选这张卡」，而官方代码块 / 差异块自带的复制、折叠
+   等按钮在样张里没有意义，也不该把整卡的点击吃掉。 */
+.fcv-pvBody{pointer-events:none;--fcv-del-bg:var(--dsw-alias-interactive-bg-hover-danger);--fcv-add-bg:var(--dsw-alias-state-success-tertiary);background:var(--dsw-alias-markdown-code-block);border:.5px solid var(--dsw-alias-border-l1);border-radius:8px;flex-direction:column;overflow:hidden;display:flex}
+.fcv-pvCodeBox{flex-direction:column;display:flex}
+/* 样张里的两个官方组件都摊平进 .fcv-pvBody：盒子由它给，语言栏（复制在其中）照旧隐藏。
+   类名刻意不复用工具行的 fcv-code / fcv-diff —— 两套版式的类名集合必须不相交。 */
+.fcv-pvCode{--dsl-code-block-line-white-space:pre;background:none!important;border-radius:0;margin:0}
+.fcv-pvCode>div:has([data-code-block-banner]){display:none}
+.fcv-pvCode [data-code-block-banner]{display:none}
+.fcv-pvCode pre{background:none!important;padding:8px 0;border-radius:0}
+.fcv-pvDiff{margin:0;border-radius:0}
+.fcv-pvDiffWrap{flex-direction:column;display:flex}
+.fcv-pvCtx{font-family:var(--ds-font-family-code);font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary);padding:0 10px;white-space:pre}
+.fcv-pvCtxLine{white-space:pre}
+.fcv-pvMuted{margin:0;padding:6px 10px 8px;color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
+
+/* ── ④ 会话页头快捷开关（conversation.session.header.utilities） ───────────────── */
+/* 形态照抄同一槽位上的官方 open-in-app：.5px 边框 + 14px 圆角的胶囊、11px 字号。
+   只有「当前会话已被覆盖」时才把边框换成品牌色，并多出一个「恢复跟随偏好」按钮。 */
+.fcv-headCtl{border:.5px solid var(--dsw-alias-border-l4);border-radius:14px;align-items:stretch;height:28px;display:inline-flex;overflow:hidden}
+.fcv-headCtlOverridden{border-color:var(--dsw-alias-brand-primary)}
+.fcv-headBtn{color:var(--dsw-alias-label-primary);cursor:pointer;white-space:nowrap;background:0 0;border:0;align-items:center;gap:5px;padding:5px 8px;font-family:var(--dsw-font-family);font-size:11px;font-weight:400;line-height:16px;display:inline-flex}
+.fcv-headBtn:hover,.fcv-headBtn:focus-visible{background:var(--dsw-alias-interactive-bg-hover)}
+.fcv-headBtn:focus-visible{outline:none}
+.fcv-headSep{background:var(--dsw-alias-border-l4);flex:none;width:.5px}
+.fcv-headLabel{color:var(--dsw-alias-label-secondary)}
+.fcv-headChevron{flex:none;transition:transform .12s}
+/* 「展开」态把折叠箭头转成朝右，一个图标表达两种状态 */
+.fcv-headChevronShut{transform:rotate(-90deg)}
+.fcv-headReset{color:var(--dsw-alias-label-secondary);cursor:pointer;background:0 0;border:0;border-left:.5px solid var(--dsw-alias-border-l4);align-items:center;padding:5px 7px;display:inline-flex}
+.fcv-headReset:hover,.fcv-headReset:focus-visible{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.fcv-headReset:focus-visible{outline:none}
+@media (prefers-reduced-motion:reduce){.fcv-headChevron{transition:none}}
 `;

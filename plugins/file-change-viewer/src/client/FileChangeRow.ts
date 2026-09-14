@@ -20,19 +20,31 @@
  *
  * ```
  * ▸ 编辑 · src/x.ts            +58 -43        ← 原生行（默认折叠，与读取/思考行一致）
- *    ▾ src/x.ts                +37 -26        ← 每个文件块自己的折叠（默认走用户偏好）
+ *    ▾ src/x.ts                +37 -26        ← 每个文件块自己的折叠（默认走会话级覆盖 / 用户偏好）
  *         [差异本体：高亮视图 / ± 差异视图]
  * ```
  *
- * 视图（高亮 / ± 差异）与「编辑 / 写入是否默认展开」都是**全局用户偏好**（见 `prefs.ts`，入口在设置页
- * 「通用 → 文件修改卡片」）；单块仍可临时点开/收起，不改变偏好。
+ * ## 三层优先级（从高到低）
+ *
+ * ```
+ * 块自己的临时点击  >  会话级覆盖（会话页头两个快捷开关）  >  全局用户偏好（设置页那一节）
+ * ```
+ *
+ * - 全局偏好住在 `settings.yaml`（`prefs.ts`），改的入口是设置页本插件那一节；
+ * - 会话级覆盖住在内存里（`session.ts`），改的入口是**会话页头**的两个按钮，换会话即失效、绝不落盘；
+ * - 单块的点开 / 收起 / 换视图只属于那一个块，不回写任何一层。
+ *
+ * 前两层的差别只在一处：会话级覆盖一改，本行**作废自己的临时状态**（`UiState.rev`），所以页头
+ * 那一下是真正的「全部展开 / 全部收起」，不会被几小时前的一次手动折叠挡回去。
  *
  * @module @dshp/file-change-viewer/client/FileChangeRow
  */
-import { buildModel, displayPath, hasChange, toDiffText } from './diff.js';
+import { buildModel, displayPath, hasChange } from './diff.js';
+import { buildHighlight, createDiffBody } from './diffView.js';
 import { languageOf } from './lang.js';
 import type { LocatorFace } from './locate.js';
 import type { PrefsFace } from './prefs.js';
+import type { SessionOverrideFace } from './session.js';
 import type {
   AnyPrimitives,
   AnyReact,
@@ -43,26 +55,13 @@ import type {
   FileDiff,
   ToolViewProps,
 } from './types.js';
-import type { UnifiedDiffKind, UnifiedDiffRow } from './diff.js';
-
-/**
- * 高亮视图单块一次渲染的行数上限。
- *
- * `CodeBlock` 没有 `maxLines`（不像 `DiffBlock` 会折叠中部），有多少行就渲染多少个高亮 span，
- * 所以必须自己封顶：400 行足够覆盖几乎所有 edit hunk 与大多数新文件，超出的部分在块下面用
- * 一行提示说明「改用 ± 视图可展开查看」。
- */
-const HIGHLIGHT_MAX_LINES = 400;
-
-/** ± 差异视图交给 `DiffBlock` 的展开上限（超出由它自己折叠中部）。 */
-const DIFF_MAX_LINES = 200;
+import type { UnifiedDiffRow } from './diff.js';
 
 /** 参数原文兜底展示的截断上限（模型产出的 JSON 不可信，见 docs/security.md）。 */
 const RAW_MAX_CHARS = 4000;
 
 const RAW_ARGS_LABEL = '原始参数';
 const WAITING_TEXT = '等待参数…';
-const OVERFLOW_HINT = '切换到 ± 差异视图可展开';
 const NEW_FILE_LABEL = '新文件';
 const REPLACE_ALL_LABEL = '全部替换';
 /** `patch` 工具的标题。conversation 命名空间里没有这个键（它不是官方工具），所以用字面量。 */
@@ -75,76 +74,6 @@ const VIEW_HIGHLIGHT_LABEL = '高亮';
 const VIEW_DIFF_LABEL = '± 差异';
 const VIEW_HIGHLIGHT_TITLE = '单代码块统一 diff：整行红绿底色 + 行号 + 语法高亮';
 const VIEW_DIFF_TITLE = '官方 ± 差异视图：逐行红绿文字，紧凑，超长中部折叠';
-
-/**
- * 生成「按行上底色 + 让删除行不占行号」的 CSS 规则。
- *
- * 官方 `CodeBlock` 没有逐行样式的 API，但它的行号模式给了三个可依赖的事实：每行是
- * `code > .line`（类名 `line` 是**未哈希**的固定名）、是块级元素（底色能铺满整行）、行号由官方
- * CSS 计数器 `counter-increment: source-line` 逐行自增。于是按行区间生成规则：连续的同类行并成
- * 一个区间选择器，正常 diff 一个 hunk 只会产出 2–4 条。
- *
- * **删除行不占行号**：行号取「新文件视角」——上下文行与新增行依次占号，删除行既不显示数字也不
- * 推进计数器（`counter-increment:none` + `:before{content:""}`），于是新文件行号连续、不会被已
- * 删除的行顶掉（与 GitHub 统一 diff 的「新列」一致）。
- *
- * 唯一的耦合点就是 `code > .line` 这个结构与那两个官方属性；上游若改结构，**后果只是底色与留空
- * 消失**（代码块、语法高亮、复制照常），不会报错。颜色不在这里写死：引用 `styles.ts` 定义的
- * `--fcv-del-bg` / `--fcv-add-bg`（它们本身又是官方 token）。
- *
- * @param codeClass - 本 hunk 独有的类名（挂在 CodeBlock 根上），避免不同行互相串色。
- * @param rows - 该 hunk 实际渲染出来的行。
- * @returns 若干条 CSS 规则（没有变更行时为空串）。
- */
-function tintRules(codeClass: string, rows: readonly UnifiedDiffRow[], startLine: number): string {
-  const rules: string[] = [];
-
-  // 真实行号：官方把 `counter-reset:source-line` 放在 code 上（`._numbered_ :where(pre) code`，
-  // 特异性 0,1,0），默认从 1 数起。这里在本 hunk 独有的类名下标一次（特异性 0,1,1 更胜），
-  // 于是首行编号就是它在文件里的真实行号；删除行照旧不占号、不推进计数器。
-  if (startLine > 1) rules.push('.' + codeClass + ' code{counter-reset:source-line ' + (startLine - 1) + '}');
-
-  const del = rangeSelectors(codeClass, rows, 'del');
-  if (del.length > 0) {
-    rules.push(del.join(',') + '{counter-increment:none;background:var(--fcv-del-bg)}');
-    // 官方行号是绝对定位的 :before（content:counter(source-line)），清空即留空号位，不挤动代码。
-    rules.push(del.map((selector) => selector + ':before').join(',') + '{content:""}');
-  }
-
-  const add = rangeSelectors(codeClass, rows, 'add');
-  if (add.length > 0) rules.push(add.join(',') + '{background:var(--fcv-add-bg)}');
-
-  return rules.join('\n');
-}
-
-/**
- * 把某一类行（删 / 增）合并成尽量少的选择器：连续区间用 `:nth-child(n+a):nth-child(-n+b)`。
- *
- * @param codeClass - 本 hunk 独有的类名。
- * @param rows - 渲染出来的行。
- * @param kind - 要命中的行类型。
- * @returns 选择器数组；没有这种行时为空数组（调用方需要逐个追加伪元素，所以不在这里 join）。
- */
-function rangeSelectors(codeClass: string, rows: readonly UnifiedDiffRow[], kind: UnifiedDiffKind): string[] {
-  const selectors: string[] = [];
-  let start = -1;
-  for (let i = 0; i <= rows.length; i += 1) {
-    const row = rows[i];
-    const matches = row !== undefined && row.kind === kind;
-    if (matches && start < 0) start = i;
-    if (!matches && start >= 0) {
-      const from = start + 1;
-      const to = i;
-      selectors.push(
-        from === to
-          ? '.' + codeClass + ' code>.line:nth-child(' + from + ')'
-          : '.' + codeClass + ' code>.line:nth-child(n+' + from + '):nth-child(-n+' + to + ')',
-      );
-      start = -1;
-    }
-  }
-  return selectors;
-}
 
 /** 匿名调用（没有 callId）时的兜底序号，避免不同行共用同一个类名互相串色。 */
 let anonymousCardSeq = 0;
@@ -182,6 +111,7 @@ function countLines(text: string): number {
  * @param P - 运行时注入的 primitives（DisclosureRow / CodeBlock / DiffBlock / StateDot / IconEditOutline16 / JsonBlock / diffTotals）。
  * @param prefsFace - 用户偏好的读写面。
  * @param locator - 真实行号查询（`patch` 自带行号；edit / write 靠它向 Host 定位）。
+ * @param sessionFace - 会话级覆盖（页头上的「全部展开 / 收起」与视图切换；不落盘）。
  * @returns 可直接交给 `slots.register` 的组件。
  */
 export function createFileChangeRow(
@@ -189,9 +119,19 @@ export function createFileChangeRow(
   P: AnyPrimitives,
   prefsFace: PrefsFace,
   locator: LocatorFace,
+  sessionFace: SessionOverrideFace,
 ): (props: ToolViewProps) => any {
   const { usePrefs } = prefsFace;
   const { locateOf, useLines } = locator;
+  const { useOverride } = sessionFace;
+  const diffBody = createDiffBody(React, P, {
+    code: 'fcv-code',
+    diff: 'fcv-diff',
+    diffWrap: 'fcv-diffWrap',
+    ctx: 'fcv-ctx',
+    ctxLine: 'fcv-ctxLine',
+    muted: 'fcv-muted',
+  });
 
   /** DiffBlock 的本地化文案（字段名与官方 `diffBlockLabels(t)` 一致）。 */
   function diffLabels(t: (key: string, params?: Record<string, unknown>) => string): DiffBlockLabels {
@@ -210,20 +150,29 @@ export function createFileChangeRow(
   interface UiState {
     callId: string;
     /**
-     * 行自己的临时开合；`null` = 用户没点过这一行 → **实时跟随用户偏好**。
+     * 这份临时状态属于会话级覆盖的哪一版（`session.ts` 的 `rev`）。
      *
-     * 「跟随」而不是「渲染时快照」：设置里把开关打开，会话里这些编辑 / 写入行应当立刻展开
-     * （用户要的就是一眼看到代码），而不是只对之后新出现的行生效。用户手动点过的那一行例外——
-     * 那一刻起由用户说了算，开关不再动它。
+     * 页头那两个按钮说的是「**所有**文件 diff」，所以点一下必须真的把所有行翻过去——包括用户
+     * 之前手动折叠过的那几行。可「行自己的覆盖优先」又意味着那些行不会动。两者靠这个版本号调和：
+     * 覆盖一改 `rev` 就变，本行发现手里这份状态过期了就整个丢掉（下面的 `newUiState`）。于是页头
+     * 那一下是真正的一键全改，而改完之后用户再单独点某一行，依然由用户说了算。
+     */
+    rev: number;
+    /**
+     * 行自己的临时开合；`null` = 用户没点过这一行 → **实时跟随会话级覆盖 / 用户偏好**。
+     *
+     * 「跟随」而不是「渲染时快照」：设置里把开关打开（或在页头点「全部展开」），会话里这些
+     * 编辑 / 写入行应当立刻展开（用户要的就是一眼看到代码），而不是只对之后新出现的行生效。
+     * 用户手动点过的那一行例外——那一刻起由用户说了算，那两个开关不再动它。
      */
     row: boolean | null;
     sections: Record<number, boolean>;
     views: Record<number, FileChangeView>;
   }
 
-  /** 新调用 = 一份干净的覆盖（一切跟随用户偏好）。 */
-  function newUiState(callId: string): UiState {
-    return { callId, row: null, sections: {}, views: {} };
+  /** 新调用 / 会话级覆盖换了一版 = 一份干净的覆盖（一切跟随会话级覆盖与用户偏好）。 */
+  function newUiState(callId: string, rev: number): UiState {
+    return { callId, rev, row: null, sections: {}, views: {} };
   }
 
   function FileChangeRow(props: ToolViewProps): any {
@@ -232,6 +181,9 @@ export function createFileChangeRow(
     const prefs = usePrefs();
     // 订阅行号缓存：定位结果回来了（或新一批发出去了）就重渲染，把真实行号填上。
     useLines();
+    // 会话级覆盖（页头快捷开关）。`sessionId` 是槽位的标准 prop，取不到就没有覆盖（见 session.ts）。
+    const override = useOverride(props.sessionId);
+    const rev = override.rev;
 
     /**
      * 临时覆盖（都不落盘）：行自己的开合 + 每个文件块的开合与展示方式。
@@ -240,17 +192,24 @@ export function createFileChangeRow(
      * `react.memo(ToolCall)`、列表上又没有显式 key：窗口滚动 / 截断 / 新调用插入时，React 可能
      * 在同一个位置**复用组件实例**去渲染另一次调用。若覆盖状态只按 `index` 存，上一行「我手动
      * 折叠过第 0 块」就会漏到新行上——表现正是「新出现的编辑 / 写入行不跟随偏好」。
+     *
+     * `rev` 一起比对：会话级覆盖改过之后，旧那份临时状态必须作废（否则页头的「全部展开」会被
+     * 用户几分钟前的一次手动折叠挡回去）。
      */
-    const [ui, setUi] = React.useState(() => newUiState(props.callId));
-    const bound = ui.callId === props.callId ? ui : newUiState(props.callId);
+    const [ui, setUi] = React.useState(() => newUiState(props.callId, rev));
+    const bound = ui.callId === props.callId && ui.rev === rev ? ui : newUiState(props.callId, rev);
     const patchUi = (fields: Partial<UiState>): void => {
       setUi((prev: UiState) => {
-        const base = prev.callId === props.callId ? prev : newUiState(props.callId);
+        const base = prev.callId === props.callId && prev.rev === rev ? prev : newUiState(props.callId, rev);
         return { ...base, ...fields };
       });
     };
-    // 行的开合：没手动点过 → 跟随偏好（关 = 与思考 / 读取行一致的原生折叠）；点过 → 按用户点的来。
-    const rowOpen = bound.row === null ? prefs.sectionsOpen : bound.row;
+    /**
+     * 生效的默认开合：**会话级覆盖 > 全局偏好**（用户手动点过的那一行/块仍然最高，见 `bound`）。
+     * 关 = 与思考 / 读取行一致的原生折叠。
+     */
+    const defaultOpen = override.expanded ?? prefs.sectionsOpen;
+    const rowOpen = bound.row ?? defaultOpen;
 
     const model: FileChangeModel = buildModel(props.toolName, props.block);
     // 统计口径 = **语义变更**（LCS 之后真正变化的行），不是工具原文的行数：
@@ -438,31 +397,24 @@ export function createFileChangeRow(
             : null,
         ];
 
-    // ── 每个文件块：自己的折叠（默认走用户偏好，单块可临时覆盖） ────────────────
+    // ── 每个文件块：自己的折叠（默认走会话级覆盖 / 用户偏好，单块可临时覆盖） ────
     const cardKey = cardKeyOf(props.callId);
 
     /**
      * 高亮视图每个 hunk 的素材（含它自己的行底色规则）。
      *
      * `rows` = 上文 + buildModel 的 LCS 结果 + 下文；`startLine` 也一并前移，所以代码块左侧的
-     * 行号仍然是文件里的真实行号（上下文行照常占号，删除行不占号）。
+     * 行号仍然是文件里的真实行号（上下文行照常占号，删除行不占号）。渲染本身在 `diffView.ts`
+     * （与设置页「展示方式」两卡的样张共用同一份代码）。
      */
-    const highlightHunks = model.hunks.map((_hunk, index) => {
-      const rows = rowsOf(index);
-      const startLine = startOf(index);
-      const overflow = rows.length > HIGHLIGHT_MAX_LINES;
-      const shown = overflow ? rows.slice(0, HIGHLIGHT_MAX_LINES) : rows;
-      const codeClass = 'fcv-lines-' + cardKey + '-' + index;
-      return {
-        rows,
-        shown,
-        overflow,
-        codeClass,
+    const highlightHunks = model.hunks.map((_hunk, index) =>
+      buildHighlight({
+        rows: rowsOf(index),
+        startLine: startOf(index),
         language: languageOf(model.hunks[index]?.raw.path ?? ''),
-        startLine,
-        css: rows.length === 0 ? '' : tintRules(codeClass, shown, startLine),
-      };
-    });
+        codeClass: 'fcv-lines-' + cardKey + '-' + index,
+      }),
+    );
 
     const tintCss = highlightHunks
       .map((hunk) => hunk.css)
@@ -472,25 +424,8 @@ export function createFileChangeRow(
     /** 高亮视图：官方 CodeBlock + 按行区间叠的整行红绿底色（一个代码块里看增删）。 */
     const renderHighlight = (index: number): any[] => {
       const hunk = highlightHunks[index];
-      if (hunk === undefined || hunk.rows.length === 0) return [];
-      return [
-        React.createElement(P.CodeBlock, {
-          key: 'code',
-          code: toDiffText(hunk.shown),
-          lang: hunk.language === null ? undefined : hunk.language,
-          className: 'fcv-code ' + hunk.codeClass,
-          lineNumbers: true,
-          copyLabel: t('copy'),
-          copiedLabel: t('copied'),
-        }),
-        hunk.overflow
-          ? React.createElement(
-              'div',
-              { className: 'fcv-muted', key: 'overflow' },
-              '… 其余 ' + (hunk.rows.length - HIGHLIGHT_MAX_LINES) + ' 行未显示（' + OVERFLOW_HINT + '）',
-            )
-          : null,
-      ];
+      if (hunk === undefined) return [];
+      return diffBody.code(hunk, t('copy'), t('copied'));
     };
 
     /**
@@ -504,39 +439,21 @@ export function createFileChangeRow(
      * （另外的那个 kind 直接 throw），**画不了中性的上下文行**，所以上下文不能塞进 `diffs`——
      * 塞进去只会变成绿色的 `+` 或红色的 `-`，把没改的行说成改了。
      */
-    const renderContext = (lines: readonly string[], key: string): any =>
-      lines.length === 0
-        ? null
-        : React.createElement(
-            'div',
-            { className: 'fcv-ctx', key },
-            lines.map((text, at) =>
-              React.createElement('div', { className: 'fcv-ctxLine', key: at }, text === '' ? ' ' : text),
-            ),
-          );
-
     const renderDiff = (index: number, fallback: FileDiff): any => {
       const context = contexts[index] ?? { before: [], after: [] };
-      return React.createElement(
-        'div',
-        { className: 'fcv-diffWrap', key: 'diff' + index },
-        renderContext(context.before, 'before'),
-        React.createElement(P.DiffBlock, {
-          diffs: [statDiffs[index] ?? fallback],
-          labels: diffLabels(t),
-          maxLines: DIFF_MAX_LINES,
-          className: 'fcv-diff',
-        }),
-        renderContext(context.after, 'after'),
-      );
+      return diffBody.lines({
+        diff: statDiffs[index] ?? fallback,
+        before: context.before,
+        after: context.after,
+        labels: diffLabels(t),
+        key: 'diff' + index,
+      });
     };
 
     const renderSections = (): any[] => {
       const nodes: any[] = [];
-      const viewOf = (index: number): FileChangeView => {
-        const override = bound.views[index];
-        return override === undefined ? prefs.view : override;
-      };
+      // 每个块的展示方式：块自己的临时覆盖 > 会话级覆盖（页头按钮） > 全局偏好。
+      const viewOf = (index: number): FileChangeView => bound.views[index] ?? override.view ?? prefs.view;
       // 一条 <style> 承担整行所有文件块的行底色，随行一起卸载；规则都用本行的类名限定。
       // 只要还有块用高亮视图就注入（切到 ± 差异的块用不到，规则是惰性的）。
       if (tintCss !== '' && model.hunks.some((_hunk, index) => viewOf(index) === 'highlight')) {
@@ -544,9 +461,8 @@ export function createFileChangeRow(
       }
       model.hunks.forEach((hunk: ChangeHunk, index: number) => {
         const shown = statDiffs[index] ?? hunk.raw;
-        const collapseOverride = bound.sections[index];
-        // 文件块同理：没单独点过就跟随偏好，点过就按用户点的来。
-        const open = collapseOverride === undefined ? prefs.sectionsOpen : collapseOverride;
+        // 文件块同样：块自己的临时覆盖 > 会话级覆盖 > 全局偏好。
+        const open = bound.sections[index] ?? defaultOpen;
         const view = viewOf(index);
         nodes.push(
           React.createElement(

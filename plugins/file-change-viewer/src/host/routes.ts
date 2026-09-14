@@ -1,5 +1,5 @@
 /**
- * 同源 JSON 路由（设置节「文件修改卡片」的读写面）
+ * 同源 JSON 路由（设置节「File Change View」的读写面）
  *
  *   GET  /ext/dshp-file-change-viewer/state   —— 当前生效偏好
  *   POST /ext/dshp-file-change-viewer/config  { view?, sectionsOpen?, patchTool?, contextLines? }

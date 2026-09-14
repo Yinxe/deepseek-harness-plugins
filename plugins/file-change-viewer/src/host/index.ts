@@ -14,7 +14,7 @@
  *    `patch` 工具开关）。`installSection` 让这份配置成为 schema 约束的正式用户设置：schema 默认值
  *    → composition patch 的 base 层 → settings.yaml 的用户分节，三层合并，热重载即时生效。
  * 2. **设置节读写路由**（`/ext/dshp-file-change-viewer/{state,config}`）：
- *    Client 的设置节「文件修改卡片」与工具行共用这一份权威配置——读走 `state`、写走 `config`
+ *    Client 的设置节「File Change View」与工具行共用这一份权威配置——读走 `state`、写走 `config`
  *    （Host 调 `settings.update(NS, patch)`）。设置改动因此**真的落进 settings.yaml**，
  *    而不是留在刷新即丢的客户端内存态里。
  * 3. **`patch` 工具（测试版，默认关）**：`patchTool` 一开一关，工具就注册 / 反注册——settings 的

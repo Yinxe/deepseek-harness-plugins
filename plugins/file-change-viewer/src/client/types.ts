@@ -152,15 +152,18 @@ export interface DiffBlockLabels {
 }
 
 /**
- * `tool.call.toolview` 交给我们的 props（owner + locale seat）。
+ * `tool.call.toolview` 交给我们的 props（owner + 槽位标准 props + locale seat）。
  *
  * 注册时传 `locale: 'conversation'`，框架才会注入 `t`；`cwd` / `home` 只用于把
- * 绝对路径显示成工作区相对路径与 `~`。
+ * 绝对路径显示成工作区相对路径与 `~`；`sessionId` 是**会话作用域槽位**的标准 prop，
+ * 会话级覆盖（页头快捷开关）用它区分「哪一个会话」。
  */
 export interface ToolViewProps {
   callId: string;
   toolName: string;
   block: ToolCallBlockLike;
+  /** 本行所属会话（标准 prop；宿主换了契约时可能缺失，缺了就没有会话级覆盖）。 */
+  sessionId?: string | undefined;
   cwd?: string | undefined;
   home?: string | undefined;
   openFile: (path: string, options?: { line?: number | undefined }) => void;
@@ -194,18 +197,20 @@ export type ContextLines = 0 | 3 | 5 | 8;
 /**
  * 两项显示偏好（= settings.yaml 的 `dshp-file-change-viewer` 分节）。
  *
- * 这是**全局默认值**：每个文件块还能在卡头就地临时覆盖折叠态与展示方式，覆盖只作用于当前会话的
- * 那一个块，不回写 settings.yaml。
+ * 这是**全局默认值**，也是唯一落盘的一层。会话里还有两层压在它上面：会话页头的两个快捷开关
+ * （内存里的会话级覆盖，见 `session.ts`，换会话即失效）与每个文件块自己的临时点击。三层合起来
+ * 的优先级是「块自己的点击 > 会话级覆盖 > 这里的全局偏好」。
  */
 export interface ViewerPrefs {
-  /** 差异展示方式。 */
+  /** 差异展示方式（**默认**值：会话页头可以临时改，改的只是当前会话）。 */
   view: DiffView;
   /**
    * **新渲染**的「编辑 / 写入」操作是否默认展开。
    *
    * 键名 `sectionsOpen` 是历史遗留（它一度只表示「行展开后文件块的开合」），含义已收敛为
    * 「这一行要不要默认展开」：开 = 直接看到改动（行内的文件块也默认展开），
-   * 关 = 与思考 / 读取行一致，点一下才展开。只决定**新渲染**时的初始状态。
+   * 关 = 与思考 / 读取行一致，点一下才展开。只决定**新渲染**时的初始状态，且会被会话级覆盖
+   * （会话页头的「展开 / 收起」）与用户对单行/单块的点击压过去。
    */
   sectionsOpen: boolean;
   /**

@@ -1,14 +1,18 @@
 /**
- * 设置节「文件修改卡片」——edit / write 行的展示偏好 + `patch` 工具开关
+ * 设置节「File Change View」——edit / write 行的展示偏好 + `patch` 工具开关
  *
  * 挂载点 `settings.section`（list 槽位）：`id` = 本插件的 settings 命名空间、`label` 进左侧设置导航。
  * 与本仓既有插件（mcwiki-search / vision-bridge / token-meter / search-provider / skill-manager /
  * mcp-manager / web-style）一致：**每个插件在设置里占自己的一节**，而不是往别人的页面里塞控件。
  *
- * 三项目都是**全局默认值**，改完立即写回 Host（`/ext/dshp-file-change-viewer/config` →
- * `settings.yaml` 的 NS 分节）：两项显示偏好会让会话里已经渲染的文件块同步换视图（单个文件块仍可在
- * 卡头临时覆盖，那种覆盖只作用于当前这一个块、不回写）；第三项是 **`patch` 工具开关**（测试版，
- * 默认关），它决定 Host 半注不注册那个工具——改完立即生效，不必重启 `dsh web`。
+ * 这一节里都是**全局默认值**，改完立即写回 Host（`/ext/dshp-file-change-viewer/config` →
+ * `settings.yaml` 的 NS 分节）。其中两项显示偏好还会被两层更近的东西压过去——会话页头的两个快捷
+ * 开关（只作用于当前会话，见 `SessionControls.ts`）与单行 / 单块自己的临时点击；三层合起来是
+ * 「块自己的点击 > 会话级覆盖 > 这里的全局偏好」。第三项是 **`patch` 工具开关**（测试版，默认关），
+ * 它决定 Host 半注不注册那个工具——改完立即生效，不必重启 `dsh web`。
+ *
+ * **展示方式不用下拉框，用两张并排的单选卡**（`viewCards.ts`）：每张卡下面用**同一份渲染代码**
+ * 画一段真实的样张，挑的时候看到什么，会话里就是什么。
  *
  * 版式照抄官方设置节的「行」规格（label 14px + desc 12px，行高 16px、行间 `.5px` 细线），
  * 类名换成 `fcv-`：官方那边是模块哈希类名，跨包无法 import。
@@ -17,13 +21,14 @@
  */
 import type { PrefsFace } from './prefs.js';
 import type { AnyPrimitives, AnyReact } from './types.js';
+import { createViewCards } from './viewCards.js';
 
 const INTRO =
-  '「编辑 / 写入」工具行的默认形态与差异视图，以及本插件附带的 patch 工具开关。这里改的是全局默认值，立即写入 settings.yaml 的 dshp-file-change-viewer 分节：显示偏好只影响**之后新渲染**的编辑 / 写入行（已经在会话里的行保持它当前的样子，单行、单块随时可以临时点开 / 收起，不写回）；patch 工具开关则是即时生效的注册开关。';
+  '「编辑 / 写入」工具行的默认形态与差异视图，以及本插件附带的 patch 工具开关。这里改的是**全局默认值**，立即写入 settings.yaml 的 dshp-file-change-viewer 分节：显示偏好只影响**之后新渲染**的编辑 / 写入行（已经在会话里的行保持它当前的样子，单行、单块随时可以临时点开 / 收起，不写回）。另外，会话页头右侧还有两个只作用于**当前会话**的快捷开关（一键展开 / 收起、切换差异视图），它们不动这里的值。';
 
 const EXPAND_LABEL = '编辑 / 写入默认展开';
 const EXPAND_HINT =
-  '开：新渲染的编辑 / 写入行直接展开显示改动；关：与思考 / 读取行一致，默认收起、点一下才展开。只决定新渲染时的初始状态，行内文件块与单块折叠都可临时点。';
+  '开：新渲染的编辑 / 写入行直接展开显示改动；关：与思考 / 读取行一致，默认收起、点一下才展开。只决定默认值，行内文件块与单块折叠都可临时点，会话页头的「展开 / 收起」也只压过当前会话。';
 
 const PATCH_LABEL = '启用 patch 工具（测试版）';
 const PATCH_HINT =
@@ -31,17 +36,11 @@ const PATCH_HINT =
 
 const VIEW_LABEL = '展示方式';
 const VIEW_HINT =
-  '高亮：单个代码块里放完整统一 diff（整行红绿 + 行号 + 语法高亮）；± 差异：官方逐行 ± 视图，紧凑、超长中部折叠。';
+  '两种视图喂给渲染器的都是**同一份语义变更**（只算真正变动的行，未变行不会重复出现），所以增删统计、行号与两边看到的完全一致；下面每张卡直接画出对应效果，选中即生效。单块仍可在卡头临时切换，会话页头也能只给当前会话换一种。';
 
 const CONTEXT_LABEL = '上下文行数';
 const CONTEXT_HINT =
   '改动两侧各多显示几行**没受影响**的代码。这几行取自文件当前内容（不是模型在 old_string / 补丁片段里带的那几行），所以模型只圈 1 行上下文时也能看清改动落在哪里；0 = 只显示模型给的内容。文件读不到、或这段改动之后又被改过时，就不补上下文（不编内容）。';
-
-/** 展示方式下拉项（与 Host schema 的 `z.const` 联合逐字对齐）。 */
-const VIEW_OPTIONS = [
-  { id: 'highlight', label: '高亮' },
-  { id: 'diff', label: '± 差异' },
-];
 
 /** 上下文行数下拉项（与 Host schema 的联合逐字对齐：0 / 3 / 5 / 8）。 */
 const CONTEXT_OPTIONS = [
@@ -61,7 +60,7 @@ interface SelectOption {
  * 造设置节组件。
  *
  * @param React - 运行时注入的 React。
- * @param P - 运行时注入的 primitives（Button / Menu / IconChevronDownOutline14）。
+ * @param P - 运行时注入的 primitives（Button / Menu / IconChevronDownOutline14 / CodeBlock / DiffBlock）。
  * @param prefsFace - 偏好读写面（与工具行共用同一个 store）。
  * @returns 可直接交给 `slots.register` 的组件。
  */
@@ -71,6 +70,7 @@ export function createFileChangeViewerSection(
   prefsFace: PrefsFace,
 ): () => any {
   const { usePrefs, setPref, useSaveState, reload } = prefsFace;
+  const ViewCards = createViewCards(React, P);
 
   /** 官方设置行：左列 label + desc，右侧控件。 */
   function Row(props: { label: string; desc: string; children?: any }): any {
@@ -80,6 +80,26 @@ export function createFileChangeViewerSection(
       React.createElement(
         'div',
         { className: 'fcv-rowText' },
+        React.createElement('div', { className: 'fcv-title' }, props.label),
+        React.createElement('div', { className: 'fcv-desc' }, props.desc),
+      ),
+      props.children,
+    );
+  }
+
+  /**
+   * 整幅设置块：label + desc 在上，控件**占满整行**在下。
+   *
+   * 「展示方式」的两张预览卡不可能塞进 `Row` 右侧那个窄列（预览本身要有宽度才看得出效果），
+   * 所以它用这一种版式；其余仍是标准的左文右控件 `Row`。
+   */
+  function Block(props: { label: string; desc: string; children?: any }): any {
+    return React.createElement(
+      'div',
+      { className: 'fcv-settingBlock' },
+      React.createElement(
+        'div',
+        { className: 'fcv-blockText' },
         React.createElement('div', { className: 'fcv-title' }, props.label),
         React.createElement('div', { className: 'fcv-desc' }, props.desc),
       ),
@@ -164,7 +184,6 @@ export function createFileChangeViewerSection(
   return function FileChangeViewerSection(): any {
     const prefs = usePrefs();
     const save = useSaveState();
-    const picked = VIEW_OPTIONS.filter((option) => option.id === prefs.view)[0];
     const pickedContext = CONTEXT_OPTIONS.filter((option) => option.id === String(prefs.contextLines))[0];
     const busy = save.phase === 'loading' || save.phase === 'saving';
 
@@ -175,12 +194,10 @@ export function createFileChangeViewerSection(
         { className: 'fcv-section' },
         React.createElement('div', { className: 'fcv-sectionHead' }, '显示'),
         React.createElement(
-          Row,
+          Block,
           { label: VIEW_LABEL, desc: VIEW_HINT },
-          React.createElement(Select, {
+          React.createElement(ViewCards, {
             value: prefs.view,
-            selectedLabel: picked === undefined ? prefs.view : picked.label,
-            options: VIEW_OPTIONS,
             onSelect: (id: string) => setPref('view', id),
           }),
         ),

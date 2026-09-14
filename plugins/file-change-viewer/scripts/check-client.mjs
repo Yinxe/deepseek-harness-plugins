@@ -105,6 +105,7 @@ const PRIMITIVES = {
   IconPlusOutline16: function IconPlusOutline16() {},
   IconCodeOutline16: function IconCodeOutline16() {},
   IconBranchOutline16: function IconBranchOutline16() {},
+  IconRefreshOutline14: function IconRefreshOutline14() {},
   diffTotals: (diffs) => {
     let added = 0;
     let removed = 0;
@@ -264,6 +265,24 @@ function settingSwitch(tree, label) {
   return element === undefined ? undefined : mount(element.type, element.props);
 }
 
+/**
+ * 设置节里找「展示方式」那张单选卡（先渲染 ViewCards，再按 aria-label 挑一张）。
+ *
+ * @param tree - 设置节的树。
+ * @param id - `highlight` | `diff`。
+ * @returns 那张卡的元素（点它的 `onClick` 就是「选中这一种展示方式」）。
+ */
+function settingViewCard(tree, id) {
+  const element = findByName(tree, 'ViewCards');
+  if (element === null) throw new Error('找不到展示方式单选卡');
+  const label = id === 'highlight' ? '高亮' : '± 差异';
+  const card = findAllByClass(mount(element.type, element.props), 'fcv-viewCard').filter(
+    (node) => node.props['aria-label'] === label,
+  )[0];
+  if (card === undefined) throw new Error('找不到展示方式卡：' + id);
+  return card;
+}
+
 /** 像 React 渲染一个组件那样调用它（重置 hook 游标，等价于该组件自己的 hook 空间）。 */
 function mount(Component, props) {
   hookCursor = 0;
@@ -411,15 +430,15 @@ ok(
   toolRegs.every((entry) => typeof entry.spec.priority === 'number' && entry.spec.priority < 0),
 );
 
-// 配置入口：本插件在设置里**单独占一节**（settings.section，左侧导航「文件修改卡片」），
+// 配置入口：本插件在设置里**单独占一节**（settings.section，左侧导航「File Change View」），
 // 与本仓其它插件一致；不再往「插件」tab 里塞 settings.plugin.item 卡片。
 const sectionRegs = registrations.filter((entry) => entry.spec.name === 'settings.section');
-ok('两项偏好必须注册成设置里独立的一节', sectionRegs.length === 1);
+ok('设置节必须注册成设置里独立的一节', sectionRegs.length === 1);
 ok(
   '设置节的 id 用本插件的 settings 命名空间（NS 四处同名）',
   sectionRegs[0].spec.id === 'dshp-file-change-viewer',
 );
-ok('设置节必须有导航标题', sectionRegs[0].spec.label === '文件修改卡片');
+ok('设置节必须有导航标题（原名「文件修改卡片」已换）', sectionRegs[0].spec.label === 'File Change View');
 ok('设置节的 order 必须与本仓其它插件错开（25-30 已占，取 31）', sectionRegs[0].spec.order === 31);
 ok(
   '不再注册插件 tab 的配置卡片',
@@ -430,9 +449,23 @@ ok(
   registrations.filter((entry) => entry.spec.name === 'settings.section').length === 1,
 );
 
+// 会话页头：两个只作用于**当前会话**的快捷开关（一键展开 / 收起、切换差异视图）。
+const headerRegs = registrations.filter(
+  (entry) => entry.spec.name === 'conversation.session.header.utilities',
+);
+ok('必须往会话页头右侧工具区注册一条', headerRegs.length === 1);
+ok('页头条目的 id 用同一个命名空间', headerRegs[0].spec.id === 'dshp-file-change-viewer');
+ok('页头开关落在工具区最右（open-in-app 是 -10、会话日志下载是 0）', headerRegs[0].spec.order === 20);
+
 const FileChangeRow = toolRegs[0].component;
 const Section = sectionRegs[0].component;
-ok('注册项必须是组件', typeof FileChangeRow === 'function' && typeof Section === 'function');
+const SessionControls = headerRegs[0].component;
+ok(
+  '注册项必须是组件',
+  typeof FileChangeRow === 'function' &&
+    typeof Section === 'function' &&
+    typeof SessionControls === 'function',
+);
 
 // 样式表：卡回来但官方语言栏（复制在其中）继续隐藏，官方的盒子换成插件自己的卡
 const css = injectedStyles[0].textContent;
@@ -457,6 +490,20 @@ ok(
     css.includes('.fcv-selector{') &&
     css.includes('.fcv-switch{'),
 );
+ok(
+  '展示方式是两张带样张的单选卡（不再是下拉框）',
+  css.includes('.fcv-viewCards{') &&
+    css.includes('.fcv-viewCard{') &&
+    css.includes('.fcv-viewCardOn,') &&
+    css.includes('.fcv-radio{') &&
+    css.includes('.fcv-pvBody{'),
+);
+ok(
+  '页头开关照抄官方 open-in-app 的胶囊尺寸（28px 高 / 14px 圆角 / 11px 字）',
+  css.includes('.fcv-headCtl{border:.5px solid var(--dsw-alias-border-l4);border-radius:14px') &&
+    css.includes('.fcv-headBtn{') &&
+    css.includes('font-size:11px'),
+);
 
 // ── 渲染辅助 ─────────────────────────────────────────────────────────────────
 
@@ -465,6 +512,8 @@ function callRow(toolName, block, overrides = {}) {
     callId: 'c1',
     toolName,
     block,
+    // 会话作用域槽位的标准 prop：页头那两个快捷开关按它区分会话（见 session.ts）。
+    sessionId: 's1',
     cwd: '/w',
     home: '/home/u',
     openFile: () => {},
@@ -523,12 +572,15 @@ ok('行元素不带外层额外内边距（行几何全部来自官方默认）'
 
 // 类名撞车护卫：设置节与工具行是两套完全不同的版式，同名类会互相串味
 // （曾经设置节给 `.fcv-row` 加了 padding:16px 0，直接打到编辑 / 写入行上）。
+// ③ 与 ④ 之间的就是设置节那一整段（包括展示方式两张卡的样张 .fcv-pv*）。
 {
-  const settingsCss = css.slice(css.indexOf('/* ── ③'));
+  const settingsCss = css.slice(css.indexOf('/* ── ③'), css.indexOf('/* ── ④'));
   const toolCss = css.slice(0, css.indexOf('/* ── ③'));
+  const headerCss = css.slice(css.indexOf('/* ── ④'));
   const classesInCss = (text) => new Set(Array.from(text.matchAll(/\.(fcv-[a-zA-Z0-9-]+)/g), (m) => m[1]));
   const settingsClasses = classesInCss(settingsCss);
   const toolClasses = classesInCss(toolCss);
+  const headerClasses = classesInCss(headerCss);
 
   const classesOnTree = (tree) => {
     const found = new Set();
@@ -550,8 +602,22 @@ ok('行元素不带外层额外内边距（行几何全部来自官方默认）'
     Array.from(rowClasses).every((name) => !(name.startsWith('fcv-') && settingsClasses.has(name))),
   );
   ok(
+    '工具行整棵子树的类名与页头开关版式零重叠',
+    Array.from(rowClasses).every((name) => !(name.startsWith('fcv-') && headerClasses.has(name))),
+  );
+  ok(
     '设置节自己的行类名不与工具行共用',
     settingsClasses.has('fcv-settingRow') && !toolClasses.has('fcv-settingRow'),
+  );
+  ok(
+    '展示方式样张刻意复用工具行的类名之外的一套（fcv-pv*）',
+    settingsClasses.has('fcv-pvCode') &&
+      settingsClasses.has('fcv-pvDiff') &&
+      !toolClasses.has('fcv-pvCode') &&
+      // 工具行那套 fcv-code / fcv-diff 不许出现在设置节里，否则样张会串到会话卡片上
+      !settingsClasses.has('fcv-code') &&
+      !settingsClasses.has('fcv-diff') &&
+      !settingsClasses.has('fcv-muted'),
   );
 }
 
@@ -665,31 +731,79 @@ ok('行底色不写死色值（只允许官方 token）', !/#[0-9a-fA-F]{3,8}\b|
 // ── 场景 2：全局偏好——设置节改视图，写回 /ext 路由，工具行同步换视图 ─────────
 
 const settingsTree = mount(Section, {});
-const selectElement = findByName(settingsTree, 'Select');
-ok('展示方式由一个自带的 Select 组件渲染', selectElement !== null);
-const menu = findByType(mount(selectElement.type, selectElement.props), PStub.Menu);
-ok('展示方式用下拉选择框（官方 Menu）而不是并排胶囊', menu !== null);
-ok('下拉当前值 = 高亮', menu.props.selectedId === 'highlight');
+// 「展示方式」不再用下拉框，改成两张并排的单选卡，每张卡里直接画出对应效果。
+const viewCardsElement = findByName(settingsTree, 'ViewCards');
+ok('展示方式由自带的 ViewCards 组件渲染', viewCardsElement !== null);
+ok('展示方式不再是下拉框', findByName(settingsTree, 'Select').props.options.length === 4); // 只剩「上下文行数」
+const viewCards = mount(viewCardsElement.type, viewCardsElement.props);
+const viewCardNodes = findAllByClass(viewCards, 'fcv-viewCard');
+ok('两张单选卡', viewCardNodes.length === 2);
 ok(
-  '下拉两个选项：高亮 / ± 差异',
-  menu.props.items.length === 2 &&
-    menu.props.items[0].id === 'highlight' &&
-    menu.props.items[1].id === 'diff',
+  '卡片是 role=radio（键盘可达），当前值 = 高亮',
+  viewCardNodes.every((node) => node.props.role === 'radio' && node.props.tabIndex === 0) &&
+    viewCardNodes[0].props['aria-checked'] === true &&
+    viewCardNodes[1].props['aria-checked'] === false,
 );
-ok('下拉锚点显示当前选项文案', textOf(menu.props.anchor) === '高亮');
-const rowLabels = findAllByName(settingsTree, 'Row').map((rowElement) => rowElement.props.label);
 ok(
-  '三条设置项都有标签与说明',
-  rowLabels.includes('展示方式') &&
+  '卡里直接渲染对应效果：高亮卡是 CodeBlock、± 卡是 DiffBlock',
+  findByType(viewCardNodes[0], PStub.CodeBlock) !== null &&
+    findByType(viewCardNodes[0], PStub.DiffBlock) === null &&
+    findByType(viewCardNodes[1], PStub.DiffBlock) !== null &&
+    findByType(viewCardNodes[1], PStub.CodeBlock) === null,
+);
+{
+  const previewCode = findByType(viewCardNodes[0], PStub.CodeBlock).props.code;
+  ok(
+    '高亮样张是真正的统一 diff（未变行只出现一次，删行原样保留在代码里）',
+    previewCode ===
+      [
+        'export function greet(name: string) {',
+        "  return 'Hello, ' + name",
+        '  const target = name.trim()',
+        '  return `Hello, ${target}!`',
+        '}',
+      ].join('\n'),
+  );
+  ok(
+    '高亮样张按 .ts 推成 typescript 并开行号',
+    findByType(viewCardNodes[0], PStub.CodeBlock).props.lang === 'typescript' &&
+      findByType(viewCardNodes[0], PStub.CodeBlock).props.lineNumbers === true,
+  );
+  const previewTint = textOf(findAllByType(viewCardNodes[0], 'style')[0]);
+  ok(
+    '样张的行底色挂在它自己的类名上（fcv-pvLines，不与会话卡片的 fcv-lines-* 共用）',
+    previewTint.includes(
+      '.fcv-pvLines code>.line:nth-child(2){counter-increment:none;background:var(--fcv-del-bg)}',
+    ) &&
+      previewTint.includes(
+        '.fcv-pvLines code>.line:nth-child(n+3):nth-child(-n+4){background:var(--fcv-add-bg)}',
+      ),
+  );
+  const previewDiff = findByType(viewCardNodes[1], PStub.DiffBlock).props.diffs[0];
+  ok(
+    '± 样张喂的是语义变更（丢掉未变上下文）',
+    previewDiff.oldText === "  return 'Hello, ' + name" &&
+      previewDiff.newText === '  const target = name.trim()\n  return `Hello, ${target}!`',
+  );
+}
+const rowLabels = findAllByName(settingsTree, 'Row').map((rowElement) => rowElement.props.label);
+const blockLabels = findAllByName(settingsTree, 'Block').map((blockElement) => blockElement.props.label);
+ok(
+  '四条设置项都有标签与说明（展示方式改成整幅块）',
+  blockLabels.includes('展示方式') &&
+    rowLabels.includes('上下文行数') &&
     rowLabels.includes('编辑 / 写入默认展开') &&
     rowLabels.includes('启用 patch 工具（测试版）') &&
     treeText(settingsTree).includes('settings.yaml'),
 );
 ok(
-  '设置行的说明文字写清了「全局默认 + 单块可临时覆盖」',
+  '设置项的说明文字写清了「全局默认 + 会话级覆盖 + 单块可临时覆盖」',
   findAllByName(settingsTree, 'Row').every(
     (settingRow) => typeof settingRow.props.desc === 'string' && settingRow.props.desc.length > 10,
-  ),
+  ) &&
+    findAllByName(settingsTree, 'Block').every(
+      (blockElement) => typeof blockElement.props.desc === 'string' && blockElement.props.desc.length > 10,
+    ),
 );
 const switchLabels = findAllByName(settingsTree, 'Switch').map((node) => node.props.label);
 ok(
@@ -737,7 +851,7 @@ ok(
     switchButton.props['aria-checked'] === true,
 );
 
-menu.props.onSelect('diff'); // 切到 ± 差异
+settingViewCard(settingsTree, 'diff').props.onClick(); // 切到 ± 差异
 ok(
   '切视图 POST 到本插件的 config 路由',
   requests.some(
@@ -766,7 +880,7 @@ ok('± 差异视图不再渲染 CodeBlock', findByType(afterSwitch, PStub.CodeBl
   ok('DiffBlock 仍用宽松的展开上限', diffCards[0].props.maxLines === 200);
 }
 
-menu.props.onSelect('highlight'); // 切回高亮
+settingViewCard(mount(Section, {}), 'highlight').props.onClick(); // 切回高亮
 const backToHighlight = rerender('edit', settledBlock);
 ok('切回高亮后重新渲染 CodeBlock', findByType(backToHighlight, PStub.CodeBlock) !== null);
 
@@ -1091,6 +1205,125 @@ ok(
 );
 reusedRow.unmount();
 
+// ── 场景 12：会话页头的两个快捷开关（只影响当前会话，绝不写偏好） ──────────────
+//
+// 页头按钮改的是内存里的**会话级覆盖**：一键把所有文件 diff 摊开 / 收起、一键换差异视图。
+// 三条硬要求都在这里盯着：① 不写 settings.yaml（一个 /config 请求都不许发）；② 覆盖生效时
+// 连用户之前手动折叠过的行也要翻过去（靠 session.ts 的 rev 让行作废自己的临时状态）；
+// ③ 只作用于当前 sessionId，换个会话立刻回落到全局偏好。
+
+/** 页头组件渲染一次（它只用 sessionId 这一个 prop）。 */
+const headTreeOf = (sessionId) => mount(SessionControls, { sessionId });
+/** `/config` 写请求的条数（页头开关不该让它变化）。 */
+const configWrites = () => requests.filter((request) => request.url.endsWith('/config')).length;
+
+const prefOpen = settingSwitch(mount(Section, {}), '编辑 / 写入默认展开').props['aria-checked'];
+const prefView = settingViewCard(mount(Section, {}), 'diff').props['aria-checked'] ? 'diff' : 'highlight';
+
+{
+  const headTree = headTreeOf('s1');
+  const headButtons = findAllByClass(headTree, 'fcv-headBtn');
+  ok(
+    '页头有一个 role=group 的容器把两个按钮收在一起',
+    findAllByClass(headTree, 'fcv-headCtl')[0]?.props.role === 'group',
+  );
+  ok('页头两个按钮：一键展开 / 收起、切换差异视图', headButtons.length === 2);
+  ok(
+    '按钮上的字就是当前生效值（未覆盖时 = 全局偏好）',
+    textOf(headButtons[0]) === (prefOpen ? '收起改动' : '展开改动') &&
+      textOf(headButtons[1]) === (prefView === 'highlight' ? '高亮' : '± 差异'),
+  );
+  ok(
+    '没被覆盖时不出现「恢复跟随偏好」，容器也不挂已覆盖的记号',
+    findAllByClass(headTree, 'fcv-headReset').length === 0 &&
+      findAllByClass(headTree, 'fcv-headCtlOverridden').length === 0,
+  );
+  ok(
+    '页头按钮是真按钮（title / aria-label 都写清了「只影响当前会话」）',
+    headButtons.every(
+      (node) =>
+        node.type === 'button' &&
+        typeof node.props.title === 'string' &&
+        node.props.title.includes('当前会话'),
+    ),
+  );
+}
+
+const headRow = mountLive('edit', settledBlock, { callId: 'c-head' });
+ok('开始时会话行跟随全局偏好', rowOf(headRow.tree).props.open === prefOpen);
+
+// 用户手动连点两下（回到与偏好相同的值）：于是「行自己的临时状态」= 偏好值。
+// 接着页头那一下翻到另一个值——若行不丢掉自己的临时状态，这次点击就会被它挡回去。
+rowOf(headRow.tree).props.onToggle();
+headRow.flush();
+rowOf(headRow.tree).props.onToggle();
+headRow.flush();
+ok('手动点过之后由用户说了算（值可以回到与偏好相同）', rowOf(headRow.tree).props.open === prefOpen);
+
+const writesBeforeHead = configWrites();
+findAllByClass(headTreeOf('s1'), 'fcv-headBtn')[0].props.onClick();
+ok('页头开关一个 /config 写请求都不发（不碰 settings.yaml）', configWrites() === writesBeforeHead);
+ok('已渲染的行被通知到（订阅生效）', headRow.isDirty());
+headRow.flush();
+const forcedOpen = !prefOpen;
+ok(
+  '一键展开 / 收起连用户之前手动点过的行也翻过去（行作废了自己的临时状态）',
+  rowOf(headRow.tree).props.open === forcedOpen &&
+    sectionsOf(headRow.tree).every((node) => node.props.open === forcedOpen),
+);
+ok(
+  '覆盖生效后容器挂上「已覆盖」记号，并多出「恢复跟随偏好」',
+  findAllByClass(headTreeOf('s1'), 'fcv-headCtlOverridden').length === 1 &&
+    findAllByClass(headTreeOf('s1'), 'fcv-headReset').length === 1,
+);
+
+// 换差异视图：同样只动当前会话
+findAllByClass(headTreeOf('s1'), 'fcv-headBtn')[1].props.onClick();
+ok('换视图也不写偏好', configWrites() === writesBeforeHead);
+headRow.flush();
+const forcedView = prefView === 'highlight' ? 'diff' : 'highlight';
+ok(
+  '所有文件块都换成页头选的那种视图',
+  forcedView === 'diff'
+    ? findAllByType(headRow.tree, PStub.DiffBlock).length > 0 &&
+        findByType(headRow.tree, PStub.CodeBlock) === null
+    : findByType(headRow.tree, PStub.CodeBlock) !== null &&
+        findByType(headRow.tree, PStub.DiffBlock) === null,
+);
+ok(
+  '按钮上的字跟着生效值走',
+  textOf(findAllByClass(headTreeOf('s1'), 'fcv-headBtn')[1]) ===
+    (forcedView === 'highlight' ? '高亮' : '± 差异'),
+);
+
+// 只影响当前会话：另一个 sessionId 的行照旧跟随全局偏好
+const otherSessionRow = mountLive('edit', settledBlock, { callId: 'c-other', sessionId: 's2' });
+ok(
+  '换一个会话立刻回落全局偏好（覆盖只在当前会话里）',
+  rowOf(otherSessionRow.tree).props.open === prefOpen &&
+    (prefView === 'highlight'
+      ? findByType(otherSessionRow.tree, PStub.CodeBlock) !== null
+      : findByType(otherSessionRow.tree, PStub.DiffBlock) !== null),
+);
+ok(
+  '另一个会话的页头显示的是它自己的生效值',
+  textOf(findAllByClass(headTreeOf('s2'), 'fcv-headBtn')[0]) === (prefOpen ? '收起改动' : '展开改动'),
+);
+otherSessionRow.unmount();
+
+// 「恢复跟随偏好」：撤掉覆盖，行与按钮都回到全局偏好
+findAllByClass(headTreeOf('s1'), 'fcv-headReset')[0].props.onClick();
+ok('撤覆盖同样不写偏好', configWrites() === writesBeforeHead);
+headRow.flush();
+ok(
+  '撤掉覆盖后行与按钮都回到全局偏好',
+  rowOf(headRow.tree).props.open === prefOpen &&
+    sectionsOf(headRow.tree).every((node) => node.props.open === prefOpen) &&
+    textOf(findAllByClass(headTreeOf('s1'), 'fcv-headBtn')[0]) === (prefOpen ? '收起改动' : '展开改动'),
+);
+ok('撤掉覆盖后「恢复跟随偏好」消失', findAllByClass(headTreeOf('s1'), 'fcv-headReset').length === 0);
+headRow.unmount();
+
 // ── 场景 4：设置节的读 / 写往返（偏好只有 Host 一个事实源） ───────────────────
 
 ok(
@@ -1107,9 +1340,10 @@ ok('设置节有「重新读取」按钮', reloadButton !== null && typeof reloa
 reloadButton.props.onClick();
 await settle();
 const reloadedTree = mount(Section, {});
-const reloadedSelect = findByName(reloadedTree, 'Select');
-const reloadedMenu = findByType(mount(reloadedSelect.type, reloadedSelect.props), PStub.Menu);
-ok('重新读取后下拉呈现 Host 的权威值', reloadedMenu.props.selectedId === 'diff');
+ok(
+  '重新读取后单选卡呈现 Host 的权威值',
+  settingViewCard(reloadedTree, 'diff').props['aria-checked'] === true,
+);
 ok(
   '开关也跟随 Host 的权威值',
   settingSwitch(reloadedTree, '编辑 / 写入默认展开').props['aria-checked'] === false,
@@ -1129,13 +1363,13 @@ ok(
 
 // 保存失败：乐观值必须回滚，且如实报错（绝不能假装保存成功）。
 failNextWrite = '写盘失败';
-reloadedMenu.props.onSelect('highlight');
+settingViewCard(reloadedTree, 'highlight').props.onClick();
 await settle();
 const failedTree = mount(Section, {});
 ok(
   '保存失败后回滚到上一次的权威值',
-  findByType(mount(findByName(failedTree, 'Select').type, findByName(failedTree, 'Select').props), PStub.Menu)
-    .props.selectedId === 'diff',
+  settingViewCard(failedTree, 'diff').props['aria-checked'] === true &&
+    settingViewCard(failedTree, 'highlight').props['aria-checked'] === false,
 );
 ok(
   '保存失败必须显示未保存徽标',
@@ -1159,9 +1393,7 @@ const PATCH_ARGS = [
 const patchArgsRaw = JSON.stringify({ patch: PATCH_ARGS });
 
 // 前面的设置往返把全局偏好切成了「± 差异」，这里先切回高亮，测的是 patch 行的默认形态。
-const patchSection = mount(Section, {});
-const patchSelect = findByName(patchSection, 'Select');
-findByType(mount(patchSelect.type, patchSelect.props), PStub.Menu).props.onSelect('highlight');
+settingViewCard(mount(Section, {}), 'highlight').props.onClick();
 
 const patchStreaming = render('patch', { name: 'patch', argsRaw: patchArgsRaw });
 ok(

@@ -8,8 +8,9 @@
 | -------- | ----------------------------------------------------------------------------------------------------- |
 | 包名     | `@dshp/file-change-viewer`                                                                            |
 | NS       | `dshp-file-change-viewer`（四处同名）                                                                 |
-| 设置节   | `settings.section` order **31**，label「文件修改卡片」                                                |
+| 设置节   | `settings.section` order **31**，label「File Change View」                                            |
 | 接管槽位 | `tool.call.toolview` keyed：`edit` / `write` / `str_replace_editor` / `patch`，影子化 priority **-1** |
+| 页头槽位 | `conversation.session.header.utilities` order **20**（会话级覆盖：一键展开 / 收起 + 换差异视图）      |
 | inject   | `['webServer']`（settings/tools/fs 走可选注入）                                                       |
 | 原实现   | 无（本仓原生），`patch` 工具语法移植自 opencode `apply_patch`                                         |
 
@@ -17,7 +18,7 @@
 
 - `src/host/`：`index.ts`（apply：settings NS + 三路由 + patch 工具动态开关）/ `config.ts` / `routes.ts`（state / config / locate）/ `patch-tool.ts`（`*** Begin Patch` 工具）/ `sandbox-escalation.ts`（官方沙箱逻辑的等价移植，**不 import 官方包**，只依赖 `ctx.get('sandboxPolicy')` / `ctx.get('approval')` 服务接缝）。
 - `src/shared/apply-patch.ts`：补丁解析/应用纯函数——Host 落盘与 Client 预览**共用同一解析器**，保证「模型看到的预览」与「真正写进去的」一致。
-- `src/client/`：`FileChangeRow.ts`（工具行）/ `diff.ts`（LCS 三口径：raw/rows/changed）/ `locate.ts`（真实行号 + 上下文批量查询）/ `prefs.ts`（偏好 store）。
+- `src/client/`：`FileChangeRow.ts`（工具行）/ `diff.ts`（LCS 三口径：raw/rows/changed）/ `diffView.ts`（两种视图的渲染：工具行与设置页样张共用）/ `viewCards.ts`（设置页「展示方式」两张带真实样张的单选卡）/ `SessionControls.ts`（会话页头两个快捷开关）/ `session.ts`（会话级覆盖 store，内存、不落盘）/ `locate.ts`（真实行号 + 上下文批量查询）/ `prefs.ts`（全局偏好 store）。
 
 ## 本插件的局部规则
 
@@ -29,7 +30,9 @@
 6. **`patchTool` 开关的时序护栏**：判定注册与否要问 settings 服务权威值（`settings.get(NS)`），不能只信 `setSource` thunk——attach/detach 时服务会用「只有 base 层」的源回调一次，只看 thunk 会误反注册（真实会话表现为 `unknown tool "patch"`）。`scripts/check-host.mjs` 有断言守着。
 7. **BOM 与行尾保持**：CRLF 归一后应用、写回恢复整份 CRLF；带 BOM 的文件改完 BOM 还在（readText 会吃掉 BOM，写回前探测补上，且不补第二个）。
 8. **失败诊断给「最像的真实行」**：`applyChunksToText` 失败时在文件里找相似度最高的行，回行号 + 原文 + 差在哪（缩进/行内空白/标点），让模型照抄就能过；只在失败路径跑、有行数上限（2 万行以上不扫）。
+9. **三层优先级从高到低：单块点击 > 会话级覆盖 > 全局偏好**。会话级覆盖是页头两个按钮写的（`session.ts`，内存、换会话即失效、**绝不写 settings.yaml**）；`prefs.ts` 才是落盘那一层。行组件靠覆盖的 `rev` 认出「页头动过」并作废自己的临时状态——否则「一键全展开」会被几小时前的一次手动折叠挡回去。
+10. **样张必须复用真渲染**：设置页两张「展示方式」卡里的预览走 `diffView.ts`（与工具行同一份代码），只有类名不同（`fcv-pv*`）。类名**不许复用**工具行那套：`styles.ts` 的三段版式是全局作用域，同名类会互相串味，`check-client.mjs` 有断言守着。
 
 ## 自检
 
-`pnpm --filter @dshp/file-change-viewer test` = `node --check` 双 bundle + `check-host.mjs`（158 项：NS/路由/工具动态开关/全有或全无/locate 单次读）+ `check-patch.mjs`（74 项：五级模糊定位/信封诊断/失败诊断）+ `check-client.mjs`（167 项：无头渲染含迷你 React，验证偏好生命周期）。
+`pnpm --filter @dshp/file-change-viewer test` = `node --check` 双 bundle + `check-host.mjs`（158 项：NS/路由/工具动态开关/全有或全无/locate 单次读）+ `check-patch.mjs`（74 项：五级模糊定位/信封诊断/失败诊断）+ `check-client.mjs`（197 项：无头渲染含迷你 React，验证偏好生命周期、设置页两张样张卡、页头两个快捷开关的会话级覆盖）。

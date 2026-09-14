@@ -17,7 +17,7 @@ export type ContextLines = 0 | 3 | 5 | 8;
 /**
  * 本插件在 `settings.yaml` 里的命名空间内容。
  *
- * 两项**显示偏好** + 一个**工具开关**，但它们是全插件唯一的权威值：设置节的「文件修改卡片」页与
+ * 两项**显示偏好** + 一个**工具开关**，但它们是全插件唯一的权威值：设置节的「File Change View」页与
  * 每个工具行的文件块都读同一份（Client 侧经 `/ext/dshp-file-change-viewer/state` 拉取并本地缓存）。
  * 偏好落 `settings.yaml` 的 NS 分节，跨浏览器、跨会话都在，也吃 schema 校验与 base 层补丁。
  */

@@ -9,11 +9,14 @@
  *
  * 两处注册，互不干扰：
  *
- * 1. `settings.section`（list 槽位）：设置左侧导航里的「文件修改卡片」一节——本插件**自己的配置区**，
+ * 1. `settings.section`（list 槽位）：设置左侧导航里的「File Change View」一节——本插件**自己的配置区**，
  *    `id` 用本插件的 settings 命名空间（与本仓其它插件一致），而不是往通用页面里塞控件。
  * 2. `tool.call.toolview`（keyed 槽位，按线上工具名分发）：注册 `edit` / `write` 即**替换**官方内置
  *    卡片（官方文档：「a key the shipped composition already covers is replaced, not shared」），
  *    `str_replace_editor` 是同类文件修改工具的兼容项——该工具未挂载时这条注册不渲染任何东西，纯增量。
+ * 3. `conversation.session.header.utilities`（list 槽位，session 作用域）：会话页头右侧的两个快捷
+ *    开关（一键展开 / 收起所有文件 diff、切换差异视图）。它们改的是**会话级覆盖**（`session.ts`，
+ *    只在内存里、换会话即失效），不碰 `settings.yaml` 里的全局偏好。
  *
  * @module @dshp/file-change-viewer/client
  */
@@ -21,6 +24,8 @@ import { createFileChangeRow } from './FileChangeRow.js';
 import { createLocator } from './locate.js';
 import { createFileChangeViewerSection } from './FileChangeViewerSection.js';
 import { createPrefs } from './prefs.js';
+import { createSessionControls } from './SessionControls.js';
+import { createSessionOverrides } from './session.js';
 import { CSS } from './styles.js';
 import type { AnyCtx, DshRequire, SlotsService } from './types.js';
 
@@ -72,8 +77,24 @@ const SETTINGS_NS = 'dshp-file-change-viewer';
  */
 const SETTINGS_ORDER = 31;
 
-/** 设置节在左侧导航里的标题。 */
-const SETTINGS_LABEL = '文件修改卡片';
+/**
+ * 设置节在左侧导航里的标题。
+ *
+ * 英文短语与同一份导航里的 `Skills` / `MCP` 一致（短、一眼扫得到），也正好是这一节的职责：
+ * 这一节管的是**文件改动的视图**，不是某个具体卡片的开关。改这一个常量即可换名字，
+ * `check-client.mjs` 有断言守着。
+ */
+const SETTINGS_LABEL = 'File Change View';
+
+/** 会话页头右侧工具区（官方 `open-in-app`、会话日志下载都在这里）。 */
+const HEADER_SLOT = 'conversation.session.header.utilities';
+
+/**
+ * 页头开关在工具区里的位置。
+ *
+ * 该槽位按 `order` 升序排列（官方 `open-in-app` 是 -10，会话日志下载默认 0），20 让它落在最右侧。
+ */
+const HEADER_ORDER = 20;
 
 function register(): void {
   const loader = (
@@ -98,10 +119,13 @@ function register(): void {
 
         // 偏好缓存：设置节与工具行共用同一个（改完偏好，已渲染的文件块同步换视图）。
         const prefsFace = createPrefs(React);
+        // 会话级覆盖：页头两个快捷开关与所有工具行共用（不落盘，换会话即失效）。
+        const sessionFace = createSessionOverrides(React);
         // 真实行号：patch 自带 `@@` 偏移；edit / write 的元数据里没有，靠 locator 问 Host 定位。
         const locator = createLocator(React);
-        const FileChangeRow = createFileChangeRow(React, P, prefsFace, locator);
+        const FileChangeRow = createFileChangeRow(React, P, prefsFace, locator, sessionFace);
         const FileChangeViewerSection = createFileChangeViewerSection(React, P, prefsFace);
+        const SessionControls = createSessionControls(React, P, prefsFace, sessionFace);
 
         // ── 样式（卸载时随 effect 收回） ──
         try {
@@ -114,7 +138,7 @@ function register(): void {
           console.error('[dshp-file-change-viewer] 注入样式失败，行内统计与差异底色会缺失：', error);
         }
 
-        // ── 设置节（设置 → 左侧导航「文件修改卡片」）：展示方式 + 编辑 / 写入是否默认展开 ──
+        // ── 设置节（设置 → 左侧导航「File Change View」）：展示方式两卡 + 上下文行数 + 默认展开 + patch 开关 ──
         try {
           ctx.effect(
             () =>
@@ -131,6 +155,19 @@ function register(): void {
             '[dshp-file-change-viewer] 注册设置节失败，两项偏好将只能手改 settings.yaml：',
             error,
           );
+        }
+
+        // ── 会话页头快捷开关（只影响当前会话，不碰 settings.yaml） ──
+        try {
+          ctx.effect(
+            () =>
+              slots.inject(HEADER_SLOT, () =>
+                slots.register({ name: HEADER_SLOT, id: SETTINGS_NS, order: HEADER_ORDER }, SessionControls),
+              ),
+            'dshp-file-change-viewer: session header controls',
+          );
+        } catch (error) {
+          console.error('[dshp-file-change-viewer] 注册会话页头快捷开关失败，设置页仍然可用：', error);
         }
 
         // ── 工具行接管（原生行 + 每个文件块的差异视图） ──
