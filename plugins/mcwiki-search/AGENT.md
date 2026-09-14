@@ -16,7 +16,7 @@
 ## 结构与职责
 
 - `src/host/`：`tools.ts`（三工具）/ `command.ts`（/mcwiki）/ `convert.ts`（数据清洗管线）/ `api.ts`（MediaWiki API）/ `routes.ts`（state / config / test）/ `config.ts` / `http.ts`。
-- `src/client/`：`McWikiSection.ts`（设置节）/ `CommandCard.ts`（`conversation.chat.commandview` 槽位，按命令名 keyed）。
+- `src/client/`：`index.tsx`（**只导出 `inject` / `apply`**，loader 壳由 `shared/tsup.preset.ts` 的 banner/footer 拼出）/ `McWikiSection.tsx`（设置节，普通函数组件 + JSX）/ `CommandCard.tsx`（`conversation.chat.commandview` 槽位，按命令名 keyed）/ `components.tsx`（Badge/Row + `cx`）/ `styles.module.css`（CSS Modules）/ `api.ts`（fetch 封装）/ `types.ts`（协议 + 领域模型 + 只含实际用到的 `ClientContext` / `SlotsService` 接缝）。
 - 端点写死为具名常量 `API_BASE = 'https://zh.minecraft.wiki/api.php'`（不可配置，换站改这里重 build）。
 
 ## 本插件的局部规则
@@ -29,4 +29,4 @@
 
 ## 自检
 
-`pnpm --filter @dshp/mcwiki-search test` = `node --check` 双 bundle（无额外脚本）；数据转换的验证用例见 README「验证（不依赖 DSH 运行时）」节。
+`pnpm --filter @dshp/mcwiki-search test` = `node --check` 双 bundle + `shared/scripts/check-css-modules.mjs`（`styles.x` 拼错在类型上是合法的，这个静态检查是唯一会自动红的网）；数据转换的验证用例见 README「验证（不依赖 DSH 运行时）」节。
