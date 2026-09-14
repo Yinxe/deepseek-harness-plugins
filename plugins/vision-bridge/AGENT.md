@@ -16,7 +16,7 @@
 ## 结构与职责
 
 - `src/host/`：`index.ts`（apply 装配，分段顺序的范式）/ `types.ts` / `config.ts`（DEFAULT_CONFIG + ConfigSchema + sanitize*）/ `http.ts`（json / readBody / sameOrigin，各插件抄这份）/ `cache.ts`（会话级图片 LRU + `walkBlocks`）/ `vision.ts`（模型发现 + 调用 + 主备 fallback）。
-- `src/client/`：`index.ts`（**ModuleLoader** loader）/ `VisionSection.ts`（设置节，`createVisionSection(React, P)` 工厂形态的范式）/ `components.ts`（Select/Switch/Badge 小构件）/ `api.ts` / `styles.ts`（类前缀 `vb-`）/ `types.ts`。
+- `src/client/`：`index.tsx`（**只导出 `inject` / `apply`**，loader 壳由 `shared/tsup.preset.ts` 拼出）/ `VisionSection.tsx`（设置节，普通函数组件 + JSX 的范式）/ `components.tsx`（Select/Switch/Badge 小构件，真实 props 类型）/ `api.ts` / `styles.module.css`（CSS Modules，局部名不再需要前缀）/ `types.ts`（协议 + 领域模型 + 只含实际用到的 `ClientContext` / `SlotsService` 接缝）。
 
 ## 本插件的局部规则
 
@@ -28,4 +28,4 @@
 
 ## 自检
 
-`pnpm --filter @dshp/vision-bridge test` = `node --check` 双 bundle（无额外脚本）。改 host/client 后跑 `build`；README 用户侧文档见本目录 `README.md`。
+`pnpm --filter @dshp/vision-bridge test` = `node --check` 双 bundle + `shared/scripts/check-css-modules.mjs`（`styles.x` 拼错在类型上是合法的，这个静态检查是唯一会自动红的网）。改 host/client 后跑 `build`；README 用户侧文档见本目录 `README.md`。
