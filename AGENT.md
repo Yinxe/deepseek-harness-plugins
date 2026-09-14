@@ -15,7 +15,7 @@
 6. **不写用户文件**：配置只进 settings.yaml 的 NS 分节；需要写用户文件的插件（skill-manager / mcp-manager）必须有写路径白名单 + 原子落盘 + 自校验，且故意不注册模型工具。→ [docs/security.md](docs/security.md)
 7. **安全最小暴露**：同源校验 + body 上限；缓存只存 leaf owned copy；日志不打密钥/prompt 全文/用户原文；代码与注释里不放任何密钥。→ [docs/security.md](docs/security.md)
 8. **不许自创配置**：tsconfig 只 extends `../../tsconfig.base.json` 不放宽任何 strict 项；不新加 oxlint rule-off（全仓仅有的两处是故意的）；不引入 typescript-eslint / eslint / webpack。→ [docs/typescript.md](docs/typescript.md)、[docs/build-and-deps.md](docs/build-and-deps.md)
-9. **Client 半的硬约束**：不用 JSX（全 `React.createElement`）；`react` / `@deepseek-ai/dsh-client-ui-primitives` 绝不打包（factory 的 require 注入）；颜色字号只用 `--dsw-alias-*` token，不写死色值。→ [docs/client-basics.md](docs/client-basics.md)
+9. **Client 半的硬约束**：源码写 `.tsx` + JSX，SDK 类型从 devDependency import（不再手写 `AnyReact` 那套 shim）；`react` / `react/jsx-runtime` / `@deepseek-ai/dsh-client-ui-primitives` 绝不打包（factory 的 require 注入，故 client 构建必须是 cjs + banner/footer）；颜色字号只用 `--dsw-alias-*` token，不写死色值。→ [docs/client-basics.md](docs/client-basics.md)、[docs/build-and-deps.md](docs/build-and-deps.md)
 10. **门禁全绿才合**：提交前 `pnpm check`（build → typecheck → lint → format）；改依赖必须提交 `pnpm-lock.yaml`。→ [docs/quality-gates.md](docs/quality-gates.md)
 
 ## 类型与模块（速记）

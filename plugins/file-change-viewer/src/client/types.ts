@@ -1,21 +1,16 @@
 /**
  * Client 半共享类型
  *
- * 数据来源两条，都与官方实现逐字段对齐（不 import 官方类型包——DSH 运行时暂无
- * 官方 npm 类型包，见 docs/typescript.md「类型策略」）：
+ * 数据来源两条，都与官方实现逐字段对齐：
  *
  *  1. `dsh-tool-fs` 的 edit / write 结果元数据 `meta.diffs`（真正落盘的 hunk，每 hunk 带 3 行上下文）；
  *  2. 调用尚未结算时的参数原文 `argsRaw`（模型产出的 JSON，可能只写了一半）。
  *
- * 卡片渲染本身交给官方 primitives（`DiffBlock` / `DisclosureRow`），
- * 这里只建模「我们要读的那几个 leaf 字段」。
+ * 官方组件的 props 类型**直接从 SDK 取**（`@deepseek-ai/dsh-client-ui-primitives` 是
+ * devDependency，只参与类型检查与构建；运行时仍由 shell 的冻结模块表注入，绝不打包），
+ * 这里只建模官方类型没覆盖的领域字段。
  */
-
-/** DSH __ModuleLoader__ 的 require（运行时提供 react / primitives） */
-export type DshRequire = (id: 'react' | '@deepseek-ai/dsh-client-ui-primitives' | string) => any;
-export type AnyReact = any;
-export type AnyPrimitives = any;
-export type AnyCtx = any;
+import type { ReactNode } from 'react';
 
 /**
  * 一次文件变更的 hunk。
@@ -140,16 +135,8 @@ export interface ChangeHunk {
   changed: FileDiff;
 }
 
-/** DiffBlock 的本地化文案契约（字段名与官方 `diffBlockLabels(t)` 一致）。 */
-export interface DiffBlockLabels {
-  copy: string;
-  copied: string;
-  collapseAria: string;
-  expandAria: (hidden: number) => string;
-  collapse: string;
-  expand: (hidden: number) => string;
-  files: (count: number) => string;
-}
+/** DiffBlock 的本地化文案契约由官方 primitives 导出（`diffBlockLabels(t)` 同字段）。 */
+export type { DiffBlockLabels } from '@deepseek-ai/dsh-client-ui-primitives';
 
 /**
  * `tool.call.toolview` 交给我们的 props（owner + 槽位标准 props + locale seat）。
@@ -171,16 +158,52 @@ export interface ToolViewProps {
   t: (key: string, params?: Record<string, unknown>) => string;
 }
 
-/** slots 服务（本插件只用 inject + register）。 */
+/**
+ * client 侧 cordis 上下文（本插件只用到这两个成员）。
+ *
+ * 不 import `@deepseek-ai/cordis` 的类型：本插件的 client 半在 cordis 服务表面前是普通
+ * 模块，`ctx` 由 shell 的模块系统注入，把整包 cordis 拉进 devDependencies 只为两个方法
+ * 并不划算。这里的形状就是实际用到的契约，改一处即可跟随上游。
+ */
+export interface ClientContext {
+  /** 取一个 cordis 服务；服务还没挂载时返回 `undefined`。 */
+  get(name: string): unknown;
+  /**
+   * 注册一个随本插件一起收回的副作用。
+   *
+   * @param callback - 返回清理函数（或任意值）的回调。
+   * @param label - 诊断用标签。
+   */
+  effect(callback: () => unknown, label?: string): unknown;
+}
+
+/**
+ * slots 服务（本插件只用 inject + register）。
+ *
+ * 只建模用到的两个成员。**没有**直接 import `@deepseek-ai/dsh-client-ui-slots` 的
+ * `SlotCore`：槽位注册的完整类型是声明合并出来的（`SlotMap` 由 settings / conversation /
+ * tool 各自的 UI 包 merge），要拿到逐槽位的 props 检查就得把那些包也拉进来。那是下一步，
+ * 与本次「前端换 TSX + 用真实 SDK 类型」是两件事。
+ */
 export interface SlotsService {
+  /**
+   * 等某个槽位被声明后再执行注册回调（**异步**：回调可能在槽位声明时才被调用）。
+   *
+   * @param name - 槽位名。
+   * @param fn - 注册逻辑；返回 generator 时，逐条注册会在槽位就绪后依次展开。
+   */
   inject(name: string, fn: () => unknown): unknown;
   /**
    * 注册一个槽位条目。
    *
    * keyed 槽位用 `key`（+ `priority` 影子化：同 key 同 priority 会抛错，派发取 priority 最小的一条，
    * 官方内置行是 0，接管必须用负数）；list 槽位用 `id`（+ `order`）。`locale` 传了才会注入 `t`。
+   *
+   * @param spec - 注册选项。
+   * @param component - 组件（props 由槽位契约决定）。
+   * @returns 卸载该条注册的 disposer。
    */
-  register(spec: SlotRegistrationSpec, component: any): unknown;
+  register(spec: SlotRegistrationSpec, component: (props: never) => ReactNode): unknown;
 }
 
 /**

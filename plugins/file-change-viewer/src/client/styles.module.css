@@ -1,0 +1,770 @@
+/**
+ * 样式（CSS Modules，局部名不再需要 fcv- 前缀）
+ *
+ * 由 `tsup.config.ts` 里的 esbuild 插件在构建期内联：lightningcss 把 `[hash]_[local]`
+ * 编译成真实类名，CSS 文本与类名映射一起塞进 lib/client.js，模块被求值时就地插一条
+ * `<style data-plugin>`。产物仍然只有一个 JS 文件（插件不能有第二个 HTTP 资源）。
+ *
+ * 局部名是**模块作用域**的，所以以前那套「各段版式的类名集合必须两两不相交」的约定彻底不需要了
+ * （曾经设置节的 `.fcv-row{padding:16px 0}` 打到「编辑 / 写入」行上，把行撑高 32px 并加了一条
+ * 底边线）。现在设置节的 `rowText` 与工具行的 `rowRoot` 是两个不同的哈希类，串味在结构上不可能。
+ *
+ * 三块内容：
+ *
+ * ① **镜像官方 ToolRow 的行内样式**。官方把这个行渲染成 `ToolRow + DisclosureRow`：行外壳
+ *    （高度、图标位、标题字号/颜色、hover 折叠箭头）来自 `DisclosureRow` 的默认 CSS，本插件直接
+ *    复用、一个类都不传；而「工具专属」的那几条（分隔点 sep、路径链接 path、摘要 summary、
+ *    统计 stat、失败摘要 errorSummary、Inspect 药丸）写在 `ToolRow.module.css` 里，是别人的
+ *    模块哈希类名，跨包无法 import。所以这里逐条镜像（值照抄）——这是「让编辑行跟思考 / 读取行
+ *    长得一样」的唯一可行做法。升级 DSH 后若行样式有变，对照上游同一个文件同步即可。
+ *
+ * ② **差异卡片**：删 / 增行的整行底色变量，以及代码块在卡内的摊平。
+ *
+ * ③ **设置节「File Change View」**与**会话页头快捷开关**两套版式。
+ *
+ * 唯一的例外是 `FileChangeRow` 里那段**运行时生成**的行底色规则（`tintRules`）：它的选择器要拼
+ * 上「哪个 callId 的第几个 hunk」，只能在运行时造字符串，所以那些 `.fcv-lines-*` 类刻意留在模块
+ * 之外（模块外的类不会被哈希）。它注入的是行内 `<style>`，随行一起卸载。
+ */
+
+/* ── ① 行内样式（镜像官方 ToolRow.module.css） ───────────── */
+.sep {
+  background: var(--dsw-alias-label-caption);
+  border-radius: 1px;
+  flex: none;
+  width: 2px;
+  height: 2px;
+  margin: 0 8px;
+}
+.summary {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+  line-height: calc(24px + var(--dsh-content-font-delta, 0px));
+  color: var(--dsw-alias-label-tertiary);
+  flex: auto;
+  overflow: hidden;
+}
+.path {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  font: inherit;
+  text-align: left;
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+  line-height: calc(24px + var(--dsh-content-font-delta, 0px));
+  color: var(--dsw-alias-label-secondary);
+  text-decoration: underline dotted;
+  text-decoration-color: var(--dsw-alias-label-tertiary);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  cursor: pointer;
+  background: 0 0;
+  border: none;
+  flex: 0 auto;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.path:hover {
+  color: var(--dsw-alias-label-primary);
+  text-decoration-color: currentColor;
+}
+.stat {
+  white-space: nowrap;
+  flex: none;
+  margin-left: 10px;
+  font-family: var(--ds-font-family-code);
+  font-size: calc(var(--dsh-content-font-size-secondary, 13px) - 2px);
+  transform: translateY(0.5px);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.statPart {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.add {
+  color: var(--dsw-alias-state-success-primary);
+}
+.del {
+  color: var(--dsw-alias-state-error-primary);
+}
+.note {
+  color: var(--dsw-alias-label-caption);
+}
+.errorSummary {
+  font-size: var(--dsh-content-font-size-secondary, 13px);
+  line-height: calc(24px + var(--dsh-content-font-delta, 0px));
+  color: var(--dsw-alias-state-error-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+}
+.body {
+  --fcv-del-bg: var(--dsw-alias-interactive-bg-hover-danger);
+  --fcv-add-bg: var(--dsw-alias-state-success-tertiary);
+  flex-direction: column;
+  display: flex;
+}
+/* 官方 Inspect 药丸：默认透明，hover 行（或键盘聚焦）时浮现 */
+.inspect {
+  border: 0.5px solid var(--dsw-alias-border-l3);
+  corner-shape: round;
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+  opacity: 0;
+  border-radius: 999px;
+  align-self: flex-start;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0 2px 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  line-height: 16px;
+  transition: opacity 0.1s;
+  display: inline-flex;
+}
+.rowRoot:hover .inspect,
+.inspect:focus-visible {
+  opacity: 1;
+}
+.inspect:hover {
+  background: var(--dsw-alias-interactive-bg-hover-solid);
+  color: var(--dsw-alias-label-primary);
+}
+
+/* ── ② 差异卡片：一个 card 包住「卡头 + 代码」 ───────────────────────────── */
+/* 卡头就是 card 里的那一行 row：左边折叠箭头 + 文件名，右边增删统计 + 单块视图切换。
+   卡头底色用官方 banner 色（与官方代码块的 banner 同色），代码区用官方代码块底色，
+   于是整体看起来就是「官方代码卡片，只是把 banner 换成了文件名 + 统计 + 控件」。
+   官方 CodeBlock 自带的 banner（语言名 + 复制按钮）继续隐藏；它自己的底色/圆角/内边距也继续
+   清掉——盒子由本插件的 .card 提供，避免套两层卡片。
+   选择器一律带 .card 两级（0,2,x），既能压过官方同级规则，又不依赖样式注入顺序。 */
+.card {
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 12px;
+  background: var(--dsw-alias-markdown-code-block);
+  overflow: hidden;
+  margin: 6px 0 8px 4px;
+}
+.card .cardRow {
+  height: auto;
+  min-height: 30px;
+  gap: 4px;
+  padding: 0 10px;
+  background: var(--dsw-alias-markdown-code-block-banner);
+  border-bottom: 0.5px solid var(--dsw-alias-border-l1);
+}
+.card .cardTitle {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  color: var(--dsw-alias-label-secondary);
+}
+.cardName {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+.cardNameText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--ds-font-family-code);
+}
+.fileIcon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+}
+.card .cardRow:hover .cardTitle {
+  color: var(--dsw-alias-label-primary);
+}
+/* 单块视图切换：两个官方 Pill 组成的小分段控件（Pill 高 24px，卡头 30px 刚好放得下） */
+.viewGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  margin-left: 6px;
+}
+.viewPill {
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 18px;
+  gap: 4px;
+}
+.viewPill svg {
+  flex: none;
+}
+/* 代码区：去掉官方代码块自己的外壳（盒子由 .card 给），只在上下留一点内边距让底色不贴边 */
+.card .code {
+  --dsl-code-block-line-white-space: pre;
+  background: none !important;
+  border-radius: 0;
+  margin: 0;
+}
+.card .code > div:has([data-code-block-banner]) {
+  display: none;
+}
+.card .code [data-code-block-banner] {
+  display: none;
+}
+.card .code pre {
+  background: none !important;
+  padding: 8px 0;
+  border-radius: 0;
+}
+/* 行底色铺满整条被滚动的宽度：官方 .line 是普通块盒，宽度只到 code 盒宽（可视宽度）；
+   `white-space:pre` 下超长文字以**行内溢出**的形式延伸到盒外——于是往右滚，滚过原始
+   盒宽的那段文字落在底色之外（红绿条在行中间断开）。让行盒自身随内容撑宽
+   （max-content），同时不小于可视宽度（min-width:100%）：短行底色照旧铺满整卡，
+   长行底色跟着文字走到行尾。块级子盒宽于父块属正常布局溢出，pre 的滚动区会把它
+   计入 scrollWidth，滚动行为不变。行号（绝对定位 :before，挂在行盒左缘）随之移到
+   「内容起点」——但行盒已 min-width:100%，行号永远落在可视区内，滚动时随行整体移动。
+   box-sizing 必须显式 border-box：官方行号列是 .line 自己的 padding-inline-start，
+   content-box 下 min-width:100% 只约束内容宽，padding 叠加在外会让背景多出约一个
+   行号列宽（右侧凭空多一段底色）。border-box 后 100% 覆盖「行号列 + 内容」整盒，
+   与未改时的官方行盒几何一致。 */
+.card .code pre code > :global(.line) {
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 100%;
+}
+/* ± 差异视图同样摊平进这张卡：去掉它自己的外边距与圆角，底色与卡片一致 */
+.card .diff {
+  margin: 0;
+  border-radius: 0;
+}
+/* ± 视图清掉官方 DiffBlock 的三样冗余（卡头已有文件名与统计，这里全是重复）：
+   ① body 首行那条**完整路径**——官方 buildRows 无条件把 path 行插进 body 第一行，
+     且带 padding-right:56px 与 600 字重，读起来像正文里突然冒出一段标题；
+   ② 右上角**复制按钮**——卡头视图切换旁边再浮一个「复制」，两个按钮挤在一起；
+   ③ 块底**footer（└ +A -B · N 个文件）**——与卡头统计同口径，重复报数。
+   选择器全走官方块自带的 data-diff 根 + 子元素结构（button 首子 / body 第一个 div /
+   footer 最后一个 div / path 是 body 里带官方 padding-right 的首个 div），不引裸类名。
+   上游若调结构，这里只是退回「冗余重现」，不报错。 */
+.card .diff[data-diff] > button {
+  display: none;
+}
+.card .diff[data-diff] > div:last-of-type {
+  display: none;
+}
+.card .diff[data-diff] > div:first-of-type > div:first-child {
+  display: none;
+}
+/* ± 视图的上下文行：官方 DiffBlock 只画得出 del / add 两种行（见 FileChangeRow.renderDiff），
+   所以没受影响的上下文由本插件单独渲染成中性行，贴在 DiffBlock 上下，颜色/行高与它保持一致。
+
+   横向滚动收敛到 .diffWrap 一个容器：官方 DiffBlock 的 .body 自己会 overflow-x:auto，
+   若上下文也各自滚（从前的 .ctx{overflow-x:auto}），超长行会在同一张卡里出现两根滚动条、
+   两段内容各滚各的。这里把官方 .body 的滚动关掉（滚动能力上移到 wrap），上下文行自己不滚、
+   只随 wrap 滚——于是整份 diff（上文 + 改动 + 下文）只有一根滚动条、一条轴。
+
+   排版与官方 DiffBlock 完全对齐：官方 .body 用 `font: var(--dsw-font-markdown-code-block)`
+   （实测 11px/19px + code 字族），行盒 19px、外盒 `min-height: --dsl-diff-line-height`
+   （官方在 .block 里定义为 22px）；上下文行此前自写 12px/18px，与改动行差一截。现在
+   `.ctx` 引用同一个字体 token（行高随 shorthand 带出 19px），`.ctxLine` 镜像官方 .line
+   的 22px 最小盒高——于是上下文行与 ± 行逐像素同行高、同字号、同垂直节奏，只有颜色
+   （tertiary）与无 ± 前缀区分。 */
+.diffWrap {
+  display: flex;
+  flex-direction: column;
+  /* 唯一的横向滚动容器：宽于卡片的内容都由它兜住（上下文行与 DiffBlock 内部都不再滚） */
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.ctx {
+  font: var(--dsw-font-markdown-code-block);
+  color: var(--dsw-alias-label-tertiary);
+  padding: 0 14px;
+  white-space: pre;
+}
+/* 改动行（官方块内）的行号列几何：del/add 行的 ::after 由 diffView 的 diffNumRules 动态喂
+   content（counter）与颜色（del 红 / add 绿，与行前缀符号同色——一眼可辨哪侧的号），
+   这里只定几何：绝对定位到行盒左缘，与上下文行号同一列宽（3ch）、同淡化。官方行是块盒，
+   行号绝对定位需要定位祖先，行本身补 position:relative。
+   与上下文行号不同色：行号着 del 红的 add 绿（与行前缀符号同色），一眼可辨哪侧的号。 */
+.card .diff[data-diff] > div > div {
+  position: relative;
+}
+.card .diff[data-diff] > div > div::after {
+  position: absolute;
+  inset-inline-start: 0;
+  width: 3ch;
+  text-align: end;
+  opacity: 0.7;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ± 视图的行号列：与高亮视图的官方行号同宽（3ch + 12px 间隙）、同色（tertiary）。官方
+   DiffBlock 的行没有编号，这里用 CSS 计数器给每行补上——起始值由 JSX 在 .ctx 上内联
+   `counter-reset: dshp-fcv-num <n-1>`（n 是上文首行的真实行号，见 diffView.tsx）。
+   删除行不占号：renderDiff 喂给官方块的是「语义变更」（只含真正变化的行），所以官方块
+   内部的行数与本计数器无关——本计数器只数上下文行，行号是「上文/下文在文件里的真实行号」。 */
+.ctxLine {
+  counter-increment: dshp-fcv-num;
+  white-space: pre;
+  /* 镜像官方 .line 的最小盒高（--dsl-diff-line-height 在官方 .block 里是 22px，
+     token 不在 .ctx 作用域，这里取同值；上游改值时同步这里） */
+  min-height: 22px;
+}
+.ctxLine::before {
+  content: counter(dshp-fcv-num);
+  display: inline-block;
+  width: 3ch;
+  margin-inline-end: 12px;
+  text-align: end;
+  color: var(--dsw-alias-label-tertiary);
+  opacity: 0.7;
+  user-select: none;
+}
+.card .ctx:first-child {
+  padding-top: 8px;
+}
+.card .ctx:last-child {
+  padding-bottom: 8px;
+}
+/* 官方 DiffBlock 摊平进这张卡：把它 .body 的滚动关掉（滚动能力上移到 .diffWrap，见上面
+   .diffWrap 的注释）。两个轴必须一起 visible——只写 overflow-x:visible 时，另一个轴的
+   hidden 会按 CSS 规范把它升回 auto（visible 遇上非 visible 的另一轴，按 auto 计算），
+   滚动条就还在。选择器走官方块自带的 data-diff 根：body 是它子元素里的**第一个 div**
+   （前面还有个 button 是复制按钮，所以不能写 div:first-child），footer 是最后一个 div。
+   行内容按自然宽度撑开（超宽部分交给 wrap 滚），不再被官方 .body 裁掉。
+   代价：复制按钮随内容一起横滚（它 position:absolute 挂在块根上），滚到最右时会移出
+   视野——回到最左即可；换来的是整份 diff 单轴滚动。上游若调整子元素顺序，这里只是
+   退回「两根滚动条」的旧观感，不报错。 */
+.card .diff[data-diff] > div:first-of-type {
+  overflow: visible;
+}
+/* 衔接处零缝隙：有上文时，改动区自己的顶部内边距（官方 12px）归零，上下文行与 ± 行
+   逐像素相接（两者行高都已对齐 22px），读起来就是同一块代码。没有上文时保留它，
+   作为卡片顶缘的呼吸空间。 */
+.diffWrap > .ctx + .diff[data-diff] > div:first-of-type {
+  padding-top: 0;
+}
+/* 有下文时同样把底部缝隙归零：DiffBlock 的 footer（└ +A -B · N 文件）是块根的最后一个
+   div，它的 padding-bottom 是改动区与下文之间的缝。 */
+.diffWrap > .diff[data-diff]:has(+ .ctx) > div:last-of-type {
+  padding-bottom: 0;
+}
+.card .diff {
+  margin: 0;
+  border-radius: 0;
+}
+.muted {
+  margin: 0;
+  padding: 6px 10px 8px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+/* ── ③ 设置节「File Change View」（settings.section） ─────────────────────────────── */
+/* 版式照抄官方设置节的「行」规格，值取自本仓标杆 vision-bridge / mcwiki-search：一页
+   max-width 720px，每节一小段标题，行内左列 label 14px + desc 12px、右侧控件，行间 .5px 细线。 */
+.page {
+  max-width: 720px;
+  color: var(--dsw-alias-label-primary);
+  flex-direction: column;
+  display: flex;
+}
+.intro {
+  color: var(--dsw-alias-label-tertiary);
+  margin: 0 0 4px;
+  font-size: 14px;
+  line-height: 22px;
+}
+.section {
+  flex-direction: column;
+  width: 100%;
+  display: flex;
+}
+.sectionHead {
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  padding: 14px 0 2px;
+}
+.settingRow {
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+  align-items: center;
+  gap: 8px;
+  padding: 16px 0;
+  display: flex;
+}
+.section .settingRow:last-child {
+  border-bottom: none;
+}
+.rowText {
+  flex-direction: column;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+  padding-right: 48px;
+  display: flex;
+}
+/* 整幅设置块（label / desc 在上、控件占满整行在下）：展示方式的预览卡塞不进 Row 右侧那个窄列 */
+.settingBlock {
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 0;
+  display: flex;
+}
+.section .settingBlock:last-child {
+  border-bottom: none;
+}
+.blockText {
+  flex-direction: column;
+  gap: 4px;
+  display: flex;
+}
+.title {
+  color: var(--dsw-alias-label-primary);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+}
+.desc {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+}
+.barEnd {
+  align-items: center;
+  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  justify-content: flex-end;
+}
+.notice {
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+}
+.noticeErr {
+  color: var(--dsw-alias-state-error-primary);
+}
+.badge {
+  white-space: nowrap;
+  align-items: center;
+  height: 20px;
+  border-radius: 10px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 20px;
+  display: inline-flex;
+}
+.badgeOk {
+  background: var(--dsw-alias-state-success-tertiary);
+  color: var(--dsw-alias-state-success-primary);
+}
+.badgeWarn {
+  background: var(--dsw-alias-state-warn-tertiary);
+  color: var(--dsw-alias-state-warn-label);
+}
+.badgeMuted {
+  background: var(--dsw-alias-button-ghost-active-fill);
+  color: var(--dsw-alias-label-caption);
+}
+/* 下拉胶囊（官方行内选择器同款，值照抄标杆 vision-bridge 的 Select 样式） */
+.selector {
+  background: var(--dsw-alias-bg-module-platform);
+  height: 36px;
+  font: inherit;
+  color: var(--dsw-alias-label-primary);
+  cursor: pointer;
+  border: none;
+  border-radius: 18px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  font-size: 14px;
+  line-height: 22px;
+  display: inline-flex;
+  max-width: 100%;
+}
+.selector:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+.selector:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary);
+  outline-offset: 2px;
+}
+.selectorLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chevron {
+  flex: none;
+}
+/* 自绘开关（36x20 胶囊 + 16px 圆点，官方 Switch 同尺寸；颜色全走 token） */
+.switch {
+  box-sizing: border-box;
+  background: var(--dsw-alias-border-l3);
+  cursor: pointer;
+  border: 0;
+  border-radius: 10px;
+  flex: none;
+  width: 36px;
+  height: 20px;
+  padding: 2px;
+  position: relative;
+}
+.switchOn {
+  background: var(--dsw-alias-brand-primary);
+}
+.switch:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary);
+  outline-offset: 2px;
+}
+.thumb {
+  background: var(--dsw-alias-label-primary-foreground);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  transition: transform 0.12s;
+  display: block;
+}
+.switchOn .thumb {
+  transform: translate(16px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .thumb {
+    transition: none;
+  }
+}
+
+/* ── ③b 展示方式：两张带真实样张的单选卡 ─────────────────────────────────────── */
+/* 窄屏（<2×240px + gap）自动落成单列；设置页本身 max-width 720px，所以常态是并排两张。 */
+.viewCards {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  display: grid;
+}
+.viewCard {
+  background: var(--dsw-alias-bg-base);
+  cursor: pointer;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 12px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  display: flex;
+  transition:
+    border-color 0.12s,
+    background 0.12s;
+}
+.viewCard:hover {
+  border-color: var(--dsw-alias-border-l4);
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+.viewCardOn,
+.viewCardOn:hover {
+  border-color: var(--dsw-alias-brand-primary);
+}
+.viewCard:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary);
+  outline-offset: 2px;
+}
+.viewCardHead {
+  align-items: center;
+  gap: 8px;
+  display: flex;
+}
+.viewCardName {
+  color: var(--dsw-alias-label-primary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
+}
+.viewCardDesc {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+}
+.radio {
+  box-sizing: border-box;
+  border: 1.5px solid var(--dsw-alias-border-l4);
+  border-radius: 50%;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  position: relative;
+}
+.viewCardOn .radio {
+  border-color: var(--dsw-alias-brand-primary);
+}
+.viewCardOn .radio:after {
+  content: '';
+  background: var(--dsw-alias-brand-primary);
+  border-radius: 50%;
+  position: absolute;
+  inset: 3px;
+}
+/* 样张整块不响应指针事件：点它任意位置都算「选这张卡」，而官方代码块 / 差异块自带的复制、折叠
+   等按钮在样张里没有意义，也不该把整卡的点击吃掉。 */
+.pvBody {
+  pointer-events: none;
+  --fcv-del-bg: var(--dsw-alias-interactive-bg-hover-danger);
+  --fcv-add-bg: var(--dsw-alias-state-success-tertiary);
+  background: var(--dsw-alias-markdown-code-block);
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 8px;
+  flex-direction: column;
+  overflow: hidden;
+  display: flex;
+}
+.pvCodeBox {
+  flex-direction: column;
+  display: flex;
+}
+/* 样张里的两个官方组件都摊平进 .pvBody：盒子由它给，语言栏（复制在其中）照旧隐藏。 */
+.pvCode {
+  --dsl-code-block-line-white-space: pre;
+  background: none !important;
+  border-radius: 0;
+  margin: 0;
+}
+.pvCode > div:has([data-code-block-banner]) {
+  display: none;
+}
+.pvCode [data-code-block-banner] {
+  display: none;
+}
+.pvCode pre {
+  background: none !important;
+  padding: 8px 0;
+  border-radius: 0;
+}
+.pvCode pre code > :global(.line) {
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 100%;
+}
+.pvDiff {
+  margin: 0;
+  border-radius: 0;
+}
+.pvDiffWrap {
+  flex-direction: column;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.pvCtx {
+  font: var(--dsw-font-markdown-code-block);
+  color: var(--dsw-alias-label-tertiary);
+  padding: 0 14px;
+  white-space: pre;
+}
+.pvDiff[data-diff] > div:first-of-type {
+  overflow: visible;
+}
+.pvCtxLine {
+  white-space: pre;
+  min-height: 22px;
+}
+.pvMuted {
+  margin: 0;
+  padding: 6px 10px 8px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+/* ── ④ 会话页头快捷开关（conversation.session.header.utilities） ───────────────── */
+/* 形态照抄同一槽位上的官方 open-in-app：.5px 边框 + 14px 圆角的胶囊、11px 字号。
+   只有「当前会话已被覆盖」时才把边框换成品牌色，并多出一个「恢复跟随偏好」按钮。 */
+.headCtl {
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  border-radius: 14px;
+  align-items: stretch;
+  height: 28px;
+  display: inline-flex;
+  overflow: hidden;
+}
+.headCtlOverridden {
+  border-color: var(--dsw-alias-brand-primary);
+}
+.headBtn {
+  color: var(--dsw-alias-label-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  background: 0 0;
+  border: 0;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  font-family: var(--dsw-font-family);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 16px;
+  display: inline-flex;
+}
+.headBtn:hover,
+.headBtn:focus-visible {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+.headBtn:focus-visible {
+  outline: none;
+}
+.headSep {
+  background: var(--dsw-alias-border-l4);
+  flex: none;
+  width: 0.5px;
+}
+.headLabel {
+  color: var(--dsw-alias-label-secondary);
+}
+.headChevron {
+  flex: none;
+  transition: transform 0.12s;
+}
+/* 「展开」态把折叠箭头转成朝右，一个图标表达两种状态 */
+.headChevronShut {
+  transform: rotate(-90deg);
+}
+.headReset {
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+  background: 0 0;
+  border: 0;
+  border-left: 0.5px solid var(--dsw-alias-border-l4);
+  align-items: center;
+  padding: 5px 7px;
+  display: inline-flex;
+}
+.headReset:hover,
+.headReset:focus-visible {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+.headReset:focus-visible {
+  outline: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .headChevron {
+    transition: none;
+  }
+}

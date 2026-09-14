@@ -30,7 +30,8 @@
  *
  * @module @dshp/file-change-viewer/client/session
  */
-import type { AnyReact, DiffView } from './types.js';
+import { useEffect, useState } from 'react';
+import type { DiffView } from './types.js';
 
 /** 一个会话的覆盖值；`null` 一律表示「跟随全局偏好」。 */
 export interface SessionViewOverride {
@@ -45,94 +46,93 @@ export interface SessionViewOverride {
 /** 没有覆盖时的**共享常量**（引用稳定，行组件不会因为新对象而误重置）。 */
 export const NO_OVERRIDE: SessionViewOverride = { expanded: null, view: null, rev: 0 };
 
-/** 覆盖的读写面：页头组件与每个工具行共用。 */
-export interface SessionOverrideFace {
-  /** 订阅 + 读取某个会话的覆盖（组件内用）。 */
-  useOverride: (sessionId: unknown) => SessionViewOverride;
-  /** 设置该会话的「展开 / 收起」。 */
-  setExpanded: (sessionId: unknown, expanded: boolean) => void;
-  /** 设置该会话的差异视图。 */
-  setView: (sessionId: unknown, view: DiffView) => void;
-  /** 撤掉该会话的全部覆盖（回到「跟随全局偏好」）。 */
-  reset: (sessionId: unknown) => void;
+/** sessionId → 覆盖。会话被关掉时没人来清，但一条覆盖只有三个标量，不值得引生命周期钩子。 */
+const overrides = new Map<string, SessionViewOverride>();
+const listeners = new Set<() => void>();
+let rev = 0;
+
+/**
+ * 取会话键。
+ *
+ * `sessionId` 是槽位的标准 prop，但**不保证存在**（槽位还没绑会话、宿主换了契约）。取不到时
+ * 返回空串：既不写进表（见 {@link write}），查出来也永远是 {@link NO_OVERRIDE}——「没有会话
+ * 就没有会话级覆盖」，而不是退化成一个所有会话共用的全局覆盖（那会悄悄改掉偏好之外的行为）。
+ *
+ * @param sessionId - 槽位给的会话 id（可能是任意值）。
+ * @returns 会话键；没有就是空串。
+ */
+function keyOf(sessionId: unknown): string {
+  return typeof sessionId === 'string' ? sessionId : '';
+}
+
+function notify(): void {
+  for (const listener of Array.from(listeners)) {
+    try {
+      listener();
+    } catch {
+      /* 订阅者自己的异常不该影响其它订阅者 */
+    }
+  }
+}
+
+/** 写一个键（没有会话键时什么都不做，见 {@link keyOf}）。 */
+function write(sessionId: unknown, next: { expanded?: boolean | null; view?: DiffView | null }): void {
+  const key = keyOf(sessionId);
+  if (key === '') return;
+  const prev = overrides.get(key) ?? NO_OVERRIDE;
+  rev += 1;
+  const merged: SessionViewOverride = {
+    expanded: next.expanded === undefined ? prev.expanded : next.expanded,
+    view: next.view === undefined ? prev.view : next.view,
+    rev,
+  };
+  overrides.set(key, merged);
+  notify();
+}
+
+/** 订阅 + 读取某个会话的覆盖（组件内用）。 */
+export function useOverride(sessionId: unknown): SessionViewOverride {
+  const [, bump] = useState(0);
+  useEffect(() => {
+    const listener = (): void => bump((tick) => tick + 1);
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  }, []);
+  // 直接返回表里的**同一个对象**：行组件拿它当身份，每次渲染造新对象会让临时状态每次都被丢掉。
+  return overrides.get(keyOf(sessionId)) ?? NO_OVERRIDE;
 }
 
 /**
- * 造会话覆盖读写面。
+ * 设置该会话的「展开 / 收起」。
  *
- * @param React - 运行时注入的 React。
- * @returns 可直接交给页头组件与工具行的 `SessionOverrideFace`。
+ * @param sessionId - 槽位给的会话 id。
+ * @param expanded - 是否展开。
  */
-export function createSessionOverrides(React: AnyReact): SessionOverrideFace {
-  /** sessionId → 覆盖。会话被关掉时没人来清，但一条覆盖只有三个标量，不值得引生命周期钩子。 */
-  const overrides = new Map<string, SessionViewOverride>();
-  const listeners = new Set<() => void>();
-  let rev = 0;
+export function setExpanded(sessionId: unknown, expanded: boolean): void {
+  write(sessionId, { expanded });
+}
 
-  /**
-   * 取会话键。
-   *
-   * `sessionId` 是槽位的标准 prop，但**不保证存在**（槽位还没绑会话、宿主换了契约）。取不到时
-   * 返回空串：既不写进表（见 {@link write}），查出来也永远是 {@link NO_OVERRIDE}——「没有会话
-   * 就没有会话级覆盖」，而不是退化成一个所有会话共用的全局覆盖（那会悄悄改掉偏好之外的行为）。
-   */
-  function keyOf(sessionId: unknown): string {
-    return typeof sessionId === 'string' ? sessionId : '';
-  }
+/**
+ * 设置该会话的差异视图。
+ *
+ * @param sessionId - 槽位给的会话 id。
+ * @param view - 展示方式。
+ */
+export function setView(sessionId: unknown, view: DiffView): void {
+  write(sessionId, { view });
+}
 
-  function notify(): void {
-    for (const listener of Array.from(listeners)) {
-      try {
-        listener();
-      } catch {
-        /* 订阅者自己的异常不该影响其它订阅者 */
-      }
-    }
-  }
-
-  /** 写一个键（没有会话键时什么都不做，见 {@link keyOf}）。 */
-  function write(sessionId: unknown, next: { expanded?: boolean | null; view?: DiffView | null }): void {
-    const key = keyOf(sessionId);
-    if (key === '') return;
-    const prev = overrides.get(key) ?? NO_OVERRIDE;
-    rev += 1;
-    const merged: SessionViewOverride = {
-      expanded: next.expanded === undefined ? prev.expanded : next.expanded,
-      view: next.view === undefined ? prev.view : next.view,
-      rev,
-    };
-    overrides.set(key, merged);
-    notify();
-  }
-
-  return {
-    useOverride(sessionId: unknown): SessionViewOverride {
-      const [, bump] = React.useState(0) as [number, (next: number | ((prev: number) => number)) => void];
-      React.useEffect(() => {
-        const listener = (): void => bump((tick: number) => tick + 1);
-        listeners.add(listener);
-        return () => {
-          listeners.delete(listener);
-        };
-      }, []);
-      // 直接返回表里的**同一个对象**：行组件拿它当身份，每次渲染造新对象会让临时状态每次都被丢掉。
-      return overrides.get(keyOf(sessionId)) ?? NO_OVERRIDE;
-    },
-
-    setExpanded(sessionId: unknown, expanded: boolean): void {
-      write(sessionId, { expanded });
-    },
-
-    setView(sessionId: unknown, view: DiffView): void {
-      write(sessionId, { view });
-    },
-
-    reset(sessionId: unknown): void {
-      const key = keyOf(sessionId);
-      if (key === '' || !overrides.delete(key)) return;
-      // 版本号继续往前走：行组件必须认得出「覆盖被撤掉了」并重置自己的临时状态。
-      rev += 1;
-      notify();
-    },
-  };
+/**
+ * 撤掉该会话的全部覆盖（回到「跟随全局偏好」）。
+ *
+ * @param sessionId - 槽位给的会话 id。
+ */
+export function resetOverride(sessionId: unknown): void {
+  const key = keyOf(sessionId);
+  if (key === '' || !overrides.delete(key)) return;
+  // 版本号继续往前走：行组件必须认得出「覆盖被撤掉了」并重置自己的临时状态。
+  rev += 1;
+  notify();
 }

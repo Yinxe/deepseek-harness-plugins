@@ -8,7 +8,7 @@
  * | `highlight` | `CodeBlock`             | 工具行的文件块、设置页「高亮」卡的预览           |
  * | `diff`      | `DiffBlock`             | 工具行的文件块、设置页「± 差异」卡的预览         |
  *
- * 设置页要把两种效果**直接画出来**给用户挑（见 `viewCards.ts`）。如果那边再写一遍渲染，
+ * 设置页要把两种效果**直接画出来**给用户挑（见 `viewCards.tsx`）。如果那边再写一遍渲染，
  * 两边迟早漂移——「预览里长这样、真正用起来却长那样」比没有预览更糟。所以渲染在这里收口：
  * 工具行与设置预览调的是同一份代码。
  *
@@ -19,15 +19,105 @@
  *
  * @module @dshp/file-change-viewer/client/diffView
  */
+import type { ReactNode } from 'react';
+import { CodeBlock, DiffBlock } from '@deepseek-ai/dsh-client-ui-primitives';
 import { toDiffText } from './diff.js';
-import type {
-  AnyPrimitives,
-  AnyReact,
-  DiffBlockLabels,
-  FileDiff,
-  UnifiedDiffKind,
-  UnifiedDiffRow,
-} from './types.js';
+import type { DiffBlockLabels, FileDiff, UnifiedDiffKind, UnifiedDiffRow } from './types.js';
+
+/**
+ * 数一份文本的行数（空串 0 行；末尾换行不算一行）——与官方 `DiffBlock` 内部口径一致。
+ * 给 ± 视图算下文的起始行号用：上文尾号 + 新增行数（删除行不占新行号）。
+ */
+function countLines(text: string): number {
+  if (text === '') return 0;
+  const body = text.endsWith('\n') ? text.slice(0, -1) : text;
+  return body.split('\n').length;
+}
+
+/**
+ * 给 ± 差异视图的官方 `DiffBlock` 生成「改动行行号」的动态 CSS。
+ *
+ * 官方块内部没有编号机制，行是 `body > div.del / div.add`（类名是官方 CSS Module 的哈希名，
+ * 跨包不可 import），但块根挂了 `data-diff`、body 是它第一个 div、行序固定为
+ * `path 行(1 个，已由样式隐藏) → del 行 × D → add 行 × A`——这些结构事实足够：
+ * 用**本 hunk 独有的类名**（调用方拼在 DiffBlock 的 className 上）限定，按 `div:nth-of-type`
+ * 区间给 del / add 行各叠一个 CSS 计数器，行号画在 `::after`（绝对定位到行盒左缘，与
+ * 上下文行号同一列）。
+ *
+ * 双侧行号的口径（与 GitHub unified diff 一致、与高亮视图同源）：
+ * - **删除行**用旧文件行号，从该 hunk 旧侧首行起数；
+ * - **新增行**用新文件行号，从该 hunk 新侧首行起数；
+ * - 上下文行的新行号由调用方按 locate 结果推算（见 {@link DiffBody.lines}）。
+ *
+ * 为什么 `div:nth-of-type` 而不是 `nth-child`：官方块超长折叠时会在行间插
+ * `FoldToggle`（一个 `<button>`），`nth-child` 连它一起数会错位；`:nth-of-type` 按
+ * 元素类型计数，button 不占 div 的位。已隐藏的 path 行**仍占** div 索引（display 不
+ * 影响选择器），所以区间统一 +1 偏移。计数器只认 `counter-increment`，对没有增量的
+ * path 行天然跳过。
+ *
+ * @param blockClass - 本 hunk 独有的类名（挂在 DiffBlock 根上）。
+ * @param oldStart - 旧侧首行行号（1 起）。
+ * @param newStart - 新侧首行行号（1 起）。
+ * @param delCount - 删除行数。
+ * @param addCount - 新增行数。
+ * @returns CSS 文本；两侧行号都不可知时为空串（行就不带号，绝不编数）。
+ */
+export function diffNumRules(
+  blockClass: string,
+  oldStart: number,
+  newStart: number,
+  delCount: number,
+  addCount: number,
+): string {
+  if (delCount <= 0 && addCount <= 0) return '';
+  const rules: string[] = [];
+  const rows = '.' + blockClass + '[data-diff]>div:first-of-type';
+  // path 行之后的 div 依次是 del × D、add × A；div:nth-of-type 从 1 数，path 占第 1 位。
+  const delFrom = 2;
+  const delTo = 1 + delCount;
+  const addFrom = delTo + 1;
+  const addTo = delTo + addCount;
+  rules.push(
+    rows + '{counter-reset:dshp-fcv-old ' + (oldStart - 1) + ' dshp-fcv-new ' + (newStart - 1) + '}',
+  );
+  if (delCount > 0) {
+    rules.push(
+      rows +
+        '>div:nth-of-type(n+' +
+        delFrom +
+        '):nth-of-type(-n+' +
+        delTo +
+        '){counter-increment:dshp-fcv-old}',
+    );
+    rules.push(
+      rows +
+        '>div:nth-of-type(n+' +
+        delFrom +
+        '):nth-of-type(-n+' +
+        delTo +
+        ')::after{content:counter(dshp-fcv-old);color:var(--dsw-alias-state-error-primary)}',
+    );
+  }
+  if (addCount > 0) {
+    rules.push(
+      rows +
+        '>div:nth-of-type(n+' +
+        addFrom +
+        '):nth-of-type(-n+' +
+        addTo +
+        '){counter-increment:dshp-fcv-new}',
+    );
+    rules.push(
+      rows +
+        '>div:nth-of-type(n+' +
+        addFrom +
+        '):nth-of-type(-n+' +
+        addTo +
+        ')::after{content:counter(dshp-fcv-new);color:var(--dsw-alias-state-success-primary)}',
+    );
+  }
+  return rules.join('\n');
+}
 
 /**
  * 高亮视图单块一次渲染的行数上限。
@@ -161,23 +251,29 @@ export function buildHighlight(args: {
 /**
  * 两套版式各自的类名。
  *
- * 工具行传 `fcv-*`（`fcv-code` / `fcv-diff` / `fcv-diffWrap` / `fcv-ctx` / `fcv-ctxLine` /
- * `fcv-muted`），设置页预览传 `fcv-pv*`——**必须不同**，否则设置节的 CSS 会打到会话里的
- * 工具行上（`styles.ts` 头部解释了为什么这是硬约束）。
+ * 工具行传 `styles` 里那一套（`code` / `diff` / `diffWrap` / `ctx` / `ctxLine` / `muted`），
+ * 设置页预览传样张那一套（`pvCode` / `pvDiff` / …）——都在同一个 CSS Module 里，是两个不同的
+ * 局部名，所以两处版式天然互不串味（`styles.module.css` 头部有说明）。
+ *
+ * 字段类型是 `string | undefined` 而不是 `string`：CSS Module 的声明是宽松的（见
+ * `shared/types/css-modules.d.ts`），索引访问在 `noUncheckedIndexedAccess` 下带 `undefined`。
+ * 值传进来的那一刻是确定的，所以只需要在这里接受它，而不是在每个调用点加 `!`。
  */
+export type ClassName = string | undefined;
+
 export interface DiffBodyClasses {
   /** `CodeBlock` 根上的类（外壳/底色由调用方的卡片提供）。 */
-  code: string;
+  code: ClassName;
   /** `DiffBlock` 根上的类。 */
-  diff: string;
+  diff: ClassName;
   /** ± 视图的最外层（上下文 + DiffBlock + 上下文）。 */
-  diffWrap: string;
+  diffWrap: ClassName;
   /** ± 视图里中性上下文的容器。 */
-  ctx: string;
+  ctx: ClassName;
   /** ± 视图里单行上下文。 */
-  ctxLine: string;
+  ctxLine: ClassName;
   /** 封顶提示那一行。 */
-  muted: string;
+  muted: ClassName;
 }
 
 /** 差异正文渲染器（`createDiffBody` 的产物）。 */
@@ -190,7 +286,7 @@ export interface DiffBody {
    * @param copiedLabel - 复制成功文案。
    * @returns 代码块与（可能有的）封顶提示；没有内容时为空数组。
    */
-  code: (material: HighlightMaterial, copyLabel: string, copiedLabel: string) => any[];
+  code: (material: HighlightMaterial, copyLabel: string, copiedLabel: string) => ReactNode[];
   /**
    * ± 差异视图：官方 `DiffBlock` 的逐行红绿合并 diff（紧凑，超长中部折叠）。
    *
@@ -208,27 +304,55 @@ export interface DiffBody {
     labels: DiffBlockLabels;
     maxLines?: number | undefined;
     key?: string | undefined;
-  }) => any;
+    /** 上文首行在文件里的真实行号（1 起）；有上文时给上下文行编号用，下文行号由它推出。 */
+    beforeLine?: number | undefined;
+    /**
+     * 改动行的双侧行号素材：旧侧首行 / 新侧首行（都 1 起）。有值时给官方块内的
+     * del / add 行叠行号（见 {@link diffNumRules}）；缺省时改动行不带号。
+     */
+    oldStart?: number | undefined;
+    newStart?: number | undefined;
+    /** 本 hunk 独有的类名（行号规则挂在它上），与高亮视图的 codeClass 同源。 */
+    numClass?: string | undefined;
+  }) => ReactNode;
 }
 
 /**
  * 造差异正文渲染器。
  *
- * @param React - 运行时注入的 React。
- * @param P - 运行时注入的 primitives（`CodeBlock` / `DiffBlock`）。
+ * 只需要两套类名当参数：React 与 primitives 现在是**顶层 import**（react / primitives 都在
+ * bundle 的 external 列表里，运行时由 shell 的冻结模块表解析），不再由工厂注入。
+ *
  * @param cn - 调用方那套类名。
  * @returns 高亮 / ± 两个视图的渲染函数。
  */
-export function createDiffBody(React: AnyReact, P: AnyPrimitives, cn: DiffBodyClasses): DiffBody {
-  /** ± 视图的中性上下文行（官方 DiffBlock 画不了，见 {@link DiffBody.lines}）。 */
-  function context(lines: readonly string[], key: string): any {
+export function createDiffBody(cn: DiffBodyClasses): DiffBody {
+  /**
+   * ± 视图的中性上下文行（官方 DiffBlock 画不了，见 {@link DiffBody.lines}）。
+   *
+   * `startLine` 有值时行首带真实行号：`.ctxLine` 的 CSS 计数器（`dshp-fcv-num`）从
+   * `startLine - 1` 起数，逐行 `counter-increment` 出 1——于是上文按文件真实行号编号，
+   * 下文的起始号由调用方算好传入（上文尾号 + 官方块内的语义行数）。行号列的宽窄、
+   * 淡化与不可选中都由 CSS 决定，这里只负责喂起始值。
+   */
+  function context(lines: readonly string[], key: string, startLine?: number | undefined): ReactNode {
     if (lines.length === 0) return null;
-    return React.createElement(
-      'div',
-      { className: cn.ctx, key },
-      lines.map((text, at) =>
-        React.createElement('div', { className: cn.ctxLine, key: at }, text === '' ? ' ' : text),
-      ),
+    return (
+      <div
+        className={cn.ctx}
+        key={key}
+        style={
+          typeof startLine === 'number' && startLine > 0
+            ? { counterReset: 'dshp-fcv-num ' + (startLine - 1) }
+            : undefined
+        }
+      >
+        {lines.map((text, at) => (
+          <div className={cn.ctxLine} key={at}>
+            {text === '' ? ' ' : text}
+          </div>
+        ))}
+      </div>
     );
   }
 
@@ -236,37 +360,60 @@ export function createDiffBody(React: AnyReact, P: AnyPrimitives, cn: DiffBodyCl
     code(material, copyLabel, copiedLabel) {
       if (material.rows.length === 0) return [];
       return [
-        React.createElement(P.CodeBlock, {
-          key: 'code',
-          code: toDiffText(material.shown),
-          lang: material.language === null ? undefined : material.language,
-          className: cn.code + ' ' + material.codeClass,
-          lineNumbers: true,
-          copyLabel,
-          copiedLabel,
-        }),
-        material.overflow
-          ? React.createElement(
-              'div',
-              { className: cn.muted, key: 'overflow' },
-              '… 其余 ' + (material.rows.length - HIGHLIGHT_MAX_LINES) + ' 行未显示（' + OVERFLOW_HINT + '）',
-            )
-          : null,
+        <CodeBlock
+          key="code"
+          code={toDiffText(material.shown)}
+          lang={material.language === null ? undefined : material.language}
+          className={cn.code + ' ' + material.codeClass}
+          lineNumbers
+          copyLabel={copyLabel}
+          copiedLabel={copiedLabel}
+        />,
+        material.overflow ? (
+          <div className={cn.muted} key="overflow">
+            {'… 其余 ' + (material.rows.length - HIGHLIGHT_MAX_LINES) + ' 行未显示（' + OVERFLOW_HINT + '）'}
+          </div>
+        ) : null,
       ];
     },
 
     lines(args) {
-      return React.createElement(
-        'div',
-        { className: cn.diffWrap, key: args.key },
-        context(args.before, 'before'),
-        React.createElement(P.DiffBlock, {
-          diffs: [args.diff],
-          labels: args.labels,
-          maxLines: args.maxLines ?? DIFF_MAX_LINES,
-          className: cn.diff,
-        }),
-        context(args.after, 'after'),
+      // 下文起始行号：上文首行 + 上文行数（上文在文件里是连续的），再跳过官方块内代表的
+      // 「语义增删」——新增行各占一个新行号，删除行不占（与高亮视图的行号口径一致，
+      // 都是「新文件视角」）。没有 beforeLine（定位不到）时下文同样不带号。
+      const afterLine =
+        typeof args.beforeLine === 'number' && args.beforeLine > 0
+          ? args.beforeLine + args.before.length + countLines(args.diff.newText)
+          : undefined;
+      // 改动行行号：双侧行号素材齐全时生成规则，随 <style> 注入（行号画在 del/add 行的
+      // ::after，列位与上下文行号一致）。注意 newStart 优先——它就是官方块的「新侧首行」，
+      // 与 afterLine 的推算同源；oldStart 是旧侧首行（del 行的号）。
+      const numCss =
+        typeof args.oldStart === 'number' &&
+        args.oldStart > 0 &&
+        typeof args.newStart === 'number' &&
+        args.newStart > 0 &&
+        args.numClass !== undefined
+          ? diffNumRules(
+              args.numClass,
+              args.oldStart,
+              args.newStart,
+              countLines(args.diff.oldText ?? ''),
+              countLines(args.diff.newText),
+            )
+          : '';
+      return (
+        <div className={cn.diffWrap} key={args.key}>
+          {numCss !== '' ? <style key="num">{numCss}</style> : null}
+          {context(args.before, 'before', args.beforeLine)}
+          <DiffBlock
+            diffs={[args.diff]}
+            labels={args.labels}
+            maxLines={args.maxLines ?? DIFF_MAX_LINES}
+            className={cn.diff + ' ' + (args.numClass ?? '')}
+          />
+          {context(args.after, 'after', afterLine)}
+        </div>
       );
     },
   };

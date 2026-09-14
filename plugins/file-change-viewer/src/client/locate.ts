@@ -22,7 +22,7 @@
  *
  * @module @dshp/file-change-viewer/client/locate
  */
-import type { AnyReact } from './types.js';
+import { useEffect, useState } from 'react';
 
 const BASE = '/ext/dshp-file-change-viewer/locate';
 
@@ -195,15 +195,18 @@ export interface LocatorFace {
   useLines: () => number;
 }
 
-/** 订阅封装成 React hook，供行组件使用。 */
-export function createLocator(React: AnyReact): LocatorFace {
-  function useLines(): number {
-    const [, bump] = React.useState(0) as [number, (next: number | ((prev: number) => number)) => void];
-    React.useEffect(() => {
-      const listener = (): void => bump((tick: number) => tick + 1);
-      return subscribeLines(listener);
-    }, []);
-    return 0;
-  }
-  return { locateOf, lineOf, useLines };
+/**
+ * 订阅封装成 React hook，供行组件使用。
+ *
+ * 定位结果回来了（或新一批发出去了）就触发重渲染，把真实行号与上下文填上。
+ *
+ * @returns 恒为 0；订阅本身才是副作用。
+ */
+export function useLines(): number {
+  const [, bump] = useState(0);
+  useEffect(() => {
+    const listener = (): void => bump((tick) => tick + 1);
+    return subscribeLines(listener);
+  }, []);
+  return 0;
 }

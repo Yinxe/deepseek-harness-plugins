@@ -15,7 +15,7 @@
  *      删除行不占行号；± 差异视图经全局偏好切换后仍可达；
  *   6. 变更推导：结算结果的 `meta.diffs`、流式半截 JSON、失败调用、窗口截断。
  *
- * 断言方式是直接调用组件函数，再遍历它返回的 React 元素树（stub React 的 `createElement`
+ * 断言方式是直接调用组件函数，再遍历它返回的 React 元素树（stub 的 `createElement` / `jsx`
  * 只造数据结构、不渲染），因此不需要 jsdom / react-dom / 浏览器。`useState` 用一份跨调用保留
  * 的槽位实现，好让「点按钮 → 再渲染 → 断言新状态」可测。
  *
@@ -88,6 +88,36 @@ function resetHooks() {
   hookSlots = [];
   hookCursor = 0;
 }
+
+/**
+ * `react/jsx-runtime` 替身。
+ *
+ * 本插件的 client 半用 automatic JSX runtime（tsconfig 的 `jsx: react-jsx`）编译，所以 JSX
+ * 的产物是 `jsx` / `jsxs` 而不是 `createElement`，参数形态也不一样：children 在
+ * `props.children` 里（多子节点时是数组）、key 走第三个参数。
+ *
+ * 这里把它**还原成与 `createElement` 完全一致的 `{ type, props, children }` 形状**——尤其
+ * `props` 里不带 `children`（原本 createElement 就是把 children 单独放的），于是下面
+ * `walk` / `mount` / `findByName` 那一整套断言助手一行都不用改。`jsxs` 与 `jsx` 的差别只是
+ * 「静态子节点数」，产物形状相同，共用同一个实现。
+ *
+ * @param type - 元素类型（字符串标签或组件函数）。
+ * @param props - 属性（children 混在其中）。
+ * @param key - automatic runtime 单独传的 key。
+ * @returns 与 `createElement` 同形的元素对象。
+ */
+function makeElement(type, props, key) {
+  const { children, ...rest } = props ?? {};
+  const list = children === undefined ? [] : Array.isArray(children) ? children : [children];
+  if (key !== undefined) rest.key = key;
+  return { type, props: rest, children: list };
+}
+
+const JsxRuntimeStub = {
+  Fragment: Symbol.for('react.fragment'),
+  jsx: makeElement,
+  jsxs: makeElement,
+};
 
 /** 各 primitives 用同名函数占位，遍历时按引用比对。 */
 const PRIMITIVES = {
@@ -177,13 +207,25 @@ globalThis.fetch = (url, init = {}) => {
 
 /** 让排队的 fetch 应答跑完（测试里跨微任务/宏任务边界看 store 的最终态）。 */
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+/**
+ * 样式注入替身。
+ *
+ * `styles.module.css` 由构建预设内联进 bundle，模块被求值时就地插一条 `<style data-plugin-css>`，
+ * 所以这些标签在 **factory 执行时**（早于 `apply`）就已经在 `injectedStyles` 里了——不再是 apply
+ * 里的手工注入。`querySelector` 用来判重，第一次必然返回 null。
+ */
 const injectedStyles = [];
 globalThis.document = {
   createElement: () => ({
-    setAttribute() {},
+    attributes: {},
+    setAttribute(name, value) {
+      this.attributes[name] = value;
+    },
     remove() {},
     textContent: '',
   }),
+  querySelector: () => null,
   head: {
     appendChild: (node) => injectedStyles.push(node),
   },
@@ -276,7 +318,7 @@ function settingViewCard(tree, id) {
   const element = findByName(tree, 'ViewCards');
   if (element === null) throw new Error('找不到展示方式单选卡');
   const label = id === 'highlight' ? '高亮' : '± 差异';
-  const card = findAllByClass(mount(element.type, element.props), 'fcv-viewCard').filter(
+  const card = findAllByClass(mount(element.type, element.props), 'viewCard').filter(
     (node) => node.props['aria-label'] === label,
   )[0];
   if (card === undefined) throw new Error('找不到展示方式卡：' + id);
@@ -337,11 +379,35 @@ function mountLive(toolName, block, overrides = {}) {
   };
 }
 
-function findAllByClass(tree, className) {
+/** 构建期被哈希的类名形如 `<hash>_<local>`（构建预设的 `[hash]_[local]` 模式）。 */
+const HASHED_CLASS = /^[A-Za-z0-9_]+_[A-Za-z][A-Za-z0-9]*$/;
+
+/**
+ * 判断一个类名是不是某个 CSS Module 局部名。
+ *
+ * 类名在构建期被哈希（`_0K34_a_card`），所以断言里写的是**局部名**（`card`），这里按
+ * `<hash>_<local>` 的后缀匹配。`dshp-fcv-*` 那两个运行时生成的全局类名走精确匹配。
+ *
+ * @param name - 元素上的单个类名。
+ * @param local - 期望的局部名（或全局类名原文）。
+ * @returns 是否命中。
+ */
+function isClass(name, local) {
+  return name === local || name.endsWith('_' + local);
+}
+
+/**
+ * 按局部名收元素。
+ *
+ * @param tree - 元素树。
+ * @param local - CSS Module 的局部名（不带 `fcv-` 前缀、不是哈希后的名字）。
+ * @returns 命中元素。
+ */
+function findAllByClass(tree, local) {
   const found = [];
   walk(tree, (node) => {
     const cls = node.props?.className;
-    if (typeof cls === 'string' && cls.split(' ').includes(className)) found.push(node);
+    if (typeof cls === 'string' && cls.split(' ').some((name) => isClass(name, local))) found.push(node);
   });
   return found;
 }
@@ -374,6 +440,7 @@ ok('factory 必须是函数', typeof captured.factory === 'function');
 
 const require = (id) => {
   if (id === 'react') return ReactStub;
+  if (id === 'react/jsx-runtime') return JsxRuntimeStub;
   if (id === '@deepseek-ai/dsh-client-ui-primitives') return PStub;
   throw new Error('未预期的 require：' + id);
 };
@@ -467,41 +534,78 @@ ok(
     typeof SessionControls === 'function',
 );
 
-// 样式表：卡回来但官方语言栏（复制在其中）继续隐藏，官方的盒子换成插件自己的卡
-const css = injectedStyles[0].textContent;
+// 样式表：由构建预设**内联进同一个 JS**（不是第二个 .css 产物），且类名已被作用域化。
+// 断言不再看选择器字面量（哈希后每次都可能变），改看「标签属性 + 声明内容 + 类名形态」。
+const styleTag = injectedStyles[0];
+ok(
+  '样式由 CSS Module 内联注入（data-plugin 标归属、data-plugin-css 用于判重）',
+  styleTag.attributes['data-plugin'] === '@dshp/file-change-viewer' &&
+    String(styleTag.attributes['data-plugin-css']).endsWith('src/client/styles.module.css'),
+);
+const css = styleTag.textContent;
+{
+  // 只认「点号 + 字母」开头的类选择器，`border:.5px` 这种小数不会被误当类名
+  const classSelectors = [...css.matchAll(/\.([A-Za-z_][A-Za-z0-9_-]*)/g)].map((match) => match[1]);
+  // `line` 是官方 CodeBlock 行元素的**全局固定类名**（官方 CSS Module 里就是 :global(.line)），
+  // 要命中它只能写全局选择器（本模块的 `code > :global(.line)` 行盒撑宽规则），属合法例外——
+  // 与下面 DYNAMIC_TINT（运行时生成的行底色类名）同一性质：模块外类名，但不是漏哈希。
+  ok(
+    '样式表里的类名全部被哈希成 <hash>_<local>（仅官方全局 .line 例外）',
+    classSelectors.length > 50 && classSelectors.every((name) => HASHED_CLASS.test(name) || name === 'line'),
+  );
+}
+// 注意：以下断言查的是**构建后**的 CSS。lightningcss 会最小化并合并规则（把 `none` 规范化成
+// `0 0`、把同一声明的多条选择器并成一条），所以只查**单个稳定的声明片段**，不拼选择器序列。
 ok(
   '官方语言标签栏（复制按钮在其中）继续隐藏',
-  css.includes('[data-code-block-banner]{display:none}') &&
-    css.includes('div:has([data-code-block-banner]){display:none}'),
+  css.includes('div:has([data-code-block-banner])') && css.includes('[data-code-block-banner]{display:none}'),
 );
-ok('代码卡片加回来了（自带边框/圆角/代码底色）', css.includes('.fcv-card{border:.5px solid'));
+ok(
+  '代码卡片加回来了（自带边框/圆角/代码底色）',
+  css.includes('border:.5px solid var(--dsw-alias-border-l2)') &&
+    css.includes('border-radius:12px') &&
+    css.includes('background:var(--dsw-alias-markdown-code-block)'),
+);
 ok(
   '卡片由插件提供，官方代码块自身的外壳被清掉（不套两层）',
-  css.includes('.fcv-code{--dsl-code-block-line-white-space:pre;background:none!important'),
+  css.includes('--dsl-code-block-line-white-space:pre') && css.includes('!important'),
+);
+ok('卡头用官方 banner 底色', css.includes('background:var(--dsw-alias-markdown-code-block-banner)'));
+// ± 视图里官方 DiffBlock 的三样冗余（path 行 / 复制按钮 / footer）被结构选择器清掉：
+// 卡头已有文件名与统计，重复信息只会在上下文与改动之间横插一段。
+// lightningcss 会把同声明的三条选择器并成一条，所以断言按「选择器片段存在」查。
+ok(
+  '± 视图清掉官方 path 行 / 复制按钮 / footer（卡头已有，全是冗余）',
+  css.includes('[data-diff]>button') &&
+    css.includes('[data-diff]>div:last-of-type') &&
+    css.includes('[data-diff]>div:first-of-type>div:first-child') &&
+    css.includes('{display:none}'),
+);
+// 高亮视图行底色铺满整条被滚动的宽度：官方 .line 是普通块盒（宽只到可视宽度），超长文字以
+// 行内溢出延伸到盒外——不撑宽行盒的话，往右滚，红绿底色会在行中间断开。规则里 .line 是官方
+// 全局类名，必须以 :global 形态写出（构建后仍是裸 .line，上面那条哈希护卫已豁免它）。
+// border-box 必须有：行号列是 .line 自己的 padding-inline-start，content-box 下
+// min-width:100% 只约束内容宽，背景会多出约一个行号列宽。
+ok(
+  '高亮视图行盒随内容撑宽且含行号列整盒计算（底色到行尾不断开、也不多一段）',
+  css.includes('pre code>.line{box-sizing:border-box;width:max-content;min-width:100%}'),
 );
 ok(
-  '卡头有官方 banner 底色与文件名样式',
-  css.includes('.fcv-card .fcv-cardRow{') && css.includes('.fcv-card .fcv-cardTitle{'),
+  '设置节用官方设置行版式（720px 页宽 + 行间 .5px 细线）',
+  css.includes('max-width:720px') && css.includes('border-bottom:.5px solid var(--dsw-alias-border-l2)'),
 );
 ok(
-  '设置节用官方设置行版式 + 下拉胶囊 + 开关',
-  css.includes('.fcv-page{') &&
-    css.includes('.fcv-settingRow{') &&
-    css.includes('.fcv-selector{') &&
-    css.includes('.fcv-switch{'),
+  '设置节的下拉胶囊与开关尺寸照抄官方',
+  css.includes('border-radius:18px') && css.includes('width:36px') && css.includes('height:20px'),
 );
 ok(
-  '展示方式是两张带样张的单选卡（不再是下拉框）',
-  css.includes('.fcv-viewCards{') &&
-    css.includes('.fcv-viewCard{') &&
-    css.includes('.fcv-viewCardOn,') &&
-    css.includes('.fcv-radio{') &&
-    css.includes('.fcv-pvBody{'),
+  '展示方式是两张带样张的并排卡（auto-fit 网格），样张整块不吃指针事件',
+  css.includes('repeat(auto-fit,minmax(240px,1fr))') && css.includes('pointer-events:none'),
 );
 ok(
-  '页头开关照抄官方 open-in-app 的胶囊尺寸（28px 高 / 14px 圆角 / 11px 字）',
-  css.includes('.fcv-headCtl{border:.5px solid var(--dsw-alias-border-l4);border-radius:14px') &&
-    css.includes('.fcv-headBtn{') &&
+  '页头开关照抄官方 open-in-app 的胶囊尺寸（.5px 边框 / 14px 圆角 / 11px 字）',
+  css.includes('border:.5px solid var(--dsw-alias-border-l4)') &&
+    css.includes('border-radius:14px') &&
     css.includes('font-size:11px'),
 );
 
@@ -567,21 +671,21 @@ ok(
 );
 ok('标题走 conversation 的 tool.title.edit 键', row.props.title === 'tool.title.edit');
 ok('行必须可折叠', row.props.expandable === true);
-ok('行外壳仍是原生行（卡片只在展开体里的文件块上）', row.props.className === 'fcv-rowRoot');
-ok('行元素不带外层额外内边距（行几何全部来自官方默认）', row.props.rowClassName === 'fcv-toolRow');
+ok('行外壳仍是原生行（卡片只在展开体里的文件块上）', isClass(row.props.className, 'rowRoot'));
+ok(
+  '行元素不挂任何自定义行类名（行几何全部来自官方 DisclosureRow 默认样式）',
+  row.props.rowClassName === undefined,
+);
 
-// 类名撞车护卫：设置节与工具行是两套完全不同的版式，同名类会互相串味
-// （曾经设置节给 `.fcv-row` 加了 padding:16px 0，直接打到编辑 / 写入行上）。
-// ③ 与 ④ 之间的就是设置节那一整段（包括展示方式两张卡的样张 .fcv-pv*）。
+// 作用域化护卫。
+//
+// 以前三套版式（工具行 / 设置节 / 页头）共用全局类名，靠「各段前缀集合两两不相交」的人工约定
+// 避免串味——曾经设置节的 `.fcv-row{padding:16px 0}` 打到「编辑 / 写入」行上，把行撑高 32px 并
+// 加了一条底边线，那个约定就是为它立的。改用 CSS Module 之后这件事在**结构上**不可能了：
+// 每个组件引用的都是自己 import 进来的哈希类名。
+//
+// 所以这里不再逐对比较类名集合，改断言**作用域本身**：渲染树上的类名必须全部是哈希名。
 {
-  const settingsCss = css.slice(css.indexOf('/* ── ③'), css.indexOf('/* ── ④'));
-  const toolCss = css.slice(0, css.indexOf('/* ── ③'));
-  const headerCss = css.slice(css.indexOf('/* ── ④'));
-  const classesInCss = (text) => new Set(Array.from(text.matchAll(/\.(fcv-[a-zA-Z0-9-]+)/g), (m) => m[1]));
-  const settingsClasses = classesInCss(settingsCss);
-  const toolClasses = classesInCss(toolCss);
-  const headerClasses = classesInCss(headerCss);
-
   const classesOnTree = (tree) => {
     const found = new Set();
     walk(tree, (node) => {
@@ -591,54 +695,33 @@ ok('行元素不带外层额外内边距（行几何全部来自官方默认）'
     return found;
   };
 
-  const rowClasses = classesOnTree(settled);
-  ok('工具行渲染出的类名不该是空的', rowClasses.size > 0);
+  const rowClasses = Array.from(classesOnTree(settled));
+  // 行底色规则的选择器要拼 callId 与 hunk 序号，只能在运行时造，所以那两个类名刻意留在模块外
+  const DYNAMIC_TINT = /^dshp-fcv-lines-[A-Za-z0-9_-]+-\d+$/;
+  ok('工具行渲染出的类名不该是空的', rowClasses.length > 0);
   ok(
-    '工具行元素上的类名不得被设置节版式命中',
-    typeof row.props.className === 'string' && !settingsClasses.has(row.props.className),
-  );
-  ok(
-    '工具行整棵子树的类名与设置节版式零重叠',
-    Array.from(rowClasses).every((name) => !(name.startsWith('fcv-') && settingsClasses.has(name))),
-  );
-  ok(
-    '工具行整棵子树的类名与页头开关版式零重叠',
-    Array.from(rowClasses).every((name) => !(name.startsWith('fcv-') && headerClasses.has(name))),
-  );
-  ok(
-    '设置节自己的行类名不与工具行共用',
-    settingsClasses.has('fcv-settingRow') && !toolClasses.has('fcv-settingRow'),
-  );
-  ok(
-    '展示方式样张刻意复用工具行的类名之外的一套（fcv-pv*）',
-    settingsClasses.has('fcv-pvCode') &&
-      settingsClasses.has('fcv-pvDiff') &&
-      !toolClasses.has('fcv-pvCode') &&
-      // 工具行那套 fcv-code / fcv-diff 不许出现在设置节里，否则样张会串到会话卡片上
-      !settingsClasses.has('fcv-code') &&
-      !settingsClasses.has('fcv-diff') &&
-      !settingsClasses.has('fcv-muted'),
+    '工具行整棵子树的类名全部是哈希名（作用域生效；唯一例外是运行时生成的行底色类名）',
+    rowClasses.every((name) => HASHED_CLASS.test(name) || DYNAMIC_TINT.test(name)),
   );
 }
 
 // 行头：路径在 summary 位，统计绿增红删
-const rowPath = findAllByClass(settled, 'fcv-path')[0];
+const rowPath = findAllByClass(settled, 'path')[0];
 ok('路径渲染成可点链接（官方 fileLink 形态）', rowPath !== undefined && textOf(rowPath) === 'src/a.ts');
 {
   const rowSummary = { props: {}, children: [row.props.collapsedContent] };
-  const rowStat = findAllByClass(rowSummary, 'fcv-stat')[0];
+  const rowStat = findAllByClass(rowSummary, 'stat')[0];
   ok(
     '行头统计按**语义变更**算：ctx/A→ctx/B 是 +1 -1，纯新增 +1，合计 +2 -1',
-    textOf(findAllByClass(rowStat, 'fcv-add')[0]) === '2' &&
-      textOf(findAllByClass(rowStat, 'fcv-del')[0]) === '1',
+    textOf(findAllByClass(rowStat, 'add')[0]) === '2' && textOf(findAllByClass(rowStat, 'del')[0]) === '1',
   );
 }
 ok(
   '统计用绿增红删两个类',
-  findAllByClass(settled, 'fcv-add').length > 0 && findAllByClass(settled, 'fcv-del').length > 0,
+  findAllByClass(settled, 'add').length > 0 && findAllByClass(settled, 'del').length > 0,
 );
-ok('标题与摘要之间有官方那种 2px 分隔点', findAllByClass(settled, 'fcv-sep').length === 1);
-ok('不再有自造角标（已应用 / 新文件）', findAllByClass(settled, 'fcv-badge').length === 0);
+ok('标题与摘要之间有官方那种 2px 分隔点', findAllByClass(settled, 'sep').length === 1);
+ok('不再有自造角标（已应用 / 新文件）', findAllByClass(settled, 'badge').length === 0);
 
 // 文件块：每个 hunk 一条自己的折叠
 const sections = sectionsOf(settled);
@@ -653,27 +736,27 @@ ok(
 );
 ok(
   '文件块自带各自的统计',
-  sections.every((node) => findAllByClass(node, 'fcv-stat').length > 0),
+  sections.every((node) => findAllByClass(node, 'stat').length > 0),
 );
 
 // 代码卡片 + 卡头（文件名 + 统计 + 单块视图切换）
-const settledCards = findAllByClass(settled, 'fcv-card');
+const settledCards = findAllByClass(settled, 'card');
 ok('每个 hunk 一张代码卡片', settledCards.length === 2);
-const cardPills = findAllByClass(settledCards[0], 'fcv-viewPill');
+const cardPills = findAllByClass(settledCards[0], 'viewPill');
 ok('卡头带每块独立的视图切换（两个 Pill）', cardPills.length === 2);
 ok(
   '两块各自默认跟随全局偏好（高亮）',
-  settledCards.every((card) => findAllByClass(card, 'fcv-viewPill')[0].props.active === true),
+  settledCards.every((card) => findAllByClass(card, 'viewPill')[0].props.active === true),
 );
 ok(
   '卡头统计也是语义口径（第一块 = +1 -1），与它自己的高亮 / ± 视图一致',
-  textOf(findAllByClass(settledCards[0], 'fcv-add')[0]) === '1' &&
-    textOf(findAllByClass(settledCards[0], 'fcv-del')[0]) === '1',
+  textOf(findAllByClass(settledCards[0], 'add')[0]) === '1' &&
+    textOf(findAllByClass(settledCards[0], 'del')[0]) === '1',
 );
 ok(
   '纯新增那块是 +1 -0',
-  textOf(findAllByClass(settledCards[1], 'fcv-add')[0]) === '1' &&
-    textOf(findAllByClass(settledCards[1], 'fcv-del')[0]) === '0',
+  textOf(findAllByClass(settledCards[1], 'add')[0]) === '1' &&
+    textOf(findAllByClass(settledCards[1], 'del')[0]) === '0',
 );
 
 // 图标：文件名前挂官方文件类型图标；增删各一个图标；两个 Pill 各一个图标
@@ -717,13 +800,13 @@ const tintCss = textOf(findAllByType(settled, 'style')[0]);
 ok(
   '删除行按区间上底色且不占行号',
   tintCss.includes(
-    '.fcv-lines-c1-0 code>.line:nth-child(2){counter-increment:none;background:var(--fcv-del-bg)}',
+    '.dshp-fcv-lines-c1-0 code>.line:nth-child(2){counter-increment:none;background:var(--fcv-del-bg)}',
   ),
 );
-ok('删除行的号位被清空', tintCss.includes('.fcv-lines-c1-0 code>.line:nth-child(2):before{content:""}'));
+ok('删除行的号位被清空', tintCss.includes('.dshp-fcv-lines-c1-0 code>.line:nth-child(2):before{content:""}'));
 ok(
   '新增行按区间上底色且照常占号',
-  tintCss.includes('.fcv-lines-c1-0 code>.line:nth-child(3){background:var(--fcv-add-bg)}') &&
+  tintCss.includes('.dshp-fcv-lines-c1-0 code>.line:nth-child(3){background:var(--fcv-add-bg)}') &&
     !tintCss.includes('nth-child(3){counter-increment:none'),
 );
 ok('行底色不写死色值（只允许官方 token）', !/#[0-9a-fA-F]{3,8}\b|rgba?\(/.test(tintCss));
@@ -736,7 +819,7 @@ const viewCardsElement = findByName(settingsTree, 'ViewCards');
 ok('展示方式由自带的 ViewCards 组件渲染', viewCardsElement !== null);
 ok('展示方式不再是下拉框', findByName(settingsTree, 'Select').props.options.length === 4); // 只剩「上下文行数」
 const viewCards = mount(viewCardsElement.type, viewCardsElement.props);
-const viewCardNodes = findAllByClass(viewCards, 'fcv-viewCard');
+const viewCardNodes = findAllByClass(viewCards, 'viewCard');
 ok('两张单选卡', viewCardNodes.length === 2);
 ok(
   '卡片是 role=radio（键盘可达），当前值 = 高亮',
@@ -771,12 +854,12 @@ ok(
   );
   const previewTint = textOf(findAllByType(viewCardNodes[0], 'style')[0]);
   ok(
-    '样张的行底色挂在它自己的类名上（fcv-pvLines，不与会话卡片的 fcv-lines-* 共用）',
+    '样张的行底色挂在它自己的类名上（dshp-fcv-pvLines，不与会话卡片的 dshp-fcv-lines-* 共用）',
     previewTint.includes(
-      '.fcv-pvLines code>.line:nth-child(2){counter-increment:none;background:var(--fcv-del-bg)}',
+      '.dshp-fcv-pvLines code>.line:nth-child(2){counter-increment:none;background:var(--fcv-del-bg)}',
     ) &&
       previewTint.includes(
-        '.fcv-pvLines code>.line:nth-child(n+3):nth-child(-n+4){background:var(--fcv-add-bg)}',
+        '.dshp-fcv-pvLines code>.line:nth-child(n+3):nth-child(-n+4){background:var(--fcv-add-bg)}',
       ),
   );
   const previewDiff = findByType(viewCardNodes[1], PStub.DiffBlock).props.diffs[0];
@@ -818,7 +901,7 @@ ok('开关反映 settings.yaml 里的权威值', switchButton.props['aria-checke
 // patch 工具开关：默认关；点一下要真的 POST 出去（Host 半据此注册 / 反注册工具）
 const patchSwitch = settingSwitch(settingsTree, '启用 patch 工具（测试版）');
 ok('patch 工具开关默认关（测试版，settings.yaml 里是 false）', patchSwitch.props['aria-checked'] === false);
-const sectionHeads = findAllByClass(settingsTree, 'fcv-sectionHead');
+const sectionHeads = findAllByClass(settingsTree, 'sectionHead');
 ok('设置节分成两组：显示 / 工具', sectionHeads.length === 2 && textOf(sectionHeads[1]) === '工具');
 const patchRow = findAllByName(settingsTree, 'Row').filter(
   (rowElement) => rowElement.props.label === '启用 patch 工具（测试版）',
@@ -885,10 +968,10 @@ const backToHighlight = rerender('edit', settledBlock);
 ok('切回高亮后重新渲染 CodeBlock', findByType(backToHighlight, PStub.CodeBlock) !== null);
 
 // 单块临时切换视图：只换被点的那一块，且不写回全局偏好
-const cardsAgain = findAllByClass(backToHighlight, 'fcv-card');
-findAllByClass(cardsAgain[0], 'fcv-viewPill')[1].props.onClick({ stopPropagation() {} });
+const cardsAgain = findAllByClass(backToHighlight, 'card');
+findAllByClass(cardsAgain[0], 'viewPill')[1].props.onClick({ stopPropagation() {} });
 const mixed = rerender('edit', settledBlock);
-const mixedCards = findAllByClass(mixed, 'fcv-card');
+const mixedCards = findAllByClass(mixed, 'card');
 ok(
   '点第一块切到 ± 差异：只影响这一块',
   findByType(mixedCards[0], PStub.DiffBlock) !== null && findByType(mixedCards[0], PStub.CodeBlock) === null,
@@ -940,7 +1023,7 @@ ok('运行中的行同样跟随那一刻的偏好', rowOf(streaming).props.open 
 // ── 场景 4：调用参数还没开始流（只有工具名） ─────────────────────────────────
 
 const waiting = render('edit', { name: 'edit', argsRaw: '' });
-ok('无参数时 summary 给出等待文案', textOf(findAllByClass(waiting, 'fcv-summary')[0]) === '等待参数…');
+ok('无参数时 summary 给出等待文案', textOf(findAllByClass(waiting, 'summary')[0]) === '等待参数…');
 ok('无参数时不渲染 CodeBlock', findByType(waiting, PStub.CodeBlock) === null);
 
 // ── 场景 5：失败调用（原生做法：summary 变错误行） ───────────────────────────
@@ -953,9 +1036,9 @@ const failed = render('edit', {
 });
 ok(
   '失败时 summary 位置只显示首行错误',
-  textOf(findAllByClass(failed, 'fcv-errorSummary')[0]) === 'old_string not found in file',
+  textOf(findAllByClass(failed, 'errorSummary')[0]) === 'old_string not found in file',
 );
-ok('失败时不显示路径与统计（官方 ToolRow 同做法）', findAllByClass(failed, 'fcv-path').length === 0);
+ok('失败时不显示路径与统计（官方 ToolRow 同做法）', findAllByClass(failed, 'path').length === 0);
 const failedCodes = findAllByType(failed, PStub.CodeBlock).map((node) => node.props.code);
 ok('失败也保留参数推导的变更（同一个块内删增交错）', failedCodes.length === 1 && failedCodes[0] === 'A\nB');
 ok('失败行的图标用官方 StateDot', findByType(failed, PStub.StateDot) !== null);
@@ -964,7 +1047,7 @@ ok('失败行的图标用官方 StateDot', findByType(failed, PStub.StateDot) !=
 
 const truncated = render('write', { kind: 'tool-result', call: null, isError: false, content: [] });
 ok('截断的调用不抛错，也没有可渲染的变更', findByType(truncated, PStub.CodeBlock) === null);
-ok('截断的调用给出「参数不可用」', textOf(findAllByClass(truncated, 'fcv-summary')[0]) === '参数不可用');
+ok('截断的调用给出「参数不可用」', textOf(findAllByClass(truncated, 'summary')[0]) === '参数不可用');
 
 // ── 场景 7：replace_all / inspect / 语言未知 / 区间合并 / 超长封顶 ───────────
 
@@ -981,9 +1064,9 @@ const replaceAll = render('edit', {
 ok('replace_all 要在行头提示「全部替换」', treeText(replaceAll).includes('全部替换'));
 ok(
   '有 inspect 时提供原生式「查看」药丸',
-  findAllByClass(render('edit', settledBlock, { inspect: () => {} }), 'fcv-inspect').length === 1,
+  findAllByClass(render('edit', settledBlock, { inspect: () => {} }), 'inspect').length === 1,
 );
-ok('没有 inspect 时不渲染药丸', findAllByClass(render('edit', settledBlock), 'fcv-inspect').length === 0);
+ok('没有 inspect 时不渲染药丸', findAllByClass(render('edit', settledBlock), 'inspect').length === 0);
 
 const unknownLang = render('edit', {
   kind: 'tool-result',
@@ -1074,14 +1157,14 @@ const contextual = render('edit', contextBlock);
   const contextStat = { props: {}, children: [rowOf(contextual).props.collapsedContent] };
   ok(
     '行头统计不按原文行数（否则是 +7 -7），而是语义变更 +1 -1',
-    textOf(findAllByClass(contextStat, 'fcv-add')[0]) === '1' &&
-      textOf(findAllByClass(contextStat, 'fcv-del')[0]) === '1',
+    textOf(findAllByClass(contextStat, 'add')[0]) === '1' &&
+      textOf(findAllByClass(contextStat, 'del')[0]) === '1',
   );
-  const contextCard = findAllByClass(contextual, 'fcv-card')[0];
+  const contextCard = findAllByClass(contextual, 'card')[0];
   ok(
     '卡头统计与行头同口径',
-    textOf(findAllByClass(contextCard, 'fcv-add')[0]) === '1' &&
-      textOf(findAllByClass(contextCard, 'fcv-del')[0]) === '1',
+    textOf(findAllByClass(contextCard, 'add')[0]) === '1' &&
+      textOf(findAllByClass(contextCard, 'del')[0]) === '1',
   );
   ok(
     '高亮视图：未变行只出现一次（8 行 = 7 原文 + 1 新增），未被整段重写',
@@ -1101,7 +1184,7 @@ const contextual = render('edit', contextBlock);
   );
 }
 
-findAllByClass(contextual, 'fcv-viewPill')[1].props.onClick({ stopPropagation() {} });
+findAllByClass(contextual, 'viewPill')[1].props.onClick({ stopPropagation() {} });
 const contextDiff = findByType(rerender('edit', contextBlock), PStub.DiffBlock);
 ok(
   '± 差异视图同样只给真正变化的行（不是整段 7 删 7 增）',
@@ -1222,10 +1305,10 @@ const prefView = settingViewCard(mount(Section, {}), 'diff').props['aria-checked
 
 {
   const headTree = headTreeOf('s1');
-  const headButtons = findAllByClass(headTree, 'fcv-headBtn');
+  const headButtons = findAllByClass(headTree, 'headBtn');
   ok(
     '页头有一个 role=group 的容器把两个按钮收在一起',
-    findAllByClass(headTree, 'fcv-headCtl')[0]?.props.role === 'group',
+    findAllByClass(headTree, 'headCtl')[0]?.props.role === 'group',
   );
   ok('页头两个按钮：一键展开 / 收起、切换差异视图', headButtons.length === 2);
   ok(
@@ -1235,8 +1318,8 @@ const prefView = settingViewCard(mount(Section, {}), 'diff').props['aria-checked
   );
   ok(
     '没被覆盖时不出现「恢复跟随偏好」，容器也不挂已覆盖的记号',
-    findAllByClass(headTree, 'fcv-headReset').length === 0 &&
-      findAllByClass(headTree, 'fcv-headCtlOverridden').length === 0,
+    findAllByClass(headTree, 'headReset').length === 0 &&
+      findAllByClass(headTree, 'headCtlOverridden').length === 0,
   );
   ok(
     '页头按钮是真按钮（title / aria-label 都写清了「只影响当前会话」）',
@@ -1261,7 +1344,7 @@ headRow.flush();
 ok('手动点过之后由用户说了算（值可以回到与偏好相同）', rowOf(headRow.tree).props.open === prefOpen);
 
 const writesBeforeHead = configWrites();
-findAllByClass(headTreeOf('s1'), 'fcv-headBtn')[0].props.onClick();
+findAllByClass(headTreeOf('s1'), 'headBtn')[0].props.onClick();
 ok('页头开关一个 /config 写请求都不发（不碰 settings.yaml）', configWrites() === writesBeforeHead);
 ok('已渲染的行被通知到（订阅生效）', headRow.isDirty());
 headRow.flush();
@@ -1273,12 +1356,12 @@ ok(
 );
 ok(
   '覆盖生效后容器挂上「已覆盖」记号，并多出「恢复跟随偏好」',
-  findAllByClass(headTreeOf('s1'), 'fcv-headCtlOverridden').length === 1 &&
-    findAllByClass(headTreeOf('s1'), 'fcv-headReset').length === 1,
+  findAllByClass(headTreeOf('s1'), 'headCtlOverridden').length === 1 &&
+    findAllByClass(headTreeOf('s1'), 'headReset').length === 1,
 );
 
 // 换差异视图：同样只动当前会话
-findAllByClass(headTreeOf('s1'), 'fcv-headBtn')[1].props.onClick();
+findAllByClass(headTreeOf('s1'), 'headBtn')[1].props.onClick();
 ok('换视图也不写偏好', configWrites() === writesBeforeHead);
 headRow.flush();
 const forcedView = prefView === 'highlight' ? 'diff' : 'highlight';
@@ -1292,8 +1375,7 @@ ok(
 );
 ok(
   '按钮上的字跟着生效值走',
-  textOf(findAllByClass(headTreeOf('s1'), 'fcv-headBtn')[1]) ===
-    (forcedView === 'highlight' ? '高亮' : '± 差异'),
+  textOf(findAllByClass(headTreeOf('s1'), 'headBtn')[1]) === (forcedView === 'highlight' ? '高亮' : '± 差异'),
 );
 
 // 只影响当前会话：另一个 sessionId 的行照旧跟随全局偏好
@@ -1307,21 +1389,21 @@ ok(
 );
 ok(
   '另一个会话的页头显示的是它自己的生效值',
-  textOf(findAllByClass(headTreeOf('s2'), 'fcv-headBtn')[0]) === (prefOpen ? '收起改动' : '展开改动'),
+  textOf(findAllByClass(headTreeOf('s2'), 'headBtn')[0]) === (prefOpen ? '收起改动' : '展开改动'),
 );
 otherSessionRow.unmount();
 
 // 「恢复跟随偏好」：撤掉覆盖，行与按钮都回到全局偏好
-findAllByClass(headTreeOf('s1'), 'fcv-headReset')[0].props.onClick();
+findAllByClass(headTreeOf('s1'), 'headReset')[0].props.onClick();
 ok('撤覆盖同样不写偏好', configWrites() === writesBeforeHead);
 headRow.flush();
 ok(
   '撤掉覆盖后行与按钮都回到全局偏好',
   rowOf(headRow.tree).props.open === prefOpen &&
     sectionsOf(headRow.tree).every((node) => node.props.open === prefOpen) &&
-    textOf(findAllByClass(headTreeOf('s1'), 'fcv-headBtn')[0]) === (prefOpen ? '收起改动' : '展开改动'),
+    textOf(findAllByClass(headTreeOf('s1'), 'headBtn')[0]) === (prefOpen ? '收起改动' : '展开改动'),
 );
-ok('撤掉覆盖后「恢复跟随偏好」消失', findAllByClass(headTreeOf('s1'), 'fcv-headReset').length === 0);
+ok('撤掉覆盖后「恢复跟随偏好」消失', findAllByClass(headTreeOf('s1'), 'headReset').length === 0);
 headRow.unmount();
 
 // ── 场景 4：设置节的读 / 写往返（偏好只有 Host 一个事实源） ───────────────────
@@ -1426,8 +1508,8 @@ const patchSettled = render('patch', {
   const patchStat = { props: {}, children: [rowOf(patchSettled).props.collapsedContent] };
   ok(
     'patch 结算：统计按语义变更 +1 -1',
-    textOf(findAllByClass(patchStat, 'fcv-add')[0]) === '1' &&
-      textOf(findAllByClass(patchStat, 'fcv-del')[0]) === '1',
+    textOf(findAllByClass(patchStat, 'add')[0]) === '1' &&
+      textOf(findAllByClass(patchStat, 'del')[0]) === '1',
   );
   ok(
     'patch 结算：卡片用 meta.diffs 渲染（不再依赖 args 预览）',
@@ -1469,7 +1551,7 @@ const patchNumbered = render('patch', {
   );
   ok(
     '行号起点规则挂在那一块自己的类名上（不串到别的块）',
-    numberedCss.includes('.fcv-lines-') && numberedCss.includes(' code{counter-reset:source-line 41}'),
+    numberedCss.includes('.dshp-fcv-lines-') && numberedCss.includes(' code{counter-reset:source-line 41}'),
   );
   ok(
     '行头路径链接带上真实行号（点开落在改动处）',
@@ -1544,28 +1626,67 @@ ok('普通改动不会多出一个箭头', !treeText(patchSettled).includes('→
   const ctxCollapsed = { props: {}, children: [rowOf(ctxRow.tree).props.collapsedContent] };
   ok(
     '上下文行不参与增删统计',
-    textOf(findAllByClass(ctxCollapsed, 'fcv-add')[0]) === '1' &&
-      textOf(findAllByClass(ctxCollapsed, 'fcv-del')[0]) === '1',
+    textOf(findAllByClass(ctxCollapsed, 'add')[0]) === '1' &&
+      textOf(findAllByClass(ctxCollapsed, 'del')[0]) === '1',
   );
   ctxRow.unmount();
 
   // ± 差异视图：默认偏好是 highlight，这里把该块临时切到 diff（与上面「单块临时切换视图」同一套路）
   const ctxHighlight = render('edit', ctxBlock, { callId: 'c-ctx' });
-  findAllByClass(findAllByClass(ctxHighlight, 'fcv-card')[0], 'fcv-viewPill')[1].props.onClick({
+  findAllByClass(findAllByClass(ctxHighlight, 'card')[0], 'viewPill')[1].props.onClick({
     stopPropagation() {},
   });
   const ctxDiffTree = rerender('edit', ctxBlock, { callId: 'c-ctx' });
-  const ctxCard = findAllByClass(ctxDiffTree, 'fcv-card')[0];
+  const ctxCard = findAllByClass(ctxDiffTree, 'card')[0];
   const diffText = treeText(ctxCard);
   ok(
     '± 差异视图：上下文也画出来了（官方 DiffBlock 画不了中性行，所以单独渲染）',
     diffText.includes('before 1') && diffText.includes('after 3'),
   );
-  ok('± 差异视图：上下文行各 3 行、不带 ± 标记', findAllByClass(ctxCard, 'fcv-ctxLine').length === 6);
+  ok('± 差异视图：上下文行各 3 行、不带 ± 标记', findAllByClass(ctxCard, 'ctxLine').length === 6);
   ok(
     '± 差异视图：DiffBlock 本身还在（改动仍是官方逐行视图）',
     findAllByType(ctxCard, PStub.DiffBlock).length === 1,
   );
+  // 行号：上下文行带真实行号（上文 counter-reset 起点 2-1=1；下文起点 = 上文首行 + 上文行数
+  // + 新增行数，这里 2 + 3 + 1 = 6，reset 为 5）。JSX 把起点内联在 .ctx 容器上。
+  {
+    const ctxBoxes = findAllByClass(ctxCard, 'ctx');
+    ok(
+      '± 差异视图：上文行号从真实行号起数（counter-reset:1）',
+      ctxBoxes[0]?.props?.style?.counterReset === 'dshp-fcv-num 1',
+    );
+    ok(
+      '± 差异视图：下文行号跳过改动区（counter-reset:5）',
+      ctxBoxes[1]?.props?.style?.counterReset === 'dshp-fcv-num 5',
+    );
+  }
+  // 改动行的双侧行号：官方 DiffBlock 的行没有编号机制，由 diffNumRules 生成动态 CSS
+  // （del 行用旧文件行号、add 行用新文件行号，计数器 + nth-of-type 区间）。这个场景里
+  // oldText/newText 都没有 ctx 行、locate 行号 5 → oldStart = newStart = 5，
+  // counter-reset 把两个计数器都拨到 4；del 1 行、add 1 行各占一个区间。
+  {
+    const numStyle = findAllByType(ctxCard, 'style').find((node) => textOf(node).includes('dshp-fcv-old'));
+    const numCss = numStyle === undefined ? '' : textOf(numStyle);
+    ok(
+      '± 差异视图：改动行行号规则已注入（计数器拨到 4，即两侧首行都是 5）',
+      numCss.includes('counter-reset:dshp-fcv-old 4 dshp-fcv-new 4'),
+    );
+    ok(
+      '± 差异视图：del 行区间（body 第 2 个 div）+ add 行区间（第 3 个）各带行号',
+      numCss.includes('div:nth-of-type(n+2):nth-of-type(-n+2)') &&
+        numCss.includes('div:nth-of-type(n+3):nth-of-type(-n+3)'),
+    );
+    ok(
+      '± 差异视图：行号带行色（del 红的 add 绿，与 ± 前缀符号同色可辨）',
+      numCss.includes('color:var(--dsw-alias-state-error-primary)') &&
+        numCss.includes('color:var(--dsw-alias-state-success-primary)'),
+    );
+    ok(
+      '± 差异视图：行号挂在 DiffBlock 根的动态类名上（与高亮视图的 codeClass 同源）',
+      findByType(ctxCard, PStub.DiffBlock).props.className.includes('dshp-fcv-lines-c-ctx-d0'),
+    );
+  }
 }
 
 // ⑤ 上下文行数 = 0（偏好）时不补任何上下文
@@ -1617,7 +1738,7 @@ ok('定位回来后行号变成文件里的真实行号', locatedCss.includes('c
 ok(
   '行头路径链接也会带上这个行号（点开落在改动处）',
   // 行头链接的 onClick 里带着 line；这里只验证链接还在（真实点击行为由 props 传递保证）
-  findAllByClass(editNumbered.tree, 'fcv-path').length === 1,
+  findAllByClass(editNumbered.tree, 'path').length === 1,
 );
 editNumbered.unmount();
 

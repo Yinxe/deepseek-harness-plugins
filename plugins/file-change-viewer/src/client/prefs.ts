@@ -17,10 +17,15 @@
  * 会话里的文件块也会跟着换视图；同时它只依赖 `/ext` 路由，不依赖 `settingsScope` 的挂载时序
  * （服务晚挂载时那条路会静默退化成只读默认值）。
  *
+ * **状态住在模块级**：bundle 的 factory 每个插件实例只求值一次，所以模块级就等于「每个插件实例
+ * 一份」，既不需要把 React 传进来造工厂，也不会在两次渲染之间丢状态。首次读取由 `apply` 显式调用
+ * {@link startPrefs} 触发，保持在原有挂载时序上。
+ *
  * @module @dshp/file-change-viewer/client/prefs
  */
+import { useEffect, useState } from 'react';
 import { fetchState, saveConfig } from './api.js';
-import type { AnyReact, ConfigPatch, PrefField, SavePhase, ViewerPrefs } from './types.js';
+import type { ConfigPatch, PrefField, SavePhase, ViewerPrefs } from './types.js';
 
 /** 默认值（与 Host 的 `DEFAULT_CONFIG` 同值；Host 读不到时的兜底）。 */
 export const DEFAULT_PREFS: ViewerPrefs = {
@@ -29,18 +34,6 @@ export const DEFAULT_PREFS: ViewerPrefs = {
   contextLines: 3,
   patchTool: false,
 };
-
-/** 偏好读写面：设置节与工具行共用。 */
-export interface PrefsFace {
-  /** 订阅 + 读取当前偏好（组件内用）。 */
-  usePrefs: () => ViewerPrefs;
-  /** 写一项偏好（乐观更新 + 落 settings.yaml）。 */
-  setPref: (field: PrefField, value: unknown) => void;
-  /** 订阅保存态（设置节显示「已保存 / 保存失败」）。 */
-  useSaveState: () => { phase: SavePhase; error: string | null };
-  /** 重新从 Host 读一次（设置节的「重新读取」按钮）。 */
-  reload: () => void;
-}
 
 /**
  * 外部存储不可信：逐字段校验，坏值回默认。
@@ -62,111 +55,129 @@ export function sanitizePrefs(raw: unknown): ViewerPrefs {
   };
 }
 
-/**
- * 造偏好读写面。
- *
- * @param React - 运行时注入的 React。
- * @returns 可直接交给设置节与工具行的 `PrefsFace`。
- */
-export function createPrefs(React: AnyReact): PrefsFace {
-  let prefs: ViewerPrefs = { ...DEFAULT_PREFS };
-  let phase: SavePhase = 'idle';
-  let error: string | null = null;
-  const listeners = new Set<() => void>();
+/** 进程内权威缓存 + 保存态。 */
+let prefs: ViewerPrefs = { ...DEFAULT_PREFS };
+let phase: SavePhase = 'idle';
+let error: string | null = null;
+const listeners = new Set<() => void>();
+let started = false;
 
-  function notify(): void {
-    for (const listener of Array.from(listeners)) {
-      try {
-        listener();
-      } catch {
-        /* 订阅者自己的异常不该影响其它订阅者 */
-      }
+function notify(): void {
+  for (const listener of Array.from(listeners)) {
+    try {
+      listener();
+    } catch {
+      /* 订阅者自己的异常不该影响其它订阅者 */
     }
   }
+}
 
-  function messageOf(cause: unknown): string {
-    return String((cause as Error)?.message ?? cause);
-  }
+function messageOf(cause: unknown): string {
+  return String((cause as Error)?.message ?? cause);
+}
 
-  function read(): void {
-    phase = 'loading';
-    error = null;
-    notify();
-    fetchState()
-      .then((response) => {
-        if (response && response.ok) {
-          prefs = sanitizePrefs(response.config);
-          phase = 'ready';
-        } else {
-          phase = 'error';
-          error = (response && response.error) || '读取配置失败';
-        }
-        notify();
-      })
-      .catch((cause: unknown) => {
+function read(): void {
+  phase = 'loading';
+  error = null;
+  notify();
+  fetchState()
+    .then((response) => {
+      if (response && response.ok) {
+        prefs = sanitizePrefs(response.config);
+        phase = 'ready';
+      } else {
         phase = 'error';
-        error = '读取配置失败：' + messageOf(cause);
-        notify();
-      });
-  }
+        error = (response && response.error) || '读取配置失败';
+      }
+      notify();
+    })
+    .catch((cause: unknown) => {
+      phase = 'error';
+      error = '读取配置失败：' + messageOf(cause);
+      notify();
+    });
+}
 
-  function write(field: PrefField, previous: ViewerPrefs): void {
-    const patch: ConfigPatch = {};
-    if (field === 'view') patch.view = prefs.view;
-    else if (field === 'sectionsOpen') patch.sectionsOpen = prefs.sectionsOpen;
-    else if (field === 'contextLines') patch.contextLines = prefs.contextLines;
-    else patch.patchTool = prefs.patchTool;
-    saveConfig(patch)
-      .then((response) => {
-        if (response && response.ok) {
-          prefs = sanitizePrefs(response.config);
-          phase = 'ready';
-          error = null;
-        } else {
-          prefs = previous;
-          phase = 'error';
-          error = '保存失败：' + ((response && response.error) || '未知错误');
-        }
-        notify();
-      })
-      .catch((cause: unknown) => {
+function write(field: PrefField, previous: ViewerPrefs): void {
+  const patch: ConfigPatch = {};
+  if (field === 'view') patch.view = prefs.view;
+  else if (field === 'sectionsOpen') patch.sectionsOpen = prefs.sectionsOpen;
+  else if (field === 'contextLines') patch.contextLines = prefs.contextLines;
+  else patch.patchTool = prefs.patchTool;
+  saveConfig(patch)
+    .then((response) => {
+      if (response && response.ok) {
+        prefs = sanitizePrefs(response.config);
+        phase = 'ready';
+        error = null;
+      } else {
         prefs = previous;
         phase = 'error';
-        error = '保存失败：' + messageOf(cause);
-        notify();
-      });
-  }
+        error = '保存失败：' + ((response && response.error) || '未知错误');
+      }
+      notify();
+    })
+    .catch((cause: unknown) => {
+      prefs = previous;
+      phase = 'error';
+      error = '保存失败：' + messageOf(cause);
+      notify();
+    });
+}
 
-  function setPref(field: PrefField, value: unknown): void {
-    const candidate = sanitizePrefs({ ...prefs, [field]: value });
-    if (candidate[field] === prefs[field]) return;
-    const previous = prefs;
-    prefs = candidate;
-    phase = 'saving';
-    error = null;
-    notify();
-    write(field, previous);
-  }
+/**
+ * 写一项偏好（乐观更新 + 落 settings.yaml）。
+ *
+ * @param field - 偏好字段名。
+ * @param value - 新值（会被 {@link sanitizePrefs} 收窄）。
+ */
+export function setPref(field: PrefField, value: unknown): void {
+  const candidate = sanitizePrefs({ ...prefs, [field]: value });
+  if (candidate[field] === prefs[field]) return;
+  const previous = prefs;
+  prefs = candidate;
+  phase = 'saving';
+  error = null;
+  notify();
+  write(field, previous);
+}
 
-  function useSnapshot<T>(pick: () => T): T {
-    const [, bump] = React.useState(0) as [number, (next: number | ((prev: number) => number)) => void];
-    React.useEffect(() => {
-      const listener = (): void => bump((tick: number) => tick + 1);
-      listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
-    }, []);
-    return pick();
-  }
+/** 重新从 Host 读一次（设置节的「重新读取」按钮）。 */
+export function reload(): void {
+  read();
+}
 
-  // 首次读取：`apply` 阶段就发起，工具行与设置节挂载时通常已经有值。
+/** 每个订阅者一份自己的重渲染计数器（组件内调用）。 */
+function useTick(): void {
+  const [, bump] = useState(0);
+  useEffect(() => {
+    const listener = (): void => bump((tick) => tick + 1);
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  }, []);
+}
+
+/** 订阅 + 读取当前偏好（工具行与设置节组件内用）。 */
+export function usePrefs(): ViewerPrefs {
+  useTick();
+  return prefs;
+}
+
+/** 订阅保存态（设置节显示「已保存 / 保存失败」）。 */
+export function useSaveState(): { phase: SavePhase; error: string | null } {
+  useTick();
+  return { phase, error };
+}
+
+/**
+ * 首次读取：由 client `apply` 调一次，工具行与设置节挂载时通常已经有值。
+ *
+ * 幂等：重复调用（例如插件被重挂载）不会重复发请求。
+ */
+export function startPrefs(): void {
+  if (started) return;
+  started = true;
   if (typeof fetch === 'function') read();
-
-  return {
-    usePrefs: () => useSnapshot(() => prefs),
-    useSaveState: () => useSnapshot(() => ({ phase, error })),
-    setPref,
-    reload: read,
-  };
 }

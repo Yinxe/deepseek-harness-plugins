@@ -18,9 +18,26 @@
 
   纯 host 插件可以不要 `jsx`，但 `noEmit/include/exclude` 格式照抄。
 
-## 类型策略（AnyCtx + 自有类型严格）
+## 类型策略（client 用真实 SDK 类型；host 待迁）
 
-DSH 运行时（`ctx / tools / llm / settings / webServer / slots`）**暂无官方 npm 类型包**，统一约定：
+官方 SDK **已经作为 npm 包发布**（`@deepseek-ai/dsh-client-ui-primitives`、`dsh-client-ui-slots`、
+`dsh-tool-fs`、`dsh-api-session-controller`…… 版本与运行时同号，如 `0.1.5-rc.1`），所以**能 import
+的类型就 import**，不要再手写 shim。
+
+### client 半（已生效，照 file-change-viewer 抄）
+
+- 组件 props 类型直接来自 SDK 声明：`import { DisclosureRow, type DiffBlockLabels } from '@deepseek-ai/dsh-client-ui-primitives'`。
+- `AnyReact` / `AnyPrimitives` / `DshRequire` 这类 shim **不再允许**——它们让整个前端退化成 `any`，
+  改一个 prop 名字不会有任何编译报错。
+- `ctx` 可以保留一个**只含实际用到成员**的本地接口（如 `ClientContext` 的 `get` / `effect`），并注明
+  「不 import 整包 cordis 只为两个方法」。逐槽位的 props 检查需要 `SlotMap` 声明合并（由 settings /
+  conversation / tool 各自的 UI 包 merge 进来），那是**下一步**。
+- 类型不全时按**实现的真实契约**就地收窄一次并写明原因，例如官方 `DisclosureRowProps.title` 声明成
+  `string`、实现却是 `children: title`（能放节点）。收窄收在文件内部，不外泄成公共 `any`。
+
+### host 半（待迁）
+
+host 侧的迁移**尚未进行**，暂时维持：
 
 ```ts
 // src/host/types.ts（每个插件必须有）
@@ -40,7 +57,34 @@ export type AnyLlm = any;
 - `verbatimModuleSyntax`：类型导入必须 `import type { X } from ...`，值和类型混写会被打回。
 - `isolatedModules`：不许 `export =` / 常量枚举，`const enum` 禁用。
 - host 按职责拆文件：`index.ts` 只做装配（apply + 注册），`types.ts` 类型，`config.ts` 默认值+schema+消毒，`http.ts` 路由小工具，`cache.ts` 状态，业务逻辑独立文件。**单个文件超过 ~600 行就拆**（标杆 `index.ts` 627 行是上限，不是目标）。
-- client 按层拆：`types.ts`（协议）/ `api.ts`（fetch 封装）/ `styles.ts`（CSS 字符串）/ `components.ts`（Badge/Row/Select/Switch）/ `<X>Section.ts`（业务）/ `index.ts`（loader 注册）。通用小构件进 `components.ts`，别在 Section 里重复造。
+- client 按层拆：`types.ts`（协议 + 领域类型，纯类型）/ `api.ts`（fetch 封装）/ `styles.module.css`（样式，声明是全仓共享的一份）/ `components.tsx`（Badge/Row/Select/Switch 等通用小构件）/ `<X>Section.tsx`（业务）/ `index.tsx`（**只导出 `inject` 与 `apply`**，loader 壳由构建预设生成）。
+  通用小构件进 `components.tsx`，别在 Section 里重复造。含 JSX 的文件必须是 `.tsx`，`tsconfig` 的 `jsx: react-jsx` 已经开好。
+  跨组件共享的状态（偏好缓存、会话覆盖、缓存订阅）写成**模块级 + 导出的 hook**，不要再造 `createXxx(React, ...)` 工厂。
+
+### CSS Module 的类型（全仓一份宽松声明，不产生按文件的 `.d.ts`）
+
+**开发者侧只有 CSS。** 写 `src/client/styles.module.css`，组件里 `import styles from './styles.module.css'`
+然后 `styles.card` 就能用——不需要跑任何命令、不产生任何按文件生成的声明。
+
+声明只有一份，在 [`shared/types/css-modules.d.ts`](../shared/types/css-modules.d.ts)，由
+`tsconfig.base.json` 的 `files` 带进每个插件的编译（路径相对 base 解析）。角色相当于 Vue 项目里的
+`vite/client`：**框架侧提供声明，业务侧只管写样式**。
+
+它用的是索引签名，所以：
+
+- `styles.card` 的类型是 `string | undefined`（`noUncheckedIndexedAccess`）。绝大多数用法
+  （`className={styles.x}`、`styles.a + ' ' + styles.b`）都直接成立；少数把它当 `string` 传进
+  自定义接口的地方（如 `DiffBodyClasses`），在那个接口上声明成 `ClassName = string | undefined`
+  接纳它，**不要在各调用点加 `!`**。
+- `styles.拼错` **不是编译错误**，运行时是 `undefined`，React 静默丢掉 className。这是刻意的取舍：
+  精确到键的声明必须按文件生成、还要跟 CSS 同步（TypeScript 不给 `.css` 补 `.d.ts`，得开
+  `allowArbitraryExtensions`），那份机械比它挡住的问题更重。拼错的类名由 `scripts/check-client.mjs`
+  的渲染断言兜住——它按类名找元素，找不到就是红的。
+
+**不要再走「按文件生成精确 `.d.ts`」那条路**（本仓试过：`styles.module.d.css.ts` +
+`allowArbitraryExtensions` + 生成/门禁脚本）。它能给出编译期拼写检查，但代价是每个插件多一个
+生成文件躺在 `src/` 里、开发者改完 CSS 得记得重新生成——Django/Vue 那类「只写 CSS」的开发手感
+全没了。
 
 ## 代码风格（Prettier 即法律）
 

@@ -2,33 +2,64 @@
 
 > 本文承接旧 AGENT.md §10 的 §10.1–10.2（loader / Section）的完整细节；provider 分层渲染（原 §10.3）、失败提示（原 §10.4）、时间与时区（原 §10.5）见另两篇。规则版总纲见[仓库根 AGENT.md](../AGENT.md)。
 
-## loader 骨架（照抄 index.ts，一字不改结构）
+## loader 骨架（注册壳由构建生成，源码是普通 ES 模块）
 
-```ts
-loader.load({
-  id: PLUGIN_ID,
+源码里**不写** `__ModuleLoader__.load`——那层壳是 `tsup.config.ts` 的 banner / footer 拼出来的。
+`src/client/index.tsx` 就是一个普通 ES 模块：
+
+```tsx
+import { useState } from 'react';
+import { DisclosureRow } from '@deepseek-ai/dsh-client-ui-primitives';
+
+export const inject = ['slots'];
+
+export function apply(ctx: ClientContext): void {
+  /* 样式注入 + slots.inject(...) */
+}
+```
+
+构建产物把壳拼在外面（`lib/client.js` 的头尾）：
+
+```js
+window.__ModuleLoader__.load({
+  id: '@dshp/<name>',
   factory: (require) => {
-    const React = require('react');
-    const P = require('@deepseek-ai/dsh-client-ui-primitives');
-    // 自有模块内联，react/primitives 绝不打包
-    exportsObj.inject = ['slots'];
-    exportsObj.apply = (ctx) => {
-      /* 样式注入 + slots.inject(...) */
-    };
+    var module = { exports: {} };
+    var exports = module.exports;
+    /* …编译后的产物；external 的 import 变成 require('react') 之类… */
+    return module.exports;
   },
 });
 ```
 
-- `PLUGIN_ID` 必须等于 host 的 `name`（`@dshp/<name>`）。
-- **不用 JSX**：全部 `React.createElement`（避免 jsx 运行时配置漂移）。`React`/`P` 由 factory 参数传入，**禁止顶层 `import React`**（打包器会把它打进 bundle）。
-- 样式：`document.createElement('style')` + `data-plugin-css="dshp-<name>/settings.css"` + `textContent = CSS`，`ctx.effect(() => () => style.remove(), ...)` 清理。CSS 类前缀用插件缩写（`vb-` / `fcv-` / `tm-`……），**颜色/字号只用 `var(--dsw-alias-*)` token**，不许写死色值（深浅主题靠 token 切换）。
-- 设置节注册：`slots.inject('settings.section', () => slots.register({ name:'settings.section', id:'dshp-<name>', order: <空位>, label:'中文名' }, Section))`。order 占位表见 docs/scaffolding.md。
+- banner 里的 `id` 必须等于 host 的 `name`（`@dshp/<name>`）。它在 `tsup.config.ts` 里，改包名要两处一起改。
+- 槽位注册同上：`slots.inject('settings.section', () => slots.register({ name:'settings.section', id:'dshp-<name>', order: <空位>, label:'中文名' }, Section))`。order 占位表见 docs/scaffolding.md。
+
+### 为什么可以（也应该）写 JSX
+
+`react/jsx-runtime` 是 shell 冻结模块表里**与 `react` 并列的一等成员**，所以 automatic runtime 完全可用，
+「jsx 运行时配置漂移」这个顾虑不成立（实测：当前 DSH 0.1.5-rc.1 前端的 `staticModules` 里就有它）。
+
+- **写 `.tsx` + JSX**，不要 `React.createElement`；`useState` / `useEffect` 直接从 `react` import。
+- `react` / `react/jsx-runtime` / `@deepseek-ai/dsh-client-ui-primitives` 三个都在 tsup 的 `external` 里，
+  **顶层 import 是正确写法**，不会被误打包（external 的 import 编译成 `require(...)`，由 factory 的
+  `require` 查 shell 模块表解析；同一个 spec 多次 require 拿到的是同一份，见 `dsh-client-modules` 的
+  `makeRequire`：`seed.has(spec)` 直接返回表里的那一个）。
+- **官方组件的 props 类型直接 import**：`@deepseek-ai/dsh-client-ui-primitives` 等 SDK 包装成
+  **devDependency**（只参与类型检查与构建，运行时仍由模块表注入）。不要再手写 `AnyReact` /
+  `AnyPrimitives` 这种 shim——它们等于把前端整体退化成 `any`。
+- 组件是**普通函数组件**，不是 `createXxx(React, P, ...)` 工厂。需要跨组件共享的状态（偏好缓存、
+  会话覆盖、行号缓存）写在**模块级**：bundle 的 factory 每个插件实例只求值一次，模块级 = 每实例一份。
+- **样式写 CSS Module（`src/client/styles.module.css`），不要手拼 CSS 字符串、也不要自己注入 `<style>`**：构建预设会把样式文本与类名映射一起内联进 `lib/client.js`，模块被求值时自动插一条 `<style data-plugin-css>`（卸载由 shell 按 `data-plugin` 清理）。源码里 `import styles from './styles.module.css'`，然后 `className={styles.card}`。
+  - **不要加 `fcv-` 这类前缀**。类名构建期被哈希成 `<hash>_<local>`，作用域由工具保证——以前「各段版式的类名集合必须两两不相交」那条人工约定（设置节的 `.fcv-row{padding:16px 0}` 曾打到编辑 / 写入行上、把行撑高 32px）彻底不需要了。
+  - 需要**运行时拼**的类名（例如按 callId 生成行底色选择器）留在 CSS Module 之外，用 `dshp-` 前缀并写清原因（见 `FileChangeRow.tsx` 的 `TINT_CLASS_PREFIX`）。
+  - **颜色/字号只用 `var(--dsw-alias-*)` token**，不许写死色值（深浅主题靠 token 切换）。
 
 ## Section 组件状态机
 
-`createVisionSection(React, P)` 工厂形态照抄：`useState` 五件套（models/config/loading/saving/error）+ `useEffect` 初次 `load()`。必须覆盖四态：loading（Icon + 「正在读取…」）/ error（红字 notice）/ 空列表（warn notice + setting.yml 改法指引）/ 正常表单。
+`useState` 五件套（models/config/loading/saving/error）+ `useEffect` 初次 `load()`。必须覆盖四态：loading（Icon + 「正在读取…」）/ error（红字 notice）/ 空列表（warn notice + setting.yml 改法指引）/ 正常表单。
 
-- 下拉用 `components.ts` 的 `Select`（胶囊 `P.Menu`），开关用 `Switch`，状态用 `Badge(kind: ok/warn/muted/info)`。新插件缺构件先看 primitives 有没有，没有才在 `components.ts` 加。
+- 下拉用 `components.ts` 的 `Select`（胶囊官方 `Menu`），开关用 `Switch`，状态用 `Badge(kind: ok/warn/muted/info)`。新插件缺构件先看 primitives 有没有，没有才在 `components.ts` 加。
 - 保存：即时项直接 `save(patch)`；长文本（textarea）`onChange` 只改本地、`onBlur` 才保存（标杆 promptTemplate 写法）。保存中 `disabled`，失败回 error notice 不丢本地值。
 - `api.ts` 三函数形态照抄：`fetchState`（`cache: no-store`）/ `saveConfig`（POST json）/ `checkConnectivity`。BASE 常量 `/ext/dshp-<name>` 与 host 对齐，类型从 `client/types.ts` 来。
 
