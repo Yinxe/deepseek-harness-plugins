@@ -14,6 +14,15 @@ import type { ProbeResult } from './types.js';
 const PROBE_TIMEOUT_MS = 5000;
 const PROTOCOL_VERSION = '2025-03-26';
 
+/**
+ * 构建期由 tsup 从 package.json 注入的插件版本（见 `tsup.config.ts`）。握手里的 `clientInfo.version`
+ * 是「谁来探的、什么版本」——写死字面量必然与 package.json 漂移（升版本时会漏掉这里），所以
+ * 版本只有一个来源。直接跑源码（不经 tsup）时这个标识符不存在，`typeof` 探测不会抛，退化成 `0.0.0`。
+ */
+declare const __DSHP_MCP_MANAGER_VERSION__: string | undefined;
+const CLIENT_VERSION =
+  typeof __DSHP_MCP_MANAGER_VERSION__ === 'string' ? __DSHP_MCP_MANAGER_VERSION__ : '0.0.0';
+
 interface ProbeInput {
   url: string;
   headers: Record<string, { js: boolean; source: string }>;
@@ -59,7 +68,7 @@ export async function probeStreamableHttp(input: ProbeInput): Promise<ProbeResul
     params: {
       protocolVersion: PROTOCOL_VERSION,
       capabilities: {},
-      clientInfo: { name: 'dshp-mcp-manager', version: '0.1.0' },
+      clientInfo: { name: 'dshp-mcp-manager', version: CLIENT_VERSION },
     },
   });
 

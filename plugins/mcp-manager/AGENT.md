@@ -25,6 +25,7 @@
 3. **故意不注册模型工具**：patch 文件是 DSH 的装配清单，增删 MCP 实例必须由人完成（见 [docs/security.md](../../docs/security.md) 写路径防护节）。
 4. **探活只碰 streamable-http**：发一次 initialize 握手即止；stdio 不 spawn（子进程有副作用）。
 5. **唯一允许的额外 dev 依赖**：`yaml`（解析/回写 patch 文件必需，构建期内联进 lib，运行时仍零依赖）——其他插件不得效仿（见 [docs/package-json.md](../../docs/package-json.md)）。
+6. **版本只有一个来源**：MCP 握手的 `clientInfo.version` 取自 `tsup.config.ts` 构建期从 package.json 注入的 `__DSHP_MCP_MANAGER_VERSION__`，源码里不许再写版本字面量——`lib/` 是提交进仓库的产物，写死的版本号升版本时必然漏（与 token-meter 注入包元信息同一套做法）。
 
 ## 自检
 
