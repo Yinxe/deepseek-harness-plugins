@@ -16,6 +16,7 @@
 ## 结构与职责
 
 - `src/host/`：`skills.ts`（扫描/增删改查/转移）/ `roots.ts`（技能根解析与优先级）/ `frontmatter.ts` / `config.ts` / `http.ts` / `index.ts`。
+- `src/client/`：`index.tsx`（**只导出 `inject` / `apply`**，两处槽位注册各带 try/catch，loader 壳由 `shared/tsup.preset.ts` 拼出）/ `SkillSection.tsx`（设置节 + `conversation.input.right` 零尺寸探针 + 模块级 `ctxHolder`，普通函数组件 + JSX 的范式）/ `components.tsx`（Badge / Switch / Selector / ActionMenu，真实 props 类型）/ `api.ts` / `styles.module.css`（CSS Modules，局部名不再需要 `sm-` 前缀）/ `types.ts`（协议 + 领域模型 + 只含实际用到的 `ClientContext` / `SlotsService` 接缝）。
 - 路由面：`GET state` / `GET read` + `POST config / create / update / toggle / remove / transfer`。
 
 ## 本插件的局部规则
@@ -28,4 +29,4 @@
 
 ## 自检
 
-`pnpm --filter @dshp/skill-manager test` = `node --check` 双 bundle（无额外脚本）。
+`pnpm --filter @dshp/skill-manager test` = `node --check` 双 bundle + `shared/scripts/check-css-modules.mjs`（`styles.x` 拼错在类型上是合法的，这个静态检查是唯一会自动红的网）。
