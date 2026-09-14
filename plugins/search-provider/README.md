@@ -129,7 +129,7 @@ dshp-search-provider:
 
 1. 复制 `src/host/providers/tavily.ts` 为 `src/host/providers/<新 id>.ts`，实现 `SearchProviderModule`（见 `src/host/types.ts`）：id / label / title / credentialRef（如 `EXA_API_KEY`）/ fields（设置页控件元数据）/ defaultConfig / configSchema / sanitizePatch / snapshot / search / stateExtras，可选 registerRoutes（供应商专属路由，如用量接口）；
 2. `src/host/providers/index.ts` 的 `createProviderModules()` 数组加一行；
-3. 需要专属 UI 组件时，`src/client/providers/index.ts` 加一行注册；重启 `dsh web`。
+3. 需要专属 UI 组件时，加 `src/client/providers/<新 id>.tsx` 导出 `create<X>Extras(C, bridge)`（`C` = 通用小构件集合、`bridge` = 同源路由封装），再在 `src/client/providers/index.ts` 的注册表里加一行；重启 `dsh web`。
 
 注册第二家供应商后，设置页自动出现「生效提供方」下拉（provider id 即 patch 固定选型时可用的取值，见安装节选型说明）；默认 provider 为清单首位，想换默认就调整 `createProviderModules()` 里的顺序。
 

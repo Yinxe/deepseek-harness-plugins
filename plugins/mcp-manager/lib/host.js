@@ -8819,6 +8819,7 @@ function serializeDoc(doc, expectedCount) {
 }
 var PROBE_TIMEOUT_MS = 5e3;
 var PROTOCOL_VERSION = "2025-03-26";
+var CLIENT_VERSION = "0.2.0" ;
 async function probeStreamableHttp(input) {
   const started = Date.now();
   const base = {
@@ -8858,7 +8859,7 @@ async function probeStreamableHttp(input) {
     params: {
       protocolVersion: PROTOCOL_VERSION,
       capabilities: {},
-      clientInfo: { name: "dshp-mcp-manager", version: "0.1.0" }
+      clientInfo: { name: "dshp-mcp-manager", version: CLIENT_VERSION }
     }
   });
   const raw = await new Promise((resolve3, reject) => {

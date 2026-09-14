@@ -1,6 +1,6 @@
 {
   "name": "@dshp/token-meter",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "DeepSeek Harness (DSH) TokenMeter: unified quota + usage statistics — multi-vendor rolling/payg quota with sidebar card and provider ops, plus session-log token aggregation with trends, heatmap and per-model breakdown. 额度与用量统计统一视图：多供应商 rolling/payg 额度（侧边栏卡片 + 供应商运维操作），外加会话日志 token 聚合（趋势、热力图、按模型拆分）。",
   "license": "MIT",
   "author": "Yinxe",
@@ -35,7 +35,7 @@
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf lib *.tsbuildinfo",
-    "test": "node --check lib/host.js && node --check lib/client.js && node scripts/check-share-tokens.mjs && echo \"syntax + token coverage ok\"",
+    "test": "node --check lib/host.js && node --check lib/client.js && node ../../shared/scripts/check-css-modules.mjs src/client && node scripts/check-share-tokens.mjs && echo \"syntax + token coverage ok\"",
     "prepublishOnly": "pnpm typecheck && pnpm build",
     "lint": "oxlint --deny-warnings --config ../../.oxlintrc.json src tsup.config.ts"
   },
@@ -60,10 +60,17 @@
       "platform": "web"
     }
   },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-client-ui-primitives": "^0.1.5-rc.1"
+  },
   "devDependencies": {
-    "@types/react": "^19.3.0",
-    "tsup": "^8.5.1",
-    "@deepseek-ai/schemastery": "^3.18.2"
+    "@deepseek-ai/dsh-client-ui-primitives": "0.1.5-rc.1",
+    "@deepseek-ai/schemastery": "^3.18.2",
+    "@types/react": "~18.3.1",
+    "@types/react-dom": "~18.3.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsup": "^8.5.1"
   },
   "dependencies": {}
 }

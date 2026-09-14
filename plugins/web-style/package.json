@@ -1,6 +1,6 @@
 {
   "name": "@dshp/web-style",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "DeepSeek Harness (DSH) web style suite: multi-theme gallery with one-click switching, persisted theme selection, global radius tuning, and Material You wallpaper color extraction — all rendered over the official light/dark token layer. 样式套件：多套主题画廊一键切换、主题选择持久化、全局圆角调节与 Material You 壁纸取色——全部叠加渲染在官方亮/暗 token 层之上。",
   "license": "MIT",
   "author": "Yinxe",
@@ -34,7 +34,7 @@
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf lib *.tsbuildinfo",
-    "test": "node --check lib/host.js && node --check lib/client.js && node scripts/check-themes.mjs && echo \"syntax ok\"",
+    "test": "node --check lib/host.js && node --check lib/client.js && node scripts/check-themes.mjs && node ../../shared/scripts/check-css-modules.mjs src/client && echo \"syntax ok\"",
     "prepublishOnly": "pnpm typecheck && pnpm build",
     "lint": "oxlint --deny-warnings --config ../../.oxlintrc.json src tsup.config.ts"
   },
@@ -60,9 +60,11 @@
     }
   },
   "devDependencies": {
-    "@types/react": "^19.3.0",
-    "tsup": "^8.5.1",
-    "@deepseek-ai/schemastery": "^3.18.2"
+    "@deepseek-ai/dsh-client-ui-primitives": "0.1.5-rc.1",
+    "@deepseek-ai/schemastery": "^3.18.2",
+    "@types/react": "~18.3.1",
+    "react": "^18.3.1",
+    "tsup": "^8.5.1"
   },
   "dependencies": {}
 }

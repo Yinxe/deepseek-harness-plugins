@@ -6,16 +6,16 @@ DeepSeek Harness（DSH）插件 Monorepo（pnpm workspaces + TypeScript ESM）�
 
 ## 插件一览
 
-| 插件                                                                 | 一句话                                                                                                                                                                                                                                                                                                                                                                                   | 文档                                           |
-| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| **[@dshp/token-meter](plugins/token-meter/README.md)**               | Token 额度 + 用量统计 + 在线时长：多供应商额度卡（opencode / DeepSeek / Command Code / 手动） + 本机会话日志聚合（趋势 / 热力图 / 模型分布 / 在线时长与每日排行，增量重算、口径分级）                                                                                                                                                                                                    | [README](plugins/token-meter/README.md)        |
-| **[@dshp/vision-bridge](plugins/vision-bridge/README.md)**           | 视觉桥接：让纯文本模型也能“看图”（`vision_describe` 工具 + 主/备模型自动降级）                                                                                                                                                                                                                                                                                                           | [README](plugins/vision-bridge/README.md)      |
-| **[@dshp/mcwiki-search](plugins/mcwiki-search/README.md)**           | Minecraft Wiki 查询工具（搜索 / 引言 / 全文，含模板清理的 AI 可读转换）                                                                                                                                                                                                                                                                                                                  | [README](plugins/mcwiki-search/README.md)      |
-| **[@dshp/search-provider](plugins/search-provider/README.md)**       | `web_search` 供应商中枢：Tavily 等可插拔接入，动态选型                                                                                                                                                                                                                                                                                                                                   | [README](plugins/search-provider/README.md)    |
-| **[@dshp/web-style](plugins/web-style/README.md)**                   | Web 外观定制：23 套主题画廊一键切换并持久化 + 壁纸取色（Material You）+ 全局圆角                                                                                                                                                                                                                                                                                                         | [README](plugins/web-style/README.md)          |
-| **[@dshp/skill-manager](plugins/skill-manager/README.md)**           | 技能管理：设置页统一管理全局（`~/.dsh/skills`、`~/.agents/skills`）与工作区技能——新建/编辑/启停/复制移动/删除                                                                                                                                                                                                                                                                            | [README](plugins/skill-manager/README.md)      |
-| **[@dshp/mcp-manager](plugins/mcp-manager/README.md)**               | MCP 服务器管理：设置页管理 cordis.patch.yml 里的官方 dsh-mcp-client 实例——新建/编辑/启停/删除/探活，表单+JSON 双模式，回写保注释                                                                                                                                                                                                                                                         | [README](plugins/mcp-manager/README.md)        |
-| **[@dshp/file-change-viewer](plugins/file-change-viewer/README.md)** | 文件修改查看器 + **`patch` 工具**：接管对话流里的 edit / write / patch 行（外壳沿用官方原生行，默认折叠、可在设置里改成默认展开），展开后每个文件块是一张带**语法高亮的统一 diff** 卡片（整行红绿、删除行不占行号、统计只算真正变化的行）；`patch` 工具让「多处零散 / 跨文件」的批量修改一次调用完成且**全有或全无**；全局偏好在设置里自己的一节「文件修改卡片」中配置，落 settings.yaml | [README](plugins/file-change-viewer/README.md) |
+| 插件                                                                 | 一句话                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | 文档                                           |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| **[@dshp/token-meter](plugins/token-meter/README.md)**               | Token 额度 + 用量统计 + 在线时长：多供应商额度卡（opencode / DeepSeek / Command Code / 手动） + 本机会话日志聚合（趋势 / 热力图 / 模型分布 / 在线时长与每日排行，增量重算、口径分级）                                                                                                                                                                                                                                                                                                                                                     | [README](plugins/token-meter/README.md)        |
+| **[@dshp/vision-bridge](plugins/vision-bridge/README.md)**           | 视觉桥接：让纯文本模型也能“看图”（`vision_describe` 工具 + 主/备模型自动降级）                                                                                                                                                                                                                                                                                                                                                                                                                                                            | [README](plugins/vision-bridge/README.md)      |
+| **[@dshp/mcwiki-search](plugins/mcwiki-search/README.md)**           | Minecraft Wiki 查询工具（搜索 / 引言 / 全文，含模板清理的 AI 可读转换）                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | [README](plugins/mcwiki-search/README.md)      |
+| **[@dshp/search-provider](plugins/search-provider/README.md)**       | `web_search` 供应商中枢：Tavily 等可插拔接入，动态选型                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | [README](plugins/search-provider/README.md)    |
+| **[@dshp/web-style](plugins/web-style/README.md)**                   | Web 外观定制：23 套主题画廊一键切换并持久化 + 壁纸取色（Material You）+ 全局圆角                                                                                                                                                                                                                                                                                                                                                                                                                                                          | [README](plugins/web-style/README.md)          |
+| **[@dshp/skill-manager](plugins/skill-manager/README.md)**           | 技能管理：设置页统一管理全局（`~/.dsh/skills`、`~/.agents/skills`）与工作区技能——新建/编辑/启停/复制移动/删除                                                                                                                                                                                                                                                                                                                                                                                                                             | [README](plugins/skill-manager/README.md)      |
+| **[@dshp/mcp-manager](plugins/mcp-manager/README.md)**               | MCP 服务器管理：设置页管理 cordis.patch.yml 里的官方 dsh-mcp-client 实例——新建/编辑/启停/删除/探活，表单+JSON 双模式，回写保注释                                                                                                                                                                                                                                                                                                                                                                                                          | [README](plugins/mcp-manager/README.md)        |
+| **[@dshp/file-change-viewer](plugins/file-change-viewer/README.md)** | 文件修改查看器 + **`patch` 工具**：接管对话流里的 edit / write / patch 行（外壳沿用官方原生行，默认折叠、可在设置里改成默认展开），展开后每个文件块是一张带**语法高亮的统一 diff** 卡片（整行红绿、删除行不占行号、统计只算真正变化的行）；`patch` 工具让「多处零散 / 跨文件」的批量修改一次调用完成且**全有或全无**；全局偏好在设置里自己的一节「File Change View」中配置（展示方式是两张直接画出效果的预览卡），落 settings.yaml；会话页头另有两个**只作用于当前会话**的快捷开关（一键展开 / 收起全部文件改动、切换差异视图），不写配置 | [README](plugins/file-change-viewer/README.md) |
 
 ## 截图预览
 
@@ -162,16 +162,16 @@ dsh web   # 重启生效
 
 ### 发布与更新约定（CI 自动执行）
 
-| 通道         | 触发          | 行为                                                             |
-| ------------ | ------------- | ---------------------------------------------------------------- |
-| `latest`     | 推送 `main`   | 滚动重建到最新提交（正式渠道，持 Latest 徽标置顶），下载地址固定 |
-| 版本 Release | 推送 `v*` tag | 静态存档，永不随构建变化                                         |
-| 分支预发布   | 推送其他分支  | 以分支名命名的预发布（`release/1.0` → `release-1.0`）            |
-| 自定义后缀   | 手动触发      | 勾选 rolling = 预发布随滚动；不勾 = 静态正式版                   |
+| 通道         | 触发                      | 行为                                                             |
+| ------------ | ------------------------- | ---------------------------------------------------------------- |
+| `latest`     | 推送 `main`               | 滚动重建到最新提交（正式渠道，持 Latest 徽标置顶），下载地址固定 |
+| 版本 Release | 推送 `v*` tag             | 静态存档，永不随构建变化                                         |
+| 自定义后缀   | 手动触发（限 main / tag） | 勾选 rolling = 预发布随滚动；不勾 = 静态正式版                   |
+| 仅门禁       | 推送其他分支 / PR         | 不打包、不发布（分支上的构建产物没有意义）                       |
 
+- **只有 `main` 与 `v*` tag 能产出发布物**：其他分支推送与 PR 只跑门禁；手动触发是唯一的人工发版口，也只在 `main`（或 `v*` tag）上生效，在别的 ref 上跑只跑门禁并打一条 notice。要给人试新版，用 `main` 的 `latest`，或手动触发指定后缀。
 - **滚动约定**：所有**预发布**（以及 notes 首行带 `<!-- rolling: true -->` 标记的 release）都跟随 main——每次 main 推送成功后整体重建到最新提交；停止跟随 = 取消 Pre-release 勾选或删除标记行。`latest` 每次最后重建并授予 Latest 徽标，始终置顶 Releases 列表。
 - **数量约束**：除 `latest` 外同时最多允许 **1 个**滚动项；出现多个时 CI 立即报错终止（不动任何现有 Release），处理后再推送即可。
-- `dev` 与 `feature/*` 分支、PR 只跑 CI 门禁，不产出发布物。
 - Release 说明由 `scripts/gen-release-notes.cjs` 生成：逐插件列出包名、版本、双语描述、下载与安装命令。
 
 ## 结构
@@ -204,7 +204,8 @@ dsh web   # 重启生效
 │       ├── src/client/         #   Client TS：GallerySection/apply-theme/md3/official/radius/themes/api/state
 │       ├── scripts/            #   check-themes.mjs（目录 ↔ 画廊 meta ↔ 产物一致性）
 │       └── lib/                #   单文件构建产物（已提交）
-├── AGENT.md                    # 插件开发规范（新插件必读）
+├── AGENT.md                    # 开发规范·规则版（红线 + 指路）
+├── docs/                       # 规范细节（脚手架 / TS / package.json / 构建 / Cordis / settings / 路由 / Client / provider / 时区 / 安全 / 门禁 / 发布 / 文档）——旧 AGENT.md §1–§14 的完整下沉
 ├── tsconfig.base.json          # 共享 TS 配置（NodeNext + strict）
 ├── tsconfig.json               # solution 引用
 ├── pnpm-workspace.yaml         # packages: plugins/* + storeDir
@@ -212,7 +213,7 @@ dsh web   # 重启生效
 └── .github/workflows/CICD.yml  # 门禁 + 打包发布：main→latest 滚动发布，v* tag→版本 Release，其他分支→同名预发布；dev 与 feature/* 仅门禁
 ```
 
-每个插件内部一律是同一套布局：`src/host/`（Node 半）+ `src/client/`（浏览器半）+ `lib/`（已提交的单文件产物）+ `cordis.patch.yml`。
+每个插件内部一律是同一套布局：`src/host/`（Node 半）+ `src/client/`（浏览器 半）+ `lib/`（已提交的单文件产物）+ `cordis.patch.yml` + `AGENT.md`（本插件的局部规则与事实，指回根规范）。
 
 ### 设置键名约定（全仓统一，改名即 breaking）
 
@@ -225,7 +226,7 @@ dsh web   # 重启生效
 | `cordis.patch.yml` 的 `id`                                     | `dshp-token-meter`        |
 | 设置页 `settings.section` 的 `id`                              | `dshp-token-meter`        |
 
-**插件只读自己的键，不做任何历史键兼容与迁移**：不读 `dshp-inx-*` 等旧命名空间、不读 `storages/*.json`、不改写 `settings.yaml`（规范见 [AGENT.md](AGENT.md) §7.1 / §7.3）。升级时若键名有变，请按各插件 README 的更新日志**手工**把旧分节改名或重配；配置键改名属 breaking 变更。
+**插件只读自己的键，不做任何历史键兼容与迁移**：不读 `dshp-inx-*` 等旧命名空间、不读 `storages/*.json`、不改写 `settings.yaml`（规范见 [docs/settings.md](docs/settings.md)）。升级时若键名有变，请按各插件 README 的更新日志**手工**把旧分节改名或重配；配置键改名属 breaking 变更。
 
 ## 环境
 
@@ -262,4 +263,4 @@ mkdir -p plugins/<name>/src
 pnpm install
 ```
 
-规范细节（目录布局、TS 策略、package.json 逐字段、Cordis 契约、多供应商分层渲染、门禁）见 **[AGENT.md](AGENT.md)**。
+规范分三层：**[AGENT.md](AGENT.md)**（红线规则版）→ **[docs/](docs/)**（主题细节，旧 §1–§14 全部下沉在此）→ 各插件 `AGENT.md`（局部规则与事实）。多供应商分层渲染、接管工具行渲染等专题见 docs/ 对应篇目。

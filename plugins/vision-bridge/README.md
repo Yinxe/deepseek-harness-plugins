@@ -224,8 +224,8 @@ llm-pi-ai:
 ## 代码结构
 
 ```
-lib/index.js        Host 半：顶部同源小工具（settingsNamespace/json/sameOrigin/readBody，本包自有）+ 图片缓存 + 模型发现 + vision_describe 工具 + 系统提示 + 同源路由 + 持久化
-client.js           Client 半：__ModuleLoader__ bundle，设置页 UI（DSH token 样式，fetch 同源路由）
+lib/host.js         Host 半：顶部同源小工具（settingsNamespace/json/sameOrigin/readBody，本包自有）+ 图片缓存 + 模型发现 + vision_describe 工具 + 系统提示 + 同源路由 + 持久化
+lib/client.js       Client 半：__ModuleLoader__ bundle（单文件 CJS，loader 壳由构建预设拼出），设置页 UI（DSH token 样式，fetch 同源路由）
 cordis.patch.yml    bundle 层 patch：仅 insert 挂载行
 package.json        包描述 + DSH bundle 声明（dsh.bundle.patch / dsh.client.platform）
 README.md           本文件
@@ -281,7 +281,7 @@ dsh web
 > **Monorepo + TS 版**：本目录是 `deepseek-harness-plugins` monorepo 的标准子项目（`plugins/vision-bridge`），由 `~/.dsh/plugins/vision-bridge`（JS，v1.3.2）等价 TS 重写移植。
 >
 > - Host：原 `lib/index.js`（816 行）→ `src/host/{types,http,config,cache,vision,index}.ts`，tsup 打包为单文件 `lib/host.js`（ESM，schemastery 内联，运行时零依赖），导出 `{ name, inject, NS, ConfigSchema, apply }` 与原版一致。
-> - Client：原手写 `client.js`（374 行）→ `src/client/{types,styles,api,components,VisionSection,index}.ts`，tsup 打包为单文件 `lib/client.js`（IIFE，内含 `__ModuleLoader__.load`，react/primitives 运行时注入不打包）。
+> - Client：原手写 `client.js`（374 行）→ `src/client/{types,api,components,styles.module.css,VisionSection,index}`（`.tsx` + JSX，不再是 `React.createElement` 工厂），构建为单文件 `lib/client.js`（CJS + 构建预设拼的 `__ModuleLoader__.load` 壳，react / react/jsx-runtime / primitives 运行时注入不打包）。官方组件的 props 类型直接来自 `@deepseek-ai/dsh-client-ui-primitives`（devDependency，见 `docs/client-basics.md`）。
 
 > 构建：`pnpm --filter @dshp/vision-bridge build`（tsup）→ `lib/host.js` + `lib/client.js`；包入口 `lib/host.js`，`./client` → `lib/client.js`。`lib/` 已提交（DSH `add github:` 直接从 git 安装，不跑 build，必须带构建产物）。
 

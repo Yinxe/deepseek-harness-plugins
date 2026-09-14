@@ -1,6 +1,6 @@
 {
   "name": "@dshp/mcp-manager",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "DeepSeek Harness (DSH) MCP server manager: list / create / edit / enable / disable / delete @deepseek-ai/dsh-mcp-client instances in the profile's cordis.patch.yml from the settings page, with form & JSON dual-mode editor, comments-preserving YAML write-back and same-origin JSON routes. MCP 服务器管理器：在设置页列出、新建、编辑、启停、删除 profile 的 cordis.patch.yml 里的 @deepseek-ai/dsh-mcp-client 实例，表单/JSON 双模式编辑，回写保留注释，内置同源 JSON 路由。",
   "license": "MIT",
   "author": "Yinxe",
@@ -33,7 +33,7 @@
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf lib *.tsbuildinfo",
-    "test": "node --check lib/host.js && node --check lib/client.js && node scripts/patchdoc.test.mjs",
+    "test": "node --check lib/host.js && node --check lib/client.js && node ../../shared/scripts/check-css-modules.mjs src/client && node scripts/patchdoc.test.mjs",
     "prepublishOnly": "pnpm typecheck && pnpm build",
     "lint": "oxlint --deny-warnings --config ../../.oxlintrc.json src tsup.config.ts"
   },
@@ -59,8 +59,10 @@
     }
   },
   "devDependencies": {
-    "@types/react": "^19.3.0",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.1.5-rc.1",
     "@deepseek-ai/schemastery": "^3.18.2",
+    "@types/react": "~18.3.1",
+    "react": "^18.3.1",
     "tsup": "^8.5.1",
     "yaml": "^2.8.0"
   },

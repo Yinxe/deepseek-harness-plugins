@@ -1,0 +1,285 @@
+/**
+ * Minecraft Wiki 搜索设置页样式（CSS Modules，局部名不再需要 mw- 前缀）
+ *
+ * 由 `shared/tsup.preset.ts` 里的 esbuild 插件在构建期内联：lightningcss 把 `[hash]_[local]`
+ * 编译成真实类名，CSS 文本与类名映射一起塞进 lib/client.js，模块被求值时就地插一条
+ * `<style data-plugin>`。产物仍然只有一个 JS 文件（插件不能有第二个 HTTP 资源）。
+ *
+ * 局部名是**模块作用域**的，不再有「类名撞到别的段上」这类问题。需要**运行时拼**的类名留在模块外
+ * （本插件只有 CommandCard 里那个没有对应规则的 `mw-cmdChevron` 字面量，见那里的说明）。
+ *
+ * 值全部照抄原 `styles.ts`（官方 `--dsw-alias-*` token，深浅主题靠 token 切换）。迁移时删掉了
+ * 2 条在本插件里没有任何引用的规则：`rowWrap` / `mono`（原文件是从旧 `lib/client.js` 整段搬过来
+ * 的，这两条是那时留下的死规则；`.rowWrap:last-child` 只随它出现在那条三选择器分组里）。
+ */
+
+.page {
+  max-width: 720px;
+  color: var(--dsw-alias-label-primary);
+  flex-direction: column;
+  display: flex;
+}
+
+.section {
+  flex-direction: column;
+  width: 100%;
+  display: flex;
+}
+
+.sectionHead {
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  padding: 14px 0 2px;
+}
+
+.row {
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+  align-items: center;
+  gap: 8px;
+  padding: 16px 0;
+  display: flex;
+}
+
+.section .row:last-child,
+.section .bar:last-child {
+  border-bottom: none;
+}
+
+.rowText {
+  flex-direction: column;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+  padding-right: 48px;
+  display: flex;
+}
+
+.control {
+  align-items: center;
+  gap: 8px;
+  display: inline-flex;
+  flex: none;
+}
+
+.unit {
+  color: var(--dsw-alias-label-secondary);
+  font-size: 14px;
+  line-height: 22px;
+  flex: none;
+}
+
+.title {
+  color: var(--dsw-alias-label-primary);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+}
+
+.desc {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+}
+
+.intro {
+  color: var(--dsw-alias-label-tertiary);
+  margin: 0 0 4px;
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.results {
+  flex-direction: column;
+  gap: 8px;
+  display: flex;
+  padding: 8px 0;
+}
+
+.inputWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 8px;
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-1);
+  width: 100%;
+}
+
+.inputWrap:focus-within {
+  border-color: var(--dsw-alias-brand-primary);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--dsw-alias-label-primary);
+  font-family: inherit;
+}
+
+.input::placeholder {
+  color: var(--dsw-alias-label-dimmed);
+}
+
+.input:disabled {
+  opacity: 0.5;
+}
+
+.badge {
+  white-space: nowrap;
+  align-items: center;
+  height: 20px;
+  border-radius: 10px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 20px;
+  display: inline-flex;
+}
+
+.badgeOk {
+  background: var(--dsw-alias-state-success-tertiary);
+  color: var(--dsw-alias-state-success-primary);
+}
+
+.badgeMuted {
+  background: var(--dsw-alias-button-ghost-active-fill);
+  color: var(--dsw-alias-label-caption);
+}
+
+.notice {
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.noticeErr {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.noticeOk {
+  color: var(--dsw-alias-state-success-primary);
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--dsw-alias-label-tertiary);
+  margin: 0;
+  line-height: 18px;
+}
+
+.bar {
+  align-items: center;
+  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+}
+
+.barEnd {
+  align-items: center;
+  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+  justify-content: flex-end;
+}
+
+.loading {
+  align-items: center;
+  gap: 8px;
+  display: flex;
+}
+
+.loadingText {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.resultItem {
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  border-radius: 8px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  display: flex;
+}
+
+.resultItem a {
+  color: var(--dsw-alias-state-business-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.resultItem a:hover {
+  text-decoration: underline;
+}
+
+.resultSnippet {
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  line-height: 18px;
+  margin-top: 4px;
+}
+
+.resultMeta {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  margin-top: 4px;
+  word-break: break-all;
+}
+
+.codeblock {
+  margin-top: 8px;
+}
+
+.codeblock pre {
+  max-height: 320px;
+  overflow: auto;
+}
+
+/* /mcwiki 命令卡片（conversation.chat.commandview 槽位；布局only，颜色走官方 token） */
+.cmdRoot {
+  width: 100%;
+}
+
+.cmdRow {
+  width: 100%;
+}
+
+.cmdTitle {
+  font-size: 13px;
+}
+
+.cmdSummary {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.cmdSummaryErr {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.cmdBody {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-primary);
+  padding: 4px 0 8px;
+}

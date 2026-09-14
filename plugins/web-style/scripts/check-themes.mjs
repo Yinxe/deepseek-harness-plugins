@@ -184,7 +184,7 @@ for (const path of [
 if (!hostBundle.includes('photo:custom')) bad('Host 缺 photo:custom 虚拟主题白名单');
 if (!hostBundle.includes('dshp-web-style')) bad('Host 缺 NS（dshp-web-style）注册');
 
-// 配置只认 NS：历史键 / 迁移代码不得回归（AGENT.md §7.3）
+// 配置只认 NS：历史键 / 迁移代码不得回归（docs/settings.md「不做迁移」）
 for (const symbol of ['migrateYamlNamespaceKey', 'LEGACY_SETTINGS_KEYS', 'storages/', 'dshp-inx-custom-ui']) {
   if (hostBundle.includes(symbol)) {
     bad('Host 产物含已废弃的历史键/迁移代码：' + symbol + '（配置只认 NS，不做迁移）');

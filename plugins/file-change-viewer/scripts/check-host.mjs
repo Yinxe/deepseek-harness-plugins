@@ -31,6 +31,8 @@ function fakeCtx(options = {}) {
     tools: [],
     /** 内存文件系统：displayPath → 内容。 */
     files: new Map(options.files ?? []),
+    /** readText 的调用记录（验证「同一文件只读一次」）。 */
+    reads: [],
     writeLog: [],
     fsWriteDenied: false,
     writePolicies: [],
@@ -41,22 +43,38 @@ function fakeCtx(options = {}) {
     /** false = 策略服务还没挂上（模拟插件挂载顺序）。 */
     policyReady: options.policyReady !== false,
     confiningReads: 0,
+    /** 假后端的 readText 是否把 BOM 留在文本里（官方后端不会；用来验证「不会补出第二个 BOM」）。 */
+    hasBom: options.hasBom === true,
+    /** 当前「base 层 + settings.yaml 用户层」合并后的值（installSection / update 都维护它）。 */
+    config: {},
   };
   last = state;
   const settings = {
     installSection: (ctxArg, ns, schema, entry, hooks) => {
       state.installed = { ctxArg, ns, schema, entry, options: hooks };
       installed = state.installed;
+      // 与真实 settings 服务同序：先交付 setSource（当前权威值），再 onChange 重新判定。
+      state.config = { ...state.config, ...entry };
+      if (typeof hooks.setSource === 'function') hooks.setSource(() => state.config);
+      if (typeof hooks.onChange === 'function') hooks.onChange();
     },
+    /** 读一个命名空间的权威值（schema 默认 + base 层 + 用户层合并后的结果）。 */
+    get: (ns) => (ns === host.NS ? { ...state.config } : undefined),
     update: async (ns, patch) => {
       state.updates.push({ ns, patch });
+      // 真实服务：合并用户层 → 校验 → 提交并 emit；emit 就是 onChange 的来源。
+      state.config = { ...state.config, ...patch };
+      const hooks = state.installed && state.installed.options;
+      if (hooks && typeof hooks.onChange === 'function') hooks.onChange();
     },
   };
+  state.settings = settings;
   const fs = {
     resolve: async (path) => ({ displayPath: path, targetKey: path }),
     stat: async (target) =>
       state.files.has(target.displayPath) ? { version: 'v1', type: 'file', size: 1 } : undefined,
     readText: async (target) => {
+      state.reads.push(target.displayPath);
       if (!state.files.has(target.displayPath)) {
         const error = new Error('not found');
         error.code = 'FS_NOT_FOUND';
@@ -78,10 +96,18 @@ function fakeCtx(options = {}) {
       state.writeLog.push(target.displayPath);
       return { operation: before === null ? 'create' : 'update', before, after: content, version: 'v2' };
     },
+    /** BOM 探测的按范围读：`hasBom` 打开时回 UTF-8 BOM 的三个字节。 */
+    readByteRange: async () =>
+      state.hasBom === true ? new Uint8Array([0xef, 0xbb, 0xbf]) : new Uint8Array(0),
   };
   const tools = {
     register: (definition) => {
       state.tools.push(definition);
+      // 与真实 `ctx.tools.register` 同契约：返回值就是「反注册这一个工具」的 disposer。
+      return () => {
+        const at = state.tools.indexOf(definition);
+        if (at >= 0) state.tools.splice(at, 1);
+      };
     },
   };
   if (options.sandboxMode !== undefined) fs.sandboxMode = options.sandboxMode;
@@ -111,7 +137,13 @@ function fakeCtx(options = {}) {
     },
     effect: (callback) => {
       state.effects += 1;
-      callback();
+      const cleanup = typeof callback === 'function' ? callback() : undefined;
+      let done = false;
+      return () => {
+        if (done) return;
+        done = true;
+        if (typeof cleanup === 'function') cleanup();
+      };
     },
     emit: () => {},
     waterfall: (...args) => {
@@ -213,9 +245,35 @@ ok(
   '必须把 setSource 回调交给 settings 服务（热重载靠它）',
   typeof installed.options.setSource === 'function',
 );
+ok(
+  '必须把 onChange 交给 settings 服务（patch 工具的动态开关靠它）',
+  typeof installed.options.onChange === 'function',
+);
+ok('patchTool 出厂默认关（测试版能力）', installed.entry.patchTool === false);
+ok('contextLines 出厂默认 3 行（git diff 同款默认）', installed.entry.contextLines === 3);
+ok(
+  '默认关着时**不注册** patch 工具',
+  last.tools.every((tool) => tool.name !== 'patch'),
+);
 
 host.apply(fakeCtx(), { view: 'diff', sectionsOpen: true });
 ok('composition 补丁必须生效', installed.entry.view === 'diff' && installed.entry.sectionsOpen === true);
+
+host.apply(fakeCtx(), { patchTool: true });
+ok('composition 也能把 patch 工具打开', installed.entry.patchTool === true);
+ok(
+  '打开后确实注册了 patch 工具',
+  last.tools.some((tool) => tool.name === 'patch'),
+);
+
+host.apply(fakeCtx(), { patchTool: 'yes' });
+ok('patchTool 非布尔值被丢弃（消毒）', installed.entry.patchTool === false);
+
+host.apply(fakeCtx(), { contextLines: 8 });
+ok('composition 能把上下文行数调大', installed.entry.contextLines === 8);
+
+host.apply(fakeCtx(), { contextLines: 4 });
+ok('枚举之外的上下文行数被丢弃（消毒）', installed.entry.contextLines === 3);
 
 host.apply(fakeCtx(), { view: 'bogus', sectionsOpen: 'yes' });
 ok(
@@ -226,10 +284,35 @@ ok(
 host.apply(fakeCtx(), 'not-an-object');
 ok('非对象补丁不抛错', installed.entry.view === 'highlight');
 
+// 动态开关的健壮性：settings 在 attach / detach 时会用「只有 base 层」的源调一次 setSource + onChange，
+// 那一刻不能把已经开着的工具反注册掉（真实会话里表现为模型收到 unknown tool "patch"）。
+{
+  const detach = fakeCtx();
+  host.apply(detach, undefined); // 部署层没开
+  await last.settings.update(host.NS, { patchTool: true }); // 用户在设置里开了
+  ok(
+    '设置里开了之后注册上',
+    last.tools.some((tool) => tool.name === 'patch'),
+  );
+  // 模拟 detach：setSource 换成一个「只有 base 层、没有 patchTool」的源，再触发 onChange
+  last.installed.options.setSource(() => ({ view: 'highlight', sectionsOpen: false, contextLines: 3 }));
+  last.installed.options.onChange();
+  ok(
+    'attach/detach 不会把已开的 patch 工具反注册掉（要读 settings 服务里的权威值）',
+    last.tools.some((tool) => tool.name === 'patch'),
+  );
+
+  // 真的在设置里关掉（权威值变了）才反注册
+  await last.settings.update(host.NS, { patchTool: false });
+  ok('权威值真的关了才反注册', !last.tools.some((tool) => tool.name === 'patch'));
+}
+
 // ── schema ─────────────────────────────────────────────────────────────────
 const parsed = installed.schema({});
 ok('schema 默认 view=highlight', parsed.view === 'highlight');
 ok('schema 默认 sectionsOpen=false（新渲染的行保持原生折叠）', parsed.sectionsOpen === false);
+ok('schema 默认 patchTool=false（工具默认关闭）', parsed.patchTool === false);
+ok('schema 默认 contextLines=3', parsed.contextLines === 3);
 ok('schema 里不再有 rowsOpen 这种多余属性', parsed.rowsOpen === undefined);
 const narrowed = installed.schema({ view: 'diff', sectionsOpen: false });
 ok('schema 接受合法值', narrowed.view === 'diff' && narrowed.sectionsOpen === false);
@@ -246,9 +329,11 @@ ok('locate 路由（真实行号定位）路径正确', paths[2] === '/ext/dshp-
 const stateRoute = state.routes[0];
 const configRoute = state.routes[1];
 
-// locate：只回行号、不回文件内容
+// locate：回行号 + 两侧上下文；不回整份文件
 {
-  const located = fakeCtx({ files: [['src/l.ts', 'one\ntwo\nthree\nfour\n']] });
+  const located = fakeCtx({
+    files: [['src/l.ts', 'one\ntwo\nthree\nfour\nfive\nsix\nseven\neight\nnine\nten\neleven\n']],
+  });
   host.apply(located, undefined);
   const route = last.routes[2];
   const answer = await callRoute(
@@ -257,19 +342,41 @@ const configRoute = state.routes[1];
     JSON.stringify({
       cwd: '/w',
       items: [
-        { path: 'src/l.ts', newText: 'three\nfour' },
+        { path: 'src/l.ts', newText: 'four\nfive' },
         { path: 'src/l.ts', newText: '不存在的段落' },
         { path: 'src/missing.ts', newText: 'x' },
+        { path: 'src/l.ts', newText: '已经不在文件里的新文本', oldText: 'seven\neight' },
       ],
     }),
   );
+  const results = answer.json.results ?? [];
   ok('locate 回 ok:true', answer.status === 200 && answer.json.ok === true);
-  ok('locate 报到真实行号（three 是第 3 行）', answer.json.lines[0] === 3);
-  ok('定位不到时回 null（卡片退回从 1 开始）', answer.json.lines[1] === null);
-  ok('文件不存在也回 null', answer.json.lines[2] === null);
+  ok('locate 报到真实行号（four 是第 4 行）', results[0].line === 4);
   ok(
-    'locate 的响应里没有任何文件内容（正文一个字都不回传）',
-    JSON.stringify(answer.json) === '{"ok":true,"lines":[3,null,null]}',
+    '上下文按文件顺序回传（上文 one / two / three；客户端取最后 N 行 = 离改动最近的 N 行）',
+    JSON.stringify(results[0].before) === JSON.stringify(['one', 'two', 'three']),
+  );
+  ok(
+    'locate 把下文一并回传（紧随其后的 six / seven / eight …，最多 8 行）',
+    JSON.stringify(results[0].after) === JSON.stringify(['six', 'seven', 'eight', 'nine', 'ten', 'eleven']),
+  );
+  ok('上下文最多 8 行（再多也不回）', results[0].after.length <= 8 && results[0].before.length <= 8);
+  ok(
+    '定位不到时回 null + 空上下文（卡片退回从 1 开始、不显示上下文）',
+    results[1].line === null && results[1].before.length === 0,
+  );
+  ok('文件不存在也回 null', results[2].line === null);
+  ok(
+    'newText 定位不到时退回 oldText 兜底（调用失败 / 文件又被改过时磁盘上还是旧文本）',
+    results[3].line === 7 && JSON.stringify(results[3].after) === JSON.stringify(['nine', 'ten', 'eleven']),
+  );
+  ok(
+    'locate 的响应里没有任何整份文件（只有行号与每侧最多 8 行原文）',
+    JSON.stringify(answer.json).length < 400 && !JSON.stringify(answer.json).includes('one\\ntwo'),
+  );
+  ok(
+    '同一请求里同一个文件只读一次（缓存按 path）',
+    last.reads.filter((path) => path === 'src/l.ts').length === 1,
   );
 }
 
@@ -297,12 +404,35 @@ ok(
 );
 const badBool = await callRoute(configRoute, 'POST', JSON.stringify({ sectionsOpen: 'yes' }));
 ok('非法 sectionsOpen 必须回 ok:false', badBool.json.ok === false);
+const openedTool = await callRoute(configRoute, 'POST', JSON.stringify({ patchTool: true }));
+ok('patchTool 能单独写', openedTool.json.ok === true && state.updates[2].patch.patchTool === true);
+ok('开启后 state 路由回的就是 true', openedTool.json.config.patchTool === true);
+const badTool = await callRoute(configRoute, 'POST', JSON.stringify({ patchTool: 'yes' }));
+ok('非法 patchTool 必须回 ok:false 且不落库', badTool.json.ok === false && state.updates.length === 3);
+const contextWritten = await callRoute(configRoute, 'POST', JSON.stringify({ contextLines: 8 }));
+ok(
+  'contextLines 能单独写并回权威值',
+  contextWritten.json.ok === true &&
+    contextWritten.json.config.contextLines === 8 &&
+    state.updates[3].patch.contextLines === 8,
+);
+const badContext = await callRoute(configRoute, 'POST', JSON.stringify({ contextLines: 4 }));
+ok('非法 contextLines 必须回 ok:false 且不落库', badContext.json.ok === false && state.updates.length === 4);
+ok(
+  'patchTool 一开，settings 的 onChange 就把工具注册上（不必重启）',
+  state.tools.some((tool) => tool.name === 'patch'),
+);
+const closedTool = await callRoute(configRoute, 'POST', JSON.stringify({ patchTool: false }));
+ok(
+  'patchTool 一关，工具立刻被反注册',
+  closedTool.json.ok === true && !state.tools.some((tool) => tool.name === 'patch'),
+);
 const legacy = await callRoute(configRoute, 'POST', JSON.stringify({ rowsOpen: true }));
 ok(
   '多余的 rowsOpen 不再被当作偏好（已移除该属性）',
-  state.updates.length === 2 && !('rowsOpen' in state.updates[1].patch) && legacy.json.ok === true,
+  !('rowsOpen' in state.updates[1].patch) && legacy.json.ok === true,
 );
-ok('非法值不得落库', state.updates.length === 2);
+ok('非法值不得落库', state.updates.length === 5);
 
 const badJson = await callRoute(configRoute, 'POST', '{oops');
 ok('请求体不是 JSON 必须回 ok:false', badJson.json.ok === false && badJson.json.error.includes('JSON'));
@@ -327,7 +457,7 @@ const withFiles = fakeCtx({
     ['src/b.ts', 'const b = 2;\n'],
   ],
 });
-host.apply(withFiles, undefined);
+host.apply(withFiles, { patchTool: true });
 const patchTool = last.tools.filter((tool) => tool.name === 'patch')[0];
 ok('必须注册 patch 工具', patchTool !== undefined);
 ok('patch 工具要求必须带 patch 文本', patchTool.parameters.required.includes('patch'));
@@ -338,37 +468,36 @@ ok(
 );
 ok('patch 工具声明为不可并行（会改文件）', patchTool.isConcurrencySafe() === false);
 
-// 工具说明必须把「改已有文件」与「新建文件」两种形式都写出来，而且**各自带例子**：
-// 只给「改」的例子，模型第一次就会拿它去写一个还不存在的文件（真实踩过）。
+// 工具说明必须把三种段头都写出来，而且**各自带例子**：只给「改」的例子，模型第一次就会拿它去
+// 写一个还不存在的文件（真实踩过）。
 {
   const description = patchTool.description;
   const paramHint = patchTool.parameters.properties.patch.description;
-  ok(
-    '描述里写明改已有文件的形式',
-    description.includes('--- a/') || description.includes('EDIT an existing file'),
-  );
-  ok(
-    '描述里写明新建文件的形式（--- /dev/null + @@ -0,0）',
-    description.includes('/dev/null') && description.includes('@@ -0,0'),
-  );
-  ok('描述里点明「文件不存在且用改的形式」会被拒', description.includes('refused'));
-  ok('描述里说明不支持删除文件', description.includes('Deleting files is not supported'));
-  ok('参数说明里同时给了改 / 建两个例子', paramHint.includes('EDIT:') && paramHint.includes('CREATE:'));
-  ok('新建例子用的是 /dev/null 形式', paramHint.includes('--- /dev/null'));
+  ok('描述里写明信封', description.includes('*** Begin Patch') && description.includes('*** End Patch'));
+  ok('描述里写明新建文件的形式', description.includes('*** Add File:'));
+  ok('描述里写明改已有文件的形式', description.includes('*** Update File:'));
+  ok('描述里没有把删除写成可用操作', !description.includes('remove an existing file; nothing follows'));
+  ok('描述里的例子不含改名（改名会被拒）', !description.includes('*** Move to: src/main.py'));
+  ok('描述里点明片段不写行号', description.includes('Line numbers are never written'));
+  ok('描述里点明 Add 命中已存在文件会被拒', description.includes('already exists is refused'));
+  ok('描述里点明删除段会被拒', description.includes('*** Delete File:') && description.includes('REFUSED'));
+  ok('描述里点明改名段会被拒', description.includes('*** Move to:'));
+  ok('描述里给出 bash 的替代出口', description.includes('rm / mv'));
+  ok('参数说明里带了完整例子', paramHint.includes('*** Begin Patch') && paramHint.includes('*** End Patch'));
 }
 
 const execCtx = { agent: { session: { header: { cwd: '/w' } } }, signal: undefined };
 const twoFilePatch = [
-  '--- a/src/a.ts',
-  '+++ b/src/a.ts',
-  '@@ -1,1 +1,1 @@',
+  '*** Begin Patch',
+  '*** Update File: src/a.ts',
+  '@@',
   '-const a = 1;',
   '+const a = 11;',
-  '--- a/src/b.ts',
-  '+++ b/src/b.ts',
-  '@@ -1,1 +1,1 @@',
+  '*** Update File: src/b.ts',
+  '@@',
   '-const b = 2;',
   '+const b = 22;',
+  '*** End Patch',
 ].join('\n');
 
 const result = await patchTool.execute({ patch: twoFilePatch }, execCtx);
@@ -378,9 +507,14 @@ ok(
 );
 ok('返回值按文件列出增删', result.files.length === 2 && result.added === 2 && result.removed === 2);
 ok(
-  '返回值带上「只含变化行」的差异文本（差异卡片直接用）',
-  result.files[0].oldText === 'const a = 1;' && result.files[0].newText === 'const a = 11;',
+  '返回值带上每个文件的操作类型',
+  result.files[0].operation === 'update' && result.files[1].operation === 'update',
 );
+ok(
+  '返回值带上「只含变化行 + 上下文」的差异文本（差异卡片直接用）',
+  result.diffs[0].oldText === 'const a = 1;' && result.diffs[0].newText === 'const a = 11;',
+);
+ok('差异带上片段在文件里的真实起始行号', result.diffs[0].startLine === 1 && result.diffs[1].startLine === 1);
 const meta = patchTool.output.presentationMeta({ patch: twoFilePatch }, result);
 ok(
   'presentationMeta 把两个文件的差异交给卡片',
@@ -388,21 +522,31 @@ ok(
 );
 ok('render 只回小结、不回显整份 patch', typeof patchTool.output.render({}, result)[0].text === 'string');
 
-// 全有或全无：第二个文件的 hunk 对不上时，第一个文件也不能被写
+// 预览（流式 / 结算前）：宽容解析，能解析出几段就预览几段
+{
+  const preview = patchTool.presentCall({ patch: twoFilePatch.replace('*** End Patch', '') });
+  ok('presentCall 在不完整补丁上也能给预览', preview.diffs.length === 2 && preview.card === 'diff');
+  ok(
+    '预览带的路径就是补丁里的路径',
+    preview.locations.length === 2 && preview.locations[0].path === 'src/a.ts',
+  );
+}
+
+// 全有或全无：第二个文件的上下文对不上时，第一个文件也不能被写
 const broken = fakeCtx({ files: [['src/a.ts', 'const a = 1;\n']] });
-host.apply(broken, undefined);
+host.apply(broken, { patchTool: true });
 const brokenTool = last.tools.filter((tool) => tool.name === 'patch')[0];
 const halfPatch = [
-  '--- a/src/a.ts',
-  '+++ b/src/a.ts',
-  '@@ -1,1 +1,1 @@',
+  '*** Begin Patch',
+  '*** Update File: src/a.ts',
+  '@@',
   '-const a = 1;',
   '+const a = 11;',
-  '--- a/missing.ts',
-  '+++ b/missing.ts',
-  '@@ -1,1 +1,1 @@',
+  '*** Update File: missing.ts',
+  '@@',
   '-nope',
   '+nope2',
+  '*** End Patch',
 ].join('\n');
 let allOrNothing = null;
 try {
@@ -413,6 +557,120 @@ try {
 ok('任一文件对不上就整体失败', allOrNothing !== null);
 ok('失败时第一个文件没有被写（不会留半截状态）', last.files.get('src/a.ts') === 'const a = 1;\n');
 ok('失败消息点名是哪个文件', String(allOrNothing.message).includes('missing.ts'));
+ok('「已有文件却不存在」的消息教了怎么新建', String(allOrNothing.message).includes('*** Add File:'));
+
+// 删除 / 改名：解析层认识，执行层明确拒绝（不读文件、不问审批、一个字节不写）
+{
+  const refuse = fakeCtx({
+    sandboxMode: 'workspace-write',
+    files: [
+      ['src/keep.ts', 'keep\n'],
+      ['src/gone.ts', 'bye\n'],
+      ['src/old.ts', 'old content\n'],
+    ],
+  });
+  host.apply(refuse, { patchTool: true });
+  const tool = last.tools.filter((item) => item.name === 'patch')[0];
+
+  let deleted = null;
+  try {
+    await tool.execute({ patch: '*** Begin Patch\n*** Delete File: src/gone.ts\n*** End Patch' }, execCtx);
+  } catch (error) {
+    deleted = error;
+  }
+  ok('*** Delete File: 被拒绝', deleted !== null && String(deleted.message).includes('不执行删除与改名'));
+  ok('拒绝消息点名了那一段', String(deleted.message).includes('*** Delete File: src/gone.ts'));
+  ok('拒绝消息给出 bash rm 的替代做法', String(deleted.message).includes('`rm`'));
+  ok('删除被拒时文件还在', last.files.has('src/gone.ts'));
+
+  let moved = null;
+  try {
+    await tool.execute(
+      {
+        patch: [
+          '*** Begin Patch',
+          '*** Update File: src/old.ts',
+          '*** Move to: src/renamed.ts',
+          '@@',
+          '-old content',
+          '+new content',
+          '*** End Patch',
+        ].join('\n'),
+      },
+      execCtx,
+    );
+  } catch (error) {
+    moved = error;
+  }
+  ok('*** Move to: 被拒绝', moved !== null && String(moved.message).includes('不执行删除与改名'));
+  ok('拒绝消息给出 mv 的替代做法', String(moved.message).includes('`mv`'));
+  ok(
+    '改名被拒时旧文件没被改、也没多出新文件',
+    last.files.get('src/old.ts') === 'old content\n' && !last.files.has('src/renamed.ts'),
+  );
+
+  // 混合补丁（一段合法 + 一段删除）：整体拒绝，合法那一段也不写
+  let mixed = null;
+  try {
+    await tool.execute(
+      {
+        patch: [
+          '*** Begin Patch',
+          '*** Update File: src/keep.ts',
+          '@@',
+          '-keep',
+          '+KEEP',
+          '*** Delete File: src/gone.ts',
+          '*** End Patch',
+        ].join('\n'),
+      },
+      execCtx,
+    );
+  } catch (error) {
+    mixed = error;
+  }
+  ok('补丁里混进删除段时整体拒绝', mixed !== null);
+  ok('被拒时合法那一段也没写（读文件之前就拒绝）', last.files.get('src/keep.ts') === 'keep\n');
+  ok('被拒时不发审批请求', last.approvals.length === 0);
+}
+
+// BOM 保持：官方后端解出来不带 BOM，写回要补上；后端若把 BOM 留在文本里也不能补出两个
+{
+  const utf8Bom = '\ufeff';
+  const kept = fakeCtx({
+    hasBom: true,
+    files: [['src/bom.cs', utf8Bom + 'using System;\n\nclass Test {}\n']],
+  });
+  host.apply(kept, { patchTool: true });
+  const tool = last.tools.filter((item) => item.name === 'patch')[0];
+  const written = await tool.execute(
+    {
+      patch:
+        '*** Begin Patch\n*** Update File: src/bom.cs\n@@\n class Test {}\n+class Next {}\n*** End Patch',
+    },
+    execCtx,
+  );
+  ok(
+    '带 BOM 的文件改完仍然只有一个 BOM',
+    last.files.get('src/bom.cs') === utf8Bom + 'using System;\n\nclass Test {}\nclass Next {}\n',
+  );
+  ok('BOM 不进入差异文本（卡片不会显示一个不可见字符）', written.diffs[0].newText.includes('class Next {}'));
+
+  const stripped = fakeCtx({ hasBom: true, files: [['src/bom2.cs', 'using System;\n']] });
+  host.apply(stripped, { patchTool: true });
+  const tool2 = last.tools.filter((item) => item.name === 'patch')[0];
+  await tool2.execute(
+    {
+      patch:
+        '*** Begin Patch\n*** Update File: src/bom2.cs\n@@\n-using System;\n+using System.Text;\n*** End Patch',
+    },
+    execCtx,
+  );
+  ok(
+    '后端把 BOM 吃掉时（官方行为）写回补上',
+    last.files.get('src/bom2.cs') === utf8Bom + 'using System.Text;\n',
+  );
+}
 
 // ── 沙箱提权：与官方 write / edit / bash 同一套 ─────────────────────────────
 
@@ -429,7 +687,7 @@ const sandboxed = fakeCtx({
     ['src/b.ts', 'const b = 2;\n'],
   ],
 });
-host.apply(sandboxed, undefined);
+host.apply(sandboxed, { patchTool: true });
 const sandboxTool = last.tools.filter((tool) => tool.name === 'patch')[0];
 const sandboxParams = sandboxTool.parameters.properties;
 ok('有沙箱后端时广告 sandbox_permissions', sandboxParams.sandbox_permissions !== undefined);
@@ -464,7 +722,7 @@ const refused = fakeCtx({
     ['src/b.ts', 'const b = 2;\n'],
   ],
 });
-host.apply(refused, undefined);
+host.apply(refused, { patchTool: true });
 const refusedTool = last.tools.filter((tool) => tool.name === 'patch')[0];
 let refusal = null;
 try {
@@ -486,7 +744,7 @@ const noWider = fakeCtx({
   standingMode: 'danger-full-access',
   approvalOutcome: 'allowed-once',
 });
-host.apply(noWider, undefined);
+host.apply(noWider, { patchTool: true });
 const noWiderTool = last.tools.filter((tool) => tool.name === 'patch')[0];
 let notWider = null;
 try {
@@ -518,7 +776,7 @@ ok('只给 justification 时拒绝', pairing !== null && String(pairing.message)
       ['src/b.ts', 'const b = 2;\n'],
     ],
   });
-  host.apply(late, undefined);
+  host.apply(late, { patchTool: true });
   const lateTool = last.tools.filter((tool) => tool.name === 'patch')[0];
 
   // 策略服务仍然没挂上：宁可拒绝，也不能用「无策略」去写（那会让围栏退回兜底根）
@@ -552,7 +810,7 @@ const denied = fakeCtx({
     ['src/b.ts', 'const b = 2;\n'],
   ],
 });
-host.apply(denied, undefined);
+host.apply(denied, { patchTool: true });
 const deniedTool = last.tools.filter((tool) => tool.name === 'patch')[0];
 last.fsWriteDenied = true;
 let blocked = null;
@@ -583,11 +841,22 @@ ok('被拒时文件没有被改（fail-closed）', last.files.get('src/a.ts') ==
 
 let garbage = null;
 try {
-  await brokenTool.execute({ patch: '这里没有 diff' }, execCtx);
+  await brokenTool.execute({ patch: '这里没有补丁' }, execCtx);
 } catch (error) {
   garbage = error;
 }
-ok('没有可解析的 hunk 时给出可照做的中文报错', garbage !== null && String(garbage.message).includes('hunk'));
+ok('没有信封时给出可照做的中文报错', garbage !== null && String(garbage.message).includes('*** Begin Patch'));
+
+let emptyEnvelope = null;
+try {
+  await brokenTool.execute({ patch: '*** Begin Patch\n*** End Patch' }, execCtx);
+} catch (error) {
+  emptyEnvelope = error;
+}
+ok(
+  '空信封给出「没有任何文件段落」的报错',
+  emptyEnvelope !== null && String(emptyEnvelope.message).includes('段落'),
+);
 
 // ── 写前预检：越界目标必须在任何写入之前被拦下 ────────────────────────────────
 
@@ -635,18 +904,18 @@ for (const [label, policy, target] of [
       ['/w/src/b.ts', 'const b = 2;\n'],
     ],
   });
-  host.apply(mixed, undefined);
+  host.apply(mixed, { patchTool: true });
   const mixedTool = last.tools.filter((tool) => tool.name === 'patch')[0];
-  // 前两个文件在工作区内，第三个是绝对路径的工作区外目标
+  // 一个在工作区内，两个是绝对路径的工作区外目标
   const outsidePatch = [
-    '--- /dev/null',
-    '+++ b//w/new-inside.txt',
-    '@@ -0,0 +1,1 @@',
+    '*** Begin Patch',
+    '*** Add File: /w/new-inside.txt',
     '+ok',
-    '--- /dev/null',
-    '+++ b//outside/evil.txt',
-    '@@ -0,0 +1,1 @@',
+    '*** Add File: /outside/evil.txt',
     '+nope',
+    '*** Add File: /outside/second.txt',
+    '+nope too',
+    '*** End Patch',
   ].join('\n');
   let mixedBlocked = null;
   try {
@@ -655,11 +924,50 @@ for (const [label, policy, target] of [
     mixedBlocked = error;
   }
   ok('混入越界文件时整体失败', mixedBlocked !== null);
-  ok('越界的那个文件没被创建', last.files.has('/outside/evil.txt') === false);
+  ok('越界的文件没被创建', last.files.has('/outside/evil.txt') === false);
+  ok('第二个越界文件也没被创建', last.files.has('/outside/second.txt') === false);
   ok(
     '同一个 patch 里合法的那个文件也没被写（写前预检 => 原子性）',
     last.files.has('/w/new-inside.txt') === false,
   );
+  ok(
+    '拒绝消息把**本批全部**越界目标一次列出来',
+    String(mixedBlocked.message).includes('/outside/evil.txt') &&
+      String(mixedBlocked.message).includes('/outside/second.txt'),
+  );
+  ok(
+    '拒绝消息给出越界目标的父目录（模型一次重试即可覆盖整批）',
+    String(mixedBlocked.message).includes('parent directories'),
+  );
+}
+
+// ── assertBatchWritable：批量预检把全部越界目标一次报出来 ────────────────────
+{
+  let batchBlocked = null;
+  try {
+    await host.assertBatchWritable({ mode: 'workspace-write', workspaceRoot: '/w' }, [
+      '/w/src/a.ts',
+      '/outside/x.ts',
+      '/outside/y.ts',
+    ]);
+  } catch (error) {
+    batchBlocked = error;
+  }
+  ok('批量预检在有越界目标时抛错', batchBlocked !== null);
+  ok(
+    '批量预检的消息仍以官方两行 marker 开头',
+    String(batchBlocked.message).startsWith(
+      '[sandbox: file access denied under workspace-write mode]\n[sandbox: escalation available',
+    ),
+  );
+  ok('批量预检带 FS_SANDBOX_DENIED 码', batchBlocked.code === 'FS_SANDBOX_DENIED');
+  await host.assertBatchWritable({ mode: 'workspace-write', workspaceRoot: '/w' }, [
+    '/w/src/a.ts',
+    '/tmp/x.ts',
+  ]);
+  ok('全部在可写根里时放行', true);
+  await host.assertBatchWritable(undefined, ['/anywhere/x.ts']);
+  ok('没有策略时不做批量预检', true);
 }
 
 console.info = realInfo;

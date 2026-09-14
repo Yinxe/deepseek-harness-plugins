@@ -20,11 +20,11 @@
  *    `rejected` 角标：用户要看到的是「它本来打算改什么」。
  *
  * `block` 是运行时 live 对象，形如官方 `RunningToolCall` / `ToolResultNode`，但窗口截断、
- * 版本漂移都可能让它缺字段，因此这里一律按 `unknown` 逐字段收窄（AGENT.md §2.2 / §11）。
+ * 版本漂移都可能让它缺字段，因此这里一律按 `unknown` 逐字段收窄（docs/typescript.md「类型策略」/ docs/security.md）。
  *
  * @module @dshp/file-change-viewer/client/diff
  */
-import { parseUnifiedPatch } from '../shared/patch.js';
+import { parseApplyPatch, previewDiffsOf } from '../shared/apply-patch.js';
 import type {
   ChangeHunk,
   FileChangeBadge,
@@ -44,7 +44,7 @@ const STR_REPLACE_TOOL = 'str_replace_editor';
 /** 本插件 Host 半注册的批量补丁工具（unified diff，一次可改多处 / 多文件）。 */
 const PATCH_TOOL = 'patch';
 
-/** 就地类型守卫（AGENT.md §2.2：不跨包共享）。 */
+/** 就地类型守卫（docs/typescript.md「类型策略」：不跨包共享）。 */
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -100,13 +100,17 @@ export function readAppliedDiffs(meta: unknown): FileDiff[] | null {
     if (typeof path !== 'string') return null;
     if (oldText !== null && typeof oldText !== 'string') return null;
     if (typeof newText !== 'string') return null;
-    // `startLine` 是本插件 `patch` 工具额外带的（官方工具没有）；有就用来显示真实行号。
+    // `startLine` / `oldPath` 是本插件 `patch` 工具额外带的（官方工具没有）：
+    // 前者用来显示真实行号，后者用来把卡头渲染成 `旧 → 新`。
     const startLine = hunk['startLine'];
-    out.push(
-      typeof startLine === 'number' && startLine > 0
-        ? { path, oldText, newText, startLine }
-        : { path, oldText, newText },
-    );
+    const oldPath = hunk['oldPath'];
+    out.push({
+      path,
+      oldText,
+      newText,
+      ...(typeof startLine === 'number' && startLine > 0 ? { startLine } : {}),
+      ...(typeof oldPath === 'string' && oldPath !== '' && oldPath !== path ? { oldPath } : {}),
+    });
   }
   return out;
 }
@@ -188,13 +192,36 @@ export interface IntendedChange {
 }
 
 /**
+ * 宽容预览：`*** Begin Patch` 文本 → 卡片差异。
+ *
+ * 流式期间文本必然是半截的，所以解析走 tolerant（缺 `*** End Patch` 不报错，能解析出几段算几段）；
+ * 解析器万一抛错也当「还没有可预览的东西」——渲染路径不允许被一个坏补丁拖挂。
+ *
+ * @param text - 参数里的补丁文本（可能半截）。
+ * @returns 按出现顺序排列的差异；一段都解析不出时为空数组。
+ */
+function previewPatch(text: string): FileDiff[] {
+  try {
+    return previewDiffsOf(parseApplyPatch(text, { tolerant: true })).map((diff) => ({
+      path: diff.path,
+      oldText: diff.oldText,
+      newText: diff.newText,
+      ...(diff.oldPath === undefined ? {} : { oldPath: diff.oldPath }),
+      ...(diff.startLine === undefined ? {} : { startLine: diff.startLine }),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/**
  * 从调用参数推导「模型打算做的变更」。
  *
  * 支持的四个工具与各自的字段：
  * - `write`：`content`（整文件写入，`oldText` 恒为 null）；
  * - `edit`：`old_string` / `new_string` / `replace_all`；
  * - `str_replace_editor`：`command: create` + `file_text`，或 `command: str_replace` + `old_str` / `new_str`；
- * - `patch`：`patch`（unified diff 文本；路径与改动都在文本里，可含多个文件）。
+ * - `patch`：`patch`（`*** Begin Patch` 信封文本；路径与改动都在文本里，可含多个文件、多个片段）。
  *
  * @param toolName - 线上工具名（分发来源，窗口截断时仍可知）。
  * @param rawArgs - 参数原文，可能半截。
@@ -211,18 +238,13 @@ export function readIntended(toolName: string, rawArgs: string): IntendedChange 
     }
     return readJsonString(rawArgs, key);
   };
-  // `patch` 没有 file_path：路径写在 patch 文本的 --- / +++ 头里，所以先于 path 判定处理。
+  // `patch` 没有 file_path：路径写在补丁文本的段头里，所以先于 path 判定处理。
   if (toolName === PATCH_TOOL) {
     const text = readString('patch');
     if (text === undefined || text.trim() === '') return null;
-    // 宽容解析：流式生成期间 patch 文本是半截的（最后一个 hunk 可能还没写完），
-    // 能解析出几个文件就先预览几个——真正落盘后的内容由 Host 的 meta.diffs 接管。
-    const files = parseUnifiedPatch(text, { tolerant: true });
-    const diffs = files.map((file) => ({
-      path: file.path,
-      oldText: file.oldText,
-      newText: file.newText,
-    }));
+    // 宽容解析：流式生成期间补丁文本是半截的（`*** End Patch` 还没流出来、最后一个片段只写了一半），
+    // 能解析出几段就先预览几段——真正落盘后的内容由 Host 的 `meta.diffs` 接管。
+    const diffs = previewPatch(text);
     if (diffs.length === 0) return null;
     return { diffs, replaceAll: false, complete };
   }
@@ -406,6 +428,21 @@ export function toDiffText(rows: readonly UnifiedDiffRow[]): string {
 }
 
 /**
+ * 把一个原始 hunk 变成渲染用的三口径（`raw` / `rows` / `changed`）。
+ *
+ * 一次调用只在这里跑**一次** LCS：`rows`（高亮视图）与 `changed`（统计 / ± 视图）同源，所以
+ * 三个地方永远说同一件事。设置页的样张预览（`viewCards.ts`）也走这一个入口，免得「预览里报
+ * `+2 -1`、真卡片报别的」。
+ *
+ * @param raw - 工具给的原始 hunk。
+ * @returns 三口径的 hunk。
+ */
+export function toChangeHunk(raw: FileDiff): ChangeHunk {
+  const rows = unifiedDiffRows(raw.oldText, raw.newText);
+  return { raw, rows, changed: changedDiffOf(raw, rows) };
+}
+
+/**
  * 失败调用的首行说明：先看结果文本，再看结构化错误。
  *
  * @param block - 已结算的调用块（不透明）。
@@ -447,10 +484,7 @@ export function buildModel(toolName: string, block: unknown): FileChangeModel {
   const applied = settled && state === 'ok' ? readAppliedDiffs(meta) : null;
   const intended = readIntended(name, rawArgs);
   // 每个 hunk 只跑一次 LCS：高亮视图（rows）与统计 / ± 视图（changed）都用它的结果。
-  const hunks: ChangeHunk[] = (applied ?? intended?.diffs ?? []).map((raw) => {
-    const rows = unifiedDiffRows(raw.oldText, raw.newText);
-    return { raw, rows, changed: changedDiffOf(raw, rows) };
-  });
+  const hunks: ChangeHunk[] = (applied ?? intended?.diffs ?? []).map((raw) => toChangeHunk(raw));
 
   let badge: FileChangeBadge;
   if (state === 'error') badge = 'rejected';
