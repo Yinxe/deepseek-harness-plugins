@@ -1,6 +1,6 @@
 {
   "name": "@dshp/mcwiki-search",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "DeepSeek Harness (DSH) tool plugin: query Minecraft Wiki (MediaWiki API) and convert raw wiki data into clean AI-readable text. 查询 Minecraft Wiki（中文/英文）并把搜索结果与页面全文转换成可直接投喂给 AI 的干净文本（搜索/引言/全文 Markdown/随机条目）。",
   "license": "MIT",
   "author": "Yinxe",

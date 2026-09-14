@@ -1,6 +1,6 @@
 {
   "name": "@dshp/vision-bridge",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "DeepSeek Harness (DSH) vision bridge: let text-only models delegate image understanding to multimodal vision models via vision_describe tool, with persistent settings UI and primary/fallback auto-retry. 视觉桥：让纯文本模型通过 vision_describe 工具把图片理解委托给多模态视觉模型，带持久化设置界面与主备自动重试。",
   "license": "MIT",
   "author": "Yinxe",
