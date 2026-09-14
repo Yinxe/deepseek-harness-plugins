@@ -1,15 +1,20 @@
 # ============================================================================
 # CICD：门禁 + 打包 + 发布
 #
-# 触发与行为：
-#   PR / dev / feature/* 分支推送 → 仅门禁（check，token 只读）
+# 触发与行为（**只有 main 与 v* tag 能产出发布物**）：
 #   推送 main                     → 门禁 → 打包 → 重建 latest（正式渠道，
 #                                    Latest 徽标置顶，资产名 -latest.tgz）
 #   推送 v* tag                   → 门禁 → 打包 → 版本 Release（静态存档，
 #                                    --generate-notes，资产名 -<tag>.tgz）
-#   推送其他分支                   → 门禁 → 打包 → 分支同名预发布（每次推送整体重建）
-#   手动触发                       → suffix=latest 同 main；自定义后缀按 rolling 勾选
-#                                    决定预发布（随滚动）或静态正式版
+#   推送其他分支 / PR             → 仅门禁（check，token 只读，不打包、不发布）
+#   手动触发（workflow_dispatch） → 只在 main（或 v* tag）上产出发布物：
+#                                    suffix=latest 同 main；自定义后缀按 rolling 勾选
+#                                    决定预发布（随滚动）或静态正式版；在别的分支上
+#                                    触发只跑门禁并打一条 notice
+#
+# 为什么分支持下发版被拿掉：任何分支推送都发一次「分支同名预发布」会让 Release 列表被
+# 一次性分支刷屏，并且立刻撞上下面那条「除 latest 外最多 1 个滚动项」的数量约束（CI 直接
+# 报错终止）。分支上的构建产物没有意义——要给人试就用 main 的 latest，或手动触发指定后缀。
 #
 # 滚动约定：
 #   滚动集合 = 除 latest 外的所有预发布 + notes 首行带 <!-- rolling: true --> 标记的
@@ -17,7 +22,7 @@
 #   停止跟随 = 取消 Pre-release 勾选或删除标记行。
 #   v* 版本 Release 是静态存档：永不滚动、永不持有 Latest 徽标。
 #
-# 包命名：dshp-<插件名>-<后缀>.tgz；后缀 = latest | tag 名 | 分支名（/→-）| 手动输入
+# 包命名：dshp-<插件名>-<后缀>.tgz；后缀 = latest | tag 名 | 手动输入的后缀
 # ============================================================================
 
 name: ci
@@ -61,9 +66,9 @@ jobs:
           node-version: 24
           cache: pnpm
 
-      # 后缀来源：tag 推送 = tag 名；手动触发 = 输入（默认 latest）；分支推送 = latest
-      #（main）或分支名派生（其他分支，/ → -，冲突时降级 branch-<sha>）。
-      # 打包范围：v* tag / main / 手动触发 / dev 与 feature/* 之外的分支推送
+      # 后缀来源：tag 推送 = tag 名；手动触发 = 输入（默认 latest）；main 推送 = latest。
+      # 打包范围：**只有 v* tag / main 推送 / main（或 v* tag）上的手动触发**——
+      # 其他分支推送与 PR 一律 pack=false，只跑门禁，不产出发布物。
       - name: Determine package suffix
         id: meta
         env:
@@ -79,22 +84,18 @@ jobs:
             exit 1
           fi
 
+          # 唯一的发布判据就是这个 pack：publish 作业整体挂在它上面（`if: pack == 'true'`），
+          # 所以想加/减发布通道只需要动这一处，不要在别处重复判断 ref。
           pack=false
           if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
-            pack=true
+            if [[ "$GITHUB_REF" == "refs/heads/main" || "$GITHUB_REF" == refs/tags/v* ]]; then
+              pack=true
+            else
+              echo "::notice::手动触发在 $GITHUB_REF 上不产出发布物（发布只来自 main 与 v* tag），本次仅跑门禁"
+            fi
           elif [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
             if [[ "$GITHUB_REF" == refs/tags/v* || "$GITHUB_REF" == "refs/heads/main" ]]; then
               pack=true
-            elif [[ "$GITHUB_REF" == refs/heads/* ]]; then
-              branch="${GITHUB_REF#refs/heads/}"
-              if [[ "$branch" != "dev" && "$branch" != feature/* ]]; then
-                pack=true
-                branch_tag=$(printf '%s' "$branch" | tr '/' '-')
-                if [[ "$branch_tag" == "latest" || ! "$branch_tag" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ || "$branch_tag" == *..* ]]; then
-                  branch_tag="branch-${GITHUB_SHA::7}"
-                fi
-                suffix="$branch_tag"
-              fi
             fi
           fi
           echo "suffix=$suffix" >> "$GITHUB_OUTPUT"
@@ -164,9 +165,10 @@ jobs:
           gh release edit "$GITHUB_REF_NAME" --latest=false
           gh release edit latest --latest || true
 
-      # ── 路径 B：自定义后缀（手动触发）/ 分支名（其他分支）→ 同名 tag + Release ──
-      - name: Release (suffix / branch)
-        if: (github.event_name == 'workflow_dispatch' && inputs.suffix != 'latest') || (github.event_name == 'push' && github.ref_type == 'branch' && github.ref_name != 'main')
+      # ── 路径 B：手动触发的自定义后缀 → 同名 tag + Release ────────────────────
+      # 分支推送不再走这里（非 main 的推送 pack=false，publish 作业整体不跑）。
+      - name: Release (manual suffix)
+        if: github.event_name == 'workflow_dispatch' && inputs.suffix != 'latest'
         env:
           SUFFIX: ${{ needs.check.outputs.suffix }}
           ROLLING: ${{ inputs.rolling }}
@@ -180,14 +182,9 @@ jobs:
             exit 1
           fi
 
-          # 发布形态：分支推送固定预发布；手动触发由 rolling 决定
-          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
-            pre="$ROLLING"
-            header="手动触发的测试构建（${GITHUB_SHA::7}）。同名 tag 为 workflow 自动创建。"
-          else
-            pre=true
-            header="分支 $GITHUB_REF_NAME 的测试构建（${GITHUB_SHA::7}），每次推送自动整体重建。"
-          fi
+          # 发布形态：手动触发由 rolling 勾选决定（勾 = 预发布并随 main 滚动）
+          pre="$ROLLING"
+          header="手动触发的测试构建（${GITHUB_SHA::7}）。同名 tag 为 workflow 自动创建。"
 
           # 覆盖护栏：版本号形态（v+数字）的正式 release 拒绝覆盖；其余整体重建
           if gh release view "$SUFFIX" >/dev/null 2>&1; then
