@@ -16,7 +16,7 @@
 
 - `src/host/`：`patchdoc.ts` / `patchfile.ts`（定位/回写 patch 文件）/ `probe.ts`（探活）/ `config.ts` / `http.ts` / `index.ts` / `types.ts`。
 - 路由面：`GET state` + `POST config / create / update / toggle / remove / probe`（见 [docs/ext-routes.md](../../docs/ext-routes.md) 一览）。
-- Client：设置页表单 + JSON 双模式编辑。
+- `src/client/`：`index.tsx`（**只导出 `inject` / `apply`**，loader 壳由 `shared/tsup.preset.ts` 拼出）/ `McpSection.tsx`（列表 + 表单/JSON 双模式编辑器 + 删除/覆盖确认，普通函数组件 + JSX 的范式）/ `components.tsx`（Badge/Switch/Selector 小构件，真实 props 类型）/ `api.ts` / `styles.module.css`（CSS Modules，局部名不再需要 `mc-` 前缀）/ `types.ts`（协议 + 领域模型 + 只含实际用到的 `ClientContext` / `SlotsService` 接缝）。
 
 ## 本插件的局部规则
 
@@ -28,4 +28,4 @@
 
 ## 自检
 
-`pnpm --filter @dshp/mcp-manager test` = `node --check` 双 bundle + `scripts/patchdoc.test.mjs`（patch 定位/回写/自校验）。
+`pnpm --filter @dshp/mcp-manager test` = `node --check` 双 bundle + `shared/scripts/check-css-modules.mjs`（`styles.x` 拼错在类型上是合法的——CSS Module 的映射是宽松声明——这个静态检查是唯一会自动红的网）+ `scripts/patchdoc.test.mjs`（patch 定位/回写/自校验）。

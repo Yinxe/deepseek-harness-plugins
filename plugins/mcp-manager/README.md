@@ -139,12 +139,12 @@ plugins/mcp-manager/
 │   ├── probe.ts        # Streamable HTTP initialize 握手（http/https 原生，SSE 帧兼容）
 │   └── http.ts         # sameOrigin / json / readBody（自有，各插件独立持有）
 ├── src/client/
-│   ├── index.ts        # __ModuleLoader__ 注册（settings.section，order 30）
-│   ├── McpSection.ts   # 列表 + 表单/JSON 双模式编辑器 + 删除/覆盖确认
-│   ├── components.ts   # Badge/Switch/Selector（包官方 primitives）
-│   ├── styles.ts       # 仅布局；颜色只用 var(--dsw-alias-*) token
+│   ├── index.tsx       # 只导出 inject / apply（settings.section，order 30）；__ModuleLoader__ 壳由构建预设拼出
+│   ├── McpSection.tsx  # 列表 + 表单/JSON 双模式编辑器 + 删除/覆盖确认（.tsx + JSX，普通函数组件）
+│   ├── components.tsx  # Badge/Switch/Selector（包官方 primitives，props 类型直接来自 SDK）
+│   ├── styles.module.css # 仅布局；颜色只用 var(--dsw-alias-*) token（CSS Modules，构建期内联进 lib/client.js）
 │   ├── api.ts          # fetch 封装（与 host 路由对齐）
-│   └── types.ts        # 协议类型（与 host/types.ts 同名对齐）
+│   └── types.ts        # 协议类型（与 host/types.ts 同名对齐）+ 服务接缝（ClientContext / SlotsService）
 ├── scripts/patchdoc.test.mjs  # 从 lib/host.js 导入 __test 的往返回归测试
 └── lib/                # 构建产物（host.js + client.js，随仓库提交）
 ```
