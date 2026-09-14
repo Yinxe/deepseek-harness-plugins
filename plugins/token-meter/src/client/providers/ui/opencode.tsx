@@ -11,17 +11,25 @@
  *  - 余额作为补充指标（订阅用户也可能有充值余额）；
  *  - 订阅备注（购买时间 / 到期倒计时）单独成行。
  */
+import type { ReactNode } from 'react';
+import styles from '../../styles.module.css';
 import type { ProviderUIKit, RenderCtx } from '../kit.js';
 
-export function opencodeUI(ctx: RenderCtx, K: ProviderUIKit): any {
-  const h = K.h;
+/**
+ * opencode 的专属渲染。
+ *
+ * @param ctx - 快照 / 时间 / 供应商身份。
+ * @param K - deps 绑定后的零件命名空间（专属 UI 与声明式层共用同一批零件）。
+ * @returns 卡片主体节点。
+ */
+export function opencodeUI(ctx: RenderCtx, K: ProviderUIKit): ReactNode {
   const snap = ctx.snap;
   const b = (snap.billing || {}) as Record<string, unknown>;
   const plan = b['plan'] ? String(b['plan']) : '';
   const wins = Array.isArray(snap.windows) ? snap.windows : [];
   const balance = b['balance'] !== undefined && b['balance'] !== null ? K.num(b['balance'], 0) : null;
 
-  const kids: any[] = [];
+  const kids: ReactNode[] = [];
 
   /* ── 订阅徽标 + 三窗口占用概览 ──────────────────────────────── */
   const chips: Array<{ text: string; tone?: 'ok' | 'warn' | 'bad' | 'info' }> = [];
@@ -31,23 +39,17 @@ export function opencodeUI(ctx: RenderCtx, K: ProviderUIKit): any {
     chips.push({ text: w.label + ' ' + pct + '%', tone: pct >= 90 ? 'bad' : pct >= 70 ? 'warn' : 'ok' });
   }
   if (!wins.length && balance !== null) chips.push({ text: '按量计费', tone: 'info' });
-  if (chips.length) kids.push(h(K.Chips, { key: 'chips', chips }));
+  if (chips.length) kids.push(<K.Chips key="chips" chips={chips} />);
 
   /* ── 滚动窗口（5h / 每周 / 每月）────────────────────────────── */
   if (wins.length) {
-    kids.push(h(K.WindowGroup, { key: 'win', windows: wins, snap, now: ctx.now, title: '订阅窗口' }));
+    kids.push(<K.WindowGroup key="win" windows={wins} snap={snap} now={ctx.now} title="订阅窗口" />);
   }
 
   /* ── 充值余额（订阅用户也可能有；Zen 用户则是主体）────────────── */
   if (balance !== null && balance !== undefined) {
     const onlyBalance = !wins.length;
-    kids.push(
-      h(K.BalanceBlock, {
-        key: 'bal',
-        billing: b as any,
-        title: onlyBalance ? '账户余额' : '充值余额',
-      }),
-    );
+    kids.push(<K.BalanceBlock key="bal" billing={b as any} title={onlyBalance ? '账户余额' : '充值余额'} />);
   }
 
   /* ── 订阅备注 / 余额补充说明 ────────────────────────────────── */
@@ -55,19 +57,19 @@ export function opencodeUI(ctx: RenderCtx, K: ProviderUIKit): any {
     (x: any) => x && x.kind === 'note' && x.text,
   );
   if (notes.length) {
-    kids.push(h(K.NoteLine, { key: 'note', text: (notes[0] as { text: string }).text, tone: 'info' }));
+    kids.push(<K.NoteLine key="note" text={(notes[0] as { text: string }).text} tone="info" />);
   } else if (wins.length) {
     const monthly = wins.filter((w) => w.key === 'monthly')[0];
     if (monthly && monthly.resetInSec > 0) {
       kids.push(
-        h(K.NoteLine, {
-          key: 'note',
-          text: '订阅约 ' + K.fmtLeft(monthly.resetInSec) + '后重置/到期（以每月窗口为准）。',
-          tone: 'info',
-        }),
+        <K.NoteLine
+          key="note"
+          text={'订阅约 ' + K.fmtLeft(monthly.resetInSec) + '后重置/到期（以每月窗口为准）。'}
+          tone="info"
+        />,
       );
     }
   }
 
-  return h('div', { className: 'tm-ui tm-ui-opencode' }, kids);
+  return <div className={styles.ui}>{kids}</div>;
 }

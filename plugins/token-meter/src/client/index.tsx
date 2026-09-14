@@ -1,0 +1,155 @@
+/**
+ * Client 入口（浏览器）
+ *
+ * 打包后为单文件 lib/client.js。**loader 注册壳不写在这里**——由构建预设的 banner / footer 生成：
+ *
+ * ```
+ * window.__ModuleLoader__.load({ id: '@dshp/token-meter', factory: (require) => {
+ *   var module = { exports: {} }; var exports = module.exports;
+ *   ...本文件与它 import 的一切...
+ *   return module.exports;
+ * } });
+ * ```
+ *
+ * 所以本文件就是一个**普通 ES 模块**：导出 `inject` / `apply`。react / react/jsx-runtime /
+ * react-dom / primitives 都在 external 列表里，由 factory 的 `require`（shell 的冻结模块表）解析。
+ *
+ * 界面收敛为三个入口：
+ *  1. `settings.section`（id `dshp-token-meter`，order 27）：精简偏好 + 供应商增删改（唯一配置入口）
+ *  2. `conversation.view`（order 40）：中心区 tab，与原生「对话 / 轨迹」并列；
+ *     tab 内部用左侧菜单切换 额度查询 / 用量统计 / 在线统计（见 CenterView.tsx）
+ *  3. `shell.overlay`：小组件浮层（把某个图表/额度卡单独拖出来常驻）
+ *
+ * 历史：额度/用量/在线曾各自占一个右侧栏 tab（sidebar.right.pane.tab），2026-09 收敛为
+ * 中心区单 tab + 侧边菜单 —— 三个会话级 tab 会盖过产品自带的 对话/轨迹。
+ *
+ * 样式与反注册：`styles.module.css` 由构建预设内联进 bundle，模块被求值时就地插一条
+ * `<style data-plugin>`（卸载由 shell 按 data-plugin 清理），所以这里没有「手插样式」与
+ * 「样式自愈」那段历史代码了。
+ *
+ * @module @dshp/token-meter/client
+ */
+import { createCenterView } from './CenterView.js';
+import { OnlineEmbed, OnlineView } from './OnlineSection.js';
+import { QuotaIcon, OnlineIcon, SettingsIcon, ShareIcon, UsageIcon } from './icons.js';
+import { SharePanel } from './StatsSection.js';
+import {
+  QuotaView,
+  StatsView,
+  TokenMeterSettings,
+  WidgetFloatLayer,
+  widgetsApi,
+} from './TokenMeterSection.js';
+import { DISPLAY_NAME } from '../name.js';
+import type { ClientContext, SlotsService } from './types.js';
+
+/**
+ * 中心区 tab 的条目 id（`conversation.view` 的 list 槽位 id，也是它在 localStorage 里的键前缀）。
+ *
+ * 与 settings 命名空间同名是巧合也是约定：本插件所有对外 id 都是 `dshp-token-meter`。
+ */
+const CENTER_VIEW = 'dshp-token-meter';
+
+/**
+ * 中心区视图。
+ *
+ * 在模块级装配一次：bundle 的 loader factory 每次加载只求值一次本模块，所以这与旧实现
+ * 「在 `apply` 的工厂里建一次」份数与时机相同。分区组件全部来自本插件的模块级导出。
+ */
+const CenterView = createCenterView(
+  {
+    QuotaView,
+    StatsView,
+    OnlineView,
+    OnlineEmbed,
+    // 与 设置 →「TokenMeter」是同一个组件：改一处两边同步
+    SettingsView: TokenMeterSettings,
+    SharePanel,
+  },
+  { QuotaIcon, UsageIcon, OnlineIcon, SettingsIcon, ShareIcon },
+);
+
+/** client 半声明的服务依赖（缺了就不激活，由 cordis 在 slots 出现后重试）。 */
+export const inject = ['slots'];
+
+/**
+ * client 半入口：由 shell 的模块系统在 slots 就绪后调用一次。
+ *
+ * @param ctx - client 侧 cordis 上下文（本插件只用 `get('slots')` 与 `effect`）。
+ */
+export function apply(ctx: ClientContext): void {
+  const slots = ctx.get('slots') as SlotsService | undefined;
+  if (slots === undefined) return;
+
+  // 在线时长面板已不再支持弹出为浮窗（2026-09 简化）：清掉遗留的 online:* 浮窗记录，
+  // 否则 localStorage 里那条会让浮层渲染一个已经不存在的组件。
+  try {
+    if (widgetsApi && typeof widgetsApi.forget === 'function') widgetsApi.forget('online:');
+  } catch {
+    /* ignore */
+  }
+
+  // 旧 localStorage 一次性清理：左栏开关、旧双浮窗系统、右侧栏 tab 自动展开标记
+  // 都已停用，旧键直接删掉，避免残留项影响后续行为。
+  try {
+    window.localStorage.removeItem('token-stats.sidebar-today');
+    window.localStorage.removeItem('tquota.float.open');
+    window.localStorage.removeItem('tquota.float.pos');
+    window.localStorage.removeItem('tm-quota-float');
+    window.localStorage.removeItem('tm-quota-float-pos');
+    window.localStorage.removeItem('ts-today.float.open');
+    window.localStorage.removeItem('ts-today.float.pos');
+    window.localStorage.removeItem('tm-today.float.open');
+    window.localStorage.removeItem('tm-today.float.pos');
+    window.localStorage.removeItem('tm-righttabs-autoopened');
+  } catch {
+    /* ignore */
+  }
+
+  // ── 设置节（设置 → 左侧导航「TokenMeter」）───
+  try {
+    ctx.effect(
+      () =>
+        slots.inject('settings.section', () =>
+          slots.register(
+            { name: 'settings.section', id: 'dshp-token-meter', order: 27, label: DISPLAY_NAME },
+            TokenMeterSettings,
+          ),
+        ),
+      'dshp-token-meter: settings section',
+    );
+  } catch (error) {
+    console.error('[dshp-token-meter] 注册设置节失败，只能手改 settings.yaml 或看中心区面板：', error);
+  }
+
+  // ── 小组件浮层（shell.overlay）───
+  try {
+    ctx.effect(
+      () =>
+        slots.inject('shell.overlay', () =>
+          slots.register({ name: 'shell.overlay', id: 'dshp-token-meter-float' }, WidgetFloatLayer),
+        ),
+      'dshp-token-meter: widget float layer',
+    );
+  } catch (error) {
+    console.error('[dshp-token-meter] 注册小组件浮层失败，已有的浮窗记录将无处渲染：', error);
+  }
+
+  // ── 中心区单 tab（官方模式：inject 声明 + slots.inject 持有）───
+  // 与原生「对话 / 轨迹」并列的一个 tab；tab 内用侧边菜单切换四块内容。
+  // order 40：排在内置 chat(0) / trajectory(10) 与第三方视图之后。
+  try {
+    ctx.effect(
+      () =>
+        slots.inject('conversation.view', () =>
+          slots.register(
+            { name: 'conversation.view', id: CENTER_VIEW, order: 40, label: DISPLAY_NAME },
+            CenterView,
+          ),
+        ),
+      'dshp-token-meter: center view',
+    );
+  } catch (error) {
+    console.error('[dshp-token-meter] 注册中心区 tab 失败，额度/用量/在线面板都看不了：', error);
+  }
+}

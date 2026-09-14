@@ -15,7 +15,8 @@
 ## 结构与职责
 
 - `src/host/`：`quota.ts`（额度路由）/ `providers/*`（适配器 + `view.ts` 声明式契约 + `index.ts` 注册与别名）/ `errors.ts`（ProviderError 分类学）/ `secrets.ts`（凭据引用解析）/ `stats/*`（引擎/指纹缓存/合并/在线口径/路由）。
-- `src/client/`：`CenterView.ts`（tab 内左侧菜单切 额度/用量/在线/设置）/ `providers/{kit,sections,registry,ui/*}` / `QuotaSection` `StatsSection` `OnlineSection` / `SharePanel` `ShareShell`（分享卡导出）/ `ErrorBox`。
+- `src/client/`（含 JSX 的一律 `.tsx`，纯逻辑保持 `.ts`）：`index.tsx`（**只导出 `inject` / `apply`**，loader 壳由 `shared/tsup.preset.ts` 拼出）/ `CenterView.tsx`（tab 内左侧菜单切 额度/用量/在线/设置）/ `TokenMeterSection.tsx`（设置节 + 中心区「用量统计」+ 小组件浮层，**模块级装配**：`const widgets = createWidgetSystem()` → `createQuotaSection(widgets)`）/ `QuotaSection.tsx` / `StatsSection.tsx` / `OnlineSection.tsx` / `SharePanel.tsx` + `ShareShell.tsx`（分享卡导出）/ `ErrorBox.tsx` / `providers/{kit,sections,registry,ui/*}`（分层渲染）/ `components.tsx` `glyphs.tsx` `icons.tsx`（自绘小构件与图标）/ `styles.module.css`。
+- **哪些还保留工厂**：`createWidgetSystem()` / `createQuotaSection(widgets)` / `createCenterView(sections, icons)` / `createErrorBox(deps)` / `createProviderKit(deps)` / `createProviderRenderers(K)` —— 它们返回的是**多键命名空间或服务对象**（`widgets.WidgetFloat`、`quota.quotaUI`、`K.RollingBar`），或者**确有注入依赖**（`widgets` / `deps` / `sections`）；`React` / `P` / `ReactDOM` 这三个注入参数已全部改为模块顶层 import。零件本身（`Badge` / `Row` / `Select` / `Switch` / `Glyph` / 五个导航图标 / kit 的 12 个成员 / `StatsSettingsPage` …）都是普通具名导出的函数组件。
 - 历史决策：额度/用量/在线曾各占一个右侧栏 tab，已收敛为中心区单 tab——会话级 tab 会盖过产品自带的对话/轨迹。
 
 ## 本插件的局部规则
@@ -31,4 +32,6 @@
 
 ## 自检
 
-`pnpm --filter @dshp/token-meter test` = `node --check` 双 bundle + `scripts/check-share-tokens.mjs`（分享卡导出的 token 清单必须覆盖 `styles.ts` 全部 `--dsw-*`——`<foreignObject>` 光栅化读不到壳层样式表，漏 token 导出图掉色）。
+`pnpm --filter @dshp/token-meter test` = `node --check` 双 bundle + `shared/scripts/check-css-modules.mjs`（`styles.x` 拼错在类型上是合法的，这个静态检查是唯一会自动红的网）+ `scripts/check-share-tokens.mjs`（分享卡导出的 token 清单必须覆盖 `styles.module.css` 全部 `--dsw-*`——`<foreignObject>` 光栅化读不到壳层样式表，漏 token 导出图掉色）。
+
+**分享卡的内联样式来自「已注入的那条 `<style>`」**：CSS Module 化之后样式表文本不再是一个导出（类名也被哈希了），而分享卡是把**真实 DOM** 序列化进 `<foreignObject>`——里面元素的 class 是哈希名，所以内联的样式表也必须是哈希后的那一份。`SharePanel.collectShareCss()` 因此从 `document.querySelector('style[data-plugin-css^="@dshp/token-meter/"]')` 取文本（取不到退化成空串），**不要**改回「import 一份 CSS 字符串」。

@@ -20,10 +20,18 @@
  * 三条进度全部由 Host 的 windows 驱动、WindowGroup 统一渲染 —— 不在本文件手写
  * 单条进度（手写会与组件内的标签列宽/间距规则脱节，导致标签被挤到换行）。
  */
+import type { ReactNode } from 'react';
+import styles from '../../styles.module.css';
 import type { ProviderUIKit, RenderCtx } from '../kit.js';
 
-export function commandcodeUI(ctx: RenderCtx, K: ProviderUIKit): any {
-  const h = K.h;
+/**
+ * CommandCode 的专属渲染。
+ *
+ * @param ctx - 快照 / 时间 / 供应商身份。
+ * @param K - deps 绑定后的零件命名空间（专属 UI 与声明式层共用同一批零件）。
+ * @returns 卡片主体节点。
+ */
+export function commandcodeUI(ctx: RenderCtx, K: ProviderUIKit): ReactNode {
   const snap = ctx.snap;
   const b = (snap.billing || {}) as Record<string, unknown>;
   const plan = b['plan'] ? String(b['plan']) : '';
@@ -34,7 +42,7 @@ export function commandcodeUI(ctx: RenderCtx, K: ProviderUIKit): any {
   // 需要用户处理的提示（订阅异常、额度告警）才值得占一行
   const alerts = notes.filter((n) => n.tone === 'bad' || n.tone === 'warn');
 
-  const kids: any[] = [];
+  const kids: ReactNode[] = [];
 
   /* ── 指标预处理：先把「订阅计划」摘出来，避免与顶部计划徽标重复 ─────
      Host 给的这一项形如「GOAT（active）」，正好把状态也一并带过来。 */
@@ -58,22 +66,15 @@ export function commandcodeUI(ctx: RenderCtx, K: ProviderUIKit): any {
     });
   if (alerts.length) chips.push({ text: '需处理', tone: 'bad' });
   else if (wins.some((w) => Number(w.pct) >= 100)) chips.push({ text: '窗口已满', tone: 'bad' });
-  if (chips.length) kids.push(h(K.Chips, { key: 'chips', chips }));
+  if (chips.length) kids.push(<K.Chips key="chips" chips={chips} />);
 
   /* ── 核心：剩余额度大数字（大数字本身即标题，省掉区块标题行）────── */
-  kids.push(h(K.BalanceBlock, { key: 'bal', billing: b as any, compact: true }));
+  kids.push(<K.BalanceBlock key="bal" billing={b as any} compact={true} />);
 
   /* ── 额度窗口：进度条已含百分比与重置时长，省略重复的汇总行 ─────── */
   if (wins.length)
     kids.push(
-      h(K.WindowGroup, {
-        key: 'win',
-        windows: wins,
-        snap,
-        now: ctx.now,
-        title: '额度窗口',
-        noSummary: true,
-      }),
+      <K.WindowGroup key="win" windows={wins} snap={snap} now={ctx.now} title="额度窗口" noSummary={true} />,
     );
 
   /* ── 额度构成：仅当有多种来源时才画（单一来源画条无意义）─────────
@@ -88,7 +89,7 @@ export function commandcodeUI(ctx: RenderCtx, K: ProviderUIKit): any {
     { label: '充值额度', value: purchased, color: '#2fb261' },
     { label: '赠送额度', value: free, color: '#f5a623' },
   ].filter((s) => s.value > 0);
-  if (segs.length > 1) kids.push(h(K.SplitBar, { key: 'split', segments: segs, title: '额度构成' }));
+  if (segs.length > 1) kids.push(<K.SplitBar key="split" segments={segs} title="额度构成" />);
 
   /* ── 账户与用量：两列网格 + 成对合并 ─────────────────────────────
      原先 8 行单列列表是卡片最高的部分，现在两项并一格、两格一行。 */
@@ -98,13 +99,13 @@ export function commandcodeUI(ctx: RenderCtx, K: ProviderUIKit): any {
     if (plan) items.push({ label: '订阅计划', value: plan });
     if (b['periodEnd']) items.push({ label: '当前周期至', value: String(b['periodEnd']) });
   }
-  kids.push(h(K.MetricGrid, { key: 'metrics', items, title: '账户与用量', mergePairs: true }));
+  kids.push(<K.MetricGrid key="metrics" items={items} title="账户与用量" mergePairs={true} />);
 
   /* ── 提示：只在订阅异常/额度告警时出现 ──────────────────────────── */
   for (let i = 0; i < alerts.length && i < 2; i++) {
     const n = alerts[i] as { text: string; tone?: 'info' | 'warn' | 'bad' };
-    kids.push(h(K.NoteLine, { key: 'note' + i, text: n.text, tone: n.tone || 'warn' }));
+    kids.push(<K.NoteLine key={'note' + i} text={n.text} tone={n.tone || 'warn'} />);
   }
 
-  return h('div', { className: 'tm-ui tm-ui-commandcode' }, kids);
+  return <div className={styles.ui}>{kids}</div>;
 }

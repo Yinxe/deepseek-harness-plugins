@@ -412,29 +412,33 @@ src/host/              Host 半（Node，tsup → lib/host.js 单文件 ESM）
     engine.ts          缓存引擎（指纹持久缓存 + 后台渐进扫描，零依赖垫片版）
     routes.ts          GET /stats（别名 /data）
   index.ts             apply 装配（patch→settings→引擎→路由）
-src/client/            Client 半（浏览器，tsup → lib/client.js 单文件 IIFE）
-  types.ts             协议类型
+src/client/            Client 半（浏览器，tsup → lib/client.js 单文件 CJS，loader 壳由构建预设拼出）
+  types.ts             协议类型 + ClientContext/SlotsService 接缝
   api.ts               路由封装
-  styles.ts            tm- 前缀样式（官方 token）
-  components.ts        Badge/Row/Select/Switch
+  styles.module.css    CSS Module 样式（官方 token，类名不再带 tm- 前缀）
+  components.tsx       Badge/Row/Select/Switch
   providers/          provider 分层渲染（专属 UI → 声明式区块 → legacy 兜底）
-    kit.ts            通用可复用 UI 零件（滚动刷新条/余额块/指标/图表/徽标/失败卡）
-    sections.ts       声明式区块渲染器（按 ProviderSection.kind 分发，复用 kit）
-    registry.ts       调度器：专属 UI → 声明式 → legacy
+    kit.tsx           通用可复用 UI 零件（滚动刷新条/余额块/指标/图表/徽标/失败卡）
+    sections.tsx      声明式区块渲染器（按 ProviderSection.kind 分发，复用 kit）
+    registry.tsx      调度器：专属 UI → 声明式 → legacy
     ui/               每个 provider 一套属于自己的完整 UI
-      commandcode.ts  三条额度进度 + 额度构成分解 + 两列指标网格
-      deepseek.ts     数据来源徽标 + 有趋势才画图
-      opencode.ts     订阅徽标 + 三窗口/余额分流
-      manual.ts       本地手填标注 + 账本明细
+      commandcode.tsx 三条额度进度 + 额度构成分解 + 两列指标网格
+      deepseek.tsx    数据来源徽标 + 有趋势才画图
+      opencode.tsx    订阅徽标 + 三窗口/余额分流
+      manual.tsx      本地手填标注 + 账本明细
       index.ts        专属 UI 注册表（新增一行即接入）
-  ErrorBox.ts         失败卡（结论/处置/排查步骤/复制详情，按 kind 上色）
-  QuotaSection.ts      额度设置页 + 侧边栏卡 + 浮窗 + 额度查询面板 + QuotaVendorWidget 独立组件
-  StatsSection.ts      独立图表组件（指标卡/趋势/热力/模型分布）+ StatsWidget + 今日卡
-  OnlineSection.ts     在线统计面板（阈值/区间切换 + 每日柱状图 + Top 日明细 + 口径说明卡）
-  TokenMeterSection.ts 精简设置页（开关+供应商管理）+ 用量统计面板 + WidgetFloatLayer
-  CenterView.ts        中心区视图：一个 conversation.view tab + 左侧菜单（额度查询/用量统计/在线统计）
-  widgets.ts           通用小组件浮窗系统（拖拽/坐标持久化/portal）
-  index.ts             loader（settings.section order 27 + conversation.view order 40 + 浮窗）
+  ErrorBox.tsx        失败卡（结论/处置/排查步骤/复制详情，按 kind 上色）
+  QuotaSection.tsx     额度设置页 + 侧边栏卡 + 浮窗 + 额度查询面板 + QuotaVendorWidget 独立组件
+  StatsSection.tsx     独立图表组件（指标卡/趋势/热力/模型分布）+ StatsWidget + 今日卡
+  OnlineSection.tsx    在线统计面板（阈值/区间切换 + 每日柱状图 + Top 日明细 + 口径说明卡）
+  TokenMeterSection.tsx 精简设置页（开关+供应商管理）+ 用量统计面板 + WidgetFloatLayer
+  CenterView.tsx       中心区视图：一个 conversation.view tab + 左侧菜单（额度查询/用量统计/在线统计）
+  widgets.tsx          通用小组件浮窗系统（拖拽/坐标持久化/portal）
+  glyphs.tsx           数据语义图标（指标卡 / 图表标题 / 水印底纹）
+  icons.tsx            五个导航图标（中心区左侧菜单）
+  SharePanel.tsx       分享卡板子（导出 PNG 用）
+  ShareShell.tsx       分享卡外壳（按钮 + 预览 + 下载/复制）
+  index.tsx            只导出 inject / apply（settings.section order 27 + conversation.view order 40 + 浮窗）
 lib/                   构建产物（已提交，DSH git 安装必需）
   host.js              后端 bundle（schemastery 内联）
   client.js            前端 bundle（含 __ModuleLoader__.load）
@@ -470,7 +474,7 @@ dsh web
 > **Monorepo + TS 版**：本目录是 `deepseek-harness-plugins` monorepo 的标准子项目（`plugins/token-meter`），由 `~/.dsh/plugins/dsh-token-quota`（JS，`@dshp-inx/token-quota` v1.0.1）与 `~/.dsh/plugins/dsh-token-stats`（JS，`@dshp-inx/token-stats` v1.1.3）合并等价 TS 重写移植。
 >
 > - Host：quota 侧 `lib/{index,config,secrets,providers/*}.js` → `src/host/{types,http,config,secrets,providers/*,quota,index}.ts`；stats 侧 `lib/{index,engine,fold,fsindex,async,http}.js` → `src/host/stats/{engine,fold,fsindex,async,routes}.ts`，tsup 打包为单文件 `lib/host.js`（ESM，schemastery 内联，运行时零依赖），导出 `{ name, inject, NS, ConfigSchema, apply }` 与规范一致。
-> - Client：quota 侧手写 `client.js`（1238 行）+ stats 侧手写 `client.js`（1548 行）→ `src/client/{types,styles,api,components,QuotaSection,StatsSection,TokenMeterSection,index}.ts`，tsup 打包为单文件 `lib/client.js`（IIFE，内含 `__ModuleLoader__.load`，react/primitives 运行时注入不打包）。
+> - Client：quota 侧手写 `client.js`（1238 行）+ stats 侧手写 `client.js`（1548 行）→ `src/client/`（`.tsx` + JSX，不再是 `React.createElement` 工厂），构建为单文件 `lib/client.js`（CJS + 构建预设拼的 `__ModuleLoader__.load` 壳；react / react/jsx-runtime / react-dom / primitives 运行时注入不打包）。官方组件的 props 类型直接来自 `@deepseek-ai/dsh-client-ui-primitives`（devDependency，见 [docs/client-basics.md](../../docs/client-basics.md)），样式走 CSS Module（构建期内联，见 [docs/build-and-deps.md](../../docs/build-and-deps.md)）。
 
 > 构建：`pnpm --filter @dshp/token-meter build`（tsup）→ `lib/host.js` + `lib/client.js`；包入口 `lib/host.js`，`./client` → `lib/client.js`。`lib/` 已提交（DSH 从 git 直接安装，不跑 build，必须带构建产物）。
 

@@ -5,7 +5,7 @@
  * 该函数**完整负责**这个供应商的数据展示（可以随意排版、加专属区块），
  * 通用零件从 `../kit.js` 取。
  *
- *   export function xxxUI(ctx: RenderCtx, K: ProviderUIKit): any { … }
+ *   export function xxxUI(ctx: RenderCtx, K: ProviderUIKit): ReactNode { … }
  *
  * 注册是可选的：没注册的 type 自动落到「声明式区块 → legacy」兜底层，
  * 因此新增供应商**不必写客户端代码**；写了则获得完全自由的专属观感。

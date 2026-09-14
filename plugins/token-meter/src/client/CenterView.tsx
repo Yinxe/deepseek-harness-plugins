@@ -16,8 +16,12 @@
  * 挤三个本插件自己的 tab 会盖过产品自身的 对话/轨迹；收敛成一个入口更克制。
  *
  * 选中项持久化在 localStorage（`tm-center-section`），下次打开回到上次看的那块。
+ *
+ * 原来是 `createCenterView(React, sections, icons)` 工厂：React 注入取消（模块顶层 import），
+ * `sections` / `icons` 是真实依赖（由 index.tsx 装配注入），保留为建造型函数参数。
  */
-import type { AnyReact } from './types.js';
+import { useState, type ReactNode } from 'react';
+import styles from './styles.module.css';
 import { DISPLAY_NAME } from '../name.js';
 
 export interface CenterViewSections {
@@ -79,12 +83,17 @@ function warnMissing(name: string): void {
   }
 }
 
+/**
+ * 造中心区视图组件。
+ *
+ * @param sections - 分区组件（额度/统计/在线/设置/分享面板）。
+ * @param icons - 左侧菜单图标。
+ * @returns conversation.view 条目组件。
+ */
 export function createCenterView(
-  React: AnyReact,
   sections: CenterViewSections,
   icons: CenterViewIcons,
-): (props: any) => any {
-  const h = React.createElement;
+): (props: any) => ReactNode {
   const ITEMS: NavItem[] = [
     {
       id: 'quota',
@@ -126,9 +135,9 @@ export function createCenterView(
     return first.id;
   }
 
-  return function TokenMeterCenterView(): any {
-    const [cur, setCur] = React.useState(readSaved) as [SectionId, (v: SectionId) => void];
-    const [share, setShare] = React.useState(false);
+  return function TokenMeterCenterView(): ReactNode {
+    const [cur, setCur] = useState(readSaved) as [SectionId, (v: SectionId) => void];
+    const [share, setShare] = useState(false);
     const pick = (id: SectionId): void => {
       setCur(id);
       try {
@@ -143,98 +152,85 @@ export function createCenterView(
 
     const box = sections as Record<string, any>;
     /** 渲染分区；未装配的字段渲染一条就地提示，而不是让 React 抛 #130 崩掉整个 tab */
-    const section = (name: string, props?: any): any => {
+    const section = (name: string, props?: any): ReactNode => {
       const Comp = box[name];
       if (!isComponent(Comp)) {
         warnMissing(name);
-        return h('div', { className: 'tm-sectMiss' }, '「' + name + '」分区未装配，请重新加载插件。');
+        return <div className={styles.sectMiss}>{'「' + name + '」分区未装配，请重新加载插件。'}</div>;
       }
-      return h(Comp, props);
+      return <Comp {...props} />;
     };
-    const icon = (Comp: any, size: number): any => (isComponent(Comp) ? h(Comp, { size }) : null);
+    const icon = (Comp: any, size: number): ReactNode => (isComponent(Comp) ? <Comp size={size} /> : null);
     const canShare = isComponent(sections.SharePanel);
     if (!canShare) warnMissing('SharePanel');
 
-    return h(
-      'div',
-      { className: 'tm-cview' },
-      h(
-        'nav',
-        { className: 'tm-cnav', 'aria-label': DISPLAY_NAME },
-        // 整列（背景 + 右分隔线）铺满内容高度，菜单本体 sticky 钉在顶部
-        h(
-          'div',
-          { className: 'tm-cnavInner' },
-          h('div', { className: 'tm-cnavHead' }, DISPLAY_NAME),
-          h(
-            'div',
-            { className: 'tm-cnavList' },
-            ITEMS.map((item) =>
-              h(
-                'button',
-                {
-                  key: item.id,
-                  type: 'button',
-                  className:
-                    'tm-cnavItem' +
-                    (cur === item.id ? ' tm-cnavOn' : '') +
-                    (item.sep ? ' tm-cnavItemSep' : ''),
-                  'aria-current': cur === item.id ? 'true' : undefined,
-                  title: item.hint,
-                  onClick: () => pick(item.id),
-                },
-                icon(item.Icon, 15),
-                h('span', { className: 'tm-cnavLabel' }, item.label),
-              ),
-            ),
-          ),
-        ),
-      ),
-      h(
-        'div',
-        { className: 'tm-cmain' },
-        h(
-          'header',
-          { className: 'tm-chead' },
-          h('span', { className: 'tm-cheadTitle' }, active.label),
-          h('span', { className: 'tm-cheadHint' }, active.hint),
-          // 分享入口：任何分区都能一键生成整张 16:9 分享卡
-          // 面板没装配就不画按钮 —— 宁可没有入口，也不要一个点了就崩的按钮
-          canShare
-            ? h(
-                'button',
-                {
-                  type: 'button',
-                  className: 'tm-shareBtn',
-                  title: '把用量统计与在线统计合成一张 16:9 分享卡',
-                  onClick: () => setShare(true),
-                },
-                icon(icons.ShareIcon, 14),
-                h('span', null, '分享'),
-              )
-            : null,
-          canShare && share
-            ? h(sections.SharePanel, {
-                onClose: () => setShare(false),
+    return (
+      <div className={styles.cview}>
+        <nav className={styles.cnav} aria-label={DISPLAY_NAME}>
+          {/* 整列（背景 + 右分隔线）铺满内容高度，菜单本体 sticky 钉在顶部 */}
+          <div className={styles.cnavInner}>
+            <div className={styles.cnavHead}>{DISPLAY_NAME}</div>
+            <div className={styles.cnavList}>
+              {ITEMS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={
+                    styles.cnavItem +
+                    (cur === item.id ? ' ' + styles.cnavOn : '') +
+                    (item.sep ? ' ' + styles.cnavItemSep : '')
+                  }
+                  aria-current={cur === item.id ? 'true' : undefined}
+                  title={item.hint}
+                  onClick={() => pick(item.id)}
+                >
+                  {icon(item.Icon, 15)}
+                  <span className={styles.cnavLabel}>{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </nav>
+        <div className={styles.cmain}>
+          <header className={styles.chead}>
+            <span className={styles.cheadTitle}>{active.label}</span>
+            <span className={styles.cheadHint}>{active.hint}</span>
+            {/* 分享入口：任何分区都能一键生成整张 16:9 分享卡
+                面板没装配就不画按钮 —— 宁可没有入口，也不要一个点了就崩的按钮 */}
+            {canShare ? (
+              <button
+                type="button"
+                className={styles.shareBtn}
+                title="把用量统计与在线统计合成一张 16:9 分享卡"
+                onClick={() => setShare(true)}
+              >
+                {icon(icons.ShareIcon, 14)}
+                <span>{'分享'}</span>
+              </button>
+            ) : null}
+            {canShare && share ? (
+              <sections.SharePanel
+                onClose={() => setShare(false)}
                 // 在线块来自 OnlineSection，这里把它交给分享面板一起内聚
-                OnlineEmbed: sections.OnlineEmbed,
-              })
-            : null,
-        ),
-        // 只挂载当前分区的面板：各面板自己会去打接口，全挂载会白拉几份数据。
-        h(
-          'div',
-          { className: 'tm-cbody', 'data-tm-scroll': '1' },
-          cur === 'quota'
-            ? section('QuotaView', { onOpenSettings: openSettings })
-            : cur === 'stats'
-              ? section('StatsView')
-              : cur === 'online'
-                ? section('OnlineView')
-                : // 设置页是行式表单布局，宽屏下收窄居中更好读（数据卡片才吃满宽度）
-                  h('div', { className: 'tm-cset' }, section('SettingsView')),
-        ),
-      ),
+                OnlineEmbed={sections.OnlineEmbed}
+              />
+            ) : null}
+          </header>
+          {/* 只挂载当前分区的面板：各面板自己会去打接口，全挂载会白拉几份数据。 */}
+          <div className={styles.cbody} data-tm-scroll="1">
+            {cur === 'quota' ? (
+              section('QuotaView', { onOpenSettings: openSettings })
+            ) : cur === 'stats' ? (
+              section('StatsView')
+            ) : cur === 'online' ? (
+              section('OnlineView')
+            ) : (
+              // 设置页是行式表单布局，宽屏下收窄居中更好读（数据卡片才吃满宽度）
+              <div className={styles.cset}>{section('SettingsView')}</div>
+            )}
+          </div>
+        </div>
+      </div>
     );
   };
 }

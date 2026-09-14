@@ -18,11 +18,12 @@
  * `<foreignObject>` 里的内容在一个独立的文档上下文里，读不到 DSH 壳层的样式表，
  * 所以必须把插件自己的 CSS 与用到的设计 token 的**计算值**一起内联进去。
  */
-import { CSS } from './styles.js';
+import { forwardRef, useMemo, type ReactNode } from 'react';
+import styles from './styles.module.css';
 import { DISPLAY_NAME } from '../name.js';
-import { createGlyphs } from './glyphs.js';
+import { Glyph } from './glyphs.js';
 import { aggregate, rangeText, type Agg } from './StatsSection.js';
-import type { AnyReact, StatsSnapshot } from './types.js';
+import type { StatsSnapshot } from './types.js';
 
 /**
  * 包元信息：**构建期从 `package.json` 注入**（见 tsup.config.ts 的 `define`）。
@@ -48,9 +49,9 @@ export const PKG: { name: string; version: string; repo: string } =
  */
 
 /**
- * 板子上用到的设计 token —— **必须与 `styles.ts` 里出现的 `--dsw-*` 一一对应**。
+ * 板子上用到的设计 token —— **必须与 `styles.module.css` 里出现的 `--dsw-*` 一一对应**。
  * 导出时这些变量要在 foreignObject 内联成计算值，漏一个就会让组件在导出的图里掉色
- * （fallback 到 inherit/initial）。自检：`node -e` 比对 styles.ts 的 token 集合。
+ * （fallback 到 inherit/initial）。自检：`node -e` 比对样式文件里的 token 集合。
  */
 export const SHARE_TOKENS = [
   '--dsw-alias-bg-base',
@@ -103,7 +104,7 @@ export interface ShareInput {
 export interface ShareBoardProps extends ShareInput {
   /**
    * 要内聚的组件。作为 **prop** 而不是工厂闭包传进来：这些分区组件由 StatsSection 提供，
-   * 在线块由 OnlineSection 提供，两边在 index.ts 才汇合；用 prop 传可以避免"谁先创建谁"
+   * 在线块由 OnlineSection 提供，两边在 index.tsx 才汇合；用 prop 传可以避免"谁先创建谁"
    * 的时序问题，也不会因为 sections 对象每次重建而把整块板子重新挂载。
    */
   sections: ShareSections;
@@ -118,109 +119,119 @@ export interface ShareBoardProps extends ShareInput {
  *   ③ 每日在线 | 模型分布
  *   ④ 在线三口径（通栏）
  * 上下留页头（标题 + 著者）与页脚（插件名 + 生成时间）。
+ *
+ * 原来是 `createShareBoard(React)` 工厂（只为注入 React 与 Glyph）：两者都改成模块顶层
+ * import 后工厂取消，直接导出组件。**必须 forwardRef**：导出时要拿到板子的真实 DOM 节点
+ * 去做光栅化；普通函数组件收不到 ref（React 只发一条警告），节点恒为 null，导出会静默失败。
  */
-export function createShareBoard(React: AnyReact): any {
-  const h = React.createElement;
-  const { Glyph } = createGlyphs(React);
-  // 必须是 forwardRef：导出时要拿到板子的真实 DOM 节点去做光栅化。
-  // 普通函数组件收不到 ref（React 只发一条警告），节点恒为 null，导出会静默失败。
-  const ShareBoard = React.forwardRef(function ShareBoard(props: ShareBoardProps, ref: any): any {
+export const ShareBoard = forwardRef<HTMLDivElement, ShareBoardProps>(
+  function ShareBoard(props, ref): ReactNode {
     const sections = props.sections;
     const data = props.data;
-    const aggAll: Agg = React.useMemo(() => aggregate(data.records || [], null), [data]);
+    const aggAll: Agg = useMemo(() => aggregate(data.records || [], null), [data]);
     const who =
-      props.showIdentity !== false && props.gitName !== undefined
-        ? h('b', { className: 'tm-shareAuthor' }, props.gitName)
-        : null;
+      props.showIdentity !== false && props.gitName !== undefined ? (
+        <b className={styles.shareAuthor}>{props.gitName}</b>
+      ) : null;
     // 分栏顺序即阅读顺序：先「用量」后「在线」，与视图里的分区顺序一致。
-    return h(
-      'div',
-      // 同时挂 tm-cview：它自带 container-type:inline-size 与 container-name:tmc，组件的响应式
-      // 断点（@container tmc 以及 .tm-cview 前缀的那批规则）于是以**板宽**为准。导出时
-      // foreignObject 里没有 .tm-cview 祖先，若不带这个类，预览与导出会长得不一样。
-      { className: 'tm-shareBoard tm-cview', ref },
-      h(
-        'header',
-        { className: 'tm-shareHead' },
-        // 第一层：标题区（左）+ 作者区（右）。作者是「谁做的」，与「由什么生成」分开，
-        // 不再把 作者/插件名/版本/邮箱/仓库 全堆在同一两行里右对齐（那会拖出一条长短不齐的长尾巴）。
-        h(
-          'div',
-          { className: 'tm-shareTop' },
-          h(
-            'div',
-            { className: 'tm-shareTitleBox' },
-            h(
-              'span',
-              { className: 'tm-shareBrandRow' },
-              h(Glyph, { name: 'layers', size: 19, className: 'tm-shareLogo' }),
-              h('span', { className: 'tm-shareBrand' }, DISPLAY_NAME),
-            ),
-            h('span', { className: 'tm-shareSub' }, 'DeepSeek Harness · 用量与在线时长总览'),
-          ),
-          h(
-            'div',
-            { className: 'tm-shareAuthorBox' },
-            who,
-            props.showIdentity !== false && props.gitEmail !== undefined
-              ? h('span', { className: 'tm-shareMail' }, props.gitEmail)
-              : null,
-          ),
-        ),
-        // 第二层：来源信息条 —— 插件名 / 版本 / 仓库**左对齐独占一行**，生成信息靠右。
-        // 与标题层之间有细线分隔，所以「是谁」和「由什么生成」一眼分得开。
-        h(
-          'div',
-          { className: 'tm-shareMeta' },
-          h(
-            'span',
-            { className: 'tm-sharePlug' },
-            PKG.name,
-            PKG.version !== '' ? h('em', null, 'v' + PKG.version) : null,
-          ),
-          h('span', { className: 'tm-shareMetaSep' }, '·'),
-          h('span', { className: 'tm-shareRepo' }, PKG.repo),
-          h(
-            'span',
-            { className: 'tm-shareMetaR' },
-            '会话 ' +
-              data.sessions +
-              ' 个 · 记录 ' +
-              aggAll.byDay.size +
-              ' 天 · 生成于 ' +
-              new Date().toLocaleString('zh-CN', { hour12: false }),
-          ),
-        ),
-      ),
-      h(
-        'div',
-        { className: 'tm-shareGrid' },
-        // ① 用量基础数据：13 张指标卡通栏一行
-        h('div', { className: 'tm-shareCell tm-sr6' }, h(sections.StatCardsSection, { aggAll, data })),
-        // ② 用量两张图并排：趋势 | 热力图
-        h('div', { className: 'tm-shareCell' }, h(sections.TrendSection, { data, aggAll })),
-        h('div', { className: 'tm-shareCell' }, h(sections.HeatSection, { data, aggAll })),
-        // ③ 以下四块各占一整行（宽度给足，图表/列表才铺得开；长图无所谓）
-        // 外面这层 .tm-donutWide 不能省：**宽布局（圆环在左 + 模型列表多列）不是 DonutSection
-        // 自己响应的，而是调用方包出来的**（视图里也是这么调的）。少这层就退回默认窄布局，
-        // 看起来就像"组件在分享面板里不响应式了"。
-        h(
-          'div',
-          { className: 'tm-shareCell tm-sr6' },
-          h(
-            'div',
-            { className: 'tm-donutWide' },
-            h(sections.DonutSection, { data, agg: aggAll, rangeLabel: rangeText('all') }),
-          ),
-        ),
-        h('div', { className: 'tm-shareCell tm-sr6' }, h(sections.OnlineEmbed, { data, block: 'metrics' })),
-        h('div', { className: 'tm-shareCell tm-sr6' }, h(sections.OnlineEmbed, { data, block: 'daily' })),
-        h('div', { className: 'tm-shareCell tm-sr6' }, h(sections.OnlineEmbed, { data, block: 'rank' })),
-      ),
+    return (
+      <div
+        // 同时挂 tm-cview：它自带 container-type:inline-size 与 container-name:tmc，组件的响应式
+        // 断点（@container tmc 以及 .tm-cview 前缀的那批规则）于是以**板宽**为准。导出时
+        // foreignObject 里没有 .tm-cview 祖先，若不带这个类，预览与导出会长得不一样。
+        className={styles.shareBoard + ' ' + styles.cview}
+        ref={ref}
+      >
+        <header className={styles.shareHead}>
+          {/* 第一层：标题区（左）+ 作者区（右）。作者是「谁做的」，与「由什么生成」分开，
+            不再把 作者/插件名/版本/邮箱/仓库 全堆在同一两行里右对齐（那会拖出一条长短不齐的长尾巴）。 */}
+          <div className={styles.shareTop}>
+            <div className={styles.shareTitleBox}>
+              <span className={styles.shareBrandRow}>
+                <Glyph name="layers" size={19} className={styles.shareLogo} />
+                <span className={styles.shareBrand}>{DISPLAY_NAME}</span>
+              </span>
+              <span className={styles.shareSub}>{'DeepSeek Harness · 用量与在线时长总览'}</span>
+            </div>
+            <div className={styles.shareAuthorBox}>
+              {who}
+              {props.showIdentity !== false && props.gitEmail !== undefined ? (
+                <span className={styles.shareMail}>{props.gitEmail}</span>
+              ) : null}
+            </div>
+          </div>
+          {/* 第二层：来源信息条 —— 插件名 / 版本 / 仓库**左对齐独占一行**，生成信息靠右。
+            与标题层之间有细线分隔，所以「是谁」和「由什么生成」一眼分得开。 */}
+          <div className={styles.shareMeta}>
+            <span className={styles.sharePlug}>
+              {PKG.name}
+              {PKG.version !== '' ? <em>{'v' + PKG.version}</em> : null}
+            </span>
+            <span className={styles.shareMetaSep}>{'·'}</span>
+            <span className={styles.shareRepo}>{PKG.repo}</span>
+            <span className={styles.shareMetaR}>
+              {'会话 ' +
+                data.sessions +
+                ' 个 · 记录 ' +
+                aggAll.byDay.size +
+                ' 天 · 生成于 ' +
+                new Date().toLocaleString('zh-CN', { hour12: false })}
+            </span>
+          </div>
+        </header>
+        <div className={styles.shareGrid}>
+          {/* ① 用量基础数据：13 张指标卡通栏一行 */}
+          <div className={styles.shareCell + ' ' + styles.sr6}>
+            <sections.StatCardsSection aggAll={aggAll} data={data} />
+          </div>
+          {/* ② 用量两张图并排：趋势 | 热力图 */}
+          <div className={styles.shareCell}>
+            <sections.TrendSection data={data} aggAll={aggAll} />
+          </div>
+          <div className={styles.shareCell}>
+            <sections.HeatSection data={data} aggAll={aggAll} />
+          </div>
+          {/* ③ 以下四块各占一整行（宽度给足，图表/列表才铺得开；长图无所谓）
+            外面这层 .tm-donutWide 不能省：**宽布局（圆环在左 + 模型列表多列）不是 DonutSection
+            自己响应的，而是调用方包出来的**（视图里也是这么调的）。少这层就退回默认窄布局，
+            看起来就像"组件在分享面板里不响应式了"。 */}
+          <div className={styles.shareCell + ' ' + styles.sr6}>
+            <div className={styles.donutWide}>
+              <sections.DonutSection data={data} agg={aggAll} rangeLabel={rangeText('all')} />
+            </div>
+          </div>
+          <div className={styles.shareCell + ' ' + styles.sr6}>
+            <sections.OnlineEmbed data={data} block="metrics" />
+          </div>
+          <div className={styles.shareCell + ' ' + styles.sr6}>
+            <sections.OnlineEmbed data={data} block="daily" />
+          </div>
+          <div className={styles.shareCell + ' ' + styles.sr6}>
+            <sections.OnlineEmbed data={data} block="rank" />
+          </div>
+        </div>
+      </div>
     );
-  });
-  ShareBoard.displayName = 'TmShareBoard';
-  return ShareBoard;
+  },
+);
+ShareBoard.displayName = 'TmShareBoard';
+
+/**
+ * 从已在屏的 CSS Module 样式标签里取插件样式文本。
+ *
+ * 构建预设会在模块求值时往 `<head>` 插一条
+ * `<style data-plugin="@dshp/token-meter" data-plugin-css="@dshp/token-meter/src/client/styles.module.css">`；
+ * 类名在构建期被哈希成 `<hash>_local`，**导出的内联样式表必须是同一份哈希后的文本**，
+ * 否则分享卡导出的图会完全掉色。这里按 `data-plugin-css` 前缀取（别写死整条 id），
+ * 取不到就退化成空串 —— 外壳只是掉色，不该让导出抛错。
+ */
+function readPluginCss(): string {
+  try {
+    const el = document.querySelector('style[data-plugin-css^="@dshp/token-meter/"]');
+    return el?.textContent ?? '';
+  } catch {
+    return '';
+  }
 }
 
 /**
@@ -250,10 +261,12 @@ export function collectShareCss(): string {
    */
   return (
     '*,:before,:after{animation:none!important;transition:none!important}' +
-    'body,.tm-shareBoard{' +
+    'body,.' +
+    styles.shareBoard +
+    '{' +
     decl +
     '}' +
-    CSS
+    readPluginCss()
   );
 }
 

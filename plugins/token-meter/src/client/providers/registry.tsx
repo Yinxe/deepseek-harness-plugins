@@ -3,15 +3,19 @@
  *
  * 「每个 provider return 自己的数据，client 也有一套属于它自己的 UI」的调度中枢：
  *
- *   1. **专属 UI**（providers/ui/<type>.ts）—— 该供应商自己的完整实现，自由排版；
- *   2. **声明式区块**（sections.ts + snap.view）—— 通用渲染，新供应商零客户端代码可用；
+ *   1. **专属 UI**（providers/ui/<type>.tsx）—— 该供应商自己的完整实现，自由排版；
+ *   2. **声明式区块**（sections.tsx + snap.view）—— 通用渲染，新供应商零客户端代码可用；
  *   3. **legacy 兜底** —— 老 Host 只下发 billingKind/windows/extra 时仍能显示。
  *
  * 失败不在这里处理：调度器只渲染成功快照，失败卡片由 QuotaSection 统一走
- * `Kit.ErrorCard`（结构化结论 + 排查步骤 + 重试），任何 provider 一致。
+ * `K.ErrorCard`（结构化结论 + 排查步骤 + 重试），任何 provider 一致。
+ *
+ * 原来是 `createProviderRenderers(React, K)` 工厂：React 形参取消（这里本就不需要它），
+ * `K`（deps 绑定后的零件命名空间）是真实依赖，保留为参数。
  */
+import type { ReactNode } from 'react';
 import type { ProviderSection, VendorSnapshot } from '../types.js';
-import { createSectionRenderer } from './sections.js';
+import { renderSections } from './sections.js';
 import { getProviderUI, hasProviderUI, providerUITypes, registerProviderUI } from './ui/index.js';
 import type { ProviderUI } from './ui/index.js';
 import type { ProviderUIKit, RenderCtx } from './kit.js';
@@ -19,7 +23,7 @@ import type { ProviderUIKit, RenderCtx } from './kit.js';
 /** 调度器对外接口。 */
 export interface ProviderRenderer {
   /** 渲染成功快照的主体（三层兜底） */
-  renderBody: (type: string, snap: VendorSnapshot, now: number) => any;
+  renderBody: (type: string, snap: VendorSnapshot, now: number) => ReactNode;
   /** 该 type 是否有专属 UI */
   hasBespoke: (type: string) => boolean;
   /** 已注册专属 UI 的 type 列表 */
@@ -66,18 +70,22 @@ export function legacySections(snap: VendorSnapshot): ProviderSection[] {
   return out;
 }
 
-export function createProviderRenderers(React: unknown, K: ProviderUIKit): ProviderRenderer {
-  const { renderSections } = createSectionRenderer(K);
-
+/**
+ * 造 provider 渲染调度器。
+ *
+ * @param K - deps 绑定后的零件命名空间。
+ * @returns 三层兜底的调度器。
+ */
+export function createProviderRenderers(K: ProviderUIKit): ProviderRenderer {
   /** 第 2 层：provider 自描述 view；没给就用 legacy 快照现推 */
-  function generic(ctx: RenderCtx): any {
+  function generic(ctx: RenderCtx): ReactNode {
     const sections = ctx.snap.view && Array.isArray(ctx.snap.view.sections) ? ctx.snap.view.sections : null;
-    const rendered = sections ? renderSections(sections, ctx) : null;
+    const rendered = sections ? renderSections(K, sections, ctx) : null;
     if (rendered) return rendered;
-    return renderSections(legacySections(ctx.snap), ctx);
+    return renderSections(K, legacySections(ctx.snap), ctx);
   }
 
-  function renderBody(type: string, snap: VendorSnapshot, now: number): any {
+  function renderBody(type: string, snap: VendorSnapshot, now: number): ReactNode {
     const ctx: RenderCtx = { snap, now, type, vendorName: snap.vendorName || '' };
     const ui: ProviderUI | undefined = getProviderUI(type);
     if (ui) {
