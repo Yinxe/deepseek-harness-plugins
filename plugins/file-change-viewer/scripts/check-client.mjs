@@ -1661,25 +1661,32 @@ ok('普通改动不会多出一个箭头', !treeText(patchSettled).includes('→
       ctxBoxes[1]?.props?.style?.counterReset === 'dshp-fcv-num 5',
     );
   }
-  // 改动行的双侧行号：官方 DiffBlock 的行没有编号机制，由 diffNumRules 生成动态 CSS
-  // （del 行用旧文件行号、add 行用新文件行号，计数器 + nth-of-type 区间）。这个场景里
-  // oldText/newText 都没有 ctx 行、locate 行号 5 → oldStart = newStart = 5，
-  // counter-reset 把两个计数器都拨到 4；del 1 行、add 1 行各占一个区间。
+  // 改动行的行号：官方 DiffBlock 的行没有编号机制，由 diffNumRules 生成动态 CSS。口径是
+  // **只给 add 行编号**（del 行是旧文件的行号、且会与行首 `- ` 前缀抢位），号取新文件视角。
+  // 这个场景里 oldText/newText 都没有 ctx 行、locate 行号 5 → newStart = 5，counter-reset 拨到 4；
+  // del 1 行、add 1 行各占一个 nth-of-type 区间，两个区间都要让出行号列（del 只让位不画号）。
   {
-    const numStyle = findAllByType(ctxCard, 'style').find((node) => textOf(node).includes('dshp-fcv-old'));
+    const numStyle = findAllByType(ctxCard, 'style').find((node) => textOf(node).includes('dshp-fcv-new'));
     const numCss = numStyle === undefined ? '' : textOf(numStyle);
+    const PAD = 'padding-inline-start:calc(4ch + 6px)';
+    const delRange = 'div:nth-of-type(n+2):nth-of-type(-n+2)';
+    const addRange = 'div:nth-of-type(n+3):nth-of-type(-n+3)';
     ok(
-      '± 差异视图：改动行行号规则已注入（计数器拨到 4，即两侧首行都是 5）',
-      numCss.includes('counter-reset:dshp-fcv-old 4 dshp-fcv-new 4'),
+      '± 差异视图：新增行行号规则已注入（上限计数器拨到 4，即首行是 5）',
+      numCss.includes('counter-reset:dshp-fcv-new 4'),
     );
     ok(
-      '± 差异视图：del 行区间（body 第 2 个 div）+ add 行区间（第 3 个）各带行号',
-      numCss.includes('div:nth-of-type(n+2):nth-of-type(-n+2)') &&
-        numCss.includes('div:nth-of-type(n+3):nth-of-type(-n+3)'),
+      '± 差异视图：del 行不编号（没有旧侧计数器），但仍让出行号列好让红绿正文对齐',
+      !numCss.includes('dshp-fcv-old') && numCss.includes(delRange + '{' + PAD + '}'),
     );
     ok(
-      '± 差异视图：行号带行色（del 红的 add 绿，与 ± 前缀符号同色可辨）',
-      numCss.includes('color:var(--dsw-alias-state-error-primary)') &&
+      '± 差异视图：add 行让位 + 计数 + 画号（nth-of-type 区间：body 第 3 个 div）',
+      numCss.includes(addRange + '{' + PAD + ';counter-increment:dshp-fcv-new}') &&
+        numCss.includes(addRange + '::after{content:counter(dshp-fcv-new)'),
+    );
+    ok(
+      '± 差异视图：行号只出现在 add 行的 ::after 上，且与 `+` 前缀同色',
+      (numCss.match(/::after\{content:counter\(/g) ?? []).length === 1 &&
         numCss.includes('color:var(--dsw-alias-state-success-primary)'),
     );
     ok(

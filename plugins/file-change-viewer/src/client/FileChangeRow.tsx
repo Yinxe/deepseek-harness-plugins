@@ -440,49 +440,30 @@ export function FileChangeRow(props: ToolViewProps): ReactNode {
    * `beforeLine` 把「上文首行的真实行号」带进去，上下文行由此带上行号（见 diffView 的
    * `context`）；`startOf(index)` 与高亮视图同源，两个视图的行号说的是同一件事。
    *
-   * 改动行的双侧行号沿 `hunk.rows`（LCS 结果）走一遍推出来：ctx 行双侧行号都推进、
-   * del 行只推进旧侧、add 行只推进新侧，记录首个 del 的旧行号与首个 add 的新行号——
-   * 这与 GitHub unified diff 的双列口径一致，也与高亮视图「删除行不占新号」互补。
-   * locate 没回结果时（定位不到）改动行同样不带号，绝不编数。
+   * 改动行的行号沿 `hunk.rows`（LCS 结果）走一遍推出来：ctx 行推进新侧行号、**del 行不推进**
+   * （删除行不占新文件的行号）、add 行推进并在**首个 add** 处记下新侧行号——这就是官方块内
+   * add 行的起始号（与高亮视图「删除行不占号」的口径互补）。只给 add 行画号：del 行拿旧文件
+   * 的行号既没有对应关系、又会和行首的 `- ` 前缀抢位（见 diffView 的 `diffNumRules`）。
+   * locate / startLine 都没有时（定位不到）改动行同样不带号，绝不编数。
    */
   const renderDiff = (index: number, fallback: FileDiff): ReactNode => {
     const context = contexts[index] ?? { before: [], after: [] };
     const hunk = model.hunks[index];
     const located = locatedHunks[index];
     const locatedLine = located === null || located === undefined ? null : located.line;
-    // 双侧行号只在「行号可信」时推：start 来自 patch 的 startLine（新文件确切行号）或
-    // locate（newText 在文件里的行号）。两种来源说的都是「新侧首行」；旧侧首行按
-    // rows 的前缀 ctx 数前移。行号不可信（退回 1 的兜底）时改动行不带号。
-    let oldStart: number | undefined;
+    // 改动行行号：**只给新增行编号**（删除行拿的是旧文件行号，与行首 `- ` 前缀抢位、也没有
+    // 对应关系，见 diffView 的 diffNumRules）。号取新文件视角：start 来自 patch 的
+    // `startLine`（片段在新文件里的确切行号）或 locate（newText 在文件里的行号），两个来源
+    // 说的都是「新侧首行」；删除行不占新文件行号，推号时直接跳过它。行号不可信（两个来源都
+    // 没有）时改动行不带号——绝不编数。
     let newStart: number | undefined;
-    if (hunk !== undefined && typeof locatedLine === 'number' && locatedLine > 0) {
-      let oldLine = locatedLine;
-      let newLine = locatedLine;
-      for (const row of hunk.rows) {
-        if (row.kind === 'ctx') {
-          oldLine += 1;
-          newLine += 1;
-        } else if (row.kind === 'del') {
-          if (oldStart === undefined) oldStart = oldLine;
-          oldLine += 1;
-        } else {
-          if (newStart === undefined) newStart = newLine;
-          newLine += 1;
-        }
-      }
-    } else if (hunk !== undefined && typeof hunk.raw.startLine === 'number' && hunk.raw.startLine > 0) {
-      // patch 工具：raw.startLine 是片段在新文件里的确切行号；旧侧首行按前缀 ctx 数前移。
-      let oldLine = hunk.raw.startLine;
-      let newLine = hunk.raw.startLine;
-      for (const row of hunk.rows) {
-        if (row.kind === 'ctx') {
-          oldLine += 1;
-          newLine += 1;
-        } else if (row.kind === 'del') {
-          if (oldStart === undefined) oldStart = oldLine;
-          oldLine += 1;
-        } else {
-          if (newStart === undefined) newStart = newLine;
+    if (hunk !== undefined) {
+      const base = typeof locatedLine === 'number' && locatedLine > 0 ? locatedLine : hunk.raw.startLine;
+      if (typeof base === 'number' && base > 0) {
+        let newLine = base;
+        for (const row of hunk.rows) {
+          if (row.kind === 'del') continue;
+          if (row.kind === 'add' && newStart === undefined) newStart = newLine;
           newLine += 1;
         }
       }
@@ -494,7 +475,6 @@ export function FileChangeRow(props: ToolViewProps): ReactNode {
       labels: diffLabels(t),
       key: 'diff' + index,
       beforeLine: context.before.length > 0 ? startOf(index) : undefined,
-      oldStart,
       newStart,
       numClass: TINT_CLASS_PREFIX + cardKey + '-d' + index,
     });

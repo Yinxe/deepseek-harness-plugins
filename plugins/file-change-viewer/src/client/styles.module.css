@@ -292,18 +292,20 @@
   padding: 0 14px;
   white-space: pre;
 }
-/* 改动行（官方块内）的行号列几何：del/add 行的 ::after 由 diffView 的 diffNumRules 动态喂
-   content（counter）与颜色（del 红 / add 绿，与行前缀符号同色——一眼可辨哪侧的号），
-   这里只定几何：绝对定位到行盒左缘，与上下文行号同一列宽（3ch）、同淡化。官方行是块盒，
-   行号绝对定位需要定位祖先，行本身补 position:relative。
-   与上下文行号不同色：行号着 del 红的 add 绿（与行前缀符号同色），一眼可辨哪侧的号。 */
+/* 改动行的行号列几何：**只有 add 行画号**（del 行让位不画，见 diffView 的 diffNumRules）。
+   content / counter-increment / 让位用的 padding-inline-start 都由那段动态规则喂，这里只定
+   行号本身的几何：绝对定位到行盒左缘的**行号列**里（4ch，与动态规则的
+   `padding-inline-start: calc(4ch + 6px)` 对齐）、右对齐、淡化、不可选中、不吃点击。
+   关键：官方的前缀符号 `+ `/`- ` 是行内 `::before`，而动态规则给整个行盒让出了这 4ch + 6px，
+   所以符号落在行号**之后**。旧实现把行号绝对定位到 `inset-inline-start: 0` 却没让位，
+   数字正好压在符号上（用户报的「+ - 与数字行号重叠」）。 */
 .card .diff[data-diff] > div > div {
   position: relative;
 }
 .card .diff[data-diff] > div > div::after {
   position: absolute;
   inset-inline-start: 0;
-  width: 3ch;
+  width: 4ch;
   text-align: end;
   opacity: 0.7;
   user-select: none;
