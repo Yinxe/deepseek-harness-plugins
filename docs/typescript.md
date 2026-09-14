@@ -34,6 +34,16 @@
   conversation / tool 各自的 UI 包 merge 进来），那是**下一步**。
 - 类型不全时按**实现的真实契约**就地收窄一次并写明原因，例如官方 `DisclosureRowProps.title` 声明成
   `string`、实现却是 `children: title`（能放节点）。收窄收在文件内部，不外泄成公共 `any`。
+- **官方 primitives 的 `className` 声明不一致**（迁移期踩过）：`Input` / `Modal` 写的是
+  `className?: string`（**没有** `| undefined`），而 `Button` / `Tag` / `Switch` / `Menu` / `Pill` 是
+  `string | undefined`。在 `exactOptionalPropertyTypes` 下，把 CSS Module 的 `styles.x`（类型就是
+  `string | undefined`）直接传进前者会编译不过。解法是**在调用点条件展开**
+  （`{...(mono ? { className: styles.mono } : {})}`）或先 `cx()` 收成 `string`——**不要**加 `!`、
+  也不要改 `shared/types/css-modules.d.ts`。上游统一后可以简化。
+- **官方声明成必填、旧实现却没传的 prop**（迁移期踩过）：旧代码靠 `React: any` 混过去，换成真实类型后
+  会直接报错。默认**按运行时原样保留**（不补 —— 补上会改 DOM，属于行为增量），需要时在调用点写一处
+  带注释的收窄。唯一的例外是「同一文件里同类调用早就传了它、显然只是漏了一处」（如 mcp-manager 的
+  `RiskConfirmationProps.closeLabel`，同文件两处 `Modal` 都传了），那就补齐并在**提交信息里点名**。
 
 ### host 半（待迁）
 

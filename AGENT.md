@@ -7,7 +7,7 @@
 
 ## 十条红线（违反即打回）
 
-1. **运行时零依赖**：`lib/host.js` 单文件 ESM、`lib/client.js` 单文件 IIFE，`dependencies` 永远 `{}`，第三方全部构建期内联或声明为运行时注入。→ [docs/build-and-deps.md](docs/build-and-deps.md)
+1. **运行时零依赖**：`lib/host.js` 单文件 ESM、`lib/client.js` 单文件 CJS（外面由构建预设拼上 `__ModuleLoader__.load` 壳），`dependencies` 永远 `{}`，第三方全部构建期内联或声明为运行时注入。→ [docs/build-and-deps.md](docs/build-and-deps.md)
 2. **`lib/` 必须提交**：DSH 从 git 直接安装不跑 build；`src` 改了 `lib` 必须重打并一起提交，二者同进同出。→ [docs/build-and-deps.md](docs/build-and-deps.md)
 3. **所有副作用可逆**：一切注册（on/register/样式/patch/section）都包在 `ctx.effect(..., 'dshp-<name>: label')` 里；`apply` 顶层不许抛，每个注册块独立 try/catch + 一行中文日志。→ [docs/cordis-host.md](docs/cordis-host.md)
 4. **外部输入全部消毒**：tool 参数、路由 body、settings patch、文件回读，逐字段校验 + 截断 + 范围夹，不信任任何 `any`。→ [docs/cordis-host.md](docs/cordis-host.md)、[docs/ext-routes.md](docs/ext-routes.md)

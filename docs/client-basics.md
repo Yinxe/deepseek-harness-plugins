@@ -71,4 +71,6 @@ window.__ModuleLoader__.load({
 
 ## 无头自检
 
-Client 侧「看不见但错了就白屏」的行为（loader 注册结果、渲染树、偏好生命周期）用无头冒烟测试兜住：把 `lib/client.js` 当 IIFE 跑一遍 + 一层迷你 React（见 file-change-viewer `scripts/check-client.mjs`），进 `pnpm test`。
+Client 侧「看不见但错了就白屏」的行为（loader 注册结果、渲染树、偏好生命周期）用无头冒烟测试兜住：造一个 `__ModuleLoader__.load` 收集器接住 bundle 的 factory，再配一层迷你 React（见 file-change-viewer `scripts/check-client.mjs`），进 `pnpm test`。
+
+没有那套渲染夹具的插件，至少挂上共用的静态检查 `node ../../shared/scripts/check-css-modules.mjs src/client`：CSS Module 的映射是宽松声明，`styles.拼错` 编译期合法、运行时静默丢 className，这个脚本是唯一会自动红的网。

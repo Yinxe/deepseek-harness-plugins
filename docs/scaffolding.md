@@ -13,11 +13,14 @@ plugins/<name>/
 ├── src/
 │   ├── host/             # Node 侧：index.ts（apply）+ types.ts + 按职责拆模块
 │   │   └── index.ts / types.ts / config.ts / cache.ts / http.ts / vision.ts ……
-│   └── client/           # 浏览器侧：index.ts（__ModuleLoader__）+ types.ts + api/styles/components/Section
-│       └── index.ts / types.ts / api.ts / styles.ts / components.ts / <X>Section.ts ……
+│   └── client/           # 浏览器侧：index.tsx（只导出 inject/apply）+ types/api/styles/components/Section
+│       └── index.tsx / types.ts / api.ts / styles.module.css / components.tsx / <X>Section.tsx ……
 ├── lib/                  # 构建产物，必须提交：host.js + client.js
 └── README.md             # 见 docs/documentation.md
 ```
+
+> client 侧只有**含 JSX 的文件**是 `.tsx`（组件、入口）；纯逻辑（`api.ts` / 领域计算 / CSS Module 之外的工具）保持 `.ts`。
+> loader 注册壳与 `<style>` 注入**源码里没有**——都由 [`shared/tsup.preset.ts`](../shared/tsup.preset.ts) 生成，见 [docs/client-basics.md](client-basics.md)。
 
 可选目录（按需，均为约定）：
 
@@ -27,10 +30,14 @@ plugins/<name>/
 | `scripts/`    | 无头自检脚本，挂进 `pnpm test`                            | file-change-viewer / mcp-manager / token-meter / web-style   |
 | `images/`     | README 截图（配合 `screenshots.json` 清单）               | mcwiki-search / token-meter / web-style / file-change-viewer |
 
+仓库根另有 `shared/`（**不是**插件）：构建预设 `tsup.preset.ts`、CSS Module 的宽松类型声明
+`types/css-modules.d.ts`、各插件 `pnpm test` 共用的静态检查 `scripts/check-css-modules.mjs`。
+只服务单个插件的东西**不许**进去（放回那个插件自己的 `tsup.config.ts` / `scripts/`）。
+
 命名约定：
 
 - 目录名用短横线小写（`vision-bridge`），包名用 `@dshp/<目录名>`。
-- host 入口永远 `src/host/index.ts`，client 入口永远 `src/client/index.ts`。
+- host 入口永远 `src/host/index.ts`，client 入口永远 `src/client/index.tsx`（只导出 `inject` 与 `apply`）。
 - 根 `tsconfig.json` 是 solution 引用聚合，新插件必须登记，否则 `pnpm typecheck` 漏检。
 
 ## 加新插件（5 步）
@@ -40,13 +47,19 @@ mkdir -p plugins/<name>/src/{host,client}
 # 1. 照抄 plugins/vision-bridge/{package.json,tsconfig.json,tsup.config.ts}
 # 2. 改 package.json：name（@dshp/<name>）、version（从 0.1.0 起）、description、
 #    repository.directory、dsh.bundle.patch 路径
-# 3. 改 tsup.config.ts 里的 entry 路径与注释（结构不变）
+# 3. 改 tsup.config.ts 里的插件 id（就一行 pluginBuild('@dshp/<name>')；本插件专属的
+#    inline / define / host banner 也写在这个文件里，不要进 shared/tsup.preset.ts）
 # 4. 写 cordis.patch.yml：id 用短横线小写（与 settings NS 同名，见 docs/settings.md），
 #    name 用包名
 # 5. 根 tsconfig.json references 加 { "path": "./plugins/<name>" }
 pnpm install
 pnpm --filter @dshp/<name> build && pnpm --filter @dshp/<name> typecheck
 ```
+
+client 侧的起步三件（照 vision-bridge 抄）：`src/client/index.tsx`（`inject` + `apply` 两个导出、
+每个注册块一个 `try/catch`）、`src/client/styles.module.css`（类名 camelCase、不带插件前缀）、
+`src/client/components.tsx`（官方 primitives 里没有的那几个小构件）。
+`package.json` 的 `test` 脚本记得挂上 `node ../../shared/scripts/check-css-modules.mjs src/client`。
 
 ## 客户端注册槽位与 order 全景
 
@@ -64,5 +77,5 @@ pnpm --filter @dshp/<name> build && pnpm --filter @dshp/<name> typecheck
 ## 标杆与阅读顺序
 
 - 唯一标杆实现：`plugins/vision-bridge`（`@dshp/vision-bridge`）。**新插件有疑问时先读它，再读规范。**
-- 阅读顺序：根 `AGENT.md` → 根 `README.md` → `plugins/vision-bridge/README.md` → `plugins/vision-bridge/src/host/*.ts` → `src/client/*.ts` → `tsup.config.ts`。
+- 阅读顺序：根 `AGENT.md` → 根 `README.md` → `plugins/vision-bridge/README.md` → `plugins/vision-bridge/src/host/*.ts` → `src/client/*`（组件是 `.tsx`）→ `tsup.config.ts`。
 - provider 型插件（多供应商分层）的第二标杆：`plugins/token-meter`；接管工具行渲染的标杆：`plugins/file-change-viewer`。

@@ -30,9 +30,19 @@ pnpm test          # pnpm -r test（至少 node --check 双 bundle）
 | ------------------ | ---------------------------- | --------------------------------------------------------------------------------------- |
 | file-change-viewer | `check-host.mjs`（158 项）   | NS 契约、补丁消毒、/ext 路由、patch 工具注册契约与动态开关、全有或全无、locate 只读一次 |
 |                    | `check-patch.mjs`（74 项）   | `*** Begin Patch` 纯函数：多文件/多片段/五级模糊定位/行尾 BOM/失败诊断                  |
-|                    | `check-client.mjs`（167 项） | 无头渲染：loader 注册、行渲染树、偏好生命周期                                           |
+|                    | `check-client.mjs`（204 项） | 无头渲染：loader 注册、行渲染树、偏好生命周期                                           |
 | mcp-manager        | `patchdoc.test.mjs`          | patch 文件定位/回写/自校验                                                              |
-| token-meter        | `check-share-tokens.mjs`     | 分享卡导出的 token 清单覆盖 `styles.ts` 全部 `--dsw-*`（导出图掉色的静态防线）          |
+| token-meter        | `check-share-tokens.mjs`     | 分享卡导出的 token 清单覆盖 `styles.module.css` 全部 `--dsw-*`（导出图掉色的静态防线）  |
 | web-style          | `check-themes.mjs`           | 主题目录 ↔ 画廊 meta ↔ 产物一致性                                                       |
+
+另有一条**全仓共用的静态检查**，所有写了 CSS Module 的插件都挂在 `pnpm test` 里：
+
+```bash
+node ../../shared/scripts/check-css-modules.mjs src/client
+```
+
+它盯 `styles.拼错` —— CSS Module 的映射是宽松声明（`shared/types/css-modules.d.ts`），拼错的类名
+编译期合法、运行时是 `undefined`、React 静默丢掉 className，这是唯一会自动红的网；顺带报出
+「CSS 里定义了但源码没用到」的孤儿规则（提示，不拦）。
 
 写新自检脚本：`scripts/*.mjs`、只许 node 内建模块、能独立跑（不启动 DSH、不碰真实文件系统的用户数据）、失败必须非零退出。
