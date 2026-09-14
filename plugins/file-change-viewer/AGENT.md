@@ -18,7 +18,7 @@
 
 - `src/host/`：`index.ts`（apply：settings NS + 三路由 + patch 工具动态开关）/ `config.ts` / `routes.ts`（state / config / locate）/ `patch-tool.ts`（`*** Begin Patch` 工具）/ `sandbox-escalation.ts`（官方沙箱逻辑的等价移植，**不 import 官方包**，只依赖 `ctx.get('sandboxPolicy')` / `ctx.get('approval')` 服务接缝）。
 - `src/shared/apply-patch.ts`：补丁解析/应用纯函数——Host 落盘与 Client 预览**共用同一解析器**，保证「模型看到的预览」与「真正写进去的」一致。
-- `src/client/`：`FileChangeRow.ts`（工具行）/ `diff.ts`（LCS 三口径：raw/rows/changed）/ `diffView.ts`（两种视图的渲染：工具行与设置页样张共用）/ `viewCards.ts`（设置页「展示方式」两张带真实样张的单选卡）/ `SessionControls.ts`（会话页头两个快捷开关）/ `session.ts`（会话级覆盖 store，内存、不落盘）/ `locate.ts`（真实行号 + 上下文批量查询）/ `prefs.ts`（全局偏好 store）。
+- `src/client/`：`FileChangeRow.tsx`（工具行）/ `diff.ts`（LCS 三口径：raw/rows/changed）/ `diffView.tsx`（两种视图的渲染：工具行与设置页样张共用）/ `viewCards.tsx`（设置页「展示方式」两张带真实样张的单选卡）/ `SessionControls.tsx`（会话页头两个快捷开关）/ `session.ts`（会话级覆盖 store，内存、不落盘）/ `locate.ts`（真实行号 + 上下文批量查询）/ `prefs.ts`（全局偏好 store）/ `styles.module.css`（CSS Modules，构建期内联）。
 
 ## 本插件的局部规则
 
@@ -31,7 +31,7 @@
 7. **BOM 与行尾保持**：CRLF 归一后应用、写回恢复整份 CRLF；带 BOM 的文件改完 BOM 还在（readText 会吃掉 BOM，写回前探测补上，且不补第二个）。
 8. **失败诊断给「最像的真实行」**：`applyChunksToText` 失败时在文件里找相似度最高的行，回行号 + 原文 + 差在哪（缩进/行内空白/标点），让模型照抄就能过；只在失败路径跑、有行数上限（2 万行以上不扫）。
 9. **三层优先级从高到低：单块点击 > 会话级覆盖 > 全局偏好**。会话级覆盖是页头两个按钮写的（`session.ts`，内存、换会话即失效、**绝不写 settings.yaml**）；`prefs.ts` 才是落盘那一层。行组件靠覆盖的 `rev` 认出「页头动过」并作废自己的临时状态——否则「一键全展开」会被几小时前的一次手动折叠挡回去。
-10. **样张必须复用真渲染**：设置页两张「展示方式」卡里的预览走 `diffView.ts`（与工具行同一份代码），只有类名不同（`fcv-pv*`）。类名**不许复用**工具行那套：`styles.ts` 的三段版式是全局作用域，同名类会互相串味，`check-client.mjs` 有断言守着。
+10. **样张必须复用真渲染**：设置页两张「展示方式」卡里的预览走 `diffView.tsx`（与工具行同一份代码），只有类名不同（`styles.pv*`）。CSS Module 化之后类名是模块作用域的、天然不会串味，但**样张不传 hunk 类名**，所以样张里的 `±` 改动行保持官方原样（行内 `+ `/`- ` 前缀、不与上下文行号对齐）——`check-client.mjs` 有断言守着。
 
 ## 自检
 

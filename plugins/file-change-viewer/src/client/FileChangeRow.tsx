@@ -440,34 +440,13 @@ export function FileChangeRow(props: ToolViewProps): ReactNode {
    * `beforeLine` 把「上文首行的真实行号」带进去，上下文行由此带上行号（见 diffView 的
    * `context`）；`startOf(index)` 与高亮视图同源，两个视图的行号说的是同一件事。
    *
-   * 改动行的行号沿 `hunk.rows`（LCS 结果）走一遍推出来：ctx 行推进新侧行号、**del 行不推进**
-   * （删除行不占新文件的行号）、add 行推进并在**首个 add** 处记下新侧行号——这就是官方块内
-   * add 行的起始号（与高亮视图「删除行不占号」的口径互补）。只给 add 行画号：del 行拿旧文件
-   * 的行号既没有对应关系、又会和行首的 `- ` 前缀抢位（见 diffView 的 `diffNumRules`）。
-   * locate / startLine 都没有时（定位不到）改动行同样不带号，绝不编数。
+   * **改动行不编号**：官方块内的行号列里只放 `+` / `-` 符号（见 diffView 的 `diffSignRules`）——
+   * 官方的前缀符号在改动行里改成画在行号列上、内容照旧只含语义变更，这样「上下文行号 / 改动
+   * 符号」共用一列，上下文行与改动行的正文列位严格对齐（这就是这一版的验收口径）。
+   * locate / startLine 都拿不到时上下文行同样不带号，绝不编数。
    */
   const renderDiff = (index: number, fallback: FileDiff): ReactNode => {
     const context = contexts[index] ?? { before: [], after: [] };
-    const hunk = model.hunks[index];
-    const located = locatedHunks[index];
-    const locatedLine = located === null || located === undefined ? null : located.line;
-    // 改动行行号：**只给新增行编号**（删除行拿的是旧文件行号，与行首 `- ` 前缀抢位、也没有
-    // 对应关系，见 diffView 的 diffNumRules）。号取新文件视角：start 来自 patch 的
-    // `startLine`（片段在新文件里的确切行号）或 locate（newText 在文件里的行号），两个来源
-    // 说的都是「新侧首行」；删除行不占新文件行号，推号时直接跳过它。行号不可信（两个来源都
-    // 没有）时改动行不带号——绝不编数。
-    let newStart: number | undefined;
-    if (hunk !== undefined) {
-      const base = typeof locatedLine === 'number' && locatedLine > 0 ? locatedLine : hunk.raw.startLine;
-      if (typeof base === 'number' && base > 0) {
-        let newLine = base;
-        for (const row of hunk.rows) {
-          if (row.kind === 'del') continue;
-          if (row.kind === 'add' && newStart === undefined) newStart = newLine;
-          newLine += 1;
-        }
-      }
-    }
     return diffBody.lines({
       diff: statDiffs[index] ?? fallback,
       before: context.before,
@@ -475,8 +454,7 @@ export function FileChangeRow(props: ToolViewProps): ReactNode {
       labels: diffLabels(t),
       key: 'diff' + index,
       beforeLine: context.before.length > 0 ? startOf(index) : undefined,
-      newStart,
-      numClass: TINT_CLASS_PREFIX + cardKey + '-d' + index,
+      hunkClass: TINT_CLASS_PREFIX + cardKey + '-d' + index,
     });
   };
 

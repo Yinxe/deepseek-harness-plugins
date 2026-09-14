@@ -292,20 +292,14 @@
   padding: 0 14px;
   white-space: pre;
 }
-/* 改动行的行号列几何：**只有 add 行画号**（del 行让位不画，见 diffView 的 diffNumRules）。
-   content / counter-increment / 让位用的 padding-inline-start 都由那段动态规则喂，这里只定
-   行号本身的几何：绝对定位到行盒左缘的**行号列**里（4ch，与动态规则的
-   `padding-inline-start: calc(4ch + 6px)` 对齐）、右对齐、淡化、不可选中、不吃点击。
-   关键：官方的前缀符号 `+ `/`- ` 是行内 `::before`，而动态规则给整个行盒让出了这 4ch + 6px，
-   所以符号落在行号**之后**。旧实现把行号绝对定位到 `inset-inline-start: 0` 却没让位，
-   数字正好压在符号上（用户报的「+ - 与数字行号重叠」）。 */
-.card .diff[data-diff] > div > div {
-  position: relative;
-}
+/* 改动行的行号列几何：**改动行不编号，行号列里放 `+` / `-` 本身**。静态规则只定行号/符号的
+   几何——与上下文行的行号同宽（3ch）、同右对齐、同淡化；让位用的 `padding-inline-start`、
+   `content` 与 `::before{content:none}`（压掉官方行内的 `- `/`+ ` 前缀）都由 diffView 的
+   `diffSignRules` 动态喂。两者共用同一列，所以「上下文行号 / 改动符号 / 正文」严格对齐。 */
 .card .diff[data-diff] > div > div::after {
   position: absolute;
   inset-inline-start: 0;
-  width: 4ch;
+  width: 3ch;
   text-align: end;
   opacity: 0.7;
   user-select: none;

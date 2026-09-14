@@ -44,30 +44,16 @@ function countLines(text: string): number {
  * 区间给 del / add 行各叠一个 CSS 计数器，行号画在 `::after`（绝对定位到行盒左缘，与
  * 上下文行号同一列）。
  *
- * 行号口径（与高亮视图同源）：**只给新增行编号**，号取新文件视角的真实行号（删除行是旧文件
- * 的行，编号既没有对应关系、又会与行首的 `- ` 前缀抢位；上下文行的新行号由调用方按 locate
- * 结果推算，见 {@link DiffBody.lines}）。
- *
- * 为什么 `div:nth-of-type` 而不是 `nth-child`：官方块超长折叠时会在行间插
- * `FoldToggle`（一个 `<button>`），`nth-child` 连它一起数会错位；`:nth-of-type` 按
- * 元素类型计数，button 不占 div 的位。已隐藏的 path 行**仍占** div 索引（display 不
- * 影响选择器），所以区间统一 +1 偏移。计数器只认 `counter-increment`，对没有增量的
- * path 行天然跳过。
+ * 行号口径：**改动行不编号**——官方块内 `+` / `-` 占的就是上下文行号那一列，正文因此与上下文行
+ * 严格对齐；上下文行的新行号由调用方按 locate 结果推算（见 {@link DiffBody.lines}）。
  *
  * @param blockClass - 本 hunk 独有的类名（挂在 DiffBlock 根上）。
- * @param newStart - 新侧首行行号（1 起）。
  * @param delCount - 删除行数。
  * @param addCount - 新增行数。
- * @returns CSS 文本；行号不可知时为空串（行就不带号，绝不编数）。
+ * @returns CSS 文本；没有改动行时为空串。
  */
-export function diffNumRules(
-  blockClass: string,
-  newStart: number,
-  delCount: number,
-  addCount: number,
-): string {
+export function diffSignRules(blockClass: string, delCount: number, addCount: number): string {
   if (delCount <= 0 && addCount <= 0) return '';
-  const rules: string[] = [];
   const rows = '.' + blockClass + '[data-diff]>div:first-of-type';
   // path 行之后的 div 依次是 del × D、add × A；div:nth-of-type 从 1 数，path 占第 1 位。
   const delFrom = 2;
@@ -75,25 +61,27 @@ export function diffNumRules(
   const addFrom = delTo + 1;
   const addTo = delTo + addCount;
   /**
-   * 行号列宽：4ch 的行号位 + 6px 与官方 `+ `/`- ` 前缀之间的间隙。
+   * 行号列：**改动行里放的就是 `+` / `-` 本身**，与上下文行的行号共用同一列
+   * （`3ch` + `12px` 间隙，见 `.ctxLine::before`），于是「上下文行号 / 改动符号 / 正文」
+   * 三者的列位严格对齐——这正是本视图的验收口径。
    *
-   * **del 行不编号，但同样让出这一列**：官方的前缀符号是行内 `::before`，不给 del 行留位的话
-   * add 行的正文会被行号推右、与 del 行的正文错开，红绿两段就不像同一个 diff 了。让位之后
-   * 每行的结构是 `[行号] [+/-] 正文`，符号永远在行号**之后**，不会互相压住（旧实现把行号
-   * 绝对定位在行盒左缘，正好盖在 `+ `/`- ` 上）。
+   * 官方的前缀符号是行内 `::before`（`content: '- '`），会把正文再推右两个字符、破掉对齐，
+   * 所以这里把它压掉（`content: none`），改在自己的 `::after` 里画符号；正文只由
+   * `padding-inline-start` 让出那一列。
    */
-  const pad = 'padding-inline-start:calc(4ch + 6px)';
-  // 计数器挂在 body（del/add 行都是它的子元素）上，起点 = 新侧首行 - 1。
-  rules.push(rows + '{counter-reset:dshp-fcv-new ' + (newStart - 1) + '}');
+  const col = 'padding-inline-start:calc(3ch + 12px)';
+  const rules: string[] = [];
   if (delCount > 0) {
-    rules.push(rows + '>div:nth-of-type(n+' + delFrom + '):nth-of-type(-n+' + delTo + '){' + pad + '}');
+    const delRange = rows + '>div:nth-of-type(n+' + delFrom + '):nth-of-type(-n+' + delTo + ')';
+    rules.push(delRange + '{' + col + '}');
+    rules.push(delRange + '::before{content:none}');
+    rules.push(delRange + "::after{content:'-';color:var(--dsw-alias-state-error-primary)}");
   }
   if (addCount > 0) {
     const addRange = rows + '>div:nth-of-type(n+' + addFrom + '):nth-of-type(-n+' + addTo + ')';
-    rules.push(addRange + '{' + pad + ';counter-increment:dshp-fcv-new}');
-    rules.push(
-      addRange + '::after{content:counter(dshp-fcv-new);color:var(--dsw-alias-state-success-primary)}',
-    );
+    rules.push(addRange + '{' + col + '}');
+    rules.push(addRange + '::before{content:none}');
+    rules.push(addRange + "::after{content:'+';color:var(--dsw-alias-state-success-primary)}");
   }
   return rules.join('\n');
 }
@@ -286,15 +274,12 @@ export interface DiffBody {
     /** 上文首行在文件里的真实行号（1 起）；有上文时给上下文行编号用，下文行号由它推出。 */
     beforeLine?: number | undefined;
     /**
-     * 新增行的起始行号（新文件视角，1 起）。
-     *
-     * 有值时给官方块内的 add 行叠行号（见 {@link diffNumRules}）；缺省时改动行不带号。
-     * 删除行**不带号**（旧文件的行号，与行首 `- ` 前缀没有对应关系），但它同样让出
-     * 行号列，好让红绿两段的正文对齐。
+     * 本 hunk 独有的类名。官方 `DiffBlock` 的 `+` / `-` 前缀与本插件给上下文行加的行号要落在
+     * **同一列**，而官方行没有编号机制，只能靠一段以本类名限定的动态规则（见
+     * {@link diffSignRules}）把行内前缀压掉、改画在行号列上；缺省时改动行保持官方原样（只有
+     * 行内前缀、不与上下文对齐）——设置页的样张就是这种情况。
      */
-    newStart?: number | undefined;
-    /** 本 hunk 独有的类名（行号规则挂在它上），与高亮视图的 codeClass 同源。 */
-    numClass?: string | undefined;
+    hunkClass?: string | undefined;
   }) => ReactNode;
 }
 
@@ -366,26 +351,21 @@ export function createDiffBody(cn: DiffBodyClasses): DiffBody {
         typeof args.beforeLine === 'number' && args.beforeLine > 0
           ? args.beforeLine + args.before.length + countLines(args.diff.newText)
           : undefined;
-      // 改动行行号：只给 add 行编号（新文件视角），删除行让位不编号。素材齐全时生成规则，
-      // 随 <style> 注入（行号画在 add 行的 ::after，列位在官方 `+ ` 前缀之前）。
-      const numCss =
-        typeof args.newStart === 'number' && args.newStart > 0 && args.numClass !== undefined
-          ? diffNumRules(
-              args.numClass,
-              args.newStart,
-              countLines(args.diff.oldText ?? ''),
-              countLines(args.diff.newText),
-            )
-          : '';
+      // 改动行的行号列：把官方行内的 `+ `/`- ` 压掉、改成画在行号列上，正文只让出那一列——
+      // 于是改动行的正文与上下文行的正文对齐。没有 hunkClass（设置页样张）时保持官方原样。
+      const signCss =
+        args.hunkClass === undefined
+          ? ''
+          : diffSignRules(args.hunkClass, countLines(args.diff.oldText ?? ''), countLines(args.diff.newText));
       return (
         <div className={cn.diffWrap} key={args.key}>
-          {numCss !== '' ? <style key="num">{numCss}</style> : null}
+          {signCss !== '' ? <style key="sign">{signCss}</style> : null}
           {context(args.before, 'before', args.beforeLine)}
           <DiffBlock
             diffs={[args.diff]}
             labels={args.labels}
             maxLines={args.maxLines ?? DIFF_MAX_LINES}
-            className={cn.diff + ' ' + (args.numClass ?? '')}
+            className={cn.diff + ' ' + (args.hunkClass ?? '')}
           />
           {context(args.after, 'after', afterLine)}
         </div>

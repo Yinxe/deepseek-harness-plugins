@@ -1661,36 +1661,35 @@ ok('普通改动不会多出一个箭头', !treeText(patchSettled).includes('→
       ctxBoxes[1]?.props?.style?.counterReset === 'dshp-fcv-num 5',
     );
   }
-  // 改动行的行号：官方 DiffBlock 的行没有编号机制，由 diffNumRules 生成动态 CSS。口径是
-  // **只给 add 行编号**（del 行是旧文件的行号、且会与行首 `- ` 前缀抢位），号取新文件视角。
-  // 这个场景里 oldText/newText 都没有 ctx 行、locate 行号 5 → newStart = 5，counter-reset 拨到 4；
-  // del 1 行、add 1 行各占一个 nth-of-type 区间，两个区间都要让出行号列（del 只让位不画号）。
+  // 改动行的行号列：**改动行不编号，列里放 `+` / `-` 本身**，与上下文行的行号共用同一列
+  // （3ch + 12px 间隙），于是「上下文行号 / 改动符号 / 正文」三列严格对齐。官方行内的
+  // `- `/`+ ` 前缀必须被压掉，否则正文会被多推两个字符、对齐就破了。这个场景里
+  // del 1 行、add 1 行，各占一个 nth-of-type 区间。
   {
-    const numStyle = findAllByType(ctxCard, 'style').find((node) => textOf(node).includes('dshp-fcv-new'));
-    const numCss = numStyle === undefined ? '' : textOf(numStyle);
-    const PAD = 'padding-inline-start:calc(4ch + 6px)';
+    const signStyle = findAllByType(ctxCard, 'style').find((node) => textOf(node).includes("content:'-'"));
+    const signCss = signStyle === undefined ? '' : textOf(signStyle);
+    const COL = 'padding-inline-start:calc(3ch + 12px)';
     const delRange = 'div:nth-of-type(n+2):nth-of-type(-n+2)';
     const addRange = 'div:nth-of-type(n+3):nth-of-type(-n+3)';
     ok(
-      '± 差异视图：新增行行号规则已注入（上限计数器拨到 4，即首行是 5）',
-      numCss.includes('counter-reset:dshp-fcv-new 4'),
+      '± 差异视图：改动行不编号（动态规则里没有任何 CSS 计数器）',
+      signCss !== '' && !signCss.includes('dshp-fcv-old') && !signCss.includes('dshp-fcv-new'),
     );
     ok(
-      '± 差异视图：del 行不编号（没有旧侧计数器），但仍让出行号列好让红绿正文对齐',
-      !numCss.includes('dshp-fcv-old') && numCss.includes(delRange + '{' + PAD + '}'),
+      '± 差异视图：del / add 行都让出行号列（与上下文行号同宽 3ch + 12px）',
+      signCss.includes(delRange + '{' + COL + '}') && signCss.includes(addRange + '{' + COL + '}'),
     );
     ok(
-      '± 差异视图：add 行让位 + 计数 + 画号（nth-of-type 区间：body 第 3 个 div）',
-      numCss.includes(addRange + '{' + PAD + ';counter-increment:dshp-fcv-new}') &&
-        numCss.includes(addRange + '::after{content:counter(dshp-fcv-new)'),
+      '± 差异视图：压掉官方行内的 `- `/`+ ` 前缀（两处 ::before{content:none}）',
+      (signCss.match(/::before\{content:none\}/g) ?? []).length === 2,
     );
     ok(
-      '± 差异视图：行号只出现在 add 行的 ::after 上，且与 `+` 前缀同色',
-      (numCss.match(/::after\{content:counter\(/g) ?? []).length === 1 &&
-        numCss.includes('color:var(--dsw-alias-state-success-primary)'),
+      '± 差异视图：行号列里画的是 +/- 本身（del 红、add 绿）',
+      signCss.includes("::after{content:'-';color:var(--dsw-alias-state-error-primary)}") &&
+        signCss.includes("::after{content:'+';color:var(--dsw-alias-state-success-primary)}"),
     );
     ok(
-      '± 差异视图：行号挂在 DiffBlock 根的动态类名上（与高亮视图的 codeClass 同源）',
+      '± 差异视图：规则挂在 DiffBlock 根的动态类名上（与高亮视图的 codeClass 同源）',
       findByType(ctxCard, PStub.DiffBlock).props.className.includes('dshp-fcv-lines-c-ctx-d0'),
     );
   }
