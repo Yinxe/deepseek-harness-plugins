@@ -252,12 +252,18 @@ importers:
 
   plugins/mcp-manager:
     devDependencies:
+      '@deepseek-ai/dsh-client-ui-primitives':
+        specifier: 0.1.5-rc.1
+        version: 0.1.5-rc.1(@deepseek-ai/cordis@4.0.2)
       '@deepseek-ai/schemastery':
         specifier: ^3.18.2
         version: 3.18.2
       '@types/react':
-        specifier: ^19.3.0
-        version: 19.3.0
+        specifier: ~18.3.1
+        version: 18.3.31
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(tsx@4.23.13)(typescript@7.0.2)(yaml@2.9.0)
@@ -266,81 +272,109 @@ importers:
         version: 2.9.0
 
   plugins/mcwiki-search:
-    dependencies:
-      '@deepseek-ai/dsh-client-ui-primitives':
-        specifier: '>=0.1.5-rc.1'
-        version: 0.1.5-rc.2(@deepseek-ai/cordis@4.0.2)
     devDependencies:
+      '@deepseek-ai/dsh-client-ui-primitives':
+        specifier: 0.1.5-rc.1
+        version: 0.1.5-rc.1(@deepseek-ai/cordis@4.0.2)
       '@deepseek-ai/schemastery':
         specifier: ^3.18.2
         version: 3.18.2
       '@types/react':
-        specifier: ^19.3.0
-        version: 19.3.0
+        specifier: ~18.3.1
+        version: 18.3.31
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(tsx@4.23.13)(typescript@7.0.2)(yaml@2.9.0)
 
   plugins/search-provider:
     devDependencies:
+      '@deepseek-ai/dsh-client-ui-primitives':
+        specifier: 0.1.5-rc.1
+        version: 0.1.5-rc.1(@deepseek-ai/cordis@4.0.2)
       '@deepseek-ai/schemastery':
         specifier: ^3.18.2
         version: 3.18.2
       '@types/react':
-        specifier: ^19.3.0
-        version: 19.3.0
+        specifier: ~18.3.1
+        version: 18.3.31
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(tsx@4.23.13)(typescript@7.0.2)(yaml@2.9.0)
 
   plugins/skill-manager:
     devDependencies:
+      '@deepseek-ai/dsh-client-ui-primitives':
+        specifier: 0.1.5-rc.1
+        version: 0.1.5-rc.1(@deepseek-ai/cordis@4.0.2)
       '@deepseek-ai/schemastery':
         specifier: ^3.18.2
         version: 3.18.2
       '@types/react':
-        specifier: ^19.3.0
-        version: 19.3.0
+        specifier: ~18.3.1
+        version: 18.3.31
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(tsx@4.23.13)(typescript@7.0.2)(yaml@2.9.0)
 
   plugins/token-meter:
-    dependencies:
-      '@deepseek-ai/dsh-client-ui-primitives':
-        specifier: ^0.1.5-rc.1
-        version: 0.1.5-rc.2(@deepseek-ai/cordis@4.0.2)
     devDependencies:
+      '@deepseek-ai/dsh-client-ui-primitives':
+        specifier: 0.1.5-rc.1
+        version: 0.1.5-rc.1(@deepseek-ai/cordis@4.0.2)
       '@deepseek-ai/schemastery':
         specifier: ^3.18.2
         version: 3.18.2
       '@types/react':
-        specifier: ^19.3.0
-        version: 19.3.0
+        specifier: ~18.3.1
+        version: 18.3.31
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(tsx@4.23.13)(typescript@7.0.2)(yaml@2.9.0)
 
   plugins/vision-bridge:
     devDependencies:
+      '@deepseek-ai/dsh-client-ui-primitives':
+        specifier: 0.1.5-rc.1
+        version: 0.1.5-rc.1(@deepseek-ai/cordis@4.0.2)
       '@deepseek-ai/schemastery':
         specifier: ^3.18.2
         version: 3.18.2
       '@types/react':
-        specifier: ^19.3.0
-        version: 19.3.0
+        specifier: ~18.3.1
+        version: 18.3.31
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(tsx@4.23.13)(typescript@7.0.2)(yaml@2.9.0)
 
   plugins/web-style:
     devDependencies:
+      '@deepseek-ai/dsh-client-ui-primitives':
+        specifier: 0.1.5-rc.1
+        version: 0.1.5-rc.1(@deepseek-ai/cordis@4.0.2)
       '@deepseek-ai/schemastery':
         specifier: ^3.18.2
         version: 3.18.2
       '@types/react':
-        specifier: ^19.3.0
-        version: 19.3.0
+        specifier: ~18.3.1
+        version: 18.3.31
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(tsx@4.23.13)(typescript@7.0.2)(yaml@2.9.0)
@@ -364,11 +398,6 @@ packages:
 
   '@deepseek-ai/dsh-client-ui-primitives@0.1.5-rc.1':
     resolution: {integrity: sha512-C6mJOcwg41gD5Yy57QGjZhX/8p8U1kSR4px7tOfLmLIKKXyeHbDytJEKjPKHfh8TkOvpqQ4wA02gQsVe06ithQ==}
-    peerDependencies:
-      '@deepseek-ai/cordis': ^4.0.2
-
-  '@deepseek-ai/dsh-client-ui-primitives@0.1.5-rc.2':
-    resolution: {integrity: sha512-APWho69VlEmbLGqzBLiybTtjun93tEbxMMJlm+Q129Cx7ZGJak3DNfQtW3OPzBCf3Gzs2PGEz8fKbunTpea2jQ==}
     peerDependencies:
       '@deepseek-ai/cordis': ^4.0.2
 
@@ -982,9 +1011,6 @@ packages:
   '@types/react@18.3.31':
     resolution: {integrity: sha512-vfEqpXTvwT91yhmwdfouStN2hSKwTvyRs8qpLfADyrq/kxDw0hZM7Wk9Ug1FELj8hIby+S/+kQCSRFF32nv2Qw==}
 
-  '@types/react@19.3.0':
-    resolution: {integrity: sha512-N0rFCuH9YoxG9/m61l9MfpJKfmLOVU0em7ipIz6TRgSSkvReLB9vL85GB+yr8Bs5leqpvg96JSwF4ZS1s4viQg==}
-
   '@typescript/typescript-aix-ppc64@7.0.2':
     resolution: {integrity: sha512-MTKKkWB7p/0E9xi1d1tHtZ5PiLkGEMIq88pK2CubZjOsLtYTLqhgIgi6zepFa+9GHZ6h05NMCkQxGKiPXMxXtQ==}
     engines: {node: '>=16.20.0'}
@@ -1446,10 +1472,6 @@ snapshots:
     dependencies:
       '@deepseek-ai/cordis': 4.0.2
 
-  '@deepseek-ai/dsh-client-ui-primitives@0.1.5-rc.2(@deepseek-ai/cordis@4.0.2)':
-    dependencies:
-      '@deepseek-ai/cordis': 4.0.2
-
   '@deepseek-ai/schemastery@3.18.2':
     dependencies:
       '@deepseek-ai/cosmokit': 1.8.3
@@ -1773,10 +1795,6 @@ snapshots:
   '@types/react@18.3.31':
     dependencies:
       '@types/prop-types': 15.7.15
-      csstype: 3.2.3
-
-  '@types/react@19.3.0':
-    dependencies:
       csstype: 3.2.3
 
   '@typescript/typescript-aix-ppc64@7.0.2':
