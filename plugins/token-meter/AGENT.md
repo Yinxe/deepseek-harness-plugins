@@ -15,7 +15,7 @@
 ## 结构与职责
 
 - `src/host/`：`quota.ts`（额度路由）/ `providers/*`（适配器 + `view.ts` 声明式契约 + `index.ts` 注册与别名）/ `errors.ts`（ProviderError 分类学）/ `secrets.ts`（凭据引用解析）/ `stats/*`（引擎/指纹缓存/合并/在线口径/路由）。
-- `src/client/`（含 JSX 的一律 `.tsx`，纯逻辑保持 `.ts`；`widget-bridge.ts` = 宿主 id 编解码/标题的**纯函数**，Node 可直跑）：`index.tsx`（**只导出 `inject` / `apply`**，loader 壳由 `shared/tsup.preset.ts` 拼出）/ `CenterView.tsx`（tab 内左侧菜单切 额度/用量/在线/设置）/ `TokenMeterSection.tsx`（设置节 + 中心区「用量统计」+ 小组件浮层，**模块级装配**：`const widgets = createWidgetSystem()` → `createQuotaSection(widgets)`）/ `QuotaSection.tsx` / `StatsSection.tsx` / `OnlineSection.tsx` / `SharePanel.tsx` + `ShareShell.tsx`（分享卡导出）/ `ErrorBox.tsx` / `providers/{kit,sections,registry,ui/*}`（分层渲染）/ `components.tsx` `glyphs.tsx` `icons.tsx`（自绘小构件与图标）/ `styles.module.css`。
+- `src/client/`（含 JSX 的一律 `.tsx`，纯逻辑保持 `.ts`；`widget-bridge.ts` = 宿主 id 编解码 / 标题 / **逐族尺寸表**的纯函数，Node 可直跑；`MenuPanel.tsx` = 活动栏图标点开的「小组件菜单」）：`index.tsx`（**只导出 `inject` / `apply`**，loader 壳由 `shared/tsup.preset.ts` 拼出）/ `CenterView.tsx`（tab 内左侧菜单切 额度/用量/在线/设置）/ `TokenMeterSection.tsx`（设置节 + 中心区「用量统计」+ 小组件浮层，**模块级装配**：`const widgets = createWidgetSystem()` → `createQuotaSection(widgets)`）/ `QuotaSection.tsx` / `StatsSection.tsx` / `OnlineSection.tsx` / `SharePanel.tsx` + `ShareShell.tsx`（分享卡导出）/ `ErrorBox.tsx` / `providers/{kit,sections,registry,ui/*}`（分层渲染）/ `components.tsx` `glyphs.tsx` `icons.tsx`（自绘小构件与图标）/ `styles.module.css`。
 - **哪些还保留工厂**：`createWidgetSystem()` / `createQuotaSection(widgets)` / `createCenterView(sections, icons)` / `createErrorBox(deps)` / `createProviderKit(deps)` / `createProviderRenderers(K)` —— 它们返回的是**多键命名空间或服务对象**（`widgets.WidgetFloat`、`quota.quotaUI`、`K.RollingBar`），或者**确有注入依赖**（`widgets` / `deps` / `sections`）；`React` / `P` / `ReactDOM` 这三个注入参数已全部改为模块顶层 import。零件本身（`Badge` / `Row` / `Select` / `Switch` / `Glyph` / 五个导航图标 / kit 的 12 个成员 / `StatsSettingsPage` …）都是普通具名导出的函数组件。
 - 历史决策：额度/用量/在线曾各占一个右侧栏 tab，已收敛为中心区单 tab——会话级 tab 会盖过产品自带的对话/轨迹。
 
@@ -28,8 +28,9 @@
 5. **快照前过 `sanitizeView()`**：区块数/条目数/字符串长度夹紧，与外部输入同等对待。
 6. **同类 provider 合并 + 别名**：`deepseek-api`/`deepseek-web` 并入 `deepseek`（按凭据形态选路），旧 type 只留 `registerAlias` 读路径别名，不落库、不改写用户文件。
 7. **在线时长口径分级**（精确/估算/下界）必须随数字标注（README「统计口径」节是权威描述）；界面时间按北京时间，见 [docs/timezone.md](../../docs/timezone.md)。
-8. **小组件的双后端必须都留着**：装了 `@dshp/widget-kit` 时窗口交给框架（`ctx.widgets.register`，`trayIcon: false` 的自由卡片），没装时退回自带浮层（`widgets.tsx` 的 `WidgetFloat`）。两条都是硬要求：① 宿主是**可选依赖**，只能 `ctx.inject(['widgets'], …)`，写进顶层 `inject` 会让整个插件在没装框架时不激活；② 卡片不占活动栏，注册必须**常驻**（`syncFloatWidgets()` 在启动与供应商增删时对齐），否则刷新后开着的卡片长不回来。宿主契约类型来自 `@dshp/widget-kit/spec` 的 **workspace devDependency**（纯类型、`import type`，产物里零 import），不许手写镜像。
-9. **密钥只存引用**（`$NAME`）或脱敏展示，经 credentials/secrets 解析，不进 settings.yaml。
+8. **活动栏上只能有一个图标**：本插件的菜单面板（`MenuPanel.tsx` → `token-meter:menu`，`presentation: 'popover'`，点开逐张开合下面那些自由卡片）。其它小组件一律 `trayIcon: false` —— 这是「一个所有者 = 一个图标 + 多张自由卡片」的落地写法，也是本插件在活动栏占的空间上限。卡片尺寸**逐族**给（`widget-bridge.ts` 的 `FLOAT_SIZES`：热力图宽而扁、模型分布留高、今日卡小），不许回退到一套全局尺寸。
+9. **小组件的双后端必须都留着**：装了 `@dshp/widget-kit` 时窗口交给框架（`ctx.widgets.register`，`trayIcon: false` 的自由卡片），没装时退回自带浮层（`widgets.tsx` 的 `WidgetFloat`）。两条都是硬要求：① 宿主是**可选依赖**，只能 `ctx.inject(['widgets'], …)`，写进顶层 `inject` 会让整个插件在没装框架时不激活；② 卡片不占活动栏，注册必须**常驻**（`syncFloatWidgets()` 在启动与供应商增删时对齐），否则刷新后开着的卡片长不回来。宿主契约类型来自 `@dshp/widget-kit/spec` 的 **workspace devDependency**（纯类型、`import type`，产物里零 import），不许手写镜像。
+10. **密钥只存引用**（`$NAME`）或脱敏展示，经 credentials/secrets 解析，不进 settings.yaml。
 
 ## 自检
 

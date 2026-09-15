@@ -36,6 +36,7 @@ import {
   QUOTA_PREFIX,
   STATS_PREFIX,
   encodeFloatId,
+  floatSize,
   floatTitle,
   isFloatId,
 } from './widget-bridge.js';
@@ -96,6 +97,8 @@ const legacyOf = new Map<string, string>();
 const disposersOf = new Map<string, () => void>();
 /** legacy id → 更具体的标题（供应商名等）；`title` 每次渲染求值，改名不需要重新注册。 */
 const hints = new Map<string, string>();
+/** 宿主原生描述符（托盘菜单那类，不属于任何 legacy id）的注销函数。 */
+const hostDisposers: Array<() => void> = [];
 
 /**
  * 卡片图标（宿主在托盘溢出菜单 / 组件箱里会画它）。
@@ -146,9 +149,10 @@ function ensureRegistered(legacy: string, hint?: string | undefined): void {
         render: () =>
           contentRenderer === null ? null : <div className={styles.wkFrame}>{contentRenderer(legacy)}</div>,
       },
+      // 尺寸按内容形状逐族给（见 widget-bridge.ts 的 FLOAT_SIZES 表）：
+      // 热力图宽而扁、模型分布要留高、今日卡天生小 —— 一套尺寸打天下就是「有的太高、有的太矮」
       card: {
-        defaultSize: { w: FLOAT_W, h: FLOAT_H },
-        minSize: { w: 240, h: 140 },
+        ...floatSize(legacy),
         resizable: true,
         minimizable: true,
         closable: true,
@@ -330,6 +334,19 @@ export interface WidgetSystem {
   attach(candidate: unknown): boolean;
   /** 摘下宿主服务：注销全部注册并回到自带浮层。 */
   detach(): void;
+  /**
+   * 注册一个**宿主原生**描述符（不属于任何 legacy 小组件：托盘菜单 / 常驻面板那类）。
+   *
+   * @param descriptor - 完整描述符（`popover` / `tray` 等只有这里能写）。
+   * @returns 注册成功为 `true`；没挂宿主或描述符被框架拒掉为 `false`。
+   */
+  registerHost(descriptor: WidgetDescriptor): boolean;
+  /**
+   * 当前在册的小组件（菜单面板用它列条目；宿主模式下才有内容）。
+   *
+   * @returns legacy id + 标题，按注册顺序。
+   */
+  listFloats(): Array<{ id: string; title: string }>;
 }
 
 export function createWidgetSystem(): WidgetSystem {
@@ -786,6 +803,14 @@ export function createWidgetSystem(): WidgetSystem {
     disposersOf.clear();
     legacyOf.clear();
     hints.clear();
+    while (hostDisposers.length > 0) {
+      const dispose = hostDisposers.pop();
+      try {
+        dispose?.();
+      } catch {
+        /* ignore */
+      }
+    }
     service = null;
     emit(false);
   }
@@ -811,5 +836,20 @@ export function createWidgetSystem(): WidgetSystem {
     syncRegistered,
     attach,
     detach,
+    registerHost: (descriptor) => {
+      if (service === null) return false;
+      try {
+        hostDisposers.push(service.register(descriptor));
+        return true;
+      } catch (error) {
+        console.error('[dshp-token-meter] 注册宿主小组件失败：' + descriptor.id, error);
+        return false;
+      }
+    },
+    listFloats: () =>
+      Array.from(disposersOf.keys()).map((legacy) => ({
+        id: legacy,
+        title: floatTitle(legacy, hints.get(legacy)),
+      })),
   };
 }

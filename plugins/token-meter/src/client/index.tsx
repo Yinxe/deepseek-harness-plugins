@@ -32,6 +32,7 @@
 import { createCenterView } from './CenterView.js';
 import { OnlineEmbed, OnlineView } from './OnlineSection.js';
 import { QuotaIcon, OnlineIcon, SettingsIcon, ShareIcon, UsageIcon } from './icons.js';
+import { createMenuWidget } from './MenuPanel.js';
 import { SharePanel } from './StatsSection.js';
 import {
   QuotaView,
@@ -105,6 +106,11 @@ export function apply(ctx: ClientContext): void {
         return;
       }
       widgetsApi.setContentRenderer((id) => renderFloatContent(id, false));
+      // 本插件在活动栏上的**唯一**图标：点开是「小组件菜单」（里面逐个开合上面那些
+      // trayIcon: false 的自由卡片）。没有它，想开一张图得先钻进中心区那个 tab。
+      if (!widgetsApi.registerHost(createMenuWidget(widgetsApi))) {
+        console.warn('[dshp-token-meter] 注册托盘菜单失败，小组件只能从中心区工具条弹出。');
+      }
       scope.effect(
         () => () => {
           widgetsApi.detach();

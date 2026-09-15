@@ -12,12 +12,16 @@
  */
 import assert from 'node:assert/strict';
 import {
+  FLOAT_SIZES,
   STATS_KINDS,
   STATS_TITLES,
+  WK_CARD_FLOOR,
   WK_ID_PATTERN,
   WK_OWNER,
   decodeFloatId,
   encodeFloatId,
+  floatFamily,
+  floatSize,
   floatTitle,
   hash32,
   isFloatId,
@@ -127,6 +131,48 @@ check('7. slug 永远是宿主认的形状', () => {
     assert.equal(slug.endsWith('-'), false, `${v} → ${slug} 以 - 结尾`);
     assert.ok(slug.length <= 20, `${v} → ${slug} 过长`);
   }
+});
+
+check('8. 尺寸表：逐族各有一套，且不越框架地板', () => {
+  const families = Object.keys(FLOAT_SIZES);
+  assert.equal(families.length, 7, '尺寸族数量变了（新增小组件族时这里要一起加）');
+
+  // 映射：legacy id → 族
+  assert.equal(floatFamily('peak'), 'peak');
+  assert.equal(floatFamily('quota:deepseek'), 'quota');
+  for (const kind of STATS_KINDS) assert.equal(floatFamily('stats:' + kind), kind);
+  assert.equal(floatFamily('whatever'), 'cards', '未知 id 要有保底族（不能没尺寸）');
+
+  // 不变量：最小尺寸不得低于框架地板、初始不得小于最小
+  for (const [family, size] of Object.entries(FLOAT_SIZES)) {
+    assert.ok(
+      size.minSize.w >= WK_CARD_FLOOR.w && size.minSize.h >= WK_CARD_FLOOR.h,
+      `${family} 的最小尺寸 ${size.minSize.w}×${size.minSize.h} 低于框架地板，注册会被拒`,
+    );
+    assert.ok(
+      size.defaultSize.w >= size.minSize.w && size.defaultSize.h >= size.minSize.h,
+      `${family} 的初始尺寸小于最小尺寸`,
+    );
+    for (const value of [size.defaultSize.w, size.defaultSize.h, size.minSize.w, size.minSize.h]) {
+      assert.ok(Number.isInteger(value) && value > 0, `${family} 的尺寸必须是正整数`);
+    }
+  }
+
+  // 「各自主适配」而不是一套尺寸打天下：宽高都要有足够多的不同取值
+  const widths = new Set(Object.values(FLOAT_SIZES).map((size) => size.defaultSize.w));
+  const heights = new Set(Object.values(FLOAT_SIZES).map((size) => size.defaultSize.h));
+  assert.ok(widths.size >= 4, `初始宽度只有 ${String(widths.size)} 种，应该是逐族适配的`);
+  assert.ok(heights.size >= 4, `初始高度只有 ${String(heights.size)} 种，应该是逐族适配的`);
+
+  // 内容形状要真的体现在数字上：热力图宽而扁，模型分布要留高，今日卡最小
+  assert.ok(FLOAT_SIZES.heat.defaultSize.h < FLOAT_SIZES.trend.defaultSize.h, '热力图该比趋势矮');
+  assert.ok(FLOAT_SIZES.heat.defaultSize.w > FLOAT_SIZES.trend.defaultSize.w, '热力图该比趋势宽');
+  assert.ok(FLOAT_SIZES.donut.defaultSize.h > FLOAT_SIZES.trend.defaultSize.h, '模型分布该比趋势高');
+  assert.ok(FLOAT_SIZES.today.defaultSize.w < FLOAT_SIZES.quota.defaultSize.w, '今日卡该比供应商卡窄');
+
+  // floatSize 每次返回同一个对象（调用方不该改它，也不该每次新建）
+  assert.equal(floatSize('stats:heat'), floatSize('stats:heat'));
+  assert.equal(floatSize('stats:heat'), FLOAT_SIZES.heat);
 });
 
 console.log(`\n宿主桥自检通过：${String(groups)} 组`);

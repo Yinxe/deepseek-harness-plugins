@@ -15,6 +15,7 @@
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { encodeFloatId } from '../src/client/widget-bridge.ts';
 
 /* ────────────────────────────── 浏览器环境替身 ────────────────────────────── */
 
@@ -93,6 +94,15 @@ const ReactStub = new Proxy(
     createContext: () => ({ Provider: 'Provider', Consumer: 'Consumer' }),
     forwardRef: (render) => render,
     memo: (component) => component,
+    // 组件树是**真的被调用**的（菜单面板），所以 hook 要给出合理初值：
+    // useReducer / useState 返回初值、useMemo / useCallback 直接求值、useEffect 不执行。
+    useReducer: (reducer, initial) => [typeof initial === 'function' ? initial(reducer) : initial, () => {}],
+    useState: (initial) => [typeof initial === 'function' ? initial() : initial, () => {}],
+    useRef: (initial) => ({ current: initial }),
+    useMemo: (factory) => factory(),
+    useCallback: (callback) => callback,
+    useEffect: () => {},
+    useLayoutEffect: () => {},
   },
   {
     get(target, prop) {
@@ -306,24 +316,72 @@ for (const id of quotaIds) {
 }
 
 const byOwner = service.list().filter((row) => row.owner === 'token-meter');
-assert.equal(byOwner.length, registeredIds.length, '所有卡片都必须归到 token-meter 名下');
-assert.ok(
-  byOwner.every((row) => row.presentation === 'card'),
-  'token-meter 只注册卡片',
+assert.equal(byOwner.length, registeredIds.length, '所有小组件都必须归到 token-meter 名下');
+// 形态：除菜单面板外全是卡片（菜单是活动栏上那个点击展开的小面板）
+const popovers = byOwner.filter((row) => row.presentation === 'popover').map((row) => row.id);
+assert.deepEqual(popovers, ['token-meter:menu'], `popover 只该有菜单面板，实际：${popovers.join(', ')}`);
+assert.equal(
+  byOwner.filter((row) => row.presentation === 'card').length,
+  expected.length + quotaIds.length,
+  '卡片数量应等于「静态小组件 + 供应商卡片」',
 );
 
-// 描述符本身：全部是「不占活动栏的自由卡片」+ 有内容渲染函数
+// 描述符本身：自由卡片全是「不占活动栏 + 有内容 + 有尺寸」，且标题可求值（供应商会改名）
 assert.equal(descriptors.length, registeredIds.length, '描述符数量必须与注册表一致');
-for (const descriptor of descriptors) {
-  assert.equal(descriptor.presentation, 'card', `${descriptor.id} 必须是 card`);
+const cards = descriptors.filter((descriptor) => descriptor.presentation === 'card');
+assert.equal(cards.length, expected.length + quotaIds.length, '卡片描述符数量不对');
+for (const descriptor of cards) {
   assert.equal(descriptor.trayIcon, false, `${descriptor.id} 必须不占活动栏图标`);
   assert.equal(typeof descriptor.content?.render, 'function', `${descriptor.id} 必须有内容渲染函数`);
   assert.ok(descriptor.card?.defaultSize?.w >= 240, `${descriptor.id} 默认宽度不得小于框架地板`);
   assert.equal(typeof descriptor.title, 'function', `${descriptor.id} 的标题应该是可求值的（供应商改名）`);
 }
 
+// 活动栏：本插件只能有**一个**图标（一个所有者 = 一个图标 + 多张自由卡片）
+const trayOwners = descriptors.filter((descriptor) => descriptor.trayIcon !== false);
+assert.equal(
+  trayOwners.length,
+  1,
+  `必须恰好一个带活动栏图标的描述符，实际 ${String(trayOwners.length)} 个：${trayOwners
+    .map((descriptor) => descriptor.id)
+    .join(', ')}`,
+);
+const menu = trayOwners[0];
+assert.equal(menu.id, 'token-meter:menu', '活动栏上的必须是本插件的菜单面板');
+assert.equal(menu.presentation, 'popover', '菜单是点击展开的小面板，不是卡片');
+assert.equal(menu.popover?.trigger, 'click', '菜单应该点开（悬停展开会误触）');
+assert.equal(typeof menu.content?.render, 'function', '菜单必须有内容渲染函数');
+assert.ok(menu.icon !== undefined && menu.icon !== null, '托盘图标必须有图形（否则活动栏只剩空白）');
+
+// 尺寸：每张卡各自适配（热力图宽而扁、模型分布留高、今日卡小），不是一套尺寸打天下
+const sizeOf = (id) => descriptors.find((descriptor) => descriptor.id === id)?.card;
+const heat = sizeOf('token-meter:stats-heat');
+const donut = sizeOf('token-meter:stats-donut');
+const today = sizeOf('token-meter:stats-today');
+const trend = sizeOf('token-meter:stats-trend');
+assert.notEqual(heat.defaultSize.h, donut.defaultSize.h, '热力图与模型分布不该同高（一个扁一个高）');
+assert.ok(heat.defaultSize.h < trend.defaultSize.h, '热力图应该比趋势矮（周 × 日网格不需要高度）');
+assert.ok(heat.defaultSize.w > trend.defaultSize.w, '热力图应该比趋势宽（横向格子多）');
+assert.ok(today.defaultSize.w < heat.defaultSize.w, '今日卡应该比热力图窄（就一张卡）');
+for (const descriptor of cards) {
+  assert.ok(
+    descriptor.card.minSize.w >= 240 && descriptor.card.minSize.h >= 140,
+    `${descriptor.id} 的最小尺寸低于框架地板 240×140，注册会被拒`,
+  );
+  assert.ok(
+    descriptor.card.defaultSize.w >= descriptor.card.minSize.w &&
+      descriptor.card.defaultSize.h >= descriptor.card.minSize.h,
+    `${descriptor.id} 的初始尺寸小于最小尺寸`,
+  );
+}
+
 // 标题真的有内容（不是空串、不是 undefined）
-const titles = new Map(descriptors.map((descriptor) => [descriptor.id, descriptor.title()]));
+const titles = new Map(
+  descriptors.map((descriptor) => [
+    descriptor.id,
+    typeof descriptor.title === 'function' ? descriptor.title() : descriptor.title,
+  ]),
+);
 assert.equal(titles.get('token-meter:peak'), '峰谷定价');
 assert.equal(titles.get('token-meter:stats-trend'), '用量趋势');
 const quotaTitle = titles.get(quotaIds.find((id) => id.includes('quota-my-vendor')));
@@ -337,6 +395,78 @@ for (const id of ['token-meter:peak', quotaIds[0]]) {
   service.close(id);
   assert.equal(service.isOpen(id), false, `${id} 关闭失败`);
 }
+
+// 菜单面板：真的把组件树跑一遍，并点它的按钮（菜单 → widgets 外观接口 → 框架）
+/** 递归求值函数组件（`{ type: Fn, props }` → `Fn(props)`），得到一个纯元素树。 */
+function renderTree(node) {
+  if (node === null || node === undefined || typeof node !== 'object') return node;
+  if (Array.isArray(node)) return node.map(renderTree);
+  if (typeof node.type === 'function') return renderTree(node.type(node.props));
+  const children = node.props?.children;
+  const rendered =
+    children === undefined
+      ? undefined
+      : Array.isArray(children)
+        ? children.map(renderTree)
+        : renderTree(children);
+  return { ...node, props: { ...node.props, children: rendered } };
+}
+const menuTree = renderTree(menu.content.render({ frame: 'popover' }));
+/** 在元素树里找所有带 `data-open` 的节点（= 面板里的每一行）。 */
+function findRows(node, out = []) {
+  if (node === null || typeof node !== 'object') return out;
+  if (node.props !== undefined && node.props['data-open'] !== undefined) out.push(node);
+  const children = node.props?.children;
+  if (Array.isArray(children)) for (const child of children) findRows(child, out);
+  else if (children !== undefined) findRows(children, out);
+  return out;
+}
+/** 在元素树里找 props.children 恰好包含某段文字的节点（按钮文案）。 */
+function findByText(node, text) {
+  if (node === null || typeof node !== 'object') return null;
+  const children = node.props?.children;
+  if (children === text) return node;
+  const list = Array.isArray(children) ? children : children === undefined ? [] : [children];
+  for (const child of list) {
+    const hit = findByText(child, text);
+    if (hit !== null) return hit;
+  }
+  return null;
+}
+const rowsBefore = findRows(menuTree);
+assert.equal(
+  rowsBefore.length,
+  cards.length,
+  `菜单面板应该列出本插件的全部 ${String(cards.length)} 张自由卡片（菜单自己不是一行），实际 ${String(
+    rowsBefore.length,
+  )} 行`,
+);
+assert.ok(findByText(menuTree, '全部收起') !== null, '菜单面板必须有「全部收起」');
+
+// 点第一行的「打开」→ 框架里那张卡真的开了（菜单 → widgets.openWidget → ctx.widgets.open）
+const firstRow = rowsBefore[0];
+const openButton = findByText(firstRow, '打开');
+assert.ok(openButton !== null, '每一行都要有开合按钮');
+// 菜单行绑定的是**本插件内部的 legacy id**（`peak` / `stats:trend` / `quota:<vid>`），
+// 而框架认的是编码后的宿主 id —— 这里用同一个纯函数翻一次，顺便交叉验证编码没漂
+const targetLegacy = firstRow.props.children
+  .flat()
+  .find((child) => child !== null && typeof child === 'object' && typeof child.props?.title === 'string')
+  ?.props.title;
+const targetId = encodeFloatId(targetLegacy);
+assert.ok(
+  registeredIds.includes(targetId),
+  `菜单行上的 ${String(targetLegacy)} 编码成 ${targetId} 后不在注册表里`,
+);
+openButton.props.onClick();
+assert.equal(service.isOpen(targetId), true, '点菜单里的「打开」应该真的打开那张卡');
+
+// 再渲染一次：那一行应该变成「收起」，点它又收回去（状态是实时的，不靠轮询）
+const rowsAfter = findRows(renderTree(menu.content.render({ frame: 'popover' })));
+const openedRow = rowsAfter.find((row) => row.props['data-open'] === '1');
+assert.ok(openedRow !== undefined, '打开后菜单里应该有一行显示为「已打开」');
+findByText(openedRow, '收起').props.onClick();
+assert.equal(service.isOpen(targetId), false, '点「收起」应该真的关掉那张卡');
 
 // 注销：插件卸载后必须不留注册（布局记录由框架按设计保留）
 record.effects
@@ -363,5 +493,7 @@ assert.ok(
 assert.equal(bare.record.injections[0]?.[0], 'widgets', '没有框架时也在等 widgets（只是永远等不到）');
 
 console.log(
-  `宿主桥集成冒烟通过：${String(registeredIds.length)} 个描述符进框架注册表（含 ${String(quotaIds.length)} 个供应商卡片），退化路径正常`,
+  `宿主桥集成冒烟通过：${String(registeredIds.length)} 个描述符进框架注册表（1 个活动栏菜单 + ${String(
+    quotaIds.length,
+  )} 个供应商卡片），菜单面板 ${String(rowsBefore.length)} 行可开合，退化路径正常`,
 );

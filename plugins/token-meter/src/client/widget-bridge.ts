@@ -186,3 +186,75 @@ export function floatTitle(legacy: string, hint?: string | undefined): string {
   }
   return '小组件';
 }
+
+/* ─────────────────────────────── 每张卡的初始尺寸 ─────────────────────────────── */
+
+/** 一张卡片进宿主时的初始 / 最小尺寸（外层 px：含框架标题栏与内容内边距）。 */
+export interface FloatSize {
+  defaultSize: { w: number; h: number };
+  minSize: { w: number; h: number };
+}
+
+/** 尺寸表的键：按「内容形状」分组，不是按 id（同一族的卡片共用一套）。 */
+export type FloatFamily = StatsKind | 'peak' | 'quota';
+
+/** 框架地板（`@dshp/widget-kit` spec v1 的 `cardFloorSize`）：minSize 不得低于它，否则注册被拒。 */
+export const WK_CARD_FLOOR = { w: 240, h: 140 } as const;
+
+/**
+ * **每张卡各自的初始尺寸**（一张总表，改尺寸只改这里）。
+ *
+ * 为什么不能一套尺寸打天下：这些小组件的内容形状差得很远 ——
+ * 热力图是「宽而扁」的周 × 日网格，给它 240 高度纯属浪费；模型分布是圆环 + 多列列表，
+ * 矮了会把列表压成滚动条；今日消耗只有一张卡，天生就该小。
+ *
+ * 宽度按 `styles.module.css` 里的容器查询断点挑（`@container tm (max-width: 300px / 340 / 420 / 480)`）：
+ * 取到断点之上，内容才是「宽屏那套排版」，而不是把窄屏排版塞进一个宽窗里。
+ *
+ * | 族        | 初始        | 最小        | 依据                                                       |
+ * | --------- | ----------- | ----------- | ---------------------------------------------------------- |
+ * | `cards`   | 460 × 360   | 300 × 220   | 指标卡 3 列 `minmax(148px)` 网格 + 三段（全量/可视化/构成） |
+ * | `trend`   | 520 × 320   | 340 × 200   | 折线图：横向空间直接决定可读性                              |
+ * | `heat`    | 560 × 230   | 360 × 170   | 周 × 日热力网格**宽而扁**，不需要高度                       |
+ * | `donut`   | 460 × 420   | 320 × 320   | 圆环 + 多列模型列表；窄于 480 会塌成一列，底部必须留高       |
+ * | `today`   | 320 × 200   | 260 × 150   | 单张「今日消耗」卡，天生小                                  |
+ * | `peak`    | 440 × 200   | 320 × 160   | 一行峰谷标题 + 24 小时色带 + 两行说明                       |
+ * | `quota`   | 400 × 320   | 320 × 220   | 供应商标题行（名称 / 徽标 / 三个按钮）+ 若干窗口进度条        |
+ */
+export const FLOAT_SIZES: Record<FloatFamily, FloatSize> = {
+  cards: { defaultSize: { w: 460, h: 360 }, minSize: { w: 300, h: 220 } },
+  trend: { defaultSize: { w: 520, h: 320 }, minSize: { w: 340, h: 200 } },
+  heat: { defaultSize: { w: 560, h: 230 }, minSize: { w: 360, h: 170 } },
+  donut: { defaultSize: { w: 460, h: 420 }, minSize: { w: 320, h: 320 } },
+  today: { defaultSize: { w: 320, h: 200 }, minSize: { w: 260, h: 150 } },
+  peak: { defaultSize: { w: 440, h: 200 }, minSize: { w: 320, h: 160 } },
+  quota: { defaultSize: { w: 400, h: 320 }, minSize: { w: 320, h: 220 } },
+};
+
+/**
+ * legacy id → 尺寸族。
+ *
+ * 未知 id 归到 `cards`（保守：最宽松的那套），不会因为少写一个分支就没有尺寸。
+ *
+ * @param legacy - legacy id。
+ * @returns 尺寸族。
+ */
+export function floatFamily(legacy: string): FloatFamily {
+  if (legacy === PEAK_ID) return 'peak';
+  if (legacy.startsWith(QUOTA_PREFIX)) return 'quota';
+  if (legacy.startsWith(STATS_PREFIX)) {
+    const kind = legacy.slice(STATS_PREFIX.length) as StatsKind;
+    if ((STATS_KINDS as readonly string[]).includes(kind)) return kind;
+  }
+  return 'cards';
+}
+
+/**
+ * legacy id → 该卡的初始 / 最小尺寸。
+ *
+ * @param legacy - legacy id。
+ * @returns 尺寸（每次返回同一个对象，调用方不要改它）。
+ */
+export function floatSize(legacy: string): FloatSize {
+  return FLOAT_SIZES[floatFamily(legacy)];
+}
