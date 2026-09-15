@@ -40,3 +40,24 @@ export function RegistryGlyph(): ReactNode {
     </Glyph>
   );
 }
+
+/** 滑杆（快速设置）。 */
+export function SlidersGlyph(): ReactNode {
+  return (
+    <Glyph>
+      <path d="M3 5.5h12M3 9h12M3 12.5h12" strokeLinecap="round" />
+      <circle cx="7" cy="5.5" r="1.6" />
+      <circle cx="11.5" cy="9" r="1.6" />
+      <circle cx="6" cy="12.5" r="1.6" />
+    </Glyph>
+  );
+}
+
+/** 脉冲（状态速览）。 */
+export function PulseGlyph(): ReactNode {
+  return (
+    <Glyph>
+      <path d="M2 9.5h3.2l1.6-4 2.4 7.4 1.8-4.4 1.2 2.4H16" strokeLinecap="round" strokeLinejoin="round" />
+    </Glyph>
+  );
+}

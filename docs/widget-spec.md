@@ -278,6 +278,10 @@ ctx.effect(
 - 点外部关闭（点锚点自身除外，否则会「关掉又被打开」）；`Esc` 关闭并把焦点还给图标。
 - 锚点元素失效（会话切换/图标卸载）→ 关闭；`card` 则回退到视口右上角固定位（不消失）。
 
+**参考实现**（可直接对照源码，都在框架自己的 `plugins/widget-kit/src/client/widgets/` 下）：
+`quick-settings.tsx` = 点击展开 + 小面板放快捷设置（写偏好）；`status.tsx` = 悬停展开 + `header: false` +
+`padding: 0`（整块面板归提供方）；`clock.tsx` / `diagnostics.tsx` = 卡片侧的尺寸呈现与注册表诊断。
+
 ### 会话绑定
 
 内容面（卡片与 popover）**绑定开启它的会话**：切换会话即关闭（位置与尺寸保留在 store，回来再用）。

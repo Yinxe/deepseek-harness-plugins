@@ -372,6 +372,13 @@ assert.ok(
 const ids = service.list().map((item) => item.id);
 assert.ok(ids.includes('dshp-widget-kit:clock'), '参考组件「时钟」必须自动注册');
 assert.ok(ids.includes('dshp-widget-kit:registry'), '参考组件「组件诊断」必须自动注册');
+assert.ok(ids.includes('dshp-widget-kit:quick'), '参考组件「快速设置」（点击 popover）必须自动注册');
+assert.ok(ids.includes('dshp-widget-kit:status'), '参考组件「状态速览」（悬停 popover）必须自动注册');
+
+// 两个参考 popover 的形态：点击 vs 悬停、header / padding 的差异必须真的在描述符里
+const referenceWidgets = new Map(service.list().map((item) => [item.id, item]));
+assert.equal(referenceWidgets.get('dshp-widget-kit:quick').presentation, 'popover');
+assert.equal(referenceWidgets.get('dshp-widget-kit:status').presentation, 'popover');
 
 // ── 8. 渲染一遍：托盘 + 卡片层 ──────────────────────────────────────────
 /** 极简渲染：只调用函数组件、不执行 effect、不画像。 */
@@ -541,6 +548,41 @@ service.toggle('demo:hover');
 assert.equal(service.isOpen('demo:hover'), false, 'toggle 关闭后必须清掉待展开的定时器');
 fireTimeouts(50);
 assert.equal(service.isOpen('demo:hover'), false, '被取消的展开定时器不得生效');
+
+// 悬停展开的参考面板：header: false + padding: 0（整块归提供方）
+runtime.hoverEnter('dshp-widget-kit:status');
+fireTimeouts(80);
+assert.equal(service.isOpen('dshp-widget-kit:status'), true, '悬停 80ms 后参考面板应展开');
+const statusNodes = collect(render(layerEntry.component({})));
+const statusPanel = statusNodes.find((node) => node.props['data-widget'] === 'dshp-widget-kit:status');
+assert.ok(statusPanel, '状态速览必须渲染出面板');
+assert.equal(statusPanel.props['data-trigger'], 'hover');
+assert.equal(statusPanel.props.style.width, 260, '状态速览的 width 必须生效');
+assert.ok(
+  !statusNodes.some(
+    (node) =>
+      typeof node.props.className === 'string' &&
+      node.props.className.includes('popoverHeader') &&
+      node.props['data-widget'] !== 'demo:hover',
+  ),
+  'header: false 的参考面板不得画框架标题栏',
+);
+const statusBody = statusNodes.find(
+  (node) => typeof node.props.className === 'string' && node.props.className.includes('popoverBody'),
+);
+assert.equal(statusBody.props.style.padding, 0, 'padding: 0 必须落到 body');
+runtime.hoverLeave('dshp-widget-kit:status');
+fireTimeouts(220);
+assert.equal(service.isOpen('dshp-widget-kit:status'), false, '移开后参考面板应收起');
+
+// 点击展开的参考面板：不带悬停行为，点开/再点关
+runtime.hoverEnter('dshp-widget-kit:quick');
+fireTimeouts(80);
+assert.equal(service.isOpen('dshp-widget-kit:quick'), false, '点击展开的参考面板不该被悬停打开');
+service.toggle('dshp-widget-kit:quick');
+assert.equal(service.isOpen('dshp-widget-kit:quick'), true);
+service.toggle('dshp-widget-kit:quick');
+assert.equal(service.isOpen('dshp-widget-kit:quick'), false);
 
 disposeClick();
 disposeHover();

@@ -30,6 +30,8 @@ import type { StorageLike } from './store.js';
 import type { ClientContext, FrameworkConfig, SlotsService } from './types.js';
 import { clockWidget } from './widgets/clock.js';
 import { createDiagnosticsWidget } from './widgets/diagnostics.js';
+import { createQuickSettingsWidget } from './widgets/quick-settings.js';
+import { createStatusWidget } from './widgets/status.js';
 
 /** client 半的硬依赖（缺了就不激活，由 cordis 在服务出现后重试）。 */
 export const inject = ['slots', 'timer'];
@@ -138,6 +140,16 @@ export function apply(ctx: ClientContext): void {
       referenceDisposers.push(runtime.register(createDiagnosticsWidget(runtime)));
     } catch (error) {
       logError('[dshp-widget-kit] 注册参考组件「组件诊断」失败：', error);
+    }
+    try {
+      referenceDisposers.push(runtime.register(createQuickSettingsWidget(runtime)));
+    } catch (error) {
+      logError('[dshp-widget-kit] 注册参考组件「快速设置」失败：', error);
+    }
+    try {
+      referenceDisposers.push(runtime.register(createStatusWidget(runtime)));
+    } catch (error) {
+      logError('[dshp-widget-kit] 注册参考组件「状态速览」失败：', error);
     }
   };
   try {

@@ -629,3 +629,111 @@
   font-size: 12px;
   color: var(--dsw-alias-label-caption);
 }
+
+/* ── 参考组件：快速设置（点击展开的 popover） ─────────────────────────── */
+
+.quick {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quickSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quickLabel {
+  font-size: 11px;
+  color: var(--dsw-alias-label-caption);
+}
+
+.seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.segBtn {
+  padding: 3px 10px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 11px;
+  font-family: var(--dsw-font-family);
+  cursor: pointer;
+}
+
+.segBtn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.segBtnActive {
+  border-color: var(--dsw-alias-state-business-primary);
+  background: var(--dsw-alias-interactive-bg-active);
+  color: var(--dsw-alias-label-primary);
+}
+
+.quickFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.quickNote {
+  font-size: 11px;
+  color: var(--dsw-alias-label-caption);
+}
+
+.quickError {
+  font-size: 11px;
+  color: var(--dsw-alias-label-error);
+}
+
+/* ── 参考组件：状态速览（悬停展开、header: false 的 popover） ─────────── */
+
+.statusRoot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+  padding: 12px;
+}
+
+.statusGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.statusCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-2);
+}
+
+.statusValue {
+  font-family: var(--dsw-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.statusKey {
+  font-size: 11px;
+  color: var(--dsw-alias-label-caption);
+}
+
+.statusHint {
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--dsw-alias-label-caption);
+}

@@ -28,7 +28,10 @@
 - `src/client/hooks.ts` —— React 粘合：快照订阅（`useSyncExternalStore`）、数据生命周期、指针拖拽（官方 `DragHandle` 范式）。
 - `src/client/{Tray,Card,CardLayer,Popover,ResizeHandles,ErrorBoundary}.tsx` —— 承载面 UI。
 - `src/client/SettingsSection.tsx` / `api.ts` / `components.tsx` —— 设置节（偏好）。
-- `src/client/widgets/{clock,diagnostics}.tsx` —— **参考实现**（规范示例，不是业务；可在设置里关掉）。
+- `src/client/widgets/{clock,diagnostics,quick-settings,status}.tsx` —— **四个参考实现**（规范示例，不是业务；可在设置里关掉）：
+  `clock` / `diagnostics` 是卡片（演示尺寸呈现与注册表诊断），`quick-settings` 是**点击展开**的 popover
+  （演示小面板放快捷设置 + 写偏好），`status` 是**悬停展开**的 popover（演示 `trigger: 'hover'` 与
+  `header: false` + `padding: 0` 的整块让权）。
 - `src/host/` —— 只做三件事：声明 NS/schema、两条同源路由、一行启动日志。
 
 ## 本插件的局部规则
