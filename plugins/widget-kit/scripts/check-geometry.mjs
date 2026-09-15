@@ -4,7 +4,8 @@
  *
  * 覆盖：夹紧（整卡留在视口内）、默认层叠落点、内容盒换算、尺寸档阈值、
  * 八向缩放（对边固定、min/max、北向不越过 y=0）、z 序，
- * 以及**移动落点的吸附 / 防重叠**（贴邻卡与视口边、跨轴对齐、间隔、无解时的兜底）。
+ * 以及**吸附候选**（贴邻卡与视口边、边缘对齐、间隔；没有目标时原样返回 —— 候选只是候选，
+ * 是否采用由「松手时预览框还在不在」决定，见 src/client/service.ts 的 setLive/commitLive）。
  *
  * 为什么用 `import '../src/client/geometry.ts'`：Node 24 的 TS 类型擦除可以直跑 `.ts`
  * （本仓 CI 与 .nvmrc 都是 24）。这也要求 geometry.ts / spec.ts **自包含**：只允许 `import type`，
@@ -16,7 +17,6 @@ import {
   CASCADE_STEP,
   CONTENT_PADDING,
   RESIZE_DIRS,
-  SNAP_ALIGN,
   SNAP_DISTANCE,
   SNAP_GAP,
   TITLE_BAR_HEIGHT,
@@ -24,14 +24,13 @@ import {
   bringToFront,
   clampRect,
   clampSize,
-  conflicts,
   containRect,
   contentBox,
   defaultRect,
-  dockRect,
   isSameRect,
   maxSizeFor,
   sizeClassOf,
+  snapRect,
 } from '../src/client/geometry.ts';
 import { SPEC_DEFAULTS } from '../src/client/spec.ts';
 
@@ -51,7 +50,6 @@ check('constants', () => {
   assert.equal(CONTENT_PADDING, SPEC_DEFAULTS.contentPadding, 'contentPadding 漂移');
   assert.equal(SNAP_GAP, SPEC_DEFAULTS.snapGap, 'snapGap 漂移');
   assert.equal(SNAP_DISTANCE, SPEC_DEFAULTS.snapDistance, 'snapDistance 漂移');
-  assert.equal(SNAP_ALIGN, SPEC_DEFAULTS.snapAlign, 'snapAlign 漂移');
   assert.equal(CASCADE_STEP, SPEC_DEFAULTS.cascadeStep, 'cascadeStep 漂移');
 });
 
@@ -206,101 +204,82 @@ check('applyResize is stable and clamped for every direction', () => {
   }
 });
 
-// ── conflicts / dockRect（移动落点的吸附与防重叠）───────────────────────
-check('conflicts', () => {
-  const a = { x: 0, y: 0, w: 100, h: 100 };
-  assert.equal(conflicts(a, { x: 100, y: 0, w: 100, h: 100 }, 0), false, '边挨边不算冲突');
-  assert.equal(conflicts(a, { x: 99, y: 0, w: 100, h: 100 }, 0), true, '压 1px 就算冲突');
-  assert.equal(conflicts(a, { x: 108, y: 0, w: 100, h: 100 }, SNAP_GAP), false, '刚好留出间隔');
-  assert.equal(conflicts(a, { x: 107, y: 0, w: 100, h: 100 }, SNAP_GAP), true, '间隔不足算冲突');
-  assert.equal(conflicts(a, { x: 0, y: 200, w: 100, h: 100 }, 0), false, '纵向分开就不冲突');
+// ── snapRect（吸附候选）─────────────────────────────────────────────────
+check('snapRect: 没有目标时原样返回（只做视口夹紧）', () => {
+  const free = { x: 400, y: 300, w: 300, h: 200 };
+  assert.deepEqual(snapRect(free, [], VP), free, '空场上不该有吸附');
+  const far = { x: 404, y: 304, w: 300, h: 200 };
+  assert.deepEqual(snapRect(far, [], VP), far, '离吸附线还远时也不该吸');
+  assert.deepEqual(
+    snapRect({ x: -50, y: -50, w: 300, h: 200 }, [], VP),
+    { x: 0, y: 0, w: 300, h: 200 },
+    '越界仍然要夹回视口内',
+  );
 });
 
-check('dockRect snaps beside a neighbour and aligns the other axis', () => {
-  // 图中场景：时钟在左上，诊断卡拖到它右侧且几乎同高 → 贴右边 + 上对齐
+check('snapRect: 贴视口边缘（12px 内吸过去）', () => {
+  assert.deepEqual(snapRect({ x: 5, y: 4, w: 300, h: 200 }, [], VP), { x: 0, y: 0, w: 300, h: 200 });
+  assert.deepEqual(snapRect({ x: VP.width - 300 - 5, y: VP.height - 200 - 7, w: 300, h: 200 }, [], VP), {
+    x: VP.width - 300,
+    y: VP.height - 200,
+    w: 300,
+    h: 200,
+  });
+});
+
+check('snapRect: 贴到邻卡旁边（带 8px 间隔）', () => {
   const clock = { x: 0, y: 0, w: 360, h: 240 };
-  const dragged = { x: 352, y: 4, w: 420, h: 300 };
-  const out = dockRect(dragged, [clock], VP);
-  assert.deepEqual(out, { x: 360 + SNAP_GAP, y: 0, w: 420, h: 300 }, '必须贴右边 + 上对齐');
-  assert.equal(conflicts(out, clock, SNAP_GAP), false, '吸附结果不得与邻卡冲突');
+  // 离邻卡右缘 6px → 吸成「贴着右缘 + 8px 间隔」；纵向差得多就不对齐
+  const near = { x: 360 + SNAP_GAP + 6, y: 400, w: 300, h: 200 };
+  assert.deepEqual(snapRect(near, [clock], VP), { x: 360 + SNAP_GAP, y: 400, w: 300, h: 200 });
+  // 贴到邻卡左边（离左缘 4px，邻卡不在屏幕边上才有的选）
+  const away = { x: 400, y: 0, w: 360, h: 240 };
+  const left = { x: 92 + 4, y: 0, w: 300, h: 200 };
+  assert.equal(snapRect(left, [away], VP).x + 300, away.x - SNAP_GAP, '贴到邻卡左边');
 });
 
-check('dockRect: 同轴吸附距离之内直接贴过去（不用先压上）', () => {
-  const clock = { x: 0, y: 0, w: 360, h: 240 };
-  // 还没压上，但只差 6px 就贴着右边了
-  const near = { x: 360 + SNAP_GAP + 6, y: 200, w: 300, h: 200 };
-  const out = dockRect(near, [clock], VP);
-  assert.equal(out.x, 360 + SNAP_GAP, '在吸附距离内必须贴到邻卡右边');
-  assert.equal(out.y, 200, '纵向离得远就不对齐');
-
-  // 纵向靠近底边 → 下对齐
-  const nearBottom = { x: 700, y: 240 - 200 + 6, w: 300, h: 200 };
-  const aligned = dockRect(nearBottom, [clock], VP);
-  assert.equal(aligned.y + aligned.h, 240, '后缘对齐（下对齐）');
-});
-
-check('dockRect: 视口边缘也是吸附目标，但绝不越界', () => {
-  const free = { x: 6, y: 5, w: 300, h: 200 };
-  assert.deepEqual(dockRect(free, [], VP), { x: 0, y: 0, w: 300, h: 200 }, '贴左上角');
-  const farRight = { x: VP.width - 300 - 5, y: VP.height - 200 - 7, w: 300, h: 200 };
-  assert.deepEqual(dockRect(farRight, [], VP), { x: VP.width - 300, y: VP.height - 200, w: 300, h: 200 });
-  const outside = { x: 99999, y: -99999, w: 300, h: 200 };
-  const clamped = dockRect(outside, [], VP);
-  assert.ok(clamped.x + clamped.w <= VP.width && clamped.y >= 0, '越界的目标必须夹回视口内');
-});
-
-check('dockRect: 压到邻卡上时贴到最近的一侧，且始终留出间隔', () => {
+check('snapRect: 边缘对齐（另一轴靠近时顺带对齐）', () => {
   const clock = { x: 400, y: 300, w: 360, h: 240 };
-  // 深压进邻卡中部：四个方向里选位移最小的那一个（这里是「贴到下方」，因为横向要跨过对方 360px 宽）
-  const inside = { x: 420, y: 320, w: 300, h: 200 };
-  const out = dockRect(inside, [clock], VP);
-  assert.equal(conflicts(out, clock, SNAP_GAP), false, '不得压在邻卡上');
-  assert.equal(out.y, 300 + 240 + SNAP_GAP, '贴到邻卡下方');
-  assert.equal(out.x, 400, '另一轴在容差内顺带对齐（左对齐）');
-
-  // 压到邻卡上沿 → 贴到上方，并且左对齐
-  const above = { x: 410, y: 290, w: 300, h: 200 };
-  const up = dockRect(above, [clock], VP);
-  assert.equal(conflicts(up, clock, SNAP_GAP), false);
-  assert.equal(up.y + up.h, 300 - SNAP_GAP, '贴到邻卡上方');
-  assert.equal(up.x, 400, '左对齐');
-
-  // 从左边靠上去、右缘刚压过邻卡左缘 4px、纵向差 4px：
-  // 「贴它的左边 + 上对齐」只差 12px，是位移最小的选择 —— 靠近就贴到旁边，而不是叠上去。
-  const touching = { x: 104, y: 296, w: 300, h: 200 };
-  const docked = dockRect(touching, [clock], VP);
-  assert.equal(docked.x + docked.w, 400 - SNAP_GAP, '贴到邻卡左边');
-  assert.equal(docked.y, 300, '上对齐');
-  assert.equal(conflicts(docked, clock, SNAP_GAP), false);
+  // 拖到邻卡右侧 3px、顶边差 4px → 两个轴同时命中：贴右边 + 上对齐（用户图里的效果）
+  const dragged = { x: 400 + 360 + 3, y: 304, w: 420, h: 300 };
+  assert.deepEqual(snapRect(dragged, [clock], VP), {
+    x: 400 + 360 + SNAP_GAP,
+    y: 300,
+    w: 420,
+    h: 300,
+  });
+  // 纵向分开时只做边缘对齐（不贴边）
+  const aligned = { x: 405, y: 600, w: 300, h: 200 };
+  assert.equal(snapRect(aligned, [clock], VP).x, clock.x, '左边缘对齐');
+  assert.equal(snapRect(aligned, [clock], VP).y, 600, '纵向离得远，不动');
 });
 
-check('dockRect: 三张卡时逐个避让（推挤会连锁）', () => {
+check('snapRect: 允许与邻卡重叠（不再强制让位）', () => {
+  const clock = { x: 400, y: 300, w: 360, h: 240 };
+  // 正压在邻卡中间：既没有贴边候选也没有对齐候选（都差 20px 以上）→ 原样返回，就是允许覆盖
+  const onTop = { x: 430, y: 320, w: 300, h: 200 };
+  assert.deepEqual(snapRect(onTop, [clock], VP), onTop, '用户就是要盖上去时，框架不得把他推开');
+  // 只差 3px 就能与邻卡左缘对齐 → 这是候选；采用与否由用户松手决定
+  const nearAlign = { x: 403, y: 330, w: 300, h: 200 };
+  assert.equal(snapRect(nearAlign, [clock], VP).x, 400, '给出对齐候选');
+});
+
+check('snapRect: 结果稳定（同样输入两次跑出同样结果，不会抖）', () => {
+  const clock = { x: 400, y: 300, w: 360, h: 240 };
+  const target = { x: 766, y: 304, w: 300, h: 200 };
+  const once = snapRect(target, [clock], VP);
+  assert.deepEqual(snapRect(target, [clock], VP), once);
+  assert.deepEqual(snapRect(once, [clock], VP), once, '已吸附的位置再算一次不能变');
+});
+
+check('snapRect: 多张邻卡时各轴取最近的候选', () => {
   const a = { x: 0, y: 0, w: 300, h: 200 };
   const b = { x: 308, y: 0, w: 300, h: 200 };
-  const inside = { x: 10, y: 10, w: 300, h: 200 };
-  const out = dockRect(inside, [a, b], VP);
-  assert.equal(conflicts(out, a, SNAP_GAP), false, '不得压到 a');
-  assert.equal(conflicts(out, b, SNAP_GAP), false, '不得压到 b');
-});
-
-check('dockRect: 结果稳定（同样的输入两次跑出同样的结果，不会抖）', () => {
-  const clock = { x: 400, y: 300, w: 360, h: 240 };
-  const target = { x: 420, y: 320, w: 300, h: 200 };
-  const once = dockRect(target, [clock], VP);
-  assert.deepEqual(dockRect(once, [clock], VP), once, '已吸附的位置再算一次不能变');
-  assert.deepEqual(dockRect(target, [clock], VP), once, '同样输入必须同样输出');
-});
-
-check('dockRect: 屏幕上没位置时保持现状（宁可重叠也不乱跳）', () => {
-  const blockers = [
-    { x: 0, y: 0, w: 640, h: 400 },
-    { x: 640, y: 0, w: 640, h: 400 },
-    { x: 0, y: 400, w: 640, h: 400 },
-    { x: 640, y: 400, w: 640, h: 400 },
-  ];
-  const target = { x: 100, y: 100, w: 600, h: 380 };
-  const out = dockRect(target, blockers, VP);
-  assert.deepEqual(out, containRect(target, VP), '无解时必须原样返回（只做视口夹紧）');
+  // 拖到 a 右侧 4px、上方 6px：x 贴 a 的右缘（b 就在那儿），y 贴视口/邻卡上缘
+  const target = { x: 300 + SNAP_GAP + 4, y: -6, w: 300, h: 100 };
+  const snapped = snapRect(target, [a, b], VP);
+  assert.equal(snapped.x, 300 + SNAP_GAP, 'x 贴 a 右缘（也是 b 的左缘）');
+  assert.equal(snapped.y, 0, 'y 贴视口上缘');
 });
 
 // ── z 序 ────────────────────────────────────────────────────────────────

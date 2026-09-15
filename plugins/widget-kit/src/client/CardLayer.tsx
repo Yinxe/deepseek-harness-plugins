@@ -4,31 +4,44 @@
  * 一次注册渲染全部卡片与当前 popover：卡片层自建层叠上下文（`isolation: isolate`），
  * 卡片之间只用**层内**相对 z-index，不跟官方层抢序。
  *
- * 拖拽 / 缩放进行中（live 几何存在）时额外铺一层**全视口手势盾**：`user-select: none` +
- * `pointer-events: auto` + 与手势一致的鼠标指针。它治的是「缩放时指针扫过页面文字 → 选中一片高亮」，
- * 顺便挡住指针进入 iframe / 画布时被对方吞掉事件。盾在卡片下面（层内 z-index 0），不挡卡片自己。
+ * 手势进行中还会多两样东西。两者都做成**只订阅一个稳定值**的叶子组件（一个字符串 / 一个对象引用），
+ * 所以 60fps 的拖动不会带着整层重渲染 —— 这正是「拖动有时卡」的根因：
+ * 早先版本让卡片层直接订阅 live，每帧一个新快照，于是所有卡片连同内容每帧都重渲染。
+ *
+ *  - **手势盾**：全视口 `user-select: none` + `pointer-events: auto`，鼠标指针跟随手势方向。
+ *    治「缩放时指针扫过页面文字选中一片高亮」，顺带挡住指针进入 iframe / 画布时事件被对方吞掉；
+ *  - **吸附预览虚框**：显示「松手会落到哪里」。拖动期间卡片本体自由跟手（允许与其它卡片重叠），
+ *    松手才真的吸附 —— 拖开让虚框消失再松手，就是「不同意吸附」，落回自由位置。
  *
  * @module @dshp/widget-kit/client/CardLayer
  */
 import type { ReactNode } from 'react';
 import { Card } from './Card.js';
 import { Popover } from './Popover.js';
-import { useFramework, useLiveGeometry } from './hooks.js';
+import { useFramework, useGestureCursor, useLiveSnap } from './hooks.js';
 import type { WidgetRuntime } from './service.js';
 import styles from './styles.module.css';
 
-/** 手势中的鼠标指针（`data-cursor` 取值，真正的 cursor 写在样式表里）。 */
-const CURSOR_BY_MODE: Record<string, string> = {
-  move: 'moving',
-  n: 'ns',
-  s: 'ns',
-  e: 'ew',
-  w: 'ew',
-  ne: 'nesw',
-  sw: 'nesw',
-  nw: 'nwse',
-  se: 'nwse',
-};
+/** 手势盾：`cursor` 是字符串，没有手势时是 `null` —— 不变就完全不重渲染。 */
+function GestureShieldHost({ runtime }: { runtime: WidgetRuntime }): ReactNode {
+  const cursor = useGestureCursor(runtime);
+  if (cursor === null) return null;
+  return <div className={styles.gestureShield} data-cursor={cursor} aria-hidden="true" />;
+}
+
+/** 吸附预览虚框：候选坐标没变时引用不变，这里也就不重渲染（变化那一次交给 CSS 过渡滑过去）。 */
+function SnapGhostHost({ runtime }: { runtime: WidgetRuntime }): ReactNode {
+  const snap = useLiveSnap(runtime);
+  if (snap === null) return null;
+  return (
+    <div
+      className={styles.snapGhost}
+      style={{ left: snap.rect.x, top: snap.rect.y, width: snap.rect.w, height: snap.rect.h }}
+      data-ghost-for={snap.id}
+      aria-hidden="true"
+    />
+  );
+}
 
 export function CardLayer({
   runtime,
@@ -38,7 +51,6 @@ export function CardLayer({
   onError?: ((message: string, error?: unknown) => void) | undefined;
 }): ReactNode {
   const snapshot = useFramework(runtime);
-  const live = useLiveGeometry(runtime);
   const byId = new Map(snapshot.widgets.map((widget) => [widget.id, widget]));
   // 禁用的组件不渲染（运行时在 setEnabled 时已经把它们收起来了，这里是第二道闸：
   // 刷新后恢复出来的布局里也可能留着一个刚被禁用的 id）
@@ -63,13 +75,8 @@ export function CardLayer({
 
   return (
     <div className={styles.layer} data-plugin-widget-kit-layer="">
-      {live !== null && (
-        <div
-          className={styles.gestureShield}
-          data-cursor={CURSOR_BY_MODE[live.mode] ?? 'moving'}
-          aria-hidden="true"
-        />
-      )}
+      <GestureShieldHost runtime={runtime} />
+      <SnapGhostHost runtime={runtime} />
       {cards.map((widget) => (
         <Card key={widget.id} runtime={runtime} widget={widget} onError={onError} />
       ))}

@@ -13,7 +13,7 @@
  */
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import { applyResize } from './geometry.js';
+import { applyResize, clampRect } from './geometry.js';
 import type { Rect, RectConstraints, ResizeDir, Viewport } from './geometry.js';
 import type { FrameworkSnapshot, LiveGeometry, WidgetRuntime } from './service.js';
 import type { NormalizedWidget } from './spec.js';
@@ -26,10 +26,63 @@ export function useFramework(runtime: WidgetRuntime): FrameworkSnapshot {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
-/** 订阅拖拽期间的活动几何（只有正在拖的那张卡真的会因此重渲染）。 */
-export function useLiveGeometry(runtime: WidgetRuntime): LiveGeometry | null {
+/**
+ * 订阅「**这一张卡**正在被拖动/缩放」时的活动几何。
+ *
+ * 必须带 id：`getLiveFor(id)` 对别的卡片恒返回 `null`（同一个引用），所以 60fps 的拖动只会重渲染
+ * 被拖的那一张卡 —— 早期版本用全局 `getLive()`，每帧都是一个新对象，结果**所有卡片连同它们的内容
+ * 每帧都重渲染**，这正是用户反馈的「拖动有时卡」。
+ *
+ * @param runtime - 框架运行时。
+ * @param id - 组件 id。
+ */
+export function useLiveGeometry(runtime: WidgetRuntime, id: string): LiveGeometry | null {
   const subscribe = useCallback((listener: () => void) => runtime.subscribeLive(listener), [runtime]);
-  const getSnapshot = useCallback(() => runtime.getLive(), [runtime]);
+  const getSnapshot = useCallback(() => runtime.getLiveFor(id), [runtime, id]);
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+/** 手势方向 → 鼠标指针 token（真正的 cursor 写在样式表里）。 */
+const GESTURE_CURSORS: Record<string, string> = {
+  move: 'moving',
+  n: 'ns',
+  s: 'ns',
+  e: 'ew',
+  w: 'ew',
+  ne: 'nesw',
+  sw: 'nesw',
+  nw: 'nwse',
+  se: 'nwse',
+};
+
+/**
+ * 当前手势对应的鼠标指针 token（没有手势时是 `null`）。
+ *
+ * 返回的是**字符串**：帧与帧之间只要指针形状没变，快照就没变 —— 订阅它的手势盾因此一帧都不会重渲染。
+ *
+ * @param runtime - 框架运行时。
+ */
+export function useGestureCursor(runtime: WidgetRuntime): string | null {
+  const subscribe = useCallback((listener: () => void) => runtime.subscribeLive(listener), [runtime]);
+  const getSnapshot = useCallback((): string | null => {
+    const live = runtime.getLive();
+    if (live === null) return null;
+    return GESTURE_CURSORS[live.mode] ?? 'moving';
+  }, [runtime]);
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+/**
+ * 订阅当前的**吸附预览**（拖动期间画虚框用）。
+ *
+ * 候选没变时运行时复用同一个对象引用，所以虚框不会每帧重渲染，只在吸附目标切换时动一次 ——
+ * 那一次正好交给 CSS transition 做平滑滑动。
+ *
+ * @param runtime - 框架运行时。
+ */
+export function useLiveSnap(runtime: WidgetRuntime): { id: string; rect: Rect } | null {
+  const subscribe = useCallback((listener: () => void) => runtime.subscribeLive(listener), [runtime]);
+  const getSnapshot = useCallback(() => runtime.getLiveSnap(), [runtime]);
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
@@ -160,10 +213,13 @@ export function useWidgetData(
 
 export interface CardDragHandlers {
   onPointerDown(event: ReactPointerEvent): void;
-  onPointerMove(event: ReactPointerEvent): void;
-  onPointerUp(event: ReactPointerEvent): void;
-  onPointerCancel(event: ReactPointerEvent): void;
-  onLostPointerCapture(event: ReactPointerEvent): void;
+}
+
+/** 手势期间挂在 window 上的兜底监听（指针捕获靠不住时它就是唯一的事件来源）。 */
+interface GestureListeners {
+  move: (event: PointerEvent) => void;
+  up: (event: PointerEvent) => void;
+  cancel: (event: PointerEvent) => void;
 }
 
 /**
@@ -171,6 +227,14 @@ export interface CardDragHandlers {
  *
  * 位置锁定的卡片在这里就被挡住（`runtime.isLocked`）：拖动标题栏与八个缩放把手都退化成普通点击，
  * 但最小化 / 关闭 / 还原照常 —— 「锁定」锁的是几何，不是生命周期。
+ *
+ * **手势的可靠性**（治用户反馈的「卡 / 断触 / 松了还在拖 / 没松就停了」）：
+ *  - `pointerdown` 里除了 `setPointerCapture`，还在 **window 上挂 move / up / cancel** —— 捕获只是
+ *    「让事件优先送到把手」，真正撑住手势的是这三个监听：捕获被浏览器悄悄收走（DOM 变动、跨 iframe、
+ *    指针离开窗口）也不影响拖动继续，`up` 也一定会被收到；
+ *  - 每帧检查 `event.buttons`：左键已经松开却漏收 `pointerup`（松在窗口外）时，这一次 move 就收尾提交；
+ *  - `pointercancel`（系统接管手势，如触屏滚动）才丢弃本次几何；
+ *  - 收尾一律走 `endDrag`，它自己判重（`capture.current`），所以多条路径重复触发也只会收一次尾。
  *
  * @param runtime - 框架运行时。
  * @param widget - 目标组件。
@@ -184,6 +248,7 @@ export function useCardDrag(
 ): { dragging: boolean; handlers: CardDragHandlers } {
   const [dragging, setDragging] = useState(false);
   const capture = useRef<{ element: HTMLElement; id: number } | null>(null);
+  const listeners = useRef<GestureListeners | null>(null);
   const origin = useRef({ x: 0, y: 0 });
   const latest = useRef({ x: 0, y: 0 });
   const startRect = useRef<Rect | null>(null);
@@ -191,26 +256,28 @@ export function useCardDrag(
   const modeRef = useRef(mode);
   modeRef.current = mode;
 
-  const compute = useCallback((): Rect | null => {
+  /** 把最新坐标送进运行时（rAF 合并：60fps 的 pointermove 不重复算几何）。 */
+  const flush = useCallback((): void => {
     const start = startRect.current;
-    if (start === null) return null;
+    if (start === null) return;
     const dx = latest.current.x - origin.current.x;
     const dy = latest.current.y - origin.current.y;
     if (modeRef.current === 'move') {
-      // 移动落点由框架算：夹进视口 + 邻卡吸附 + 防重叠（吸附因此在拖动期间就可见）
-      return runtime.resolveMove(widget.id, {
-        x: start.x + dx,
-        y: start.y + dy,
-        w: start.w,
-        h: start.h,
-      });
+      // 自由跟手（允许盖住别的卡片）；夹进视口即可，吸附候选由运行时在 setLive 里一并算好
+      const constraints: RectConstraints = runtime.constraintsOf(widget);
+      const viewport: Viewport = runtime.viewport();
+      runtime.setLive(
+        widget.id,
+        clampRect({ x: start.x + dx, y: start.y + dy, w: start.w, h: start.h }, constraints, viewport),
+      );
+      return;
     }
     const constraints: RectConstraints = runtime.constraintsOf(widget);
     const viewport: Viewport = runtime.viewport();
-    return applyResize(start, modeRef.current, dx, dy, constraints, viewport);
+    runtime.setLive(widget.id, applyResize(start, modeRef.current, dx, dy, constraints, viewport));
   }, [runtime, widget]);
 
-  /** 收尾：`commit` = 落盘当前几何；`false` = 丢弃本次手势（pointercancel / 失去捕获）。 */
+  /** 收尾：`commit` = 采用（吸附预览优先）；`false` = 丢弃本次手势。可重复调用，只有第一次生效。 */
   const endDrag = useCallback(
     (commit: boolean) => {
       const active = capture.current;
@@ -219,6 +286,13 @@ export function useCardDrag(
       if (frame.current !== null) {
         cancelAnimationFrame(frame.current);
         frame.current = null;
+      }
+      const attached = listeners.current;
+      listeners.current = null;
+      if (attached !== null && typeof window !== 'undefined') {
+        window.removeEventListener('pointermove', attached.move);
+        window.removeEventListener('pointerup', attached.up);
+        window.removeEventListener('pointercancel', attached.cancel);
       }
       try {
         if (active.element.hasPointerCapture(active.id)) active.element.releasePointerCapture(active.id);
@@ -235,7 +309,7 @@ export function useCardDrag(
   const onPointerDown = useCallback(
     (event: ReactPointerEvent): void => {
       if (event.button !== 0 || capture.current !== null) return;
-      // 先吃掉这次 pointerdown：否则锁定后按住标题栏拖动会选中页面上的文字（用户反馈的那类误触）
+      // 先吃掉这次 pointerdown：否则按住标题栏/缩放把手拖动会选中页面上的文字
       event.preventDefault();
       if (runtime.isLocked(widget.id)) {
         // 位置锁定：不进入拖拽（也就不会有 live 几何），但点一下仍然把它提到最前
@@ -244,57 +318,56 @@ export function useCardDrag(
       }
       event.stopPropagation();
       const element = event.currentTarget as HTMLElement;
+      const pointerId = event.pointerId;
       try {
-        element.setPointerCapture(event.pointerId);
+        element.setPointerCapture(pointerId);
       } catch {
-        /* 某些环境不支持捕获：仍然允许拖（只是移出元素后收不到事件） */
+        /* 某些环境不支持捕获：window 上的兜底监听照样让手势成立 */
       }
-      capture.current = { element, id: event.pointerId };
+      capture.current = { element, id: pointerId };
       origin.current = { x: event.clientX, y: event.clientY };
       latest.current = { x: event.clientX, y: event.clientY };
       startRect.current = runtime.rectOf(widget.id);
       runtime.raise(widget.id);
       runtime.beginLive(widget.id, modeRef.current);
       setDragging(true);
-    },
-    [runtime, widget.id],
-  );
 
-  const onPointerMove = useCallback(
-    (event: ReactPointerEvent): void => {
-      if (capture.current?.id !== event.pointerId) return;
-      latest.current = { x: event.clientX, y: event.clientY };
-      if (frame.current !== null) return;
-      frame.current = requestAnimationFrame(() => {
-        frame.current = null;
-        const next = compute();
-        if (next !== null) runtime.setLive(widget.id, next);
-      });
+      if (typeof window === 'undefined') return;
+      const move = (native: PointerEvent): void => {
+        if (native.pointerId !== pointerId) return;
+        // 漏收 pointerup（松在窗口外）时，按钮已经不再是按下状态：就地收尾并提交
+        if (native.pointerType !== 'touch' && native.buttons === 0) {
+          endDrag(true);
+          return;
+        }
+        latest.current = { x: native.clientX, y: native.clientY };
+        if (frame.current !== null) return;
+        frame.current = requestAnimationFrame(() => {
+          frame.current = null;
+          flush();
+        });
+      };
+      const up = (native: PointerEvent): void => {
+        if (native.pointerId !== pointerId) return;
+        latest.current = { x: native.clientX, y: native.clientY };
+        flush(); // 先把最终精确值交给运行时（吸附候选也按它算），再收尾
+        endDrag(true);
+      };
+      const cancel = (native: PointerEvent): void => {
+        if (native.pointerId !== pointerId) return;
+        endDrag(false);
+      };
+      listeners.current = { move, up, cancel };
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+      window.addEventListener('pointercancel', cancel);
     },
-    [compute, runtime, widget.id],
-  );
-
-  const onPointerUp = useCallback(
-    (event: ReactPointerEvent): void => {
-      if (capture.current?.id !== event.pointerId) return;
-      latest.current = { x: event.clientX, y: event.clientY };
-      const next = compute();
-      if (next !== null) runtime.setLive(widget.id, next);
-      endDrag(true);
-    },
-    [compute, endDrag, runtime, widget.id],
-  );
-
-  const onPointerCancel = useCallback(
-    (event: ReactPointerEvent): void => {
-      if (capture.current?.id !== event.pointerId) return;
-      endDrag(false);
-    },
-    [endDrag],
+    [endDrag, flush, runtime, widget.id],
   );
 
   useEffect(
     () => () => {
+      // 卸载（卡片被关掉/切会话）时把没结束的手势收干净：保留用户已经拖到的位置
       if (capture.current !== null) endDrag(true);
     },
     [endDrag],
@@ -302,12 +375,6 @@ export function useCardDrag(
 
   return {
     dragging,
-    handlers: {
-      onPointerDown,
-      onPointerMove,
-      onPointerUp,
-      onPointerCancel,
-      onLostPointerCapture: onPointerCancel,
-    },
+    handlers: { onPointerDown },
   };
 }

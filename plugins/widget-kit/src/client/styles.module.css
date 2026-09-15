@@ -143,10 +143,41 @@
   overflow: hidden;
   color: var(--dsw-alias-label-primary);
   font-family: var(--dsw-font-family);
+  /* 出现时轻轻放大淡入；尺寸变化（最小化 / 还原 / 尺寸预设）与移位置（吸附落位、键盘微调）平滑过渡 */
+  animation: cardIn 180ms cubic-bezier(0.2, 0, 0, 1);
+  transition:
+    left 140ms cubic-bezier(0.2, 0, 0, 1),
+    top 140ms cubic-bezier(0.2, 0, 0, 1),
+    width 160ms cubic-bezier(0.2, 0, 0, 1),
+    height 160ms cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 140ms ease;
+}
+
+/* 拖动 / 缩放期间：几何必须逐帧跟手，任何过渡都会变成「拖不动」的滞后感；
+   但「被拿起来」的观感（放大一点 + 更重的阴影）要过渡出来 */
+.card[data-gesture='true'] {
+  transition:
+    transform 120ms ease,
+    box-shadow 140ms ease;
+  transform: scale(1.012);
+  box-shadow: var(--dsw-shadow-lv3);
+  will-change: left, top;
 }
 
 .cardDragging {
   user-select: none;
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* 拖拽 / 缩放进行中的全视口手势盾：挡住页面文字的选中与 iframe/画布的指针吞掉，
@@ -177,6 +208,24 @@
 
 .gestureShield[data-cursor='nwse'] {
   cursor: nwse-resize;
+}
+
+/* 吸附预览虚框：松手会落到这里。虚线 + 极淡填充 + 位置过渡（候选切换时滑过去而不是闪一下） */
+.snapGhost {
+  position: fixed;
+  z-index: 0;
+  box-sizing: border-box;
+  border: 1px dashed var(--dsw-alias-state-business-primary);
+  border-radius: 12px;
+  background: var(--dsw-alias-interactive-bg-hover);
+  opacity: 0.5;
+  pointer-events: none;
+  transition:
+    left 120ms cubic-bezier(0.2, 0, 0, 1),
+    top 120ms cubic-bezier(0.2, 0, 0, 1),
+    width 120ms cubic-bezier(0.2, 0, 0, 1),
+    height 120ms cubic-bezier(0.2, 0, 0, 1),
+    opacity 120ms ease;
 }
 
 .cardMinimized {
@@ -286,11 +335,13 @@
   min-height: 0;
   padding: 10px;
   box-sizing: border-box;
+  transition: opacity 140ms ease;
 }
 
-/* 最小化 = 折叠成一条标题栏：内容留在树上（保留组件状态）但不显示、不占位 */
+/* 最小化 = 折叠成一条标题栏：内容留在树上（保留组件状态）但淡出、不占位（高度被卡片折叠挤成 0） */
 .cardBodyHidden {
-  display: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* 内容盒：给提供方做容器查询的锚点；尺寸由卡片外层决定，故用 100% + container-type: size */
@@ -820,4 +871,15 @@
   font-size: 11px;
   line-height: 16px;
   color: var(--dsw-alias-label-caption);
+}
+
+/* ── 降低动效偏好 ─────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .cardBody,
+  .snapGhost {
+    animation: none;
+    transition: none;
+  }
 }

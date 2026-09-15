@@ -17,7 +17,7 @@ import type { ReactNode } from 'react';
 export const SPEC_VERSION = 1;
 
 /** 框架版本。必须等于 package.json 的 version（check-spec-drift.mjs 比对）。 */
-export const FRAMEWORK_VERSION = '0.3.1';
+export const FRAMEWORK_VERSION = '0.4.0';
 
 /** 命名空间 = 本插件的 settings NS = cordis 行 id = 路由前缀段。 */
 export const NS = 'dshp-widget-kit';
@@ -57,10 +57,9 @@ export const SPEC_DEFAULTS = {
   /** 标题栏高度与内容区内边距（内容盒 = 外层 − 标题栏 − 2×内边距）。 */
   titleBarHeight: 36,
   contentPadding: 10,
-  /** 相邻卡片之间保留的间隔、同轴吸附距离、跨轴对齐容差（px）。 */
+  /** 吸附：相邻卡片贴在一起保留的间隔、触发吸附的距离（px）。 */
   snapGap: 8,
   snapDistance: 12,
-  snapAlign: 28,
   /** 同屏卡片上限；开了第 7 张时自动最小化最旧一张。 */
   maxOpenCards: 6,
   /** 托盘可见图标上限（框架偏好的默认值，用户可在设置页改）。 */

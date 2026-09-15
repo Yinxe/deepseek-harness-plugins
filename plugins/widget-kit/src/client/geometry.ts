@@ -17,17 +17,14 @@ export const TITLE_BAR_HEIGHT = 36;
 /** 内容区内边距（px）：内容盒 = 外层宽 − 2×它，外层高 − 标题栏 − 2×它。 */
 export const CONTENT_PADDING = 10;
 
-/** 新卡相对上一张的层叠偏移（px）。 */
-export const CASCADE_STEP = 28;
-
-/** 相邻卡片之间的间隔（px）：贴在一起时也留这么多，不糊在一起。 */
+/** 相邻卡片之间的间隔（px）：吸附贴在一起时留这么多，不糊在一起。 */
 export const SNAP_GAP = 8;
 
 /** 同轴吸附距离（px）：与邻卡的边、或视口边缘差这么多以内就吸过去。 */
 export const SNAP_DISTANCE = 12;
 
-/** 跨轴对齐容差（px）：贴到邻卡旁边时，另一轴差这么多以内就顺带对齐（比吸附距离宽松一档）。 */
-export const SNAP_ALIGN = 28;
+/** 新卡相对上一张的层叠偏移（px）。 */
+export const CASCADE_STEP = 28;
 
 /** 层叠位置的回绕周期（第 n 张卡用第 n % 该值 档）。 */
 export const CASCADE_WRAP = 6;
@@ -177,19 +174,17 @@ export function sizeClassOf(width: number, breakpoints: Breakpoints): SizeClass 
   return 'regular';
 }
 
-// ── 吸附 / 防重叠（移动落点）────────────────────────────────────────────
+// ── 吸附（移动落点的磁力）──────────────────────────────────────────────
 
 /** 吸附参数。 */
-export interface DockOptions {
-  /** 相邻卡片之间保留的间隔（px）。 */
+export interface SnapOptions {
+  /** 相邻卡片贴在一起时保留的间隔（px）。 */
   gap: number;
-  /** 同轴吸附距离：与邻卡边或视口边缘差这么多以内就吸过去（px）。 */
+  /** 吸附距离：与邻卡边、邻卡对齐线或视口边缘差这么多以内就吸过去（px）。 */
   distance: number;
-  /** 跨轴对齐容差：贴到邻卡旁边时另一轴对齐的容差（px）。 */
-  align: number;
 }
 
-const DEFAULT_DOCK: DockOptions = { gap: SNAP_GAP, distance: SNAP_DISTANCE, align: SNAP_ALIGN };
+const DEFAULT_SNAP: SnapOptions = { gap: SNAP_GAP, distance: SNAP_DISTANCE };
 
 /** 单轴上的一个区间（位置 + 尺寸），吸附算法用它描述邻卡在某一轴上的投影（数值，不依赖 Rect）。 */
 export interface AxisSpan {
@@ -198,23 +193,17 @@ export interface AxisSpan {
 }
 
 /**
- * 两块矩形是否「冲突」：任一轴上的间隔小于 `gap` 就算冲突（`gap: 0` 时退化成普通的相交判定）。
- */
-export function conflicts(a: Rect, b: Rect, gap: number): boolean {
-  return a.x < b.x + b.w + gap && b.x < a.x + a.w + gap && a.y < b.y + b.h + gap && b.y < a.y + a.h + gap;
-}
-
-/**
  * 单轴吸附：候选 = 视口两端 + 邻卡两端（贴边，带 gap）+ 邻卡两端（对齐）。
  *
  * 取位移最小的那个；位移相同则优先「贴边」候选（贴上去比单纯对齐更可用）。
+ * 一个候选都不在 `distance` 内时原样返回，也就是「没有吸附目标」。
  */
 function snapAxis(
   pos: number,
   size: number,
   spans: readonly AxisSpan[],
   limit: number,
-  options: DockOptions,
+  options: SnapOptions,
 ): number {
   const candidates: { value: number; edge: boolean }[] = [
     { value: 0, edge: true },
@@ -244,77 +233,30 @@ function snapAxis(
   return Math.round(bestValue);
 }
 
-/** 跨轴对齐：把 `pos` 拉向邻卡的前缘或后缘（取更近的那个，且都在容差内）。 */
-function alignAxis(pos: number, size: number, span: AxisSpan, tolerance: number): number {
-  const head = span.pos - pos;
-  if (Number.isFinite(head) && Math.abs(head) <= tolerance) return span.pos;
-  const tail = span.pos + span.size - size - pos;
-  if (Number.isFinite(tail) && Math.abs(tail) <= tolerance) return span.pos + span.size - size;
-  return pos;
-}
-
 /**
- * 不许压在别的卡片上：为目标矩形找**离它最近的空位** —— 候选是「贴到每一张卡片的四条边」
- * （另一轴尽量与那张卡对齐），取无冲突且位移最小的一个。
+ * 吸附目标（**只是候选**，不改变卡片当下的位置）：夹进视口 → 两个轴各自找磁力目标。
  *
- * 为什么是「全局扫候选」而不是「撞到谁就往那一边推」：多张卡片挨在一起时，局部推挤会连锁
- * （推开的落点又撞上第三张），推着推着就没解了 —— 新卡会叠上去。扫候选一次就能找到空位。
+ * 语义（v1 的移动模型）：
+ *  - 拖动期间卡片**自由跟手、允许与其它卡片互相覆盖**（不再有「必须让开」的硬约束）；
+ *  - 与视口边缘、邻卡边缘或邻卡对齐线相差 ≤ `distance` 时给出吸附候选（两个轴各自独立判断，
+ *    所以「贴到旁边 + 上对齐」是两条候选同时命中）；
+ *  - 返回值与入参完全相同 = 这次没有吸附目标（调用方据此决定要不要画预览框）；
+ *  - **是否采用由用户决定**：松手时若预览框还在，就落到这里；否则落回自由位置。
  *
- * 一个候选都放不下（屏幕真的满了）时保持原样：宁可短暂重叠，也不要让卡片乱跳到莫名其妙的位置。
- */
-function escapeConflicts(
-  rect: Rect,
-  others: readonly Rect[],
-  viewport: Viewport,
-  options: DockOptions,
-): Rect {
-  if (!others.some((other) => conflicts(rect, other, options.gap))) return rect;
-  const candidates: Rect[] = [];
-  for (const other of others) {
-    const vertical = alignAxis(rect.y, rect.h, { pos: other.y, size: other.h }, options.align);
-    const horizontal = alignAxis(rect.x, rect.w, { pos: other.x, size: other.w }, options.align);
-    candidates.push(
-      { ...rect, x: other.x + other.w + options.gap, y: vertical }, // 贴它右边
-      { ...rect, x: other.x - rect.w - options.gap, y: vertical }, // 贴它左边
-      { ...rect, y: other.y + other.h + options.gap, x: horizontal }, // 贴它下边
-      { ...rect, y: other.y - rect.h - options.gap, x: horizontal }, // 贴它上边
-    );
-  }
-  let best: Rect | null = null;
-  let bestCost = Number.POSITIVE_INFINITY;
-  for (const candidate of candidates) {
-    const placed = containRect(candidate, viewport);
-    if (others.some((other) => conflicts(placed, other, options.gap))) continue;
-    const cost = Math.abs(placed.x - rect.x) + Math.abs(placed.y - rect.y);
-    if (cost < bestCost) {
-      best = placed;
-      bestCost = cost;
-    }
-  }
-  return best ?? rect;
-}
-
-/**
- * 移动落点（拖动与键盘移动共用）：夹进视口 → 同轴吸附（贴邻卡 / 贴视口边 / 边缘对齐）→
- * 不许压在别的卡片上。
- *
- * 拖动期间**每帧**都会跑它，所以吸附是「提前渲染」出来的：卡片在指针还没松手时就贴好了，
- * 松手只是把同一份几何写进本机布局。缩放不走这里（缩放只夹在 min/max 与视口内）。
- *
- * @param rect - 指针（或键盘）算出来的目标矩形。
- * @param others - 屏幕上其它卡片的矩形（不含自己；最小化的卡片不算障碍）。
+ * @param rect - 指针算出来的自由位置（内部会先夹进视口）。
+ * @param others - 屏幕上其它卡片的矩形（不含自己）。
  * @param viewport - 视口尺寸。
- * @param options - 吸附参数（默认 `SNAP_GAP` / `SNAP_DISTANCE` / `SNAP_ALIGN`）。
+ * @param options - 吸附参数（默认 `SNAP_GAP` / `SNAP_DISTANCE`）。
  */
-export function dockRect(
+export function snapRect(
   rect: Rect,
   others: readonly Rect[],
   viewport: Viewport,
-  options: DockOptions = DEFAULT_DOCK,
+  options: SnapOptions = DEFAULT_SNAP,
 ): Rect {
   const vp = safeViewport(viewport);
   const contained = containRect(rect, vp);
-  const snapped: Rect = {
+  return {
     ...contained,
     x: snapAxis(
       contained.x,
@@ -331,7 +273,6 @@ export function dockRect(
       options,
     ),
   };
-  return escapeConflicts(snapped, others, vp, options);
 }
 
 /**

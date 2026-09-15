@@ -37,7 +37,8 @@ export function Card({
   onError?: ((message: string, error?: unknown) => void) | undefined;
 }): ReactNode {
   const snapshot = useFramework(runtime);
-  const live = useLiveGeometry(runtime);
+  // 只订阅「我自己」的活动几何：别的卡片被拖动时这里拿到的引用不变，不会跟着重渲染
+  const live = useLiveGeometry(runtime, widget.id);
   const [menuOpen, setMenuOpen] = useState(false);
   const renderDepth = useRef(0);
   const warnedRenderSize = useRef(false);
@@ -218,6 +219,7 @@ export function Card({
       data-size-class={sizeClass}
       data-minimized={minimized ? 'true' : 'false'}
       data-locked={locked ? 'true' : 'false'}
+      data-gesture={gestureActive ? 'true' : 'false'}
     >
       <div
         className={styles.cardHeader}

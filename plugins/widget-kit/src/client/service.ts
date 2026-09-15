@@ -17,9 +17,10 @@ import {
   bringToFront,
   clampRect,
   contentBox,
+  containRect,
   defaultRect,
-  dockRect,
   isSameRect,
+  snapRect,
   sizeClassOf,
 } from './geometry.js';
 import type { Rect, RectConstraints, ResizeDir, Size, SizeClass, Viewport } from './geometry.js';
@@ -37,11 +38,17 @@ import type { CardState, DebouncedSaver, PersistedState, StorageLike } from './s
 import type { FrameworkConfig } from './types.js';
 import type { NormalizedWidget, WidgetBadge, WidgetDescriptor, WidgetSummary } from './spec.js';
 
-/** 拖拽/缩放期间挂起来的活动几何（只通知订阅 live 的那张卡）。 */
+/**
+ * 拖拽/缩放期间挂起来的活动几何。
+ *
+ * `rect` 是**自由跟手**的位置（卡片就渲染在这里，允许与其它卡片互相覆盖）；
+ * `snap` 是同时算出来的**吸附候选**（松手才会采用，拖动期间只画一个预览虚框）。
+ */
 export interface LiveGeometry {
   id: string;
   rect: Rect;
   mode: 'move' | ResizeDir;
+  snap: Rect | null;
 }
 
 /** 托盘与卡片层消费的完整快照（`useSyncExternalStore` 的 getSnapshot 返回它）。 */
@@ -92,6 +99,10 @@ export interface WidgetRuntime {
   getSnapshot(): FrameworkSnapshot;
   subscribeLive(listener: () => void): () => void;
   getLive(): LiveGeometry | null;
+  /** 只关心「我自己是不是正在被拖」的订阅者用它：别的卡片永远拿到 `null`（引用稳定，不触发重渲染）。 */
+  getLiveFor(id: string): LiveGeometry | null;
+  /** 当前吸附预览（拖动期间画虚框用；没有候选时为 `null`，引用稳定）。 */
+  getLiveSnap(): { id: string; rect: Rect } | null;
   beginLive(id: string, mode: 'move' | ResizeDir): void;
   setLive(id: string, rect: Rect): void;
   commitLive(id: string): void;
@@ -100,14 +111,6 @@ export interface WidgetRuntime {
   toggleMinimize(id: string): void;
   nudge(id: string, dx: number, dy: number): void;
   nudgeResize(id: string, dw: number, dh: number): void;
-  /**
-   * 移动落点：夹进视口 + 与其它卡片吸附 / 防重叠（拖动每帧与键盘移动共用）。
-   * 拖动期间调用它，吸附效果就是**提前渲染**出来的。
-   *
-   * @param magnet - 是否开启吸附磁力（默认 true）。键盘微调与「居中」传 false：
-   *   否则贴着邻卡时每一步都会被磁力吸回去，键盘就再也挪不开了 —— 防重叠仍然生效。
-   */
-  resolveMove(id: string, next: Rect, magnet?: boolean): Rect;
   requestSize(id: string, next: { w?: number | undefined; h?: number | undefined }): void;
   /** 框架自己改尺寸（菜单预设 / 恢复默认）：不受内容回环防护限制。 */
   resizeTo(id: string, next: { w?: number | undefined; h?: number | undefined }): void;
@@ -199,16 +202,12 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     return { min, max: widget.card?.maxSize ?? null };
   };
 
-  /** 吸附参数（数字只在 spec.ts 的 SPEC_DEFAULTS 里写一遍）。`magnet: false` 关掉磁力，只留防重叠。 */
-  function dockOptions(magnet = true): { gap: number; distance: number; align: number } {
-    return {
-      gap: SPEC_DEFAULTS.snapGap,
-      distance: magnet ? SPEC_DEFAULTS.snapDistance : 0,
-      align: magnet ? SPEC_DEFAULTS.snapAlign : 0,
-    };
+  /** 吸附参数（数字只在 spec.ts 的 SPEC_DEFAULTS 里写一遍）。 */
+  function snapOptions(): { gap: number; distance: number } {
+    return { gap: SPEC_DEFAULTS.snapGap, distance: SPEC_DEFAULTS.snapDistance };
   }
 
-  /** 屏幕上真正占位的其它卡片（不含自己；最小化的只留一条标题栏，不算障碍）。 */
+  /** 屏幕上真正占位的其它卡片（不含自己；最小化的只留一条标题栏，不作为吸附对象）。 */
   function othersOf(exceptId: string): Rect[] {
     const out: Rect[] = [];
     for (const [id, card] of Object.entries(state.cards)) {
@@ -216,11 +215,6 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       out.push({ x: card.x, y: card.y, w: card.w, h: card.h });
     }
     return out;
-  }
-
-  /** 移动落点：夹进视口 + 吸附 + 不许压在别的卡片上。拖动与键盘移动共用这一处。 */
-  function resolveMove(id: string, next: Rect, magnet = true): Rect {
-    return dockRect(next, othersOf(id), viewport, dockOptions(magnet));
   }
 
   // 启动时**宽松**读盘：此刻注册表还是空的（各插件的 client 半随后才注册），按 id 过滤会把
@@ -341,10 +335,8 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   function makeCardState(widget: NormalizedWidget, index: number): CardState {
     const constraints = constraintsFor(widget);
     const wanted: Size = widget.card?.defaultSize ?? SPEC_DEFAULTS.cardDefaultSize;
-    // 层叠落点只是「从哪冒出来」的锚，真正落位还要避让已在屏幕上的卡片：
-    // 新卡宁可贴到旁边，也不要压在别人身上（见 docs/widget-spec.md §6 卡片 · 吸附）。
-    const fallback = defaultRect(index, wanted, constraints, viewport);
-    const rect = dockRect(fallback, othersOf(widget.id), viewport, dockOptions());
+    // 层叠落点：新卡依次往左下错开一点，**允许与已有卡片重叠**（谁在上由 z 序说了算）。
+    const rect = defaultRect(index, wanted, constraints, viewport);
     return { ...rect, minimized: false, open: false, locked: false };
   }
 
@@ -690,21 +682,37 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     if (widgetOf(id) === undefined) return;
     // 锁定 = 位置与尺寸都不可改：拖拽/缩放在入口就被挡住（键盘与菜单走 applyRect 的同一道锁）
     if (isLocked(id)) return;
-    live = { id, rect: rectOf(id), mode };
+    live = { id, rect: rectOf(id), mode, snap: null };
     notifyLive();
   }
 
+  /**
+   * 拖动/缩放中的一帧。
+   *
+   * 移动时同时算一份**吸附候选**：卡片本体按自由位置渲染（允许盖住别人），候选只画虚框；
+   * 松手（`commitLive`）才决定用哪一个 —— 这就是「先给预览，用户松手才算同意」。
+   * 候选没变时复用同一个对象引用，订阅者（虚框）因此不会每帧重渲染。
+   */
   function setLive(id: string, rect: Rect): void {
     if (live === null || live.id !== id) return;
-    if (isSameRect(live.rect, rect)) return;
-    live = { id, rect, mode: live.mode };
+    const contained = containRect(rect, viewport);
+    let snap: Rect | null = null;
+    if (live.mode === 'move') {
+      const candidate = snapRect(contained, othersOf(id), viewport, snapOptions());
+      if (!isSameRect(candidate, contained)) {
+        snap = live.snap !== null && isSameRect(live.snap, candidate) ? live.snap : candidate;
+      }
+    }
+    if (isSameRect(live.rect, contained) && snap === live.snap) return;
+    live = { id, rect: contained, mode: live.mode, snap };
     notifyLive();
   }
 
   function commitLive(id: string): void {
     if (live === null || live.id !== id) return;
     const widget = widgetOf(id);
-    const rect = live.rect;
+    // 松手时如果吸附预览还在，就落到预览位置；否则落回自由位置（用户「不同意」吸附）
+    const rect = live.snap ?? live.rect;
     live = null;
     notifyLive();
     if (widget === undefined || widget.presentation !== 'card') return;
@@ -756,8 +764,8 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   function nudge(id: string, dx: number, dy: number): void {
     const rect = rectOf(id);
     raiseOrder(id);
-    // 键盘微调要「说走就走」：关掉磁力（否则贴着邻卡时每步都被吸回去），但防重叠照旧
-    applyRect(id, resolveMove(id, { ...rect, x: rect.x + dx, y: rect.y + dy }, false));
+    // 键盘微调是「精确移动」：不吃磁力（吸附只服务指针拖拽），只做视口夹紧
+    applyRect(id, { ...rect, x: rect.x + dx, y: rect.y + dy });
   }
 
   function nudgeResize(id: string, dw: number, dh: number): void {
@@ -783,18 +791,11 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     const widget = widgetOf(id);
     if (widget === undefined || widget.presentation !== 'card') return;
     const rect = rectOf(id);
-    applyRect(
-      id,
-      resolveMove(
-        id,
-        {
-          ...rect,
-          x: Math.round((viewport.width - rect.w) / 2),
-          y: Math.round((viewport.height - rect.h) / 2),
-        },
-        false,
-      ),
-    );
+    applyRect(id, {
+      ...rect,
+      x: Math.round((viewport.width - rect.w) / 2),
+      y: Math.round((viewport.height - rect.h) / 2),
+    });
   }
 
   function requestSize(id: string, next: { w?: number | undefined; h?: number | undefined }): void {
@@ -1020,6 +1021,8 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       };
     },
     getLive: () => live,
+    getLiveFor: (id) => (live !== null && live.id === id ? live : null),
+    getLiveSnap: () => (live === null || live.snap === null ? null : { id: live.id, rect: live.snap }),
     beginLive,
     setLive,
     commitLive,
@@ -1031,7 +1034,6 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     toggleMinimize,
     nudge,
     nudgeResize,
-    resolveMove,
     requestSize,
     resizeTo,
     center,

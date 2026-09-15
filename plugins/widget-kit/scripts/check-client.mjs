@@ -12,8 +12,10 @@
  *   6. 同 id 重注册 = 覆盖（HMR / 重复 apply 的语义）；
  *   7. **渲染一遍**：托盘与卡片层的组件树能真的跑出元素（用 stub 的 React，不画像），
  *      卡片外层几何等于运行时给的矩形 —— 这一步能在没有浏览器的情况下抓住渲染期崩溃；
- *   8. 本轮新增的四件事：**刷新后恢复**（首帧会话绑定不算切会话）、**最小化折叠成标题栏**、
- *      **位置锁定**、**启用 / 禁用**与**常驻 popover**。
+ *   8. **刷新后恢复**（首帧会话绑定不算切会话）、**最小化折叠成标题栏**、**位置锁定**、
+ *      **启用 / 禁用**与**常驻 popover**；
+ *   9. **拖动模型**：自由跟手 + 允许互相覆盖、吸附候选只画预览虚框、松手才吸附；
+ *      手势的 window 兜底监听与「左键已松开」的收尾（治「卡 / 断触 / 松了还在拖」）。
  *
  * 只用 node 内建模块。
  */
@@ -74,6 +76,8 @@ void liveHook;
 
 // ── 浏览器环境替身 ───────────────────────────────────────────────────────
 const storage = new Map();
+/** window 上的监听器登记表：手势的 move / up / cancel 都挂在这里，自检要能手动派发。 */
+const windowListeners = new Map();
 const windowStub = {
   __ModuleLoader__: {
     load: (entry) => {
@@ -82,8 +86,14 @@ const windowStub = {
   },
   innerWidth: 1280,
   innerHeight: 800,
-  addEventListener: () => {},
-  removeEventListener: () => {},
+  addEventListener: (type, handler) => {
+    const set = windowListeners.get(type) ?? new Set();
+    set.add(handler);
+    windowListeners.set(type, set);
+  },
+  removeEventListener: (type, handler) => {
+    windowListeners.get(type)?.delete(handler);
+  },
   localStorage: {
     getItem: (key) => (storage.has(key) ? storage.get(key) : null),
     setItem: (key, value) => storage.set(key, value),
@@ -92,6 +102,20 @@ const windowStub = {
 };
 let loaded = null;
 
+/** rAF 替身：立即执行（手势的每帧合并逻辑因此可以确定性推进）。 */
+globalThis.requestAnimationFrame = (callback) => {
+  callback();
+  return 1;
+};
+globalThis.cancelAnimationFrame = () => {};
+
+/** 把事件派发给所有 window 监听器（手势的兜底监听就是这些）。 */
+function fireWindow(type, event) {
+  // 先取快照再派发：监听器里可能会把自己摘掉（收尾时 removeEventListener）
+  const handlers = Array.from(windowListeners.get(type) ?? []);
+  for (const handler of handlers) handler(event);
+}
+
 const fetchCalls = [];
 globalThis.fetch = async (url, init) => {
   fetchCalls.push({ url, method: init?.method ?? 'GET' });
@@ -99,7 +123,7 @@ globalThis.fetch = async (url, init) => {
     async json() {
       return {
         ok: true,
-        version: '0.3.1',
+        version: '0.4.0',
         specVersion: 1,
         config: {
           trayEnabled: true,
@@ -212,7 +236,7 @@ const expectedServiceKeys = [...EXPECTED_SERVICE_KEYS];
 expectedServiceKeys.sort();
 assert.deepEqual(actualServiceKeys, expectedServiceKeys, 'widgets 服务的成员必须与 SPEC_KEYS.service 一致');
 assert.equal(service.specVersion, 1);
-assert.equal(service.frameworkVersion, '0.3.1');
+assert.equal(service.frameworkVersion, '0.4.0');
 
 // ── 2. 槽位注册 ──────────────────────────────────────────────────────────
 assert.deepEqual(injections, ['conversation.session.header.utilities', 'shell.overlay', 'settings.section']);
@@ -869,8 +893,8 @@ runtime.setAnchor('demo:lock', null);
 assert.equal(runtime.getAnchor('demo:lock'), null, '卸载后锚点必须清掉');
 stopAnchorWatch();
 
-// 10.9 吸附与防重叠（拖动期间就要看到吸附结果）
-/** 两块矩形是否冲突（与 framework 的 geometry.conflicts 同一判定）。 */
+// 10.9 拖动模型：自由跟手 + 允许覆盖 + 吸附预览虚框 + 松手才吸附
+/** 两块矩形是否相交（只做判定，不再有「必须让开」的硬约束）。 */
 function overlaps(a, b, gap) {
   return a.x < b.x + b.w + gap && b.x < a.x + a.w + gap && a.y < b.y + b.h + gap && b.y < a.y + a.h + gap;
 }
@@ -882,91 +906,161 @@ const disposeDockA = service.register(makeCard('demo:dock-a', '吸附甲'));
 const disposeDockB = service.register(makeCard('demo:dock-b', '吸附乙'));
 const disposeDockC = service.register(makeCard('demo:dock-c', '吸附丙'));
 
-// ① 不许拖到屏幕之外：四个越界方向都夹回视口内（整卡可见），靠近边缘则直接吸附贴边
+// ① 打开三张卡：全部完整留在视口内；**允许互相覆盖**（谁在上由 z 序决定，不再强行推开）
 service.close('demo:lock');
-assert.deepEqual(runtime.resolveMove('demo:dock-c', { x: -9999, y: -9999, w: 240, h: 140 }), {
-  x: 0,
-  y: 0,
-  w: 240,
-  h: 140,
-});
-assert.deepEqual(
-  runtime.resolveMove('demo:dock-c', { x: 5, y: 4, w: 240, h: 140 }),
-  { x: 0, y: 0, w: 240, h: 140 },
-  '离边缘 5px 以内要吸附贴边',
-);
-assert.deepEqual(runtime.resolveMove('demo:dock-c', { x: 9999, y: 9999, w: 240, h: 140 }), {
-  x: 1280 - 240,
-  y: 800 - 140,
-  w: 240,
-  h: 140,
-});
+service.open('demo:dock-a');
+service.open('demo:dock-b');
+service.open('demo:dock-c');
+const openIds = ['demo:dock-a', 'demo:dock-b', 'demo:dock-c'];
+for (const id of openIds) {
+  assert.ok(insideViewport(runtime.rectOf(id)), `${id} 必须完整留在视口内`);
+}
+assert.equal(service.isOpen('demo:lock'), false, '这一段开始时已收起「锁定卡片」');
 
 // ② 甲挪到左上角当基准（键盘微调不受磁力影响，落点精确）
-service.open('demo:dock-a');
 runtime.nudge('demo:dock-a', -9999, -9999);
 const dockAnchor = runtime.rectOf('demo:dock-a');
 assert.deepEqual(dockAnchor, { x: 0, y: 0, w: 360, h: 240 }, '甲应停在左上角');
 
-// ③ 拖动期间：乙拖到甲右侧 3px、往下 100px → **live 快照里就已经是吸附结果**
-service.open('demo:dock-b');
+// ③ 拖动期间卡片**自由跟手**（不会被强行吸走），同时给出吸附候选
 runtime.beginLive('demo:dock-b', 'move');
-runtime.setLive(
-  'demo:dock-b',
-  runtime.resolveMove('demo:dock-b', {
-    x: dockAnchor.x + dockAnchor.w + 3,
-    y: dockAnchor.y + 100,
-    w: 360,
-    h: 240,
-  }),
-);
-const liveRect = runtime.getLive().rect;
-assert.equal(liveRect.x, dockAnchor.x + dockAnchor.w + 8, '拖动期间就要贴到邻卡右侧（间隔 8px）');
-assert.equal(liveRect.y, dockAnchor.y + 100, '纵向差得多就不对齐，跟手走');
+const freeTarget = { x: dockAnchor.x + dockAnchor.w + 3, y: dockAnchor.y + 100, w: 360, h: 240 };
+runtime.setLive('demo:dock-b', freeTarget);
+const liveFree = runtime.getLive();
+assert.deepEqual(liveFree.rect, freeTarget, '松手前卡片必须停在指针给的位置（不强制吸附）');
+const previewLive = runtime.getLiveSnap();
+assert.ok(previewLive, '离邻卡边缘 3px：必须给出吸附预览');
+assert.equal(previewLive.rect.x, dockAnchor.x + dockAnchor.w + 8, '预览贴到邻卡右侧（间隔 8px）');
+assert.equal(previewLive.rect.y, dockAnchor.y + 100, '纵向差得多，预览不对齐');
 runtime.commitLive('demo:dock-b');
-assert.deepEqual(runtime.rectOf('demo:dock-b'), liveRect, '松手后落到同一个吸附位置（预览即结果）');
-assert.equal(overlaps(liveRect, dockAnchor, 8), false, '吸附结果不得压住邻卡');
+assert.deepEqual(runtime.rectOf('demo:dock-b'), previewLive.rect, '松手（同意）后落到预览位置');
+assert.equal(runtime.getLiveSnap(), null, '手势结束后不再有预览');
 
-// 纵向也靠近时：顺带上对齐
+// ④ 纵向也靠近时：预览变成「贴右边 + 上对齐」
 runtime.beginLive('demo:dock-b', 'move');
-runtime.setLive(
-  'demo:dock-b',
-  runtime.resolveMove('demo:dock-b', {
-    x: dockAnchor.x + dockAnchor.w + 3,
-    y: dockAnchor.y + 2,
-    w: 360,
-    h: 240,
-  }),
+runtime.setLive('demo:dock-b', {
+  x: dockAnchor.x + dockAnchor.w + 3,
+  y: dockAnchor.y + 2,
+  w: 360,
+  h: 240,
+});
+const aligned = runtime.getLiveSnap();
+assert.ok(aligned, '仍然有预览');
+assert.equal(aligned.rect.y, dockAnchor.y, '另一轴在容差内顺带对齐（上对齐）');
+runtime.commitLive('demo:dock-b');
+assert.deepEqual(runtime.rectOf('demo:dock-b'), aligned.rect);
+
+// ⑤ 拖开（离吸附线很远）再松手：**不吸附**，落回自由位置 —— 这就是「不同意」
+runtime.beginLive('demo:dock-b', 'move');
+const loose = { x: 600, y: 500, w: 360, h: 240 };
+runtime.setLive('demo:dock-b', loose);
+assert.equal(runtime.getLiveSnap(), null, '离任何吸附线都远：不得给出预览');
+assert.deepEqual(runtime.getLive().rect, loose, '自由位置照常跟手');
+runtime.commitLive('demo:dock-b');
+assert.deepEqual(runtime.rectOf('demo:dock-b'), loose, '没有预览就落回自由位置');
+assert.equal(overlaps(runtime.rectOf('demo:dock-b'), runtime.rectOf('demo:dock-c'), 0), false);
+
+// ⑥ 允许覆盖：把乙直接拖到丙身上，框架不得把它推开
+const targetC = runtime.rectOf('demo:dock-c');
+runtime.beginLive('demo:dock-b', 'move');
+runtime.setLive('demo:dock-b', { x: targetC.x, y: targetC.y, w: 360, h: 240 });
+assert.deepEqual(
+  runtime.getLive().rect,
+  { x: targetC.x, y: targetC.y, w: 360, h: 240 },
+  '卡可以盖在另一张卡上（用户要对齐压上去时不许被推开）',
 );
-const alignedRect = runtime.getLive().rect;
-assert.equal(alignedRect.y, dockAnchor.y, '另一轴在容差内顺带对齐（上对齐）');
+runtime.commitLive('demo:dock-b');
+assert.deepEqual(runtime.rectOf('demo:dock-b'), { ...targetC, w: 360, h: 240 });
+
+// ⑦ 拖到屏幕外：夹回视口内（整卡可见）
+runtime.beginLive('demo:dock-b', 'move');
+runtime.setLive('demo:dock-b', { x: -9999, y: -9999, w: 360, h: 240 });
+assert.deepEqual(runtime.getLive().rect, { x: 0, y: 0, w: 360, h: 240 }, '越界必须夹回视口内');
 runtime.commitLive('demo:dock-b');
 
-// ④ 再打开丙：它自己会让位，屏幕上三张卡两两不重叠
-service.open('demo:dock-c');
-assert.equal(service.isOpen('demo:lock'), false, '这一段开始时已收起「锁定卡片」');
-const openIds = ['demo:dock-a', 'demo:dock-b', 'demo:dock-c'];
-const openRects = openIds.map((id) => runtime.rectOf(id));
-for (let i = 0; i < openRects.length; i += 1) {
-  assert.ok(insideViewport(openRects[i]), `${openIds[i]} 必须完整留在视口内`);
-  for (let j = i + 1; j < openRects.length; j += 1) {
-    assert.equal(
-      overlaps(openRects[i], openRects[j], 8),
-      false,
-      `${openIds[i]} 与 ${openIds[j]} 不得叠在一起（新卡自己会让位）`,
-    );
-  }
-}
-
-// ⑤ 键盘：贴着邻卡的卡片必须还能被挪开（关掉磁力），但挪不进别的卡片里（防重叠照旧）
-const dockedB = runtime.rectOf('demo:dock-b');
+// ⑧ 键盘微调是精确移动：不吃磁力，但仍受视口约束
+const before = runtime.rectOf('demo:dock-b');
 runtime.nudge('demo:dock-b', 8, 0);
-assert.deepEqual(runtime.rectOf('demo:dock-b'), { ...dockedB, x: dockedB.x + 8 }, '键盘微调不得被磁力吸住');
-runtime.nudge('demo:dock-b', -1000, 0);
-const pushed = runtime.rectOf('demo:dock-b');
-assert.equal(overlaps(pushed, runtime.rectOf('demo:dock-a'), 8), false, '键盘也不许把卡片压到别人身上');
-assert.equal(overlaps(pushed, runtime.rectOf('demo:dock-c'), 8), false);
-assert.ok(insideViewport(pushed), '键盘移动同样受视口约束');
+assert.deepEqual(runtime.rectOf('demo:dock-b'), { ...before, x: before.x + 8 }, '键盘微调不得被磁力吸住');
+runtime.nudge('demo:dock-b', -9999, -9999);
+assert.deepEqual(runtime.rectOf('demo:dock-b'), { ...before, x: 0 }, '键盘移动受视口约束');
+
+// ⑨ 订阅稳定性：别的卡片拿到的 live 恒为 null（同一个引用），拖动不会带着所有卡片重渲染
+const liveCalls = [];
+runtime.subscribeLive(() => {
+  liveCalls.push(runtime.getLiveFor('demo:dock-c'));
+});
+runtime.beginLive('demo:dock-b', 'move');
+runtime.setLive('demo:dock-b', { x: 100, y: 100, w: 360, h: 240 });
+runtime.setLive('demo:dock-b', { x: 110, y: 100, w: 360, h: 240 });
+assert.ok(liveCalls.length >= 3, '订阅者必须被通知');
+assert.ok(
+  liveCalls.every((value) => value === null),
+  '没被拖的卡片每帧都必须拿到 null（引用稳定 → 不重渲染）',
+);
+assert.equal(runtime.getLiveFor('demo:dock-b')?.id, 'demo:dock-b', '被拖的卡片能拿到自己的几何');
+// 吸附候选不变时必须复用同一个对象引用（虚框组件因此不会每帧重渲染）
+runtime.setLive('demo:dock-b', { x: 108, y: 108, w: 360, h: 240 });
+const snapOne = runtime.getLiveSnap();
+runtime.setLive('demo:dock-b', { x: 111, y: 111, w: 360, h: 240 });
+assert.equal(runtime.getLiveSnap(), snapOne, '候选没变就必须是同一个引用');
+runtime.commitLive('demo:dock-b');
+
+// ⑩ 真实手势走一遍：pointerdown → window 上的 move / up（含「左键已松开」的兜底）
+const gestureCard = cardNodeOf('demo:dock-b');
+const gestureHeader = collect(gestureCard).find(
+  (node) => typeof node.props.className === 'string' && node.props.className.includes('cardHeader'),
+);
+const gestureStart = runtime.rectOf('demo:dock-b');
+let captured = null;
+gestureHeader.props.onPointerDown({
+  button: 0,
+  pointerId: 7,
+  clientX: 0,
+  clientY: 0,
+  currentTarget: {
+    setPointerCapture: (id) => {
+      captured = id;
+    },
+  },
+  preventDefault: () => {},
+  stopPropagation: () => {},
+});
+assert.equal(captured, 7, 'pointerdown 必须尝试捕获指针');
+assert.equal(runtime.getLive()?.id, 'demo:dock-b', '手势已经开始');
+fireWindow('pointermove', { pointerId: 7, pointerType: 'mouse', buttons: 1, clientX: 40, clientY: -20 });
+assert.deepEqual(
+  runtime.getLive().rect,
+  { x: gestureStart.x + 40, y: Math.max(0, gestureStart.y - 20), w: 360, h: 240 },
+  'window 上的 move 必须驱动手势（指针捕获在真实浏览器里可能被悄悄收走）',
+);
+// 左键已经松开（漏收了 pointerup，例如松在窗口外）：这一次 move 就该收尾提交，
+// 并且**按最后按住时的坐标**提交 —— 松手后再甩鼠标不该让卡片跟着乱跑
+fireWindow('pointermove', { pointerId: 7, pointerType: 'mouse', buttons: 0, clientX: 200, clientY: 200 });
+assert.equal(runtime.getLive(), null, 'buttons === 0 必须立即结束手势，不能一直「粘」在拖动状态');
+assert.deepEqual(
+  runtime.rectOf('demo:dock-b'),
+  { x: gestureStart.x + 40, y: gestureStart.y - 20, w: 360, h: 240 },
+  '按最后「按住时」的坐标提交',
+);
+assert.equal(windowListeners.get('pointermove')?.size ?? 0, 0, '手势结束后 window 监听必须摘干净');
+
+// ⑪ pointercancel（系统接管手势）丢弃本次几何
+const beforeCancel = runtime.rectOf('demo:dock-b');
+gestureHeader.props.onPointerDown({
+  button: 0,
+  pointerId: 9,
+  clientX: 0,
+  clientY: 0,
+  currentTarget: { setPointerCapture: () => {} },
+  preventDefault: () => {},
+  stopPropagation: () => {},
+});
+fireWindow('pointermove', { pointerId: 9, pointerType: 'touch', buttons: 1, clientX: 200, clientY: 200 });
+fireWindow('pointercancel', { pointerId: 9, pointerType: 'touch', buttons: 0, clientX: 200, clientY: 200 });
+assert.equal(runtime.getLive(), null, 'pointercancel 必须结束手势');
+assert.deepEqual(runtime.rectOf('demo:dock-b'), beforeCancel, 'pointercancel 丢弃本次几何');
+assert.equal(windowListeners.get('pointerup')?.size ?? 0, 0, 'window 监听必须摘干净');
 
 // 10.9b 锁定后拖拽入口仍要吃掉 pointerdown（否则会选中页面文字），但不能产生 live 几何
 runtime.setLocked('demo:dock-a', true);
@@ -1033,6 +1127,42 @@ runtime.commitLive('demo:dock-a');
 assert.equal(shieldOf(), null);
 assert.equal(runtime.rectOf('demo:dock-a').w, 420, '提交后几何才落盘');
 
+// 10.9d 吸附预览虚框：拖动期间在层里渲染一个「松手会落到这里」的框
+const ghostOf = () => {
+  const node = collect(render(layerEntry.component({}))).find(
+    (candidate) =>
+      typeof candidate.props.className === 'string' && candidate.props.className.includes('snapGhost'),
+  );
+  return node ?? null;
+};
+assert.equal(ghostOf(), null, '没有手势时不得有预览虚框');
+
+// 先把甲摆到 (400,300) 当基准（键盘微调精确落位，不吃磁力）
+const aBefore = runtime.rectOf('demo:dock-a');
+runtime.nudge('demo:dock-a', 400 - aBefore.x, 300 - aBefore.y);
+const anchorA = runtime.rectOf('demo:dock-a');
+assert.deepEqual({ x: anchorA.x, y: anchorA.y }, { x: 400, y: 300 }, '甲停在 (400,300)');
+
+const cBeforeLive = runtime.rectOf('demo:dock-c');
+runtime.beginLive('demo:dock-c', 'move');
+runtime.setLive('demo:dock-c', { x: anchorA.x + anchorA.w + 3, y: anchorA.y + 2, w: 360, h: 240 });
+const ghost = ghostOf();
+assert.ok(ghost, '有吸附候选时必须渲染预览虚框');
+assert.equal(ghost.props['data-ghost-for'], 'demo:dock-c');
+assert.equal(ghost.props.style.left, anchorA.x + anchorA.w + 8, '虚框落在吸附后的位置（贴右缘 + 8px）');
+assert.equal(ghost.props.style.top, anchorA.y, '虚框也带上对齐结果（上对齐）');
+assert.equal(runtime.rectOf('demo:dock-c').x, cBeforeLive.x, '虚框出现时卡片本体还没动（松手才吸附）');
+assert.equal(runtime.getLive().rect.x, anchorA.x + anchorA.w + 3, '本体仍然自由跟手');
+
+// 拖开：虚框消失，卡片本体照常跟手（先把乙支开，免得它提供新的吸附线）
+const bBefore = runtime.rectOf('demo:dock-b');
+runtime.nudge('demo:dock-b', -bBefore.x, 540 - bBefore.y);
+runtime.setLive('demo:dock-c', { x: 100, y: 100, w: 360, h: 240 });
+assert.equal(ghostOf(), null, '离开所有吸附线后虚框必须消失');
+assert.equal(runtime.getLive().rect.x, 100, '卡片本体仍然自由跟手');
+runtime.cancelLive();
+assert.equal(ghostOf(), null, '手势结束后虚框必须撤掉');
+
 // 10.10 锁定按钮的状态（红色锁 / 绿色开锁靠 data-locked 选择器着色）
 const lockBtnOf = (id) => {
   const card = collect(render(layerEntry.component({}))).find((node) => node.props['data-widget'] === id);
@@ -1060,5 +1190,5 @@ disposePinnedHover();
 disposeA();
 disposeB();
 console.log(
-  'check-client.mjs ok (loader / 服务 / 槽位 / 校验 / 渲染 / popover / 恢复 / 折叠 / 锁定 / 启停 / 吸附)',
+  'check-client.mjs ok (loader / 服务 / 槽位 / 校验 / 渲染 / popover / 恢复 / 折叠 / 锁定 / 启停 / 吸附 / 手势)',
 );
