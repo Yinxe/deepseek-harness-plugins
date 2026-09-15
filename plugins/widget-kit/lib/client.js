@@ -30,7 +30,7 @@ module.exports = __toCommonJS(client_exports);
 
 // src/client/spec.ts
 var SPEC_VERSION = 1;
-var FRAMEWORK_VERSION = "0.4.0";
+var FRAMEWORK_VERSION = "0.4.1";
 var WIDGET_ID_PATTERN = /^[a-z0-9-]{2,32}:[a-z0-9-]{2,32}$/;
 var PRESENTATIONS = ["tray", "popover", "card"];
 var SPEC_DEFAULTS = {
@@ -1014,7 +1014,7 @@ function Card({
       { id: "lock", label: locked ? "\u89E3\u9501\u4F4D\u7F6E" : "\u9501\u5B9A\u4F4D\u7F6E\uFF08\u4E0D\u53EF\u79FB\u52A8\u4E0E\u7F29\u653E\uFF09" }
     ];
     if (locked) {
-      entries.push({ type: "label", id: "locked-label", text: "\u4F4D\u7F6E\u5DF2\u9501\u5B9A" });
+      entries.push({ type: "label", id: "locked-label", text: "\u4F4D\u7F6E\u5DF2\u9501\u5B9A\uFF1A\u79FB\u52A8\u4E0E\u7F29\u653E\u5DF2\u505C\u7528" });
     } else {
       entries.push(
         { id: "reset", label: "\u6062\u590D\u9ED8\u8BA4\u5C3A\u5BF8" },
@@ -1174,7 +1174,7 @@ function Card({
                         children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(LockGlyph, { locked })
                       }
                     ),
-                    widget.card?.minimizable !== false && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                    !locked && widget.card?.minimizable !== false && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
                       "button",
                       {
                         type: "button",
@@ -1215,7 +1215,7 @@ function Card({
                         )
                       }
                     ),
-                    widget.card?.closable !== false && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                    !locked && widget.card?.closable !== false && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
                       "button",
                       {
                         type: "button",

@@ -123,7 +123,7 @@ globalThis.fetch = async (url, init) => {
     async json() {
       return {
         ok: true,
-        version: '0.4.0',
+        version: '0.4.1',
         specVersion: 1,
         config: {
           trayEnabled: true,
@@ -236,7 +236,7 @@ const expectedServiceKeys = [...EXPECTED_SERVICE_KEYS];
 expectedServiceKeys.sort();
 assert.deepEqual(actualServiceKeys, expectedServiceKeys, 'widgets 服务的成员必须与 SPEC_KEYS.service 一致');
 assert.equal(service.specVersion, 1);
-assert.equal(service.frameworkVersion, '0.4.0');
+assert.equal(service.frameworkVersion, '0.4.1');
 
 // ── 2. 槽位注册 ──────────────────────────────────────────────────────────
 assert.deepEqual(injections, ['conversation.session.header.utilities', 'shell.overlay', 'settings.section']);
@@ -1179,7 +1179,31 @@ const lockedBtn = lockBtnOf('demo:dock-a');
 assert.equal(lockedBtn.props['data-locked'], 'true', '锁定后必须切到红锁态');
 assert.equal(lockedBtn.props['aria-pressed'], true);
 assert.match(lockedBtn.props['aria-label'], /解锁「吸附甲」的位置/);
+
+// 锁定后标题栏只留「解锁」+「⋯」：最小化 / 关闭 / 尺寸项都不再占位置（前两个进菜单）
+const headerButtons = (id) => {
+  const card = collect(render(layerEntry.component({}))).find((node) => node.props['data-widget'] === id);
+  const header = collect(card).find(
+    (node) => typeof node.props.className === 'string' && node.props.className.includes('cardHeader'),
+  );
+  return collect(header).filter((node) => node.type === 'button');
+};
+assert.equal(headerButtons('demo:dock-a').length, 1, '锁定后标题栏只剩解锁按钮（⋯ 是 Menu 的锚点）');
+assert.ok(
+  collect(render(layerEntry.component({}))).some((node) => node.type === 'Menu'),
+  '⋯ 扩展菜单必须还在',
+);
+const lockedMenuIds = collect(render(layerEntry.component({})))
+  .filter((node) => node.type === 'Menu')
+  .map((node) => node.props.items.map((item) => item.id));
+assert.ok(
+  lockedMenuIds.some(
+    (items) => items.includes('minimize') && items.includes('close') && items.includes('lock'),
+  ),
+  '锁定时最小化 / 关闭 / 解锁都必须在扩展菜单里（仍然可用，只是不占标题栏）',
+);
 runtime.setLocked('demo:dock-a', false);
+assert.equal(headerButtons('demo:dock-a').length, 3, '解锁后标题栏恢复：锁定 + 最小化 + 关闭');
 
 disposeDockA();
 disposeDockB();

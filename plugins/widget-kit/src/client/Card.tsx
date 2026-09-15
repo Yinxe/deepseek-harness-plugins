@@ -79,9 +79,10 @@ export function Card({
       { id: 'minimize', label: minimized ? '还原卡片' : '最小化' },
       { id: 'lock', label: locked ? '解锁位置' : '锁定位置（不可移动与缩放）' },
     ];
-    // 锁定后几何相关的项一律不出现：菜单里能点、点了没反应是最糟的一种交互
+    // 锁定后几何相关的项一律不出现（点了没反应是最糟的一种交互），标题栏也只剩「解锁 + ⋯」，
+    // 所以最小化 / 关闭这两个仍可用的动作都收进这个菜单里
     if (locked) {
-      entries.push({ type: 'label', id: 'locked-label', text: '位置已锁定' });
+      entries.push({ type: 'label', id: 'locked-label', text: '位置已锁定：移动与缩放已停用' });
     } else {
       entries.push(
         { id: 'reset', label: '恢复默认尺寸' },
@@ -255,7 +256,9 @@ export function Card({
           >
             <LockGlyph locked={locked} />
           </button>
-          {widget.card?.minimizable !== false && (
+          {/* 锁定的卡片标题栏只留「解锁」与「⋯」：最小化 / 关闭都进菜单，
+              免得一排图标里点错（这两个动作本身仍然可用，只是不再占标题栏） */}
+          {!locked && widget.card?.minimizable !== false && (
             <button
               type="button"
               className={styles.cardAction}
@@ -293,7 +296,7 @@ export function Card({
               </button>
             }
           />
-          {widget.card?.closable !== false && (
+          {!locked && widget.card?.closable !== false && (
             <button
               type="button"
               className={styles.cardAction + ' ' + styles.cardActionDanger}
