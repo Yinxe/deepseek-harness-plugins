@@ -137,7 +137,7 @@ globalThis.fetch = async (url, init) => {
     async json() {
       return {
         ok: true,
-        version: '0.9.0',
+        version: '0.9.1',
         specVersion: 1,
         config: {
           trayEnabled: true,
@@ -250,7 +250,7 @@ const expectedServiceKeys = [...EXPECTED_SERVICE_KEYS];
 expectedServiceKeys.sort();
 assert.deepEqual(actualServiceKeys, expectedServiceKeys, 'widgets 服务的成员必须与 SPEC_KEYS.service 一致');
 assert.equal(service.specVersion, 1);
-assert.equal(service.frameworkVersion, '0.9.0');
+assert.equal(service.frameworkVersion, '0.9.1');
 
 // ── 2. 槽位注册 ──────────────────────────────────────────────────────────
 assert.deepEqual(injections, ['conversation.session.header.utilities', 'shell.overlay', 'settings.section']);
@@ -732,12 +732,12 @@ assert.equal(restoredCard.props['data-minimized'], 'false');
 runtime.minimize('demo:lock');
 const capsule = runtime.rectOf('demo:lock');
 assert.equal(runtime.getSnapshot().layout.cards['demo:lock'].minimized, true, '前置：先最小化');
-runtime.setCollapsedSize('demo:lock', { w: 148, h: 36 });
+const capsuleWidth = Math.min(capsule.w, 160); // SPEC_DEFAULTS.minimizedWidth
 assert.deepEqual(runtime.rectOf('demo:lock'), capsule, '胶囊尺寸不得改动布局里的矩形');
 assert.deepEqual(
   runtime.visualRectOf('demo:lock'),
-  { x: capsule.x, y: capsule.y, w: 148, h: 36 },
-  '看起来占的是一枚 148×36 的胶囊（最小化中）',
+  { x: capsule.x, y: capsule.y, w: capsuleWidth, h: 36 },
+  '看起来占的是一枚 160×36 的胶囊（最小化中）',
 );
 // 键盘移动：只改位置，展开尺寸留着
 runtime.nudge('demo:lock', 10, 6);
@@ -748,24 +748,29 @@ assert.deepEqual(runtime.rectOf('demo:lock'), {
 });
 // 拖动提交：同样只取位置
 runtime.beginLive('demo:lock', 'move');
-runtime.setLive('demo:lock', { x: 400, y: 300, w: 148, h: 36 });
+runtime.setLive('demo:lock', { x: 400, y: 300, w: capsuleWidth, h: 36 });
 runtime.commitLive('demo:lock');
 assert.deepEqual(runtime.rectOf('demo:lock'), {
   ...capsule,
   x: 400,
   y: 300,
 });
-assert.deepEqual(runtime.visualRectOf('demo:lock'), { x: 400, y: 300, w: 148, h: 36 });
-// 胶囊参与吸附：按 148 宽算（而不是展开宽度 360）
+assert.deepEqual(runtime.visualRectOf('demo:lock'), { x: 400, y: 300, w: capsuleWidth, h: 36 });
+// 胶囊参与吸附：按胶囊宽度算（而不是展开宽度）
 const capsuleSnap = runtime.getLiveSnap();
 assert.equal(capsuleSnap, null, '此时没有手势，也就没有预览');
-// 卡片渲染：最小化时不写死宽度（交给内容撑成胶囊），复原后写回展开宽度
+// 卡片渲染：最小化时宽度必须是**显式长度**（长度 ↔ auto 不可插值，会瞬移），高度是标题栏高度
 const capsuleNode = cardNodeOf('demo:lock');
-assert.equal(capsuleNode.props.style.width, undefined, '最小化时不得写死宽度');
-assert.equal(capsuleNode.props.style.maxWidth, capsule.w, '胶囊宽度上限 = 布局里的展开宽度');
-assert.equal(capsuleNode.props.style.height, 36);
+assert.equal(capsuleNode.props.style.width, capsuleWidth, '最小化时必须给显式宽度（不能用 auto）');
+assert.equal(capsuleNode.props.style.height, 36, '最小化时高度 = 标题栏高度');
+assert.equal(capsuleNode.props.style.maxWidth, undefined, '不再用 max-width 撑内容：宽度是算出来的长度');
+// 比布局宽度还窄的卡片：胶囊宽度不得超过它自己
+runtime.resizeTo('demo:lock', { w: 300, h: 240 });
+assert.equal(cardNodeOf('demo:lock').props.style.width, 160, '布局宽度 < 胶囊宽度时，胶囊就用布局宽度');
+// （卡片宽度的地板是 240px > 胶囊宽度，所以「布局比胶囊还窄」实际到不了）
+runtime.resizeTo('demo:lock', { w: capsule.w, h: capsule.h });
+assert.equal(cardNodeOf('demo:lock').props.style.width, capsuleWidth);
 // 还原：展开尺寸必须原样回来
-runtime.setCollapsedSize('demo:lock', null);
 runtime.restore('demo:lock');
 assert.deepEqual(runtime.rectOf('demo:lock'), { ...capsule, x: 400, y: 300 }, '还原后仍是展开尺寸');
 assert.equal(runtime.visualRectOf('demo:lock').w, capsule.w, '展开后按布局矩形算');

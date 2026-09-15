@@ -315,16 +315,12 @@
   background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 30%, transparent);
 }
 
-/* 最小化 = 一枚胶囊：宽度被内容撑到最小（标题 + 控件），两端全圆，阴影收一档 */
+/* 最小化 = 一枚胶囊：宽度在行内写成显式长度（min(布局宽, minimizedWidth)），两端全圆、阴影收一档。
+   宽度必须是长度而不是 auto —— 否则「长度 ↔ auto」不可插值，宽度会瞬移，缩高度再慢慢跟上，很跳。 */
 .cardMinimized {
-  width: auto;
   box-shadow: var(--dsw-shadow-lv1);
   /* 胶囊默认两端全圆；选「直角」时跟随偏好的 0px */
   border-radius: var(--dshp-card-capsule-radius, 999px);
-}
-
-.cardMinimized .cardHeader {
-  padding: 0 6px 0 14px;
 }
 
 /* 锁定：标题栏不再是「可抓」的手型（几何已冻，只留最小化 / 关闭 / 菜单） */
@@ -386,12 +382,23 @@
 }
 
 .cardSubtitle {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 50%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 11px;
   color: var(--dsw-alias-label-caption);
+  /* 最小化时副标题被「挤没」而不是瞬间消失：max-width + opacity 都是可插值的 */
+  transition:
+    max-width var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    opacity var(--dshp-motion-ms, 300ms) ease;
+}
+
+.cardSubtitleHidden {
+  max-width: 0;
+  opacity: 0;
 }
 
 .cardActions {
@@ -433,12 +440,16 @@
   min-height: 0;
   padding: 10px;
   box-sizing: border-box;
-  transition: opacity var(--dshp-motion-ms, 300ms) ease;
+  transition:
+    opacity var(--dshp-motion-ms, 300ms) ease,
+    padding var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1);
 }
 
-/* 最小化 = 折叠成一条标题栏：内容留在树上（保留组件状态）但淡出、不占位（高度被卡片折叠挤成 0） */
+/* 最小化：内容留在树上（保留组件状态）但淡出、不占位。
+   内边距也一起收掉 —— 否则收缩过程中那 20px 会顶住高度，出现「先卡一下再缩」的顿挫 */
 .cardBodyHidden {
   opacity: 0;
+  padding: 0;
   pointer-events: none;
 }
 

@@ -67,9 +67,10 @@
    只放内存的后果就是刷新即丢（0.2.0 的教训）。
 5. **几何只有一道锁**：拖动/缩放（`beginLive`）、键盘微调、菜单预设、内容 `setSize`、居中全部经过
    `applyRect` 或 `beginLive`，锁定判定就放在这两处；卡片 UI 另外把几何项从菜单里摘掉（点了没反应最糟）。
-   **最小化期间只允许改位置**：布局里存的是展开尺寸，胶囊尺寸由 Card 量出来回报
-   （`runtime.setCollapsedSize` / `visualRectOf`），`applyRect` 与 `commitLive` 在这一态下都只取 x/y ——
-   否则一次拖动就把用户的展开尺寸写成胶囊尺寸了。
+   **最小化期间只允许改位置**：布局里存的是展开尺寸，胶囊尺寸由 `service.collapsedSize`
+   （`min(布局宽, SPEC_DEFAULTS.minimizedWidth)` × 标题栏高）算出来，`visualRectOf` 用它；
+   **Card 渲染胶囊时读的是同一个算式**（不再有「渲染 → 量 → 回报」回路，那样第一帧会不一致）。
+   `applyRect` 与 `commitLive` 在最小化态下都只取 x/y —— 否则一次拖动就把用户的展开尺寸写成胶囊尺寸了。
 6. **移动模型只有一处实现**：`geometry.snapRect` 只算**吸附候选**（视口边 / 邻卡边 / 对齐线，
    夹进视口 + 磁力，绝不移动卡片本体），`service.setLive` 每帧把「自由位置 + 候选」一起放进
    `LiveGeometry`，`commitLive` 才决定用哪个（有候选就用候选 = 松手同意吸附）。

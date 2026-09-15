@@ -17,7 +17,7 @@ import type { ReactNode } from 'react';
 export const SPEC_VERSION = 1;
 
 /** 框架版本。必须等于 package.json 的 version（check-spec-drift.mjs 比对）。 */
-export const FRAMEWORK_VERSION = '0.9.0';
+export const FRAMEWORK_VERSION = '0.9.1';
 
 /** 命名空间 = 本插件的 settings NS = cordis 行 id = 路由前缀段。 */
 export const NS = 'dshp-widget-kit';
@@ -67,6 +67,11 @@ export const SPEC_DEFAULTS = {
   cardBorderWidthStrong: 1,
   /** 动效时长（ms）：所有过渡与入场动画用它；`0` = 关闭动效。 */
   motionMs: 300,
+  /**
+   * 最小化胶囊的宽度（px）：显式长度（不是 `width: auto`），宽度才能被 transition 平滑插值 ——
+   * 用 `auto` 时浏览器无法在「长度 ↔ auto」之间做动画，最小化会先瞬移再缩高度，观感很跳。
+   */
+  minimizedWidth: 160,
   /** 动效可选档位（设置页的「关 / 100 / 200 / 300 / 400 / 500」）。 */
   motionChoices: [0, 100, 200, 300, 400, 500] as const,
   /** 同屏卡片上限；开了第 7 张时自动最小化最旧一张。 */

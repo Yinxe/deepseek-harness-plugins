@@ -132,8 +132,6 @@ export interface WidgetRuntime {
    * 但布局里存的 `w/h`（展开尺寸）不动，还原时原样回来。
    */
   visualRectOf(id: string): Rect;
-  /** Card 量到胶囊尺寸后回报（最小化期间有效）；传 `null` 表示卡片已展开，回到存的矩形。 */
-  setCollapsedSize(id: string, size: Size | null): void;
   /** 在视口里居中（菜单「居中」）。 */
   center(id: string): void;
   sizeClassOf(widget: NormalizedWidget, rect: Rect): SizeClass;
@@ -203,8 +201,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   const anchors = new Map<string, HTMLElement | null>();
   /** 上一次「真挂上」的锚点元素：用来区分「新挂载」与「同一次 commit 里的 detach + attach」。 */
   const lastAnchors = new Map<string, HTMLElement>();
-  /** 最小化卡片的实际尺寸（Card 量出来的胶囊），只影响「看起来占多大」，不动布局。 */
-  const collapsed = new Map<string, Size>();
+
   const badges: Record<string, WidgetBadge | null> = {};
   /** 尺寸回环防护：每个组件的请求时间戳与「已冻结」标记。 */
   const sizeCalls = new Map<string, number[]>();
@@ -250,8 +247,8 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       if (id === exceptId || !card.open || card.minimized) continue;
       if (!registry.has(id)) continue;
       // 最小化的卡片是一枚小胶囊：按它**看起来**的尺寸参与吸附，而不是展开尺寸
-      const size = card.minimized ? collapsed.get(id) : undefined;
-      out.push({ x: card.x, y: card.y, w: size?.w ?? card.w, h: size?.h ?? card.h });
+      const size = card.minimized ? collapsedSize(id) : { w: card.w, h: card.h };
+      out.push({ x: card.x, y: card.y, w: size.w, h: size.h });
     }
     return out;
   }
@@ -480,7 +477,6 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
         transientOrigin = null;
       }
       delete badges[value.id];
-      collapsed.delete(value.id);
       // **卸载不动本机布局**（这是刻意的）：插件热重载 / 暂时停用 / 开发中构建失败都会走到这里，
       // 早先版本在这条路径上 `pruneId` 把卡片、托盘顺序、隐藏/禁用、层叠顺序、内容面目标全删了 ——
       // 于是每改一次代码布局就被重置一次。记录按 id 保存，重新注册回来时原地恢复；
@@ -862,25 +858,23 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     return state.cards[id]?.minimized === true;
   }
 
+  /**
+   * 最小化胶囊的尺寸：宽 = `min(布局里的宽度, SPEC_DEFAULTS.minimizedWidth)`，高 = 标题栏高度。
+   *
+   * 与 `Card` 渲染时用的**同一个算式**（都读 SPEC_DEFAULTS）：渲染与几何因此永远一致，
+   * 不需要「先渲染、量出来、再回报」那条回路（那条回路会在第一帧给出不一致的尺寸）。
+   */
+  function collapsedSize(id: string): Size {
+    const card = state.cards[id];
+    const stored = card?.w ?? SPEC_DEFAULTS.cardDefaultSize.w;
+    return { w: Math.min(stored, SPEC_DEFAULTS.minimizedWidth), h: SPEC_DEFAULTS.titleBarHeight };
+  }
+
   /** 卡片看起来占的矩形（见 `WidgetRuntime.visualRectOf`）。 */
   function visualRectOf(id: string): Rect {
     const rect = rectOf(id);
     if (!isCollapsed(id)) return rect;
-    const size = collapsed.get(id);
-    return size === undefined ? rect : { x: rect.x, y: rect.y, w: size.w, h: size.h };
-  }
-
-  function setCollapsedSize(id: string, size: Size | null): void {
-    const before = collapsed.get(id);
-    if (size === null) {
-      if (before === undefined) return;
-      collapsed.delete(id);
-      return;
-    }
-    const w = Math.max(1, Math.round(size.w));
-    const h = Math.max(1, Math.round(size.h));
-    if (before !== undefined && before.w === w && before.h === h) return; // 量到的没变：别惊动任何人
-    collapsed.set(id, { w, h });
+    return { ...rect, ...collapsedSize(id) };
   }
 
   function rectOf(id: string): Rect {
@@ -1077,7 +1071,6 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     saver.cancel();
     const ok = clearState(deps.storage);
     state = emptyState();
-    collapsed.clear();
     cancelAllHoverTimers();
     setTransientTarget(null, null);
     clearLive();
@@ -1099,8 +1092,8 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     for (const [id, card] of Object.entries(state.cards)) {
       const widget = widgetOf(id);
       if (widget === undefined) continue;
-      const size = card.minimized ? collapsed.get(id) : undefined;
-      const visual = size === undefined ? card : { ...card, w: size.w, h: size.h };
+      const size = card.minimized ? collapsedSize(id) : { w: card.w, h: card.h };
+      const visual = { ...card, ...size };
       const clamped = clampRect(visual, constraintsFor(widget), viewport);
       const placed = card.minimized ? { ...clamped, w: card.w, h: card.h } : clamped;
       if (isSameRect(card, placed)) continue;
@@ -1215,7 +1208,6 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     contentSize: (rect) => contentBox(rect),
     rectOf,
     visualRectOf,
-    setCollapsedSize,
     constraintsOf: constraintsFor,
     viewport: () => viewport,
     setViewport,
