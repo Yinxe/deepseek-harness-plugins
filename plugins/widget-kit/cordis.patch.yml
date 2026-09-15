@@ -1,0 +1,8 @@
+# @dshp/widget-kit bundle patch: business-free widget standard for DeepSeek Harness.
+# Host half: settings namespace (dshp-widget-kit) + /ext/dshp-widget-kit/* routes (state / config).
+# Client half: the `widgets` registry service, the session-header tray, the card/popover layer,
+#              the widget spec conformance checks and two reference widgets (clock / diagnostics).
+
+- insert:
+    - id: dshp-widget-kit
+      name: '@dshp/widget-kit'

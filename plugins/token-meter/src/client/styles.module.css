@@ -252,6 +252,102 @@
   font-size: 12px;
   color: var(--dsw-alias-label-secondary);
 }
+/* ── 托盘图标点开的「小组件菜单」（MenuPanel.tsx） ─────────────────────────────
+   面板本体（边框/底色/圆角/内边距）由宿主的 popover 提供，这里只排里面那几行。 */
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.menuHead {
+  display: flex;
+  gap: 6px;
+}
+.menuHint {
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--dsw-alias-label-tertiary);
+}
+.menuList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 46vh;
+  overflow: auto;
+}
+.menuRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 8px;
+  min-width: 0;
+}
+.menuRow:hover {
+  background: var(--dsw-alias-bg-layer-2);
+}
+/* 状态点：开着 = 业务色实心，收起 = 中性描边（只看颜色就能扫出哪几张开着） */
+.menuDot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: transparent;
+}
+.menuRow[data-open='1'] .menuDot {
+  border-color: var(--dsw-alias-state-business-primary);
+  background: var(--dsw-alias-state-business-primary);
+}
+.menuLabel {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.menuBtn {
+  flex: none;
+  background: transparent;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 11px;
+  line-height: 16px;
+  padding: 2px 8px;
+  font-family: inherit;
+}
+.menuBtn:hover:not(:disabled) {
+  border-color: var(--dsw-alias-state-business-primary);
+  color: var(--dsw-alias-label-primary);
+}
+.menuBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.menuEmpty {
+  font-size: 12px;
+  color: var(--dsw-alias-label-tertiary);
+  padding: 4px 2px;
+}
+.menuFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid var(--dsw-alias-border-l1);
+  padding-top: 8px;
+}
+.menuCount {
+  font-size: 11px;
+  color: var(--dsw-alias-label-tertiary);
+  font-variant-numeric: tabular-nums;
+}
 .cardHint {
   color: var(--dsw-alias-label-tertiary);
   margin: 0;
@@ -1888,6 +1984,24 @@ div:has(> div[data-slot='sidebar.footer.action']) {
 .minibtn:hover {
   border-color: var(--dsw-alias-border-l1);
   color: var(--dsw-alias-label-primary);
+}
+/* 宿主卡片（@dshp/widget-kit）里的内容承载框。
+   小组件组件自带「卡片外框」（.card / .today 的边框 + 底色 + 圆角 + 内边距），
+   而宿主卡片已经给了标题栏与内边距 —— 不去掉就是「卡中卡」的双层描边。这里只拆外观、
+   保留内部布局；滚动与高度交给这一层（宿主内容区高度可变，缩到很小时要能滚）。 */
+.wkFrame {
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+}
+.wkFrame .card,
+.wkFrame .today {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
 }
 .float {
   position: fixed;

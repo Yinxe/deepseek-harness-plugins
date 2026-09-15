@@ -1,18 +1,23 @@
 {
-  "name": "@dshp/token-meter",
-  "version": "0.8.0",
-  "description": "DeepSeek Harness (DSH) TokenMeter: unified quota + usage statistics — multi-vendor rolling/payg quota with sidebar card and provider ops, plus session-log token aggregation with trends, heatmap and per-model breakdown. 额度与用量统计统一视图：多供应商 rolling/payg 额度（侧边栏卡片 + 供应商运维操作），外加会话日志 token 聚合（趋势、热力图、按模型拆分）。",
+  "name": "@dshp/widget-kit",
+  "version": "0.11.0",
+  "description": "DeepSeek Harness (DSH) widget kit: a business-free standard for plugin-contributed widgets — session-header tray icons (badge / reorder / hide) plus drag-resize-minimize-close floating cards, with a frozen descriptor contract, framework-owned loading/error/refresh states and per-size rendering left to the widget author. 小组件规范：会话顶部托盘 + 可拖拽/缩放/最小化/关闭的卡片宿主，内容如何随尺寸变化由组件提供方决定。",
   "license": "MIT",
   "author": "Yinxe",
   "type": "module",
   "main": "./lib/host.js",
+  "types": "./spec.d.ts",
   "exports": {
     ".": "./lib/host.js",
     "./client": "./lib/client.js",
+    "./spec": {
+      "types": "./spec.d.ts"
+    },
     "./package.json": "./package.json"
   },
   "files": [
     "lib",
+    "spec.d.ts",
     "cordis.patch.yml",
     "README.md"
   ],
@@ -21,11 +26,11 @@
     "deepseek-harness",
     "cordis",
     "plugin",
-    "token",
-    "quota",
-    "billing",
-    "usage",
-    "statistics"
+    "widget",
+    "widgets",
+    "tray",
+    "dashboard",
+    "spec"
   ],
   "engines": {
     "node": ">=20"
@@ -35,19 +40,19 @@
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf lib *.tsbuildinfo",
-    "test": "node --check lib/host.js && node --check lib/client.js && node ../../shared/scripts/check-css-modules.mjs src/client && node scripts/check-share-tokens.mjs && node scripts/check-widget-bridge.mjs && node scripts/check-widget-kit-bridge.mjs && echo \"syntax + token coverage + widget bridge ok\"",
+    "test": "node --check lib/host.js && node --check lib/client.js && node scripts/check-geometry.mjs && node scripts/check-store.mjs && node scripts/check-spec-drift.mjs && node scripts/check-css-tokens.mjs && node scripts/check-client.mjs && node ../../shared/scripts/check-css-modules.mjs src/client && echo \"syntax ok\"",
     "prepublishOnly": "pnpm typecheck && pnpm build",
     "lint": "oxlint --deny-warnings --config ../../.oxlintrc.json src tsup.config.ts"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Yinxe/deepseek-harness-plugins.git",
-    "directory": "plugins/token-meter"
+    "directory": "plugins/widget-kit"
   },
   "bugs": {
     "url": "https://github.com/Yinxe/deepseek-harness-plugins/issues"
   },
-  "homepage": "https://github.com/Yinxe/deepseek-harness-plugins/tree/main/plugins/token-meter#readme",
+  "homepage": "https://github.com/Yinxe/deepseek-harness-plugins/tree/main/plugins/widget-kit#readme",
   "publishConfig": {
     "access": "public",
     "provenance": true
@@ -60,17 +65,11 @@
       "platform": "web"
     }
   },
-  "peerDependencies": {
-    "@deepseek-ai/dsh-client-ui-primitives": "^0.1.5-rc.1"
-  },
   "devDependencies": {
     "@deepseek-ai/dsh-client-ui-primitives": "0.1.5-rc.1",
-    "@dshp/widget-kit": "workspace:*",
     "@deepseek-ai/schemastery": "^3.18.2",
     "@types/react": "~18.3.1",
-    "@types/react-dom": "~18.3.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
     "tsup": "^8.5.1"
   },
   "dependencies": {}

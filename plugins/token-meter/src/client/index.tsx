@@ -32,12 +32,16 @@
 import { createCenterView } from './CenterView.js';
 import { OnlineEmbed, OnlineView } from './OnlineSection.js';
 import { QuotaIcon, OnlineIcon, SettingsIcon, ShareIcon, UsageIcon } from './icons.js';
+import { createMenuWidget } from './MenuPanel.js';
 import { SharePanel } from './StatsSection.js';
 import {
   QuotaView,
   StatsView,
   TokenMeterSettings,
   WidgetFloatLayer,
+  quotaStore,
+  renderFloatContent,
+  syncFloatWidgets,
   widgetsApi,
 } from './TokenMeterSection.js';
 import { DISPLAY_NAME } from '../name.js';
@@ -87,6 +91,50 @@ export function apply(ctx: ClientContext): void {
     if (widgetsApi && typeof widgetsApi.forget === 'function') widgetsApi.forget('online:');
   } catch {
     /* ignore */
+  }
+
+  // ── 小组件宿主（可选依赖：`@dshp/widget-kit`）───
+  // 用 `ctx.inject` 而不是顶层 `inject: ['widgets']`：后者的语义是「没有这个服务我就不激活」，
+  // 一旦用户没装 / 停用了 widget-kit，整个 TokenMeter（额度面板、统计、设置节）都会消失 ——
+  // 小组件只是**增强**，不是本插件的存在前提。这里服务来了才挂上，服务走了作用域自动销毁。
+  try {
+    ctx.inject(['widgets'], (scope: ClientContext) => {
+      if (!widgetsApi.attach(scope.get('widgets'))) {
+        console.warn(
+          '[dshp-token-meter] widgets 服务的形状不符合小组件规范（spec v1），小组件改用自带浮窗渲染。',
+        );
+        return;
+      }
+      widgetsApi.setContentRenderer((id) => renderFloatContent(id, false));
+      // 本插件在活动栏上的**唯一**图标：点开是「小组件菜单」（里面逐个开合上面那些
+      // trayIcon: false 的自由卡片）。没有它，想开一张图得先钻进中心区那个 tab。
+      if (!widgetsApi.registerHost(createMenuWidget(widgetsApi))) {
+        console.warn('[dshp-token-meter] 注册托盘菜单失败，小组件只能从中心区工具条弹出。');
+      }
+      scope.effect(
+        () => () => {
+          widgetsApi.detach();
+        },
+        'dshp-token-meter: widget-kit bridge',
+      );
+      // 常驻注册：卡片都是 trayIcon: false（不占活动栏），刷新后布局里「开着」的卡片
+      // 只能靠这里提前注册回来。供应商增删后同步一次（增的注册、删的注销）。
+      void quotaStore
+        .ensureLoad()
+        .then(() => {
+          syncFloatWidgets();
+        })
+        .catch(() => {
+          syncFloatWidgets();
+        });
+      try {
+        scope.effect(() => quotaStore.subscribe(() => syncFloatWidgets()), 'dshp-token-meter: widget sync');
+      } catch (error) {
+        console.error('[dshp-token-meter] 订阅额度 store 失败（供应商增删后小组件列表可能不同步）：', error);
+      }
+    });
+  } catch (error) {
+    console.error('[dshp-token-meter] 挂载小组件宿主失败，小组件改用自带浮窗渲染：', error);
   }
 
   // 旧 localStorage 一次性清理：左栏开关、旧双浮窗系统、右侧栏 tab 自动展开标记

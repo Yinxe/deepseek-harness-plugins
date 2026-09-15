@@ -267,6 +267,17 @@ export interface ClientContext {
    * @param label - 诊断用标签。
    */
   effect(callback: () => unknown, label?: string): unknown;
+  /**
+   * 在「依赖就绪」的作用域里跑一段逻辑（cordis `ctx.inject(deps, cb)`）。
+   *
+   * **可选依赖必须用它**：写成 client 半顶层的 `inject: ['widgets']` 会让整个插件在
+   * 没装 / 停用了 `@dshp/widget-kit` 时整体不激活（连额度面板都不见了），
+   * 而 `ctx.inject` 只是让这段回调等着 —— 服务来了才跑，服务走了作用域随之销毁。
+   *
+   * @param deps - 依赖的服务名。
+   * @param callback - 依赖就绪时的回调（拿到的是作用域 ctx）。
+   */
+  inject(deps: string[], callback: (scope: ClientContext) => unknown): unknown;
 }
 
 /**

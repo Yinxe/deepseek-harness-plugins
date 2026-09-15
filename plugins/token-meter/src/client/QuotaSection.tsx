@@ -276,7 +276,7 @@ interface SnapBodyProps {
   now: number;
 }
 
-interface QuotaStoreState {
+export interface QuotaStoreState {
   cfg: any;
   snaps: Record<string, VendorSnapshot>;
   loading: boolean;
@@ -295,6 +295,10 @@ interface QuotaStoreState {
 /** 单例额度 store 的对外方法（调用方按这些名字取用）。 */
 export interface QuotaStoreApi {
   useStore: () => QuotaStoreState;
+  /** 读当前快照（无 hook 的调用方用：宿主桥按供应商列表同步注册）。 */
+  get: () => QuotaStoreState;
+  /** 订阅 store 变化（供应商增删 / 拉取结果）；返回取消订阅。 */
+  subscribe: (fn: () => void) => () => void;
   useNow: (step?: number) => number;
   ensureLoad: () => Promise<void>;
   reload: () => Promise<void>;
@@ -2084,7 +2088,7 @@ export function createQuotaSection(widgets?: WidgetsApi): QuotaSectionParts {
             >
               {off ? '启用' : '禁用'}
             </Btn>
-            {WG ? <WG.WidgetToggle id={wid} /> : null}
+            {WG ? <WG.WidgetToggle id={wid} name={v.name ? '额度 · ' + v.name : undefined} /> : null}
           </span>
         </div>
         {snap ? (
@@ -2420,6 +2424,8 @@ export function createQuotaSection(widgets?: WidgetsApi): QuotaSectionParts {
     PeakIndicator,
     quotaStore: {
       useStore,
+      get: () => store.get(),
+      subscribe: (fn) => store.subscribe(fn),
       useNow,
       ensureLoad,
       reload,

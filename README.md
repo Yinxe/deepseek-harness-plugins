@@ -8,7 +8,7 @@ DeepSeek Harness（DSH）插件 Monorepo（pnpm workspaces + TypeScript ESM）�
 
 | 插件                                                                 | 一句话                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | 文档                                           |
 | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| **[@dshp/token-meter](plugins/token-meter/README.md)**               | Token 额度 + 用量统计 + 在线时长：多供应商额度卡（opencode / DeepSeek / Command Code / 手动） + 本机会话日志聚合（趋势 / 热力图 / 模型分布 / 在线时长与每日排行，增量重算、口径分级）                                                                                                                                                                                                                                                                                                                                                     | [README](plugins/token-meter/README.md)        |
+| **[@dshp/token-meter](plugins/token-meter/README.md)**               | Token 额度 + 用量统计 + 在线时长：多供应商额度卡（opencode / DeepSeek / Command Code / 手动） + 本机会话日志聚合（趋势 / 热力图 / 模型分布 / 在线时长与每日排行，增量重算、口径分级）；额度卡与每张图表可弹出为独立小组件（装了 `@dshp/widget-kit` 时是框架卡片），活动栏一个图标点开即「小组件菜单」                                                                                                                                                                                                                                     | [README](plugins/token-meter/README.md)        |
 | **[@dshp/vision-bridge](plugins/vision-bridge/README.md)**           | 视觉桥接：让纯文本模型也能“看图”（`vision_describe` 工具 + 主/备模型自动降级）                                                                                                                                                                                                                                                                                                                                                                                                                                                            | [README](plugins/vision-bridge/README.md)      |
 | **[@dshp/mcwiki-search](plugins/mcwiki-search/README.md)**           | Minecraft Wiki 查询工具（搜索 / 引言 / 全文，含模板清理的 AI 可读转换）                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | [README](plugins/mcwiki-search/README.md)      |
 | **[@dshp/search-provider](plugins/search-provider/README.md)**       | `web_search` 供应商中枢：Tavily 等可插拔接入，动态选型                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | [README](plugins/search-provider/README.md)    |
@@ -16,6 +16,7 @@ DeepSeek Harness（DSH）插件 Monorepo（pnpm workspaces + TypeScript ESM）�
 | **[@dshp/skill-manager](plugins/skill-manager/README.md)**           | 技能管理：设置页统一管理全局（`~/.dsh/skills`、`~/.agents/skills`）与工作区技能——新建/编辑/启停/复制移动/删除                                                                                                                                                                                                                                                                                                                                                                                                                             | [README](plugins/skill-manager/README.md)      |
 | **[@dshp/mcp-manager](plugins/mcp-manager/README.md)**               | MCP 服务器管理：设置页管理 cordis.patch.yml 里的官方 dsh-mcp-client 实例——新建/编辑/启停/删除/探活，表单+JSON 双模式，回写保注释                                                                                                                                                                                                                                                                                                                                                                                                          | [README](plugins/mcp-manager/README.md)        |
 | **[@dshp/file-change-viewer](plugins/file-change-viewer/README.md)** | 文件修改查看器 + **`patch` 工具**：接管对话流里的 edit / write / patch 行（外壳沿用官方原生行，默认折叠、可在设置里改成默认展开），展开后每个文件块是一张带**语法高亮的统一 diff** 卡片（整行红绿、删除行不占行号、统计只算真正变化的行）；`patch` 工具让「多处零散 / 跨文件」的批量修改一次调用完成且**全有或全无**；全局偏好在设置里自己的一节「File Change View」中配置（展示方式是两张直接画出效果的预览卡），落 settings.yaml；会话页头另有两个**只作用于当前会话**的快捷开关（一键展开 / 收起全部文件改动、切换差异视图），不写配置 | [README](plugins/file-change-viewer/README.md) |
+| **[@dshp/widget-kit](plugins/widget-kit/README.md)**                 | 小组件规范与宿主（**不含业务**）：会话顶部托盘（图标/徽标/双向拖拽换序/溢出菜单/启用禁用）+ 可拖拽/缩放/最小化折叠/**锁定位置**/关闭的卡片（拖动自由跟手、允许互相覆盖，靠近边缘/邻卡时给出虚线**吸附预览框**、松手才吸附）与可点击或悬停展开（可声明**常驻**）的小面板，统一负责加载/错误/陈旧态、轮询节流、错误隔离、z 序、几何夹紧、本机布局持久化（刷新即恢复）与键盘焦点；**内容如何随尺寸变化由组件提供方决定**（`sizeClass` / 容器查询 / 实测 `size` 三选一）                                                                      | [README](plugins/widget-kit/README.md)         |
 
 ## 截图预览
 
@@ -59,10 +60,12 @@ dsh plugin --profile web add ./plugins/web-style
 dsh plugin --profile web add ./plugins/skill-manager
 dsh plugin --profile web add ./plugins/mcp-manager
 dsh plugin --profile web add ./plugins/file-change-viewer
+dsh plugin --profile web add ./plugins/widget-kit
 
 dsh web   # 重启生效
 ```
 
+- **`@dshp/widget-kit` 是可选的**：装上后，提供小组件的插件（如 `@dshp/token-meter` 的额度卡 / 统计图表 / 峰谷显示器）自动升级为**框架卡片**——拖拽 / 缩放 / 最小化成胶囊 / 锁定位置 / 吸附预览 / 主题色玻璃外观 / 刷新后原地恢复；不装则退回插件自带的浮层，功能不缺、只是窗口能力弱一档。
 - **更新**：仓库内 `git pull` + `dsh web`（最快——lib 已提交，未改 src 无需 build）；兼容旧版 DSH：按 [`compat.json`](compat.json) 的 tag `git checkout <tag>` 后重跑上面的 add。
 
 `dsh plugin add` 会把包写进 profile 的 `dsh.profile.bundles` —— **无需手动改配置文件**。
@@ -199,13 +202,19 @@ dsh web   # 重启生效
 │   │   ├── src/client/         #   Client TS：diff（LCS 三口径）+ FileChangeRow + 设置节 + prefs store
 │   │   ├── scripts/            #   check-host.mjs（47）+ check-patch.mjs（41）+ check-client.mjs（143）
 │   │   └── lib/                #   单文件构建产物（已提交）
+│   ├── widget-kit/             # @dshp/widget-kit（小组件规范与宿主：托盘 + 卡片 + 小面板，不含业务）
+│   │   ├── spec.d.ts           #   对外契约（其它插件 import type 的唯一入口）
+│   │   ├── src/client/         #   Client TS：spec/geometry/store/service/badges/hooks + Tray/Card/Popover
+│   │   ├── src/client/widgets/ #   参考组件：clock（尺寸呈现示例）/ diagnostics（注册表诊断）
+│   │   ├── scripts/            #   六个自检（几何 / 存储 / 契约漂移 / 样式与依赖 / 无头冒烟）
+│   │   └── lib/                #   单文件构建产物（已提交）
 │   └── web-style/              # @dshp/web-style（23 套主题画廊 + 壁纸取色 + 全局圆角）
 │       ├── src/host/           #   Host TS：types/http/config + themes/（token 单源，21 个主题模块）
 │       ├── src/client/         #   Client TS：GallerySection/apply-theme/md3/official/radius/themes/api/state
 │       ├── scripts/            #   check-themes.mjs（目录 ↔ 画廊 meta ↔ 产物一致性）
 │       └── lib/                #   单文件构建产物（已提交）
 ├── AGENT.md                    # 开发规范·规则版（红线 + 指路）
-├── docs/                       # 规范细节（脚手架 / TS / package.json / 构建 / Cordis / settings / 路由 / Client / provider / 时区 / 安全 / 门禁 / 发布 / 文档）——旧 AGENT.md §1–§14 的完整下沉
+├── docs/                       # 规范细节（脚手架 / TS / package.json / 构建 / Cordis / settings / 路由 / Client / provider / 时区 / 安全 / 门禁 / 发布 / 文档 / 小组件）——旧 AGENT.md §1–§14 的完整下沉
 ├── tsconfig.base.json          # 共享 TS 配置（NodeNext + strict）
 ├── tsconfig.json               # solution 引用
 ├── pnpm-workspace.yaml         # packages: plugins/* + storeDir

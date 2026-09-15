@@ -1,17 +1,49 @@
 /**
- * 通用小组件浮窗系统
+ * 通用小组件浮窗系统（**双后端**）
  *
- * 中心区面板里的独立组件（供应商额度卡 `quota:<vendorId>`、统计图表 `stats:<kind>`）
- * 都可以拖出为全局浮窗（shell.overlay），坐标与开关持久化到 localStorage。
+ * 中心区面板里的独立组件（供应商额度卡 `quota:<vendorId>`、统计图表 `stats:<kind>`、
+ * 峰谷显示器 `peak`）都可以拖出为全局浮窗，坐标与开关持久化到 localStorage。
+ *
+ * ## 两个后端
+ *
+ * | 后端                | 何时用                                     | 谁画窗口                     |
+ * | ------------------- | ------------------------------------------ | ---------------------------- |
+ * | `@dshp/widget-kit`  | 装了（且启用了）框架插件时                 | 框架：拖拽/缩放/最小化/锁定/吸附/动效/持久化 |
+ * | 自带浮层（legacy）  | 没装框架插件时                             | 本文件（`WidgetFloat` + portal） |
+ *
+ * 两者共用同一个外观接口（`WidgetSystem`），所以 `StatsSection` / `QuotaSection` / 中心区
+ * 一行都不用改：它们只调 `WidgetToggle` / `useWidgets`。挂载由 `index.tsx` 在
+ * `ctx.inject(['widgets'], …)` 里做（**可选依赖**：框架缺席时这个回调永不执行，插件其余部分照常）。
+ *
+ * 进宿主前把 legacy id 编码成宿主要求的形状（`peak` / `stats:trend` / `quota:deepseek` →
+ * `token-meter:…`，见 `widget-bridge.ts`），**本插件内部一律沿用旧 id**。
+ *
+ * 宿主是 `trayIcon: false` 的自由卡片：不占活动栏图标，由中心区各行/工具条上的「⧉」按钮开合，
+ * 也可以被任何别的组件用 `ctx.widgets.toggle('token-meter:stats-trend')` 打开。因为刷新后
+ * 布局里「开着」的卡片要能自己长回来，注册是**常驻**的：`syncRegistered()` 在启动与供应商增删时
+ * 把当前该有的卡片一次性对齐（新增注册、缺席注销）。
+ *
  * 与额度/今日卡旧浮窗并存（旧浮窗跟随当前供应商/今日，widget 浮窗绑定固定组件）。
  *
- * 原来是 `createWidgetSystem(React, ReactDOM)` 工厂：React 注入取消（模块顶层 import），
- * `ReactDOM` 改成模块顶层 `import * as ReactDOM from 'react-dom'`（运行时由 shell 的冻结
- * 模块表注入），portal 的守卫与兜底分支原样保留。
+ * @module @dshp/token-meter/client/widgets
  */
 import { useEffect, useReducer, type ReactNode } from 'react';
 import * as ReactDOM from 'react-dom';
+import { Glyph } from './glyphs.js';
+import { QuotaIcon } from './icons.js';
+import {
+  PEAK_ID,
+  QUOTA_PREFIX,
+  STATS_PREFIX,
+  encodeFloatId,
+  floatSize,
+  floatTitle,
+  isFloatId,
+} from './widget-bridge.js';
 import styles from './styles.module.css';
+// 宿主契约直接从 @dshp/widget-kit 的 spec 拿类型（workspace devDependency，纯类型、
+// 运行时零 import：`verbatimModuleSyntax` + tsup 的 external 让它在产物里不留痕迹）。
+import type { WidgetDescriptor, WidgetsService } from '@dshp/widget-kit/spec';
 
 export interface WidgetPlacement {
   x: number;
@@ -27,6 +59,190 @@ const LS_KEY = 'tm-widgets';
 const FLOAT_W = 360;
 /** 统一的最大高度（clamp 底部余量与 CSS 一致） */
 const FLOAT_H = Math.round(FLOAT_W * 0.6);
+
+/* ═══════════════════════════ 宿主桥（@dshp/widget-kit） ═══════════════════════════ */
+
+/**
+ * 宿主服务形状检查。
+ *
+ * 跨插件接缝拿到的永远是 `unknown`：别的插件可能因为版本不同、或者根本不是 widget-kit，
+ * 往同名服务上放了别的东西。形状不对就当没有宿主（回退自带浮层），不要把异常抛给插件层。
+ *
+ * @param candidate - `ctx.get('widgets')` 的返回值。
+ * @returns 通过检查时是服务本身，否则 `null`。
+ */
+function asService(candidate: unknown): WidgetsService | null {
+  if (candidate === null || typeof candidate !== 'object') return null;
+  const s = candidate as Partial<WidgetsService>;
+  const ok =
+    typeof s.register === 'function' &&
+    typeof s.list === 'function' &&
+    typeof s.subscribe === 'function' &&
+    typeof s.open === 'function' &&
+    typeof s.close === 'function' &&
+    typeof s.isOpen === 'function';
+  return ok ? (candidate as WidgetsService) : null;
+}
+
+/** 宿主服务；`null` = 没装（或形状不对）→ 全程走自带浮层。 */
+let service: WidgetsService | null = null;
+/** 宿主的注册表通知订阅（模块级一份，不是每个 hook 一份）。 */
+let serviceOff: (() => void) | null = null;
+/** 宿主卡片里画什么（由 `TokenMeterSection` 注入：它才知道每个 id 对应哪个组件）。 */
+let contentRenderer: ((legacyId: string) => ReactNode) | null = null;
+/** legacy id → 宿主 id（正反向都要：宿主回调只会给宿主 id）。 */
+const wkOf = new Map<string, string>();
+const legacyOf = new Map<string, string>();
+/** legacy id → 宿主 `register()` 返回的注销函数。 */
+const disposersOf = new Map<string, () => void>();
+/** legacy id → 更具体的标题（供应商名等）；`title` 每次渲染求值，改名不需要重新注册。 */
+const hints = new Map<string, string>();
+/** 宿主原生描述符（托盘菜单那类，不属于任何 legacy id）的注销函数。 */
+const hostDisposers: Array<() => void> = [];
+
+/**
+ * 卡片图标（宿主在托盘溢出菜单 / 组件箱里会画它）。
+ *
+ * 统计族按图表语义挑 glyph，供应商用额度图标 —— 与中心区里的观感一致。
+ *
+ * @param legacy - legacy id。
+ * @returns 图标节点。
+ */
+function floatIcon(legacy: string): ReactNode {
+  if (legacy.startsWith(QUOTA_PREFIX)) return <QuotaIcon size={16} />;
+  if (legacy === PEAK_ID) return <Glyph name="clock" size={16} />;
+  const kind = legacy.startsWith(STATS_PREFIX) ? legacy.slice(STATS_PREFIX.length) : '';
+  const glyph: Record<string, string> = {
+    cards: 'chartBar',
+    trend: 'trend',
+    heat: 'grid',
+    donut: 'donut',
+    today: 'calendar',
+  };
+  return <Glyph name={glyph[kind] ?? 'chartBar'} size={16} />;
+}
+
+/**
+ * 确保某个 legacy id 已在宿主注册表里（幂等）。
+ *
+ * 注册是**常驻**的：宿主渲染一张卡片的前提是描述符在册，而 `trayIcon: false` 的卡片没有图标，
+ * 「刷新后仍开着」只能靠这里提前注册。重复调用只更新标题提示，不会重复注册。
+ *
+ * @param legacy - legacy id（`peak` / `stats:*` / `quota:*`）。
+ * @param hint - 更具体的标题（供应商名）；不传时用 `floatTitle` 的默认表。
+ * @returns 无。
+ */
+function ensureRegistered(legacy: string, hint?: string | undefined): void {
+  if (service === null || !isFloatId(legacy)) return;
+  if (hint !== undefined && hint !== '') hints.set(legacy, hint);
+  if (disposersOf.has(legacy)) return;
+  const wkId = encodeFloatId(legacy);
+  try {
+    const dispose = service.register({
+      id: wkId,
+      title: () => floatTitle(legacy, hints.get(legacy)),
+      icon: floatIcon(legacy),
+      presentation: 'card',
+      // 不占活动栏：这些卡片由中心区里的按钮开合（一个拥有者一个图标 + 多张自由卡片）
+      trayIcon: false,
+      content: {
+        render: () =>
+          contentRenderer === null ? null : <div className={styles.wkFrame}>{contentRenderer(legacy)}</div>,
+      },
+      // 尺寸按内容形状逐族给（见 widget-bridge.ts 的 FLOAT_SIZES 表）：
+      // 热力图宽而扁、模型分布要留高、今日卡天生小 —— 一套尺寸打天下就是「有的太高、有的太矮」
+      card: {
+        ...floatSize(legacy),
+        resizable: true,
+        minimizable: true,
+        closable: true,
+      },
+    } satisfies WidgetDescriptor);
+    disposersOf.set(legacy, dispose);
+    wkOf.set(legacy, wkId);
+    legacyOf.set(wkId, legacy);
+  } catch (error) {
+    console.error('[dshp-token-meter] 注册小组件到宿主失败（该卡片不会出现）：' + legacy, error);
+  }
+}
+
+/**
+ * 注销一个 legacy id（关闭 + 释放描述符 + 清映射）。
+ *
+ * 先 `close` 再注销：否则宿主布局里会留下「开着但不在册」的记录，等这个 id 再注册回来时
+ * 又自己弹出来（供应商删了又加回来就会看到这种幽灵卡片）。
+ *
+ * @param legacy - legacy id。
+ * @returns 无。
+ */
+function forgetFloat(legacy: string): void {
+  const wkId = wkOf.get(legacy);
+  const dispose = disposersOf.get(legacy);
+  if (service !== null && wkId !== undefined) {
+    try {
+      service.close(wkId);
+    } catch {
+      /* ignore */
+    }
+  }
+  if (dispose !== undefined) {
+    try {
+      dispose();
+    } catch {
+      /* ignore */
+    }
+  }
+  wkOf.delete(legacy);
+  disposersOf.delete(legacy);
+  hints.delete(legacy);
+  if (wkId !== undefined) legacyOf.delete(wkId);
+}
+
+/**
+ * 把宿主注册表对齐到「当前该有的卡片」。
+ *
+ * 启动与供应商增删（store 变化）时调用：多出来的注销、缺的补上、已存在的只更新标题。
+ *
+ * @param list - 当前该存在的卡片（legacy id + 标题提示）。
+ * @returns 无。
+ */
+function syncRegistered(list: Array<{ id: string; title?: string | undefined }>): void {
+  if (service === null) return;
+  const want = new Set<string>();
+  for (const item of list) {
+    if (!isFloatId(item.id)) continue;
+    want.add(item.id);
+    ensureRegistered(item.id, item.title);
+  }
+  for (const legacy of Array.from(disposersOf.keys())) {
+    if (!want.has(legacy)) forgetFloat(legacy);
+  }
+}
+
+/**
+ * 当前开着的卡片（宿主模式下由宿主回答）。
+ *
+ * 自带浮层的开合状态是本地 `open` 表 + localStorage；宿主模式下这个状态在框架那边
+ * （它还要管最小化、锁定、跨刷新恢复），所以这里问它。
+ *
+ * @returns 开着的卡片（自带模式下带坐标；宿主模式坐标由框架管，填 `{0,0}`）。
+ */
+function bridgedOpenList(): OpenWidget[] {
+  if (service === null) return [];
+  const out: OpenWidget[] = [];
+  for (const legacy of disposersOf.keys()) {
+    const wkId = wkOf.get(legacy);
+    if (wkId === undefined) continue;
+    let open = false;
+    try {
+      open = service.isOpen(wkId);
+    } catch {
+      open = false;
+    }
+    if (open) out.push({ id: legacy, pos: { x: 0, y: 0 } });
+  }
+  return out;
+}
 
 function loadAll(): Record<string, WidgetPlacement> {
   try {
@@ -90,7 +306,7 @@ export interface WidgetSystem {
   /** 某个 id 是否开着。 */
   isOpen(id: string): boolean;
   /** 打开 / 关闭 / 忘记某个 widget。 */
-  openWidget(id: string): void;
+  openWidget(id: string, at?: WidgetPlacement): void;
   closeWidget(id: string): void;
   forget(prefix: string): void;
   /** 拖拽期间的临时坐标与落点提交。 */
@@ -105,6 +321,32 @@ export interface WidgetSystem {
   raise(id: string): void;
   zOf(id: string): number;
   clampAllToViewport(): void;
+
+  /* ── 宿主桥（只有 `index.tsx` 用；不挂宿主时全是 no-op） ── */
+
+  /** 是否已挂上 `@dshp/widget-kit`（挂上后窗口由框架画）。 */
+  isBridged(): boolean;
+  /** 宿主卡片里画什么（每个 legacy id 一个组件）。 */
+  setContentRenderer(render: (legacyId: string) => ReactNode): void;
+  /** 把注册表对齐到「当前该有的卡片」（启动 + 供应商增删时调用）。 */
+  syncRegistered(list: Array<{ id: string; title?: string | undefined }>): void;
+  /** 挂上宿主服务（形状不对返回 `false`，此时继续走自带浮层）。 */
+  attach(candidate: unknown): boolean;
+  /** 摘下宿主服务：注销全部注册并回到自带浮层。 */
+  detach(): void;
+  /**
+   * 注册一个**宿主原生**描述符（不属于任何 legacy 小组件：托盘菜单 / 常驻面板那类）。
+   *
+   * @param descriptor - 完整描述符（`popover` / `tray` 等只有这里能写）。
+   * @returns 注册成功为 `true`；没挂宿主或描述符被框架拒掉为 `false`。
+   */
+  registerHost(descriptor: WidgetDescriptor): boolean;
+  /**
+   * 当前在册的小组件（菜单面板用它列条目；宿主模式下才有内容）。
+   *
+   * @returns legacy id + 标题，按注册顺序。
+   */
+  listFloats(): Array<{ id: string; title: string }>;
 }
 
 export function createWidgetSystem(): WidgetSystem {
@@ -161,6 +403,8 @@ export function createWidgetSystem(): WidgetSystem {
         listeners.delete(fn);
       };
     }, []);
+    // 宿主模式：开合状态在框架那边（还要管最小化/锁定/刷新恢复），问它
+    if (service !== null) return bridgedOpenList();
     return Object.keys(open).map((id) => ({
       id,
       pos: (open as Record<string, WidgetPlacement>)[id] as WidgetPlacement,
@@ -168,9 +412,29 @@ export function createWidgetSystem(): WidgetSystem {
   }
 
   function isOpen(id: string): boolean {
+    if (service !== null) {
+      const wkId = wkOf.get(id);
+      if (wkId === undefined) return false;
+      try {
+        return service.isOpen(wkId);
+      } catch {
+        return false;
+      }
+    }
     return Object.hasOwn(open, id);
   }
   function openWidget(id: string, at?: WidgetPlacement): void {
+    if (service !== null) {
+      ensureRegistered(id);
+      const wkId = wkOf.get(id);
+      if (wkId === undefined) return;
+      try {
+        service.open(wkId);
+      } catch (error) {
+        console.error('[dshp-token-meter] 打开小组件失败：' + id, error);
+      }
+      return;
+    }
     const pos = clampPos(
       at || (open[id] as WidgetPlacement | undefined) || cascadePos(Object.keys(open).length),
     );
@@ -178,8 +442,15 @@ export function createWidgetSystem(): WidgetSystem {
     order = order.filter((x) => x !== id).concat(id); // 新开/移动都置顶
     emit(true);
   }
-  /** 按前缀丢弃浮窗记录（组件被移除后用它清理 localStorage 里的遗留项） */
+  /** 按前缀丢弃浮窗记录（组件被移除后用它清理遗留项）。
+   * 宿主模式下「记录」在框架那边（而且框架刻意不因注销删布局），所以只能注销描述符。 */
   function forget(prefix: string): void {
+    if (service !== null) {
+      for (const legacy of Array.from(disposersOf.keys())) {
+        if (legacy.startsWith(prefix)) forgetFloat(legacy);
+      }
+      return;
+    }
     const next = Object.assign({}, open as Record<string, WidgetPlacement>);
     let changed = false;
     for (const id of Object.keys(next)) {
@@ -193,6 +464,16 @@ export function createWidgetSystem(): WidgetSystem {
     emit(true);
   }
   function closeWidget(id: string): void {
+    if (service !== null) {
+      const wkId = wkOf.get(id);
+      if (wkId === undefined) return;
+      try {
+        service.close(wkId);
+      } catch (error) {
+        console.error('[dshp-token-meter] 关闭小组件失败：' + id, error);
+      }
+      return;
+    }
     if (!Object.hasOwn(open, id)) return;
     const next = Object.assign({}, open);
     delete next[id];
@@ -339,10 +620,13 @@ export function createWidgetSystem(): WidgetSystem {
 
   /** 通用浮窗外壳：只做定位（fixed + 坐标），不带任何边框/背景/内边距/阴影。
    * 组件自身的卡片样式即浮窗样式 —— 浮出前后视觉完全一致，原位置由调用方隐藏。
-   * 拖动：卡片内任意非交互区域按住即可拖（抓手 ⠿ 同样有效）。 */
+   * 拖动：卡片内任意非交互区域按住即可拖（抓手 ⠿ 同样有效）。
+   *
+   * 宿主模式下**恒为 `null`**：窗口（定位、拖拽、缩放、最小化、锁定）全部由 widget-kit 负责，
+   * 内容由注册时给的 `content.render` 提供，`WidgetFloatLayer` 也不会被渲染。 */
   function WidgetFloat(props: { id: string; children?: ReactNode }): ReactNode {
     const list = useWidgets();
-    const cur = list.filter((w) => w.id === props.id)[0];
+    const cur = service === null ? list.filter((w) => w.id === props.id)[0] : undefined;
     // 窗口缩放时把坐标钳制回视口（hook 必须在早退前声明）
     useEffect(() => {
       const onR = (): void => {
@@ -391,14 +675,46 @@ export function createWidgetSystem(): WidgetSystem {
   }
 
   /**
-   * 小组件开关按钮（抓手 + 状态按钮）：侧栏中显示 ⧉弹出，浮出后同一位置显示 回归侧栏。
-   * 放在卡片/图表标题栏使用，浮窗内外渲染一致。
+   * 小组件开关按钮：原位显示「⧉」弹出，浮出后同一位置显示「回归」。
+   *
+   * 两种模式下的交互不同，是因为窗口的归属不同：
+   *  - 自带浮层：抓手 ⠿ 按住可把卡片**拖出**（`gripProps`），点按直接弹出；
+   *  - 宿主模式：没有「从锚点拖出一个窗口」这种 API，卡片出现在框架给的位置、由框架拖拽，
+   *    所以只留一个开合按钮（拖出没有意义，会给「拖了却什么都没发生」的错觉）。
    */
   function WidgetToggle(props: { id: string; name?: string | undefined }): ReactNode {
     const list = useWidgets();
-    const opened = list.some((w) => w.id === props.id);
+    const opened = service === null ? list.some((w) => w.id === props.id) : isOpen(props.id);
     /** 抓手/按钮的文案里带上目标卡片名 —— 避免"抓手挂在这张卡上、弹出的却是另一张"的困惑 */
     const what = props.name ? '「' + props.name + '」' : '本卡片';
+    if (service !== null) {
+      return (
+        <span style={{ display: 'inline-flex', gap: 2, alignItems: 'center', marginLeft: 6, flex: 'none' }}>
+          {opened ? (
+            <button
+              className={styles.minibtn}
+              title={'把 ' + what + ' 收回原位（关闭小组件卡片）'}
+              onClick={() => closeWidget(props.id)}
+            >
+              {'回归'}
+            </button>
+          ) : (
+            <button
+              className={styles.minibtn}
+              title={'弹出 ' + what + ' 为独立卡片（可拖动 / 缩放 / 最小化）'}
+              onClick={() => {
+                // 顺手把标题提示带上：万一 syncFloatWidgets 还没跑（供应商刚加），
+                // 卡片标题也能用上人话而不是供应商 id
+                ensureRegistered(props.id, props.name);
+                openWidget(props.id);
+              }}
+            >
+              {'⧉'}
+            </button>
+          )}
+        </span>
+      );
+    }
     return (
       <span style={{ display: 'inline-flex', gap: 2, alignItems: 'center', marginLeft: 6, flex: 'none' }}>
         <span
@@ -432,6 +748,73 @@ export function createWidgetSystem(): WidgetSystem {
     );
   }
 
+  /**
+   * 挂上宿主服务。
+   *
+   * 只做「记住服务 + 订阅注册表变化」：注册什么由 `syncRegistered()` 在拿到供应商列表后决定
+   * （启动顺序是 attach → ensureLoad → sync，见 `index.tsx`）。
+   *
+   * @param candidate - `ctx.get('widgets')` 的返回值。
+   * @returns 挂上（或本来就挂着）为 `true`；形状不对为 `false`（继续走自带浮层）。
+   */
+  function attach(candidate: unknown): boolean {
+    const next = asService(candidate);
+    if (next === null) return false;
+    if (service === next) return true;
+    if (service !== null) detach();
+    service = next;
+    try {
+      // 框架那边任何变化（别的组件开合、用户关掉我们的卡片、设置里禁用）都要让本插件重渲染
+      serviceOff = service.subscribe(() => {
+        emit(false);
+      });
+    } catch (error) {
+      serviceOff = null;
+      console.error('[dshp-token-meter] 订阅宿主注册表失败（卡片开关状态可能不刷新）：', error);
+    }
+    emit(false);
+    return true;
+  }
+
+  /**
+   * 摘下宿主服务：注销本插件注册的全部卡片，回到自带浮层。
+   *
+   * @returns 无。
+   */
+  function detach(): void {
+    if (serviceOff !== null) {
+      try {
+        serviceOff();
+      } catch {
+        /* ignore */
+      }
+      serviceOff = null;
+    }
+    for (const legacy of Array.from(disposersOf.keys())) {
+      const dispose = disposersOf.get(legacy);
+      if (dispose === undefined) continue;
+      try {
+        dispose();
+      } catch {
+        /* ignore */
+      }
+      wkOf.delete(legacy);
+    }
+    disposersOf.clear();
+    legacyOf.clear();
+    hints.clear();
+    while (hostDisposers.length > 0) {
+      const dispose = hostDisposers.pop();
+      try {
+        dispose?.();
+      } catch {
+        /* ignore */
+      }
+    }
+    service = null;
+    emit(false);
+  }
+
   return {
     useWidgets,
     isOpen,
@@ -446,5 +829,27 @@ export function createWidgetSystem(): WidgetSystem {
     raise,
     zOf,
     clampAllToViewport,
+    isBridged: () => service !== null,
+    setContentRenderer: (render) => {
+      contentRenderer = render;
+    },
+    syncRegistered,
+    attach,
+    detach,
+    registerHost: (descriptor) => {
+      if (service === null) return false;
+      try {
+        hostDisposers.push(service.register(descriptor));
+        return true;
+      } catch (error) {
+        console.error('[dshp-token-meter] 注册宿主小组件失败：' + descriptor.id, error);
+        return false;
+      }
+    },
+    listFloats: () =>
+      Array.from(disposersOf.keys()).map((legacy) => ({
+        id: legacy,
+        title: floatTitle(legacy, hints.get(legacy)),
+      })),
   };
 }

@@ -1,0 +1,1141 @@
+/**
+ * @dshp/widget-kit —— 托盘 / 卡片 / 弹层 / 设置节样式
+ *
+ * 规则（本仓红线）：颜色与字体只走 `--dsw-alias-*` / `--dsw-font-*` token，不写死色值；
+ * 类名 camelCase；构建期由 lightningcss 加哈希前缀，作用域由工具保证。
+ *
+ * 层叠：卡片层根 `isolation: isolate` 自建层叠上下文，卡片之间只用**层内**相对 z-index ——
+ * 客户端目前还没有 z-index token 层（官方 sidebar-right README 亦如此说明），所以绝不写全局基线值。
+ */
+
+/* ── 会话顶部托盘 ─────────────────────────────────────────────────────── */
+
+.tray {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  /* 与卡片层同一套兜底：Tray 会在根上钉一份同样的自定义属性 */
+  --dshp-card-alpha: 100%;
+  --dshp-card-blur: none;
+  --dshp-card-radius: 12px;
+  --dshp-card-capsule-radius: 999px;
+  --dshp-card-border-width: 0.5px;
+  --dshp-motion-ms: 300ms;
+}
+
+.trayAnchor {
+  display: inline-flex;
+  /* 让位 / 落位都靠 transform 过渡：拖动期间不重排 DOM，位置变化看得见而且不抖 */
+  transition: transform var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* 被拖起来的那个：跟手位移由行内 transform 给，所以这里必须**关掉过渡**（否则会滞后于指针）；
+   「拿起来」的放大与阴影由 .trayBtnDragging 自己的过渡给 */
+.trayAnchorDragging {
+  z-index: 3;
+  transition: none;
+}
+
+.trayAnchorDragging .trayBtn {
+  box-shadow: 0 2px 8px var(--dsw-alias-state-business-tertiary);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--dsw-alias-state-business-primary) 22%, transparent);
+}
+
+/* 目标槽位的预览块：主题色填充 + 主题色柔光（与卡片的吸附预览同一套视觉语言） */
+.trayGhost {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  box-sizing: border-box;
+  border: 1px dashed var(--dsw-alias-state-business-primary);
+  border-radius: 8px;
+  background: var(--dsw-alias-state-business-tertiary);
+  background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 20%, transparent);
+  box-shadow: 0 0 0 3px var(--dsw-alias-state-business-tertiary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent);
+  pointer-events: none;
+  animation: ghostIn var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1);
+  transition: left var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes ghostIn {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.trayBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  /* 有文字时按钮自己撑宽，没文字时还是 28×28 的方图标 */
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+  cursor: pointer;
+  transition:
+    transform var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    background var(--dshp-motion-ms, 300ms) ease,
+    color var(--dshp-motion-ms, 300ms) ease;
+}
+
+.trayBtn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.trayBtn:focus-visible {
+  outline: 1px solid var(--dsw-alias-state-business-primary);
+  outline-offset: 2px;
+}
+
+.trayBtnActive {
+  background: var(--dsw-alias-interactive-bg-active);
+  color: var(--dsw-alias-label-primary);
+}
+
+/* 拖起来：放大 + 主题色阴影（有过渡，所以「拿起来」这个动作是看得见的） */
+.trayBtnDragging {
+  transform: scale(1.12);
+  background: var(--dsw-alias-interactive-bg-active);
+  color: var(--dsw-alias-label-primary);
+  box-shadow: 0 0 0 3px var(--dsw-alias-state-business-tertiary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsw-alias-state-business-primary) 14%, transparent);
+}
+
+/* 活动栏的「图标 + 少量文字」：最多 6 个字，超了省略号（描述符里已经限长，这里只是兜底） */
+.trayLabel {
+  max-width: 68px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 1;
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.trayGlyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}
+
+.trayGlyph > svg {
+  width: 18px;
+  height: 18px;
+}
+
+.trayBadge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--dsw-alias-state-business-primary);
+}
+
+.trayBadge[data-tone='ok'] {
+  background: var(--dsw-alias-state-success-primary);
+}
+
+.trayBadge[data-tone='warn'] {
+  background: var(--dsw-alias-state-warn-primary);
+}
+
+.trayBadge[data-tone='bad'] {
+  background: var(--dsw-alias-state-error-primary);
+}
+
+.trayBadgeText {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: var(--dsw-alias-state-business-primary);
+  color: var(--dsw-alias-label-primary-foreground);
+  font-size: 9px;
+  line-height: 14px;
+  text-align: center;
+  font-family: var(--dsw-font-family);
+}
+
+.trayBadgeText[data-tone='ok'] {
+  background: var(--dsw-alias-state-success-primary);
+}
+
+.trayBadgeText[data-tone='warn'] {
+  background: var(--dsw-alias-state-warn-primary);
+}
+
+.trayBadgeText[data-tone='bad'] {
+  background: var(--dsw-alias-state-error-primary);
+}
+
+/* ── 卡片层（shell.overlay 的一个条目） ───────────────────────────────── */
+
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  /* 自建层叠上下文：卡片之间只用相对值，不抢官方层的序 */
+  isolation: isolate;
+  /* shell.overlay 是点击穿透层：宿主要显式放行，否则整页被一块透明板盖住 */
+  pointer-events: none;
+  /* 外观偏好的兜底值（CardLayer 会按设置里的偏好覆盖这四个）：不透明、不模糊、12px 圆角、0.5px 边框 */
+  --dshp-card-alpha: 100%;
+  --dshp-card-blur: none;
+  --dshp-card-radius: 12px;
+  --dshp-card-capsule-radius: 999px;
+  --dshp-card-border-width: 0.5px;
+  /* 动效时长（ms）：cardOpacity 一样由设置里的偏好覆盖；0 = 关闭过渡与入场动画 */
+  --dshp-motion-ms: 300ms;
+}
+
+.card {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  box-sizing: border-box;
+  border: var(--dshp-card-border-width, 0.5px) solid var(--dsw-alias-border-l2);
+  border-radius: var(--dshp-card-radius, 12px);
+  /* 背景：先给不透明兜底，再用 color-mix 按偏好调透明度（颜色仍然只来自 token） */
+  background: var(--dsw-alias-bg-layer-1);
+  background: color-mix(in srgb, var(--dsw-alias-bg-layer-1) var(--dshp-card-alpha, 100%), transparent);
+  /* 毛玻璃：透明度越低越明显；关掉时是 `none`（不建合成层） */
+  -webkit-backdrop-filter: var(--dshp-card-blur, none);
+  backdrop-filter: var(--dshp-card-blur, none);
+  box-shadow: var(--dsw-shadow-lv3);
+  overflow: hidden;
+  color: var(--dsw-alias-label-primary);
+  font-family: var(--dsw-font-family);
+  /* 出现时轻轻放大淡入；尺寸变化（最小化 / 还原 / 尺寸预设）与移位置（吸附落位、键盘微调）平滑过渡 */
+  animation: cardIn var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1);
+  transition:
+    left var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    top var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    width var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    height var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    box-shadow var(--dshp-motion-ms, 300ms) ease;
+}
+
+/* 拖动 / 缩放期间：几何必须逐帧跟手，任何过渡都会变成「拖不动」的滞后感；
+   但「被拿起来」的观感（放大一点 + 更重的阴影）要过渡出来 */
+.card[data-gesture='true'] {
+  transition:
+    transform var(--dshp-motion-ms, 300ms) ease,
+    box-shadow var(--dshp-motion-ms, 300ms) ease;
+  transform: scale(1.012);
+  box-shadow: var(--dsw-shadow-lv3);
+  will-change: left, top;
+}
+
+.cardDragging {
+  user-select: none;
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 拖拽 / 缩放进行中的全视口手势盾：挡住页面文字的选中与 iframe/画布的指针吞掉，
+   层内 z-index 0（卡片是 z-index ≥ 1，仍然在盾上面） */
+.gestureShield {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.gestureShield[data-cursor='moving'] {
+  cursor: grabbing;
+}
+
+.gestureShield[data-cursor='ns'] {
+  cursor: ns-resize;
+}
+
+.gestureShield[data-cursor='ew'] {
+  cursor: ew-resize;
+}
+
+.gestureShield[data-cursor='nesw'] {
+  cursor: nesw-resize;
+}
+
+.gestureShield[data-cursor='nwse'] {
+  cursor: nwse-resize;
+}
+
+/* 吸附预览虚框：松手会落到这里。虚线 + 极淡填充 + 位置过渡（候选切换时滑过去而不是闪一下） */
+.snapGhost {
+  position: fixed;
+  z-index: 0;
+  box-sizing: border-box;
+  border: 1px dashed var(--dsw-alias-state-business-primary);
+  border-radius: 12px;
+  /* 主题色填充 + 主题色柔光：读到的是一块「要落下的位置」，不是一根虚线框。
+     先写 token 兜底、再写 color-mix 版本（不支持 color-mix 的浏览器自动回退到上面那行） */
+  background: var(--dsw-alias-state-business-tertiary);
+  background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 18%, transparent);
+  box-shadow: 0 0 0 4px var(--dsw-alias-state-business-tertiary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent);
+  pointer-events: none;
+  transition:
+    left var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    top var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    width var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    height var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* 顶部一条更实的主题色带 = 「这张卡会带着标题栏落到这里」，一眼看出不是普通占位框 */
+.snapGhost::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 36px;
+  border-radius: 11px 11px 0 0;
+  background: var(--dsw-alias-state-business-tertiary);
+  background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 30%, transparent);
+}
+
+/* 最小化 = 一枚胶囊：宽度在行内写成显式长度（min(布局宽, minimizedWidth)），两端全圆、阴影收一档。
+   宽度必须是长度而不是 auto —— 否则「长度 ↔ auto」不可插值，宽度会瞬移，缩高度再慢慢跟上，很跳。 */
+.cardMinimized {
+  box-shadow: var(--dsw-shadow-lv1);
+  /* 胶囊默认两端全圆；选「直角」时跟随偏好的 0px */
+  border-radius: var(--dshp-card-capsule-radius, 999px);
+}
+
+/* 锁定：标题栏不再是「可抓」的手型（几何已冻，只留最小化 / 关闭 / 菜单） */
+.cardLocked .cardHeader {
+  cursor: default;
+  border-bottom-color: var(--dsw-alias-border-l2);
+}
+
+/* 锁定按钮的两个状态用语义色：锁定 = 红锁，解锁 = 绿开锁（都走 token，深浅主题自动跟随） */
+.cardAction.cardLockAction[data-locked='true'] {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.cardAction.cardLockAction[data-locked='false'] {
+  color: var(--dsw-alias-state-success-primary);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  height: 36px;
+  padding: 0 6px 0 10px;
+  box-sizing: border-box;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l1);
+  /* 标题栏吃**同一份**透明度：否则会看到半张卡实心的断层
+     （毛玻璃是卡片的 backdrop-filter，标题栏在卡片盒内，自然一起被模糊） */
+  background: var(--dsw-alias-bg-layer-2);
+  background: color-mix(in srgb, var(--dsw-alias-bg-layer-2) var(--dshp-card-alpha, 100%), transparent);
+  cursor: grab;
+  touch-action: none;
+  /* 标题栏是拖拽把手：任何时候都不允许选中文字（锁定后没有指针处理，更容易误选） */
+  user-select: none;
+}
+
+.cardMinimized .cardHeader {
+  border-bottom: none;
+}
+
+.cardDragging .cardHeader {
+  cursor: grabbing;
+}
+
+.cardHeader:focus-visible {
+  outline: 1px solid var(--dsw-alias-state-business-primary);
+  outline-offset: -2px;
+}
+
+.cardTitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--dsw-alias-label-primary);
+}
+
+.cardSubtitle {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--dsw-alias-label-caption);
+  /* 最小化时副标题被「挤没」而不是瞬间消失：max-width + opacity 都是可插值的 */
+  transition:
+    max-width var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    opacity var(--dshp-motion-ms, 300ms) ease;
+}
+
+.cardSubtitleHidden {
+  max-width: 0;
+  opacity: 0;
+}
+
+.cardActions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+
+.cardAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cardAction:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.cardActionDanger:hover {
+  background: var(--dsw-alias-interactive-bg-hover-danger);
+  color: var(--dsw-alias-label-error);
+}
+
+.cardBody {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 10px;
+  box-sizing: border-box;
+  transition:
+    opacity var(--dshp-motion-ms, 300ms) ease,
+    padding var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* 最小化：内容留在树上（保留组件状态）但淡出、不占位。
+   内边距也一起收掉 —— 否则收缩过程中那 20px 会顶住高度，出现「先卡一下再缩」的顿挫 */
+.cardBodyHidden {
+  opacity: 0;
+  padding: 0;
+  pointer-events: none;
+}
+
+/* 内容盒：给提供方做容器查询的锚点；尺寸由卡片外层决定，故用 100% + container-type: size */
+.contentHost {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+  container-type: size;
+}
+
+.resizeHandle {
+  position: absolute;
+  z-index: 2;
+  touch-action: none;
+  /* 把手是纯指针控件：不允许选中（缩放时指针会扫过卡片内容与页面文字） */
+  user-select: none;
+}
+
+.resizeHandle[data-dir='n'] {
+  top: 0;
+  left: 8px;
+  right: 8px;
+  height: 6px;
+  cursor: ns-resize;
+}
+
+.resizeHandle[data-dir='s'] {
+  bottom: 0;
+  left: 8px;
+  right: 8px;
+  height: 6px;
+  cursor: ns-resize;
+}
+
+.resizeHandle[data-dir='e'] {
+  right: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 6px;
+  cursor: ew-resize;
+}
+
+.resizeHandle[data-dir='w'] {
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 6px;
+  cursor: ew-resize;
+}
+
+.resizeHandle[data-dir='ne'] {
+  top: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  cursor: nesw-resize;
+}
+
+.resizeHandle[data-dir='nw'] {
+  top: 0;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  cursor: nwse-resize;
+}
+
+.resizeHandle[data-dir='se'] {
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  cursor: nwse-resize;
+}
+
+.resizeHandle[data-dir='sw'] {
+  bottom: 0;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  cursor: nesw-resize;
+}
+
+/* ── popover（锚定在托盘图标下方） ─────────────────────────────────────── */
+
+.popover {
+  position: fixed;
+  /* 层内层级：卡片是 1..N、虚框是卡片序、常驻面板 40、**临时（悬停）面板 50** ——
+     悬停展开的速览永远压在常驻面板之上，两者都压在所有卡片之上（层内私有刻度，不与官方层比大小） */
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  width: min(420px, calc(100vw - 24px));
+  max-height: min(60vh, 520px);
+  pointer-events: auto;
+  box-sizing: border-box;
+  border: var(--dshp-card-border-width, 0.5px) solid var(--dsw-alias-border-l2);
+  border-radius: var(--dshp-card-radius, 12px);
+  background: var(--dsw-alias-bg-overlay);
+  background: color-mix(in srgb, var(--dsw-alias-bg-overlay) var(--dshp-card-alpha, 100%), transparent);
+  -webkit-backdrop-filter: var(--dshp-card-blur, none);
+  backdrop-filter: var(--dshp-card-blur, none);
+  box-shadow: var(--dsw-shadow-lv3);
+  overflow: hidden;
+  color: var(--dsw-alias-label-primary);
+  font-family: var(--dsw-font-family);
+}
+
+/* 临时层（悬停速览 / 一次性菜单）压在常驻层之上：先看悬停要看的东西，常驻面板不抢焦点 */
+.popover[data-channel='transient'] {
+  z-index: 50;
+}
+
+.popoverHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  height: 34px;
+  padding: 0 6px 0 12px;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l1);
+  background: var(--dsw-alias-bg-layer-2);
+  background: color-mix(in srgb, var(--dsw-alias-bg-layer-2) var(--dshp-card-alpha, 100%), transparent);
+}
+
+.popoverTitle {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.popoverPinned {
+  flex: none;
+  padding: 1px 6px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 999px;
+  font-size: 10px;
+  line-height: 16px;
+  color: var(--dsw-alias-label-caption);
+}
+
+.popoverBody {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 12px;
+  box-sizing: border-box;
+  overflow: auto;
+  container-type: inline-size;
+}
+
+/* ── 组件箱：自由卡片的统一入口（只列声明过 listedInBox 的卡片） ──────── */
+
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.boxHead {
+  display: flex;
+  align-items: center;
+}
+
+.boxList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* 一行 = 状态点 + 标题 + 开合按钮：扫一眼颜色就知道哪几张开着（与 token-meter 的菜单同构） */
+.boxRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 8px;
+  min-width: 0;
+}
+
+.boxRow:hover {
+  background: var(--dsw-alias-bg-layer-2);
+}
+
+/* 状态点：开着 = 业务色实心，收起 = 中性描边 */
+.boxDot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: transparent;
+}
+
+.boxRow[data-open='1'] .boxDot {
+  border-color: var(--dsw-alias-state-business-primary);
+  background: var(--dsw-alias-state-business-primary);
+}
+
+.boxLabel {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.boxFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid var(--dsw-alias-border-l1);
+  padding-top: 8px;
+}
+
+.boxCount {
+  font-size: 11px;
+  color: var(--dsw-alias-label-caption);
+}
+
+.boxHint {
+  font-size: 11px;
+  line-height: 17px;
+  color: var(--dsw-alias-label-caption);
+}
+
+.boxEmpty {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-caption);
+}
+
+/* 空态里要写出字段名（`listedInBox: true`）：等宽 + 淡底，读起来是「字段」而不是正文 */
+.boxEmpty code {
+  font-family: var(--dsw-font-mono);
+  font-size: 11px;
+  padding: 0 3px;
+  border-radius: 4px;
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-secondary);
+}
+
+/* ── 设置节 ───────────────────────────────────────────────────────────── */
+
+.slider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 190px;
+}
+
+.sliderInput {
+  flex: 1;
+  min-width: 0;
+  /* 颜色只走 token：原生滑块用 accent-color 就够了 */
+  accent-color: var(--dsw-alias-state-business-primary);
+}
+
+.sliderValue {
+  flex: none;
+  min-width: 48px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--dsw-alias-label-caption);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--dsw-alias-label-primary);
+}
+
+.sectionHint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-caption);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 10px;
+  padding: 4px 12px;
+  background: var(--dsw-alias-bg-layer-1);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.row + .row {
+  border-top: 0.5px solid var(--dsw-alias-border-l1);
+}
+
+.rowLabel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rowTitle {
+  font-size: 13px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.rowHint {
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--dsw-alias-label-caption);
+}
+
+.rowControl {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 18px;
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-secondary);
+}
+
+.noticeBad {
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-error);
+}
+
+.noticeOk {
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-state-success-primary);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.listRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--dsw-alias-bg-layer-1);
+}
+
+.listRow + .listRow {
+  border-top: 0.5px solid var(--dsw-alias-border-l1);
+}
+
+/* 已禁用的组件：整行压暗，但开关仍可点（那是唯一的复活路径） */
+.listRowOff {
+  opacity: 0.6;
+}
+
+.listRowOff .listActions {
+  opacity: 1;
+}
+
+.listMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.listId {
+  font-family: var(--dsw-font-mono);
+  font-size: 12px;
+  color: var(--dsw-alias-label-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.listMeta {
+  font-size: 11px;
+  color: var(--dsw-alias-label-caption);
+}
+
+.listActions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.empty {
+  padding: 14px 12px;
+  font-size: 12px;
+  color: var(--dsw-alias-label-caption);
+  background: var(--dsw-alias-bg-layer-1);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── 参考组件：时钟 ───────────────────────────────────────────────────── */
+
+.clock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 100%;
+  text-align: center;
+}
+
+.clockTime {
+  font-family: var(--dsw-font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--dsw-alias-label-primary);
+  line-height: 1.1;
+}
+
+.clockTime[data-size='compact'] {
+  font-size: 22px;
+}
+
+.clockTime[data-size='regular'] {
+  font-size: 32px;
+}
+
+.clockTime[data-size='wide'] {
+  font-size: 44px;
+}
+
+.clockMeta {
+  font-size: 12px;
+  color: var(--dsw-alias-label-caption);
+}
+
+.clockRow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.clockLabel {
+  font-size: 11px;
+  color: var(--dsw-alias-label-caption);
+}
+
+/* ── 参考组件：注册表诊断 ─────────────────────────────────────────────── */
+
+.diag {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+.diagSummary {
+  font-size: 12px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.diagList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.diagRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-2);
+}
+
+.diagMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.diagActions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.diagRow[data-disabled='true'] {
+  opacity: 0.6;
+}
+
+.diagId {
+  font-family: var(--dsw-font-mono);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.diagMeta {
+  font-size: 11px;
+  color: var(--dsw-alias-label-caption);
+}
+
+.diagError {
+  font-size: 11px;
+  color: var(--dsw-alias-label-error);
+}
+
+.diagEmpty {
+  font-size: 12px;
+  color: var(--dsw-alias-label-caption);
+}
+
+/* ── 参考组件：快速设置（点击展开的 popover） ─────────────────────────── */
+
+.quick {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quickSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quickLabel {
+  font-size: 11px;
+  color: var(--dsw-alias-label-caption);
+}
+
+.seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.segBtn {
+  padding: 3px 10px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 11px;
+  font-family: var(--dsw-font-family);
+  cursor: pointer;
+}
+
+.segBtn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.segBtnActive {
+  border-color: var(--dsw-alias-state-business-primary);
+  background: var(--dsw-alias-interactive-bg-active);
+  color: var(--dsw-alias-label-primary);
+}
+
+.quickFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.quickNote {
+  font-size: 11px;
+  color: var(--dsw-alias-label-caption);
+}
+
+.quickError {
+  font-size: 11px;
+  color: var(--dsw-alias-label-error);
+}
+
+/* ── 参考组件：状态速览（悬停展开、header: false 的 popover） ─────────── */
+
+.statusRoot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+  padding: 12px;
+}
+
+.statusGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.statusCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-2);
+}
+
+.statusValue {
+  font-family: var(--dsw-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.statusKey {
+  font-size: 11px;
+  color: var(--dsw-alias-label-caption);
+}
+
+.statusHint {
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--dsw-alias-label-caption);
+}
+
+/* ── 降低动效偏好 ─────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .cardBody,
+  .snapGhost,
+  .trayAnchor,
+  .trayBtn,
+  .trayGhost {
+    animation: none;
+    transition: none;
+  }
+}
