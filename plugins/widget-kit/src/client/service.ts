@@ -153,7 +153,10 @@ export interface WidgetRuntime {
   /** 重置托盘顺序与隐藏集合（溢出菜单里的一项）。 */
   resetTrayLayout(): void;
   setHidden(id: string, hidden: boolean): void;
-  setPrefs(patch: Partial<FrameworkConfig>): Promise<{ ok: boolean; error?: string }>;
+  setPrefs(
+    patch: Partial<FrameworkConfig>,
+    options?: { save?: boolean },
+  ): Promise<{ ok: boolean; error?: string }>;
   /** 宿主偏好到达后调一次：填偏好 + 标记 ready（首个快照才算正式）。 */
   applyPrefs(prefs: FrameworkConfig): void;
   /** 启动一段时间后清理「在册但从未注册」的历史残留（卸载过的插件留下的卡片/顺序项）。 */
@@ -1004,10 +1007,20 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     publish();
   }
 
-  async function setPrefs(patch: Partial<FrameworkConfig>): Promise<{ ok: boolean; error?: string }> {
+  /**
+   * 改偏好。
+   *
+   * `options.save === false` = **只本地预览**（滑块拖动时每帧调用它，不能每帧往宿主写一遍
+   * settings.yaml）：快照立刻更新、界面即时反应，松手时再用 `save: true` 落盘一次。
+   */
+  async function setPrefs(
+    patch: Partial<FrameworkConfig>,
+    options?: { save?: boolean },
+  ): Promise<{ ok: boolean; error?: string }> {
     const before = prefs;
     prefs = { ...prefs, ...patch };
     publish();
+    if (options?.save === false) return { ok: true };
     if (deps.savePrefs === undefined) return { ok: true };
     const result = await deps.savePrefs(prefs);
     if (!result.ok) {

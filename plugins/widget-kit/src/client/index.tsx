@@ -54,6 +54,13 @@ const DEFAULT_PREFS: FrameworkConfig = {
   badgeIntervalMs: SPEC_DEFAULTS.badgeIntervalMs,
   hoverPreview: true,
   referenceWidgets: true,
+  // 外观默认值 = 「保持不变」：与 src/host/config.ts 的 DEFAULT_CONFIG 必须一致
+  // （scripts/check-spec-drift.mjs 会比对这几个数字）
+  cardOpacity: 1,
+  cardBlur: 0,
+  cardBorder: 'auto',
+  cardRadius: 'auto',
+  motionMs: 300,
 };
 
 function readStorage(): StorageLike | null {

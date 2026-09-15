@@ -23,15 +23,8 @@ export const inject: string[] = ['webServer'];
 export { NS, ConfigSchema };
 
 export function apply(ctx: AnyCtx, rawConfig: unknown): void {
-  const entry: FrameworkConfig = { ...DEFAULT_CONFIG };
-  const patch = sanitizePatchConfig(rawConfig);
-  if (patch !== null) {
-    if (patch.trayEnabled !== undefined) entry.trayEnabled = patch.trayEnabled;
-    if (patch.maxVisibleIcons !== undefined) entry.maxVisibleIcons = patch.maxVisibleIcons;
-    if (patch.badgeIntervalMs !== undefined) entry.badgeIntervalMs = patch.badgeIntervalMs;
-    if (patch.hoverPreview !== undefined) entry.hoverPreview = patch.hoverPreview;
-    if (patch.referenceWidgets !== undefined) entry.referenceWidgets = patch.referenceWidgets;
-  }
+  const patchFromLoader = sanitizePatchConfig(rawConfig);
+  const entry: FrameworkConfig = { ...DEFAULT_CONFIG, ...patchFromLoader };
 
   let current: () => FrameworkConfig = () => entry;
 
@@ -68,13 +61,9 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
 
   function snapshot(): FrameworkConfig {
     const config = getConfig();
-    return {
-      trayEnabled: config.trayEnabled === true,
-      maxVisibleIcons: config.maxVisibleIcons,
-      badgeIntervalMs: config.badgeIntervalMs,
-      hoverPreview: config.hoverPreview === true,
-      referenceWidgets: config.referenceWidgets === true,
-    };
+    // 逐字段消毒后再交出去：settings 里的值来自用户手改的 YAML，不能直接信
+    const patch = sanitizePatchConfig(config) ?? {};
+    return { ...DEFAULT_CONFIG, ...patch };
   }
 
   async function update(patchObj: FrameworkConfigPatch): Promise<void> {

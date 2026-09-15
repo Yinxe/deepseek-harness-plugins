@@ -137,7 +137,7 @@ globalThis.fetch = async (url, init) => {
     async json() {
       return {
         ok: true,
-        version: '0.8.0',
+        version: '0.9.0',
         specVersion: 1,
         config: {
           trayEnabled: true,
@@ -250,7 +250,7 @@ const expectedServiceKeys = [...EXPECTED_SERVICE_KEYS];
 expectedServiceKeys.sort();
 assert.deepEqual(actualServiceKeys, expectedServiceKeys, 'widgets 服务的成员必须与 SPEC_KEYS.service 一致');
 assert.equal(service.specVersion, 1);
-assert.equal(service.frameworkVersion, '0.8.0');
+assert.equal(service.frameworkVersion, '0.9.0');
 
 // ── 2. 槽位注册 ──────────────────────────────────────────────────────────
 assert.deepEqual(injections, ['conversation.session.header.utilities', 'shell.overlay', 'settings.section']);
@@ -1279,6 +1279,58 @@ assert.equal(ghostOf(), null, '离开所有吸附线后虚框必须消失');
 assert.equal(runtime.getLive().rect.x, 100, '卡片本体仍然自由跟手');
 runtime.cancelLive();
 assert.equal(ghostOf(), null, '手势结束后虚框必须撤掉');
+
+// 10.9e 外观 / 动效偏好 → 卡片层根上的 CSS 自定义属性（卡片、标题栏、小面板共用同一套）
+runtime.applyPrefs({
+  trayEnabled: true,
+  maxVisibleIcons: 4,
+  badgeIntervalMs: 30000,
+  hoverPreview: true,
+  referenceWidgets: true,
+  cardOpacity: 0.6,
+  cardBlur: 12,
+  cardBorder: 'off',
+  cardRadius: 'square',
+  motionMs: 100,
+});
+const styledLayer = render(layerEntry.component({}));
+const layerVars = collect(styledLayer)[0]?.props.style ?? styledLayer.props.style;
+assert.equal(layerVars['--dshp-card-alpha'], '60%', '透明度偏好必须下达到层根');
+assert.equal(layerVars['--dshp-card-blur'], 'blur(12px)', '毛玻璃偏好必须下达到层根');
+assert.equal(layerVars['--dshp-card-border-width'], '0px', '「无边框」档 → 0px');
+assert.equal(layerVars['--dshp-card-radius'], '0px', '「直角」档 → 0px');
+assert.equal(layerVars['--dshp-card-capsule-radius'], '0px', '直角档下最小化胶囊也拉平');
+assert.equal(layerVars['--dshp-motion-ms'], '100ms', '动效时长偏好必须下达到层根');
+// 关掉毛玻璃时不建 backdrop-filter 合成层
+runtime.applyPrefs({ ...runtime.getSnapshot().prefs, cardBlur: 0, cardOpacity: 1, motionMs: 300 });
+const plainLayer = render(layerEntry.component({}));
+const plainVars = collect(plainLayer)[0]?.props.style ?? plainLayer.props.style;
+assert.equal(plainVars['--dshp-card-blur'], 'none', '模糊 = 0 时必须给 none（而不是 blur(0px)）');
+assert.equal(plainVars['--dshp-card-alpha'], '100%', '默认不透明');
+assert.equal(plainVars['--dshp-motion-ms'], '300ms', '默认动效 300ms');
+
+// 10.9f 滑块拖动只改本地预览，不往宿主写 settings.yaml（松手才落盘）
+const postsBefore = fetchCalls.filter((call) => call.method === 'POST').length;
+await runtime.setPrefs({ cardOpacity: 0.5 }, { save: false });
+assert.equal(
+  fetchCalls.filter((call) => call.method === 'POST').length,
+  postsBefore,
+  '拖动中的预览不得发 POST（否则每帧刷一遍 settings.yaml）',
+);
+assert.equal(runtime.getSnapshot().prefs.cardOpacity, 0.5, '预览仍要立刻生效');
+await runtime.setPrefs({ cardOpacity: 0.55 });
+assert.equal(
+  fetchCalls.filter((call) => call.method === 'POST').length,
+  postsBefore + 1,
+  '松手（save 默认 true）才落盘一次',
+);
+await runtime.setPrefs({
+  cardOpacity: 1,
+  cardBlur: 0,
+  cardBorder: 'auto',
+  cardRadius: 'auto',
+  motionMs: 300,
+});
 
 // 10.10 锁定按钮的状态（红色锁 / 绿色开锁靠 data-locked 选择器着色）
 const lockBtnOf = (id) => {

@@ -16,12 +16,19 @@
   align-items: center;
   gap: 2px;
   flex: none;
+  /* 与卡片层同一套兜底：Tray 会在根上钉一份同样的自定义属性 */
+  --dshp-card-alpha: 100%;
+  --dshp-card-blur: none;
+  --dshp-card-radius: 12px;
+  --dshp-card-capsule-radius: 999px;
+  --dshp-card-border-width: 0.5px;
+  --dshp-motion-ms: 300ms;
 }
 
 .trayAnchor {
   display: inline-flex;
   /* 让位 / 落位都靠 transform 过渡：拖动期间不重排 DOM，位置变化看得见而且不抖 */
-  transition: transform 150ms cubic-bezier(0.2, 0, 0, 1);
+  transition: transform var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1);
 }
 
 /* 被拖起来的那个：跟手位移由行内 transform 给，所以这里必须**关掉过渡**（否则会滞后于指针）；
@@ -49,8 +56,8 @@
   box-shadow: 0 0 0 3px var(--dsw-alias-state-business-tertiary);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent);
   pointer-events: none;
-  animation: ghostIn 140ms cubic-bezier(0.2, 0, 0, 1);
-  transition: left 150ms cubic-bezier(0.2, 0, 0, 1);
+  animation: ghostIn var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1);
+  transition: left var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1);
 }
 
 @keyframes ghostIn {
@@ -79,9 +86,9 @@
   color: var(--dsw-alias-label-tertiary);
   cursor: pointer;
   transition:
-    transform 140ms cubic-bezier(0.2, 0, 0, 1),
-    background 140ms ease,
-    color 140ms ease;
+    transform var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    background var(--dshp-motion-ms, 300ms) ease,
+    color var(--dshp-motion-ms, 300ms) ease;
 }
 
 .trayBtn:hover {
@@ -181,6 +188,14 @@
   isolation: isolate;
   /* shell.overlay 是点击穿透层：宿主要显式放行，否则整页被一块透明板盖住 */
   pointer-events: none;
+  /* 外观偏好的兜底值（CardLayer 会按设置里的偏好覆盖这四个）：不透明、不模糊、12px 圆角、0.5px 边框 */
+  --dshp-card-alpha: 100%;
+  --dshp-card-blur: none;
+  --dshp-card-radius: 12px;
+  --dshp-card-capsule-radius: 999px;
+  --dshp-card-border-width: 0.5px;
+  /* 动效时长（ms）：cardOpacity 一样由设置里的偏好覆盖；0 = 关闭过渡与入场动画 */
+  --dshp-motion-ms: 300ms;
 }
 
 .card {
@@ -189,29 +204,34 @@
   flex-direction: column;
   pointer-events: auto;
   box-sizing: border-box;
-  border: 0.5px solid var(--dsw-alias-border-l2);
-  border-radius: 12px;
+  border: var(--dshp-card-border-width, 0.5px) solid var(--dsw-alias-border-l2);
+  border-radius: var(--dshp-card-radius, 12px);
+  /* 背景：先给不透明兜底，再用 color-mix 按偏好调透明度（颜色仍然只来自 token） */
   background: var(--dsw-alias-bg-layer-1);
+  background: color-mix(in srgb, var(--dsw-alias-bg-layer-1) var(--dshp-card-alpha, 100%), transparent);
+  /* 毛玻璃：透明度越低越明显；关掉时是 `none`（不建合成层） */
+  -webkit-backdrop-filter: var(--dshp-card-blur, none);
+  backdrop-filter: var(--dshp-card-blur, none);
   box-shadow: var(--dsw-shadow-lv3);
   overflow: hidden;
   color: var(--dsw-alias-label-primary);
   font-family: var(--dsw-font-family);
   /* 出现时轻轻放大淡入；尺寸变化（最小化 / 还原 / 尺寸预设）与移位置（吸附落位、键盘微调）平滑过渡 */
-  animation: cardIn 180ms cubic-bezier(0.2, 0, 0, 1);
+  animation: cardIn var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1);
   transition:
-    left 140ms cubic-bezier(0.2, 0, 0, 1),
-    top 140ms cubic-bezier(0.2, 0, 0, 1),
-    width 160ms cubic-bezier(0.2, 0, 0, 1),
-    height 160ms cubic-bezier(0.2, 0, 0, 1),
-    box-shadow 140ms ease;
+    left var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    top var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    width var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    height var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    box-shadow var(--dshp-motion-ms, 300ms) ease;
 }
 
 /* 拖动 / 缩放期间：几何必须逐帧跟手，任何过渡都会变成「拖不动」的滞后感；
    但「被拿起来」的观感（放大一点 + 更重的阴影）要过渡出来 */
 .card[data-gesture='true'] {
   transition:
-    transform 120ms ease,
-    box-shadow 140ms ease;
+    transform var(--dshp-motion-ms, 300ms) ease,
+    box-shadow var(--dshp-motion-ms, 300ms) ease;
   transform: scale(1.012);
   box-shadow: var(--dsw-shadow-lv3);
   will-change: left, top;
@@ -278,10 +298,10 @@
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent);
   pointer-events: none;
   transition:
-    left 120ms cubic-bezier(0.2, 0, 0, 1),
-    top 120ms cubic-bezier(0.2, 0, 0, 1),
-    width 120ms cubic-bezier(0.2, 0, 0, 1),
-    height 120ms cubic-bezier(0.2, 0, 0, 1);
+    left var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    top var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    width var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1),
+    height var(--dshp-motion-ms, 300ms) cubic-bezier(0.2, 0, 0, 1);
 }
 
 /* 顶部一条更实的主题色带 = 「这张卡会带着标题栏落到这里」，一眼看出不是普通占位框 */
@@ -299,7 +319,8 @@
 .cardMinimized {
   width: auto;
   box-shadow: var(--dsw-shadow-lv1);
-  border-radius: 999px;
+  /* 胶囊默认两端全圆；选「直角」时跟随偏好的 0px */
+  border-radius: var(--dshp-card-capsule-radius, 999px);
 }
 
 .cardMinimized .cardHeader {
@@ -330,7 +351,10 @@
   padding: 0 6px 0 10px;
   box-sizing: border-box;
   border-bottom: 0.5px solid var(--dsw-alias-border-l1);
+  /* 标题栏吃**同一份**透明度：否则会看到半张卡实心的断层
+     （毛玻璃是卡片的 backdrop-filter，标题栏在卡片盒内，自然一起被模糊） */
   background: var(--dsw-alias-bg-layer-2);
+  background: color-mix(in srgb, var(--dsw-alias-bg-layer-2) var(--dshp-card-alpha, 100%), transparent);
   cursor: grab;
   touch-action: none;
   /* 标题栏是拖拽把手：任何时候都不允许选中文字（锁定后没有指针处理，更容易误选） */
@@ -409,7 +433,7 @@
   min-height: 0;
   padding: 10px;
   box-sizing: border-box;
-  transition: opacity 140ms ease;
+  transition: opacity var(--dshp-motion-ms, 300ms) ease;
 }
 
 /* 最小化 = 折叠成一条标题栏：内容留在树上（保留组件状态）但淡出、不占位（高度被卡片折叠挤成 0） */
@@ -509,9 +533,12 @@
   max-height: min(60vh, 520px);
   pointer-events: auto;
   box-sizing: border-box;
-  border: 0.5px solid var(--dsw-alias-border-l2);
-  border-radius: 12px;
+  border: var(--dshp-card-border-width, 0.5px) solid var(--dsw-alias-border-l2);
+  border-radius: var(--dshp-card-radius, 12px);
   background: var(--dsw-alias-bg-overlay);
+  background: color-mix(in srgb, var(--dsw-alias-bg-overlay) var(--dshp-card-alpha, 100%), transparent);
+  -webkit-backdrop-filter: var(--dshp-card-blur, none);
+  backdrop-filter: var(--dshp-card-blur, none);
   box-shadow: var(--dsw-shadow-lv3);
   overflow: hidden;
   color: var(--dsw-alias-label-primary);
@@ -526,6 +553,8 @@
   height: 34px;
   padding: 0 6px 0 12px;
   border-bottom: 0.5px solid var(--dsw-alias-border-l1);
+  background: var(--dsw-alias-bg-layer-2);
+  background: color-mix(in srgb, var(--dsw-alias-bg-layer-2) var(--dshp-card-alpha, 100%), transparent);
 }
 
 .popoverTitle {
@@ -558,6 +587,28 @@
 }
 
 /* ── 设置节 ───────────────────────────────────────────────────────────── */
+
+.slider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 190px;
+}
+
+.sliderInput {
+  flex: 1;
+  min-width: 0;
+  /* 颜色只走 token：原生滑块用 accent-color 就够了 */
+  accent-color: var(--dsw-alias-state-business-primary);
+}
+
+.sliderValue {
+  flex: none;
+  min-width: 48px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--dsw-alias-label-caption);
+}
 
 .section {
   display: flex;

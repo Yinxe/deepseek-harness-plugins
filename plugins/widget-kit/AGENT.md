@@ -19,6 +19,9 @@
 ## 结构与职责
 
 - `src/client/spec.ts` —— **规范单一事实来源**：公开类型 + 默认值 + `normalizeDescriptor` 校验器 + `SPEC_KEYS`。
+- `src/client/appearance.ts` —— 把外观 / 动效偏好（`cardOpacity` / `cardBlur` / `cardBorder` /
+  `cardRadius` / `motionMs`）翻成 CSS 自定义属性；卡片层与托盘**各钉一份**（两棵树、两个槽位），
+  绝不写 `document.documentElement`。
 - `spec.d.ts` —— 给别的插件 `import type` 的手写契约；与 `spec.ts` 由 `check-spec-drift.mjs` 逐字段比对。
 - `src/client/geometry.ts` —— 全部卡片几何（视口夹紧 / 八向缩放 / 内容盒 / 尺寸档 / z 序），
   以及**移动落点的吸附与防重叠**（`dockRect` + `snapAxis` / `alignAxis` / `escapeConflicts` / `conflicts`），纯函数。

@@ -829,21 +829,32 @@ function readBody(req, limit = 1024 * 1024) {
 
 // src/host/config.ts
 var NS = settingsNamespace("dshp-widget-kit");
-var FRAMEWORK_VERSION = "0.8.0";
+var FRAMEWORK_VERSION = "0.9.0";
 var SPEC_VERSION = 1;
 var DEFAULT_CONFIG = {
   trayEnabled: true,
   maxVisibleIcons: 4,
   badgeIntervalMs: 3e4,
   hoverPreview: true,
-  referenceWidgets: true
+  referenceWidgets: true,
+  // 外观默认值 = 「保持不变」：不透明、不模糊，用户不动滑块就跟以前长得一样
+  cardOpacity: 1,
+  cardBlur: 0,
+  cardBorder: "auto",
+  cardRadius: "auto",
+  // 动效默认 300ms（比之前写死的 120–180ms 更顺一档，也留出「关 / 更快 / 更慢」的余地）
+  motionMs: 300
 };
 var ConfigSchema = Schema.object({
   trayEnabled: Schema.boolean().default(true),
   maxVisibleIcons: Schema.number().step(1).min(1).max(8).default(4),
   badgeIntervalMs: Schema.number().step(1).min(5e3).max(6e5).default(3e4),
   hoverPreview: Schema.boolean().default(true),
-  referenceWidgets: Schema.boolean().default(true)
+  referenceWidgets: Schema.boolean().default(true),
+  cardOpacity: Schema.number().min(0.2).max(1).default(1),
+  cardBlur: Schema.number().step(1).min(0).max(32).default(0),
+  cardBorder: Schema.union(["auto", "on", "off"]).default("auto"),
+  cardRadius: Schema.union(["auto", "round", "square"]).default("auto")
 });
 function isRecord(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
@@ -867,6 +878,28 @@ function sanitizePatchConfig(raw) {
       const n = Math.floor(v);
       if (n >= 5e3 && n <= 6e5) out.badgeIntervalMs = n;
     }
+  }
+  if (Object.hasOwn(raw, "cardOpacity")) {
+    const v = raw["cardOpacity"];
+    if (typeof v === "number" && Number.isFinite(v)) {
+      const n = Math.round(v * 100) / 100;
+      if (n >= 0.2 && n <= 1) out.cardOpacity = n;
+    }
+  }
+  if (Object.hasOwn(raw, "cardBlur")) {
+    const v = raw["cardBlur"];
+    if (typeof v === "number" && Number.isFinite(v)) {
+      const n = Math.floor(v);
+      if (n >= 0 && n <= 32) out.cardBlur = n;
+    }
+  }
+  if (Object.hasOwn(raw, "cardBorder")) {
+    const v = raw["cardBorder"];
+    if (v === "auto" || v === "on" || v === "off") out.cardBorder = v;
+  }
+  if (Object.hasOwn(raw, "cardRadius")) {
+    const v = raw["cardRadius"];
+    if (v === "auto" || v === "round" || v === "square") out.cardRadius = v;
   }
   return Object.keys(out).length === 0 ? null : out;
 }
@@ -936,15 +969,8 @@ function registerRoutes(ctx, deps) {
 var name = "@dshp/widget-kit";
 var inject = ["webServer"];
 function apply(ctx, rawConfig) {
-  const entry = { ...DEFAULT_CONFIG };
-  const patch = sanitizePatchConfig(rawConfig);
-  if (patch !== null) {
-    if (patch.trayEnabled !== void 0) entry.trayEnabled = patch.trayEnabled;
-    if (patch.maxVisibleIcons !== void 0) entry.maxVisibleIcons = patch.maxVisibleIcons;
-    if (patch.badgeIntervalMs !== void 0) entry.badgeIntervalMs = patch.badgeIntervalMs;
-    if (patch.hoverPreview !== void 0) entry.hoverPreview = patch.hoverPreview;
-    if (patch.referenceWidgets !== void 0) entry.referenceWidgets = patch.referenceWidgets;
-  }
+  const patchFromLoader = sanitizePatchConfig(rawConfig);
+  const entry = { ...DEFAULT_CONFIG, ...patchFromLoader };
   let current = () => entry;
   try {
     ctx.inject(["settings"], (sctx) => {
@@ -975,13 +1001,8 @@ function apply(ctx, rawConfig) {
   }
   function snapshot() {
     const config = getConfig();
-    return {
-      trayEnabled: config.trayEnabled === true,
-      maxVisibleIcons: config.maxVisibleIcons,
-      badgeIntervalMs: config.badgeIntervalMs,
-      hoverPreview: config.hoverPreview === true,
-      referenceWidgets: config.referenceWidgets === true
-    };
+    const patch = sanitizePatchConfig(config) ?? {};
+    return { ...DEFAULT_CONFIG, ...patch };
   }
   async function update(patchObj) {
     let settings = null;

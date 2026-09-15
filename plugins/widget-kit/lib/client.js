@@ -30,7 +30,7 @@ module.exports = __toCommonJS(client_exports);
 
 // src/client/spec.ts
 var SPEC_VERSION = 1;
-var FRAMEWORK_VERSION = "0.8.0";
+var FRAMEWORK_VERSION = "0.9.0";
 var WIDGET_ID_PATTERN = /^[a-z0-9-]{2,32}:[a-z0-9-]{2,32}$/;
 var PRESENTATIONS = ["tray", "popover", "card"];
 var SPEC_DEFAULTS = {
@@ -52,6 +52,15 @@ var SPEC_DEFAULTS = {
   /** 吸附：相邻卡片贴在一起保留的间隔、触发吸附的距离（px）。 */
   snapGap: 8,
   snapDistance: 12,
+  /** 外观：圆角「跟随框架默认 / 圆角 / 直角」三档，以及边框宽度（默认 / 明显 / 无）。 */
+  cardRadius: 12,
+  cardRadiusRound: 20,
+  cardBorderWidth: 0.5,
+  cardBorderWidthStrong: 1,
+  /** 动效时长（ms）：所有过渡与入场动画用它；`0` = 关闭动效。 */
+  motionMs: 300,
+  /** 动效可选档位（设置页的「关 / 100 / 200 / 300 / 400 / 500」）。 */
+  motionChoices: [0, 100, 200, 300, 400, 500],
   /** 同屏卡片上限；开了第 7 张时自动最小化最旧一张。 */
   maxOpenCards: 6,
   /** 托盘可见图标上限（框架偏好的默认值，用户可在设置页改）。 */
@@ -444,7 +453,7 @@ var import_react = require("react");
 var import_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
 
 // dsh-css-module:dsh-css:src/client/styles.module.css.mjs
-var css = '.SigSeG_tray{flex:none;align-items:center;gap:2px;display:flex;position:relative}.SigSeG_trayAnchor{transition:transform .15s cubic-bezier(.2,0,0,1);display:inline-flex}.SigSeG_trayAnchorDragging{z-index:3;transition:none}.SigSeG_trayAnchorDragging .SigSeG_trayBtn{box-shadow:0 2px 8px var(--dsw-alias-state-business-tertiary);box-shadow:0 2px 8px color-mix(in srgb, var(--dsw-alias-state-business-primary) 22%, transparent)}.SigSeG_trayGhost{box-sizing:border-box;border:1px dashed var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary);background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 20%, transparent);box-shadow:0 0 0 3px var(--dsw-alias-state-business-tertiary);box-shadow:0 0 0 3px color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent);pointer-events:none;border-radius:8px;transition:left .15s cubic-bezier(.2,0,0,1);animation:.14s cubic-bezier(.2,0,0,1) SigSeG_ghostIn;position:absolute;top:0;bottom:0}@keyframes SigSeG_ghostIn{0%{opacity:0;transform:scale(.86)}to{opacity:1;transform:scale(1)}}.SigSeG_trayBtn{width:28px;height:28px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:8px;justify-content:center;align-items:center;padding:0;transition:transform .14s cubic-bezier(.2,0,0,1),background .14s,color .14s;display:inline-flex;position:relative}.SigSeG_trayBtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_trayBtn:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:2px}.SigSeG_trayBtnActive{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.SigSeG_trayBtnDragging{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary);box-shadow:0 0 0 3px var(--dsw-alias-state-business-tertiary);box-shadow:0 0 0 3px color-mix(in srgb, var(--dsw-alias-state-business-primary) 14%, transparent);transform:scale(1.12)}.SigSeG_trayGlyph{justify-content:center;align-items:center;width:18px;height:18px;display:inline-flex}.SigSeG_trayGlyph>svg{width:18px;height:18px}.SigSeG_trayBadge{background:var(--dsw-alias-state-business-primary);border-radius:999px;width:6px;height:6px;position:absolute;top:2px;right:2px}.SigSeG_trayBadge[data-tone=ok]{background:var(--dsw-alias-state-success-primary)}.SigSeG_trayBadge[data-tone=warn]{background:var(--dsw-alias-state-warn-primary)}.SigSeG_trayBadge[data-tone=bad]{background:var(--dsw-alias-state-error-primary)}.SigSeG_trayBadgeText{background:var(--dsw-alias-state-business-primary);min-width:14px;height:14px;color:var(--dsw-alias-label-primary-foreground);text-align:center;font-size:9px;line-height:14px;font-family:var(--dsw-font-family);border-radius:999px;padding:0 3px;position:absolute;top:-2px;right:-4px}.SigSeG_trayBadgeText[data-tone=ok]{background:var(--dsw-alias-state-success-primary)}.SigSeG_trayBadgeText[data-tone=warn]{background:var(--dsw-alias-state-warn-primary)}.SigSeG_trayBadgeText[data-tone=bad]{background:var(--dsw-alias-state-error-primary)}.SigSeG_layer{z-index:1;isolation:isolate;pointer-events:none;position:fixed;inset:0}.SigSeG_card{pointer-events:auto;box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);border-radius:12px;flex-direction:column;transition:left .14s cubic-bezier(.2,0,0,1),top .14s cubic-bezier(.2,0,0,1),width .16s cubic-bezier(.2,0,0,1),height .16s cubic-bezier(.2,0,0,1),box-shadow .14s;animation:.18s cubic-bezier(.2,0,0,1) SigSeG_cardIn;display:flex;position:fixed;overflow:hidden}.SigSeG_card[data-gesture=true]{box-shadow:var(--dsw-shadow-lv3);will-change:left, top;transition:transform .12s,box-shadow .14s;transform:scale(1.012)}.SigSeG_cardDragging{user-select:none}@keyframes SigSeG_cardIn{0%{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}.SigSeG_gestureShield{z-index:0;pointer-events:auto;user-select:none;position:fixed;inset:0}.SigSeG_gestureShield[data-cursor=moving]{cursor:grabbing}.SigSeG_gestureShield[data-cursor=ns]{cursor:ns-resize}.SigSeG_gestureShield[data-cursor=ew]{cursor:ew-resize}.SigSeG_gestureShield[data-cursor=nesw]{cursor:nesw-resize}.SigSeG_gestureShield[data-cursor=nwse]{cursor:nwse-resize}.SigSeG_snapGhost{z-index:0;box-sizing:border-box;border:1px dashed var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary);background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 18%, transparent);box-shadow:0 0 0 4px var(--dsw-alias-state-business-tertiary);box-shadow:0 0 0 4px color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent);pointer-events:none;border-radius:12px;transition:left .12s cubic-bezier(.2,0,0,1),top .12s cubic-bezier(.2,0,0,1),width .12s cubic-bezier(.2,0,0,1),height .12s cubic-bezier(.2,0,0,1);position:fixed}.SigSeG_snapGhost:before{content:"";background:var(--dsw-alias-state-business-tertiary);background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 30%, transparent);border-radius:11px 11px 0 0;height:36px;position:absolute;inset:0 0 auto}.SigSeG_cardMinimized{width:auto;box-shadow:var(--dsw-shadow-lv1);border-radius:999px}.SigSeG_cardMinimized .SigSeG_cardHeader{padding:0 6px 0 14px}.SigSeG_cardLocked .SigSeG_cardHeader{cursor:default;border-bottom-color:var(--dsw-alias-border-l2)}.SigSeG_cardAction.SigSeG_cardLockAction[data-locked=true]{color:var(--dsw-alias-state-error-primary)}.SigSeG_cardAction.SigSeG_cardLockAction[data-locked=false]{color:var(--dsw-alias-state-success-primary)}.SigSeG_cardHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);cursor:grab;touch-action:none;user-select:none;flex:none;align-items:center;gap:6px;height:36px;padding:0 6px 0 10px;display:flex}.SigSeG_cardMinimized .SigSeG_cardHeader{border-bottom:none}.SigSeG_cardDragging .SigSeG_cardHeader{cursor:grabbing}.SigSeG_cardHeader:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:-2px}.SigSeG_cardTitle{text-overflow:ellipsis;white-space:nowrap;min-width:0;color:var(--dsw-alias-label-primary);flex:1;font-size:13px;font-weight:500;overflow:hidden}.SigSeG_cardSubtitle{text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-caption);flex:none;font-size:11px;overflow:hidden}.SigSeG_cardActions{flex:none;align-items:center;gap:2px;display:flex}.SigSeG_cardAction{width:24px;height:24px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:6px;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:1;display:inline-flex}.SigSeG_cardAction:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_cardActionDanger:hover{background:var(--dsw-alias-interactive-bg-hover-danger);color:var(--dsw-alias-label-error)}.SigSeG_cardBody{box-sizing:border-box;flex:auto;min-height:0;padding:10px;transition:opacity .14s;position:relative}.SigSeG_cardBodyHidden{opacity:0;pointer-events:none}.SigSeG_contentHost{box-sizing:border-box;width:100%;height:100%;overflow:auto;container-type:size}.SigSeG_resizeHandle{z-index:2;touch-action:none;user-select:none;position:absolute}.SigSeG_resizeHandle[data-dir=n]{cursor:ns-resize;height:6px;top:0;left:8px;right:8px}.SigSeG_resizeHandle[data-dir=s]{cursor:ns-resize;height:6px;bottom:0;left:8px;right:8px}.SigSeG_resizeHandle[data-dir=e]{cursor:ew-resize;width:6px;top:8px;bottom:8px;right:0}.SigSeG_resizeHandle[data-dir=w]{cursor:ew-resize;width:6px;top:8px;bottom:8px;left:0}.SigSeG_resizeHandle[data-dir=ne]{cursor:nesw-resize;width:12px;height:12px;top:0;right:0}.SigSeG_resizeHandle[data-dir=nw]{cursor:nwse-resize;width:12px;height:12px;top:0;left:0}.SigSeG_resizeHandle[data-dir=se]{cursor:nwse-resize;width:12px;height:12px;bottom:0;right:0}.SigSeG_resizeHandle[data-dir=sw]{cursor:nesw-resize;width:12px;height:12px;bottom:0;left:0}.SigSeG_popover{pointer-events:auto;box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-overlay);width:min(420px,100vw - 24px);max-height:min(60vh,520px);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);border-radius:12px;flex-direction:column;display:flex;position:fixed;overflow:hidden}.SigSeG_popoverHeader{border-bottom:.5px solid var(--dsw-alias-border-l1);flex:none;align-items:center;gap:6px;height:34px;padding:0 6px 0 12px;display:flex}.SigSeG_popoverTitle{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-size:13px;font-weight:500;overflow:hidden}.SigSeG_popoverPinned{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-caption);border-radius:999px;flex:none;padding:1px 6px;font-size:10px;line-height:16px}.SigSeG_popoverBody{box-sizing:border-box;flex:auto;min-height:0;padding:12px;overflow:auto;container-type:inline-size}.SigSeG_section{flex-direction:column;gap:14px;display:flex}.SigSeG_sectionTitle{color:var(--dsw-alias-label-primary);margin:0;font-size:15px;font-weight:600}.SigSeG_sectionHint{color:var(--dsw-alias-label-caption);margin:0;font-size:12px;line-height:18px}.SigSeG_group{border:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:2px;padding:4px 12px;display:flex}.SigSeG_row{align-items:center;gap:12px;padding:10px 0;display:flex}.SigSeG_row+.SigSeG_row{border-top:.5px solid var(--dsw-alias-border-l1)}.SigSeG_rowLabel{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_rowTitle{color:var(--dsw-alias-label-primary);font-size:13px}.SigSeG_rowHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}.SigSeG_rowControl{flex:none;align-items:center;gap:8px;display:flex}.SigSeG_notice{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);border-radius:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px}.SigSeG_noticeBad{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-error)}.SigSeG_noticeOk{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-state-success-primary)}.SigSeG_list{border:.5px solid var(--dsw-alias-border-l1);border-radius:10px;flex-direction:column;gap:0;display:flex;overflow:hidden}.SigSeG_listRow{background:var(--dsw-alias-bg-layer-1);align-items:center;gap:10px;padding:8px 12px;display:flex}.SigSeG_listRow+.SigSeG_listRow{border-top:.5px solid var(--dsw-alias-border-l1)}.SigSeG_listRowOff{opacity:.6}.SigSeG_listRowOff .SigSeG_listActions{opacity:1}.SigSeG_listMain{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_listId{font-family:var(--dsw-font-mono);color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.SigSeG_listMeta{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_listActions{flex:none;align-items:center;gap:6px;display:flex}.SigSeG_empty{color:var(--dsw-alias-label-caption);background:var(--dsw-alias-bg-layer-1);padding:14px 12px;font-size:12px}.SigSeG_footer{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.SigSeG_clock{text-align:center;flex-direction:column;justify-content:center;align-items:center;gap:6px;height:100%;display:flex}.SigSeG_clockTime{font-family:var(--dsw-font-mono);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);line-height:1.1}.SigSeG_clockTime[data-size=compact]{font-size:22px}.SigSeG_clockTime[data-size=regular]{font-size:32px}.SigSeG_clockTime[data-size=wide]{font-size:44px}.SigSeG_clockMeta{color:var(--dsw-alias-label-caption);font-size:12px}.SigSeG_clockRow{flex-wrap:wrap;justify-content:center;align-items:baseline;gap:10px;display:flex}.SigSeG_clockLabel{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_diag{flex-direction:column;gap:8px;height:100%;display:flex}.SigSeG_diagSummary{color:var(--dsw-alias-label-secondary);font-size:12px}.SigSeG_diagList{flex-direction:column;gap:6px;display:flex}.SigSeG_diagRow{background:var(--dsw-alias-bg-layer-2);border-radius:8px;align-items:center;gap:8px;padding:6px 8px;display:flex}.SigSeG_diagMain{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_diagActions{flex:none;align-items:center;gap:4px;display:flex}.SigSeG_diagRow[data-disabled=true]{opacity:.6}.SigSeG_diagId{font-family:var(--dsw-font-mono);text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.SigSeG_diagMeta{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_diagError{color:var(--dsw-alias-label-error);font-size:11px}.SigSeG_diagEmpty{color:var(--dsw-alias-label-caption);font-size:12px}.SigSeG_quick{flex-direction:column;gap:12px;display:flex}.SigSeG_quickSection{flex-direction:column;gap:6px;display:flex}.SigSeG_quickLabel{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_seg{flex-wrap:wrap;gap:4px;display:flex}.SigSeG_segBtn{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font-size:11px;font-family:var(--dsw-font-family);cursor:pointer;background:0 0;border-radius:999px;padding:3px 10px}.SigSeG_segBtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_segBtnActive{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.SigSeG_quickFoot{justify-content:space-between;align-items:center;gap:8px;display:flex}.SigSeG_quickNote{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_quickError{color:var(--dsw-alias-label-error);font-size:11px}.SigSeG_statusRoot{box-sizing:border-box;flex-direction:column;gap:10px;padding:12px;display:flex}.SigSeG_statusGrid{grid-template-columns:1fr 1fr;gap:8px;display:grid}.SigSeG_statusCell{background:var(--dsw-alias-bg-layer-2);border-radius:8px;flex-direction:column;gap:2px;padding:8px 10px;display:flex}.SigSeG_statusValue{font-family:var(--dsw-font-mono);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);font-size:16px;line-height:20px}.SigSeG_statusKey{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_statusHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}@media (prefers-reduced-motion:reduce){.SigSeG_card,.SigSeG_cardBody,.SigSeG_snapGhost,.SigSeG_trayAnchor,.SigSeG_trayBtn,.SigSeG_trayGhost{transition:none;animation:none}}';
+var css = '.SigSeG_tray{--dshp-card-alpha:100%;--dshp-card-blur:none;--dshp-card-radius:12px;--dshp-card-capsule-radius:999px;--dshp-card-border-width:.5px;--dshp-motion-ms:.3s;flex:none;align-items:center;gap:2px;display:flex;position:relative}.SigSeG_trayAnchor{transition:transform var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1);display:inline-flex}.SigSeG_trayAnchorDragging{z-index:3;transition:none}.SigSeG_trayAnchorDragging .SigSeG_trayBtn{box-shadow:0 2px 8px var(--dsw-alias-state-business-tertiary);box-shadow:0 2px 8px color-mix(in srgb, var(--dsw-alias-state-business-primary) 22%, transparent)}.SigSeG_trayGhost{box-sizing:border-box;border:1px dashed var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary);background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 20%, transparent);box-shadow:0 0 0 3px var(--dsw-alias-state-business-tertiary);box-shadow:0 0 0 3px color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent);pointer-events:none;animation:SigSeG_ghostIn var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1);transition:left var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1);border-radius:8px;position:absolute;top:0;bottom:0}@keyframes SigSeG_ghostIn{0%{opacity:0;transform:scale(.86)}to{opacity:1;transform:scale(1)}}.SigSeG_trayBtn{width:28px;height:28px;color:var(--dsw-alias-label-tertiary);cursor:pointer;transition:transform var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), background var(--dshp-motion-ms,.3s) ease, color var(--dshp-motion-ms,.3s) ease;background:0 0;border:none;border-radius:8px;justify-content:center;align-items:center;padding:0;display:inline-flex;position:relative}.SigSeG_trayBtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_trayBtn:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:2px}.SigSeG_trayBtnActive{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.SigSeG_trayBtnDragging{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary);box-shadow:0 0 0 3px var(--dsw-alias-state-business-tertiary);box-shadow:0 0 0 3px color-mix(in srgb, var(--dsw-alias-state-business-primary) 14%, transparent);transform:scale(1.12)}.SigSeG_trayGlyph{justify-content:center;align-items:center;width:18px;height:18px;display:inline-flex}.SigSeG_trayGlyph>svg{width:18px;height:18px}.SigSeG_trayBadge{background:var(--dsw-alias-state-business-primary);border-radius:999px;width:6px;height:6px;position:absolute;top:2px;right:2px}.SigSeG_trayBadge[data-tone=ok]{background:var(--dsw-alias-state-success-primary)}.SigSeG_trayBadge[data-tone=warn]{background:var(--dsw-alias-state-warn-primary)}.SigSeG_trayBadge[data-tone=bad]{background:var(--dsw-alias-state-error-primary)}.SigSeG_trayBadgeText{background:var(--dsw-alias-state-business-primary);min-width:14px;height:14px;color:var(--dsw-alias-label-primary-foreground);text-align:center;font-size:9px;line-height:14px;font-family:var(--dsw-font-family);border-radius:999px;padding:0 3px;position:absolute;top:-2px;right:-4px}.SigSeG_trayBadgeText[data-tone=ok]{background:var(--dsw-alias-state-success-primary)}.SigSeG_trayBadgeText[data-tone=warn]{background:var(--dsw-alias-state-warn-primary)}.SigSeG_trayBadgeText[data-tone=bad]{background:var(--dsw-alias-state-error-primary)}.SigSeG_layer{z-index:1;isolation:isolate;pointer-events:none;--dshp-card-alpha:100%;--dshp-card-blur:none;--dshp-card-radius:12px;--dshp-card-capsule-radius:999px;--dshp-card-border-width:.5px;--dshp-motion-ms:.3s;position:fixed;inset:0}.SigSeG_card{pointer-events:auto;box-sizing:border-box;border:var(--dshp-card-border-width,.5px) solid var(--dsw-alias-border-l2);border-radius:var(--dshp-card-radius,12px);background:var(--dsw-alias-bg-layer-1);background:color-mix(in srgb, var(--dsw-alias-bg-layer-1) var(--dshp-card-alpha,100%), transparent);backdrop-filter:var(--dshp-card-blur,none);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);animation:SigSeG_cardIn var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1);transition:left var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), top var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), width var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), height var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), box-shadow var(--dshp-motion-ms,.3s) ease;flex-direction:column;display:flex;position:fixed;overflow:hidden}.SigSeG_card[data-gesture=true]{transition:transform var(--dshp-motion-ms,.3s) ease, box-shadow var(--dshp-motion-ms,.3s) ease;box-shadow:var(--dsw-shadow-lv3);will-change:left, top;transform:scale(1.012)}.SigSeG_cardDragging{user-select:none}@keyframes SigSeG_cardIn{0%{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}.SigSeG_gestureShield{z-index:0;pointer-events:auto;user-select:none;position:fixed;inset:0}.SigSeG_gestureShield[data-cursor=moving]{cursor:grabbing}.SigSeG_gestureShield[data-cursor=ns]{cursor:ns-resize}.SigSeG_gestureShield[data-cursor=ew]{cursor:ew-resize}.SigSeG_gestureShield[data-cursor=nesw]{cursor:nesw-resize}.SigSeG_gestureShield[data-cursor=nwse]{cursor:nwse-resize}.SigSeG_snapGhost{z-index:0;box-sizing:border-box;border:1px dashed var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary);background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 18%, transparent);box-shadow:0 0 0 4px var(--dsw-alias-state-business-tertiary);box-shadow:0 0 0 4px color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent);pointer-events:none;transition:left var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), top var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), width var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), height var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1);border-radius:12px;position:fixed}.SigSeG_snapGhost:before{content:"";background:var(--dsw-alias-state-business-tertiary);background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 30%, transparent);border-radius:11px 11px 0 0;height:36px;position:absolute;inset:0 0 auto}.SigSeG_cardMinimized{width:auto;box-shadow:var(--dsw-shadow-lv1);border-radius:var(--dshp-card-capsule-radius,999px)}.SigSeG_cardMinimized .SigSeG_cardHeader{padding:0 6px 0 14px}.SigSeG_cardLocked .SigSeG_cardHeader{cursor:default;border-bottom-color:var(--dsw-alias-border-l2)}.SigSeG_cardAction.SigSeG_cardLockAction[data-locked=true]{color:var(--dsw-alias-state-error-primary)}.SigSeG_cardAction.SigSeG_cardLockAction[data-locked=false]{color:var(--dsw-alias-state-success-primary)}.SigSeG_cardHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);background:color-mix(in srgb, var(--dsw-alias-bg-layer-2) var(--dshp-card-alpha,100%), transparent);cursor:grab;touch-action:none;user-select:none;flex:none;align-items:center;gap:6px;height:36px;padding:0 6px 0 10px;display:flex}.SigSeG_cardMinimized .SigSeG_cardHeader{border-bottom:none}.SigSeG_cardDragging .SigSeG_cardHeader{cursor:grabbing}.SigSeG_cardHeader:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:-2px}.SigSeG_cardTitle{text-overflow:ellipsis;white-space:nowrap;min-width:0;color:var(--dsw-alias-label-primary);flex:1;font-size:13px;font-weight:500;overflow:hidden}.SigSeG_cardSubtitle{text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-caption);flex:none;font-size:11px;overflow:hidden}.SigSeG_cardActions{flex:none;align-items:center;gap:2px;display:flex}.SigSeG_cardAction{width:24px;height:24px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:6px;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:1;display:inline-flex}.SigSeG_cardAction:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_cardActionDanger:hover{background:var(--dsw-alias-interactive-bg-hover-danger);color:var(--dsw-alias-label-error)}.SigSeG_cardBody{box-sizing:border-box;min-height:0;transition:opacity var(--dshp-motion-ms,.3s) ease;flex:auto;padding:10px;position:relative}.SigSeG_cardBodyHidden{opacity:0;pointer-events:none}.SigSeG_contentHost{box-sizing:border-box;width:100%;height:100%;overflow:auto;container-type:size}.SigSeG_resizeHandle{z-index:2;touch-action:none;user-select:none;position:absolute}.SigSeG_resizeHandle[data-dir=n]{cursor:ns-resize;height:6px;top:0;left:8px;right:8px}.SigSeG_resizeHandle[data-dir=s]{cursor:ns-resize;height:6px;bottom:0;left:8px;right:8px}.SigSeG_resizeHandle[data-dir=e]{cursor:ew-resize;width:6px;top:8px;bottom:8px;right:0}.SigSeG_resizeHandle[data-dir=w]{cursor:ew-resize;width:6px;top:8px;bottom:8px;left:0}.SigSeG_resizeHandle[data-dir=ne]{cursor:nesw-resize;width:12px;height:12px;top:0;right:0}.SigSeG_resizeHandle[data-dir=nw]{cursor:nwse-resize;width:12px;height:12px;top:0;left:0}.SigSeG_resizeHandle[data-dir=se]{cursor:nwse-resize;width:12px;height:12px;bottom:0;right:0}.SigSeG_resizeHandle[data-dir=sw]{cursor:nesw-resize;width:12px;height:12px;bottom:0;left:0}.SigSeG_popover{pointer-events:auto;box-sizing:border-box;border:var(--dshp-card-border-width,.5px) solid var(--dsw-alias-border-l2);border-radius:var(--dshp-card-radius,12px);background:var(--dsw-alias-bg-overlay);background:color-mix(in srgb, var(--dsw-alias-bg-overlay) var(--dshp-card-alpha,100%), transparent);width:min(420px,100vw - 24px);max-height:min(60vh,520px);backdrop-filter:var(--dshp-card-blur,none);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);flex-direction:column;display:flex;position:fixed;overflow:hidden}.SigSeG_popoverHeader{border-bottom:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);background:color-mix(in srgb, var(--dsw-alias-bg-layer-2) var(--dshp-card-alpha,100%), transparent);flex:none;align-items:center;gap:6px;height:34px;padding:0 6px 0 12px;display:flex}.SigSeG_popoverTitle{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-size:13px;font-weight:500;overflow:hidden}.SigSeG_popoverPinned{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-caption);border-radius:999px;flex:none;padding:1px 6px;font-size:10px;line-height:16px}.SigSeG_popoverBody{box-sizing:border-box;flex:auto;min-height:0;padding:12px;overflow:auto;container-type:inline-size}.SigSeG_slider{align-items:center;gap:10px;min-width:190px;display:flex}.SigSeG_sliderInput{min-width:0;accent-color:var(--dsw-alias-state-business-primary);flex:1}.SigSeG_sliderValue{text-align:right;min-width:48px;color:var(--dsw-alias-label-caption);flex:none;font-size:12px}.SigSeG_section{flex-direction:column;gap:14px;display:flex}.SigSeG_sectionTitle{color:var(--dsw-alias-label-primary);margin:0;font-size:15px;font-weight:600}.SigSeG_sectionHint{color:var(--dsw-alias-label-caption);margin:0;font-size:12px;line-height:18px}.SigSeG_group{border:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:2px;padding:4px 12px;display:flex}.SigSeG_row{align-items:center;gap:12px;padding:10px 0;display:flex}.SigSeG_row+.SigSeG_row{border-top:.5px solid var(--dsw-alias-border-l1)}.SigSeG_rowLabel{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_rowTitle{color:var(--dsw-alias-label-primary);font-size:13px}.SigSeG_rowHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}.SigSeG_rowControl{flex:none;align-items:center;gap:8px;display:flex}.SigSeG_notice{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);border-radius:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px}.SigSeG_noticeBad{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-error)}.SigSeG_noticeOk{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-state-success-primary)}.SigSeG_list{border:.5px solid var(--dsw-alias-border-l1);border-radius:10px;flex-direction:column;gap:0;display:flex;overflow:hidden}.SigSeG_listRow{background:var(--dsw-alias-bg-layer-1);align-items:center;gap:10px;padding:8px 12px;display:flex}.SigSeG_listRow+.SigSeG_listRow{border-top:.5px solid var(--dsw-alias-border-l1)}.SigSeG_listRowOff{opacity:.6}.SigSeG_listRowOff .SigSeG_listActions{opacity:1}.SigSeG_listMain{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_listId{font-family:var(--dsw-font-mono);color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.SigSeG_listMeta{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_listActions{flex:none;align-items:center;gap:6px;display:flex}.SigSeG_empty{color:var(--dsw-alias-label-caption);background:var(--dsw-alias-bg-layer-1);padding:14px 12px;font-size:12px}.SigSeG_footer{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.SigSeG_clock{text-align:center;flex-direction:column;justify-content:center;align-items:center;gap:6px;height:100%;display:flex}.SigSeG_clockTime{font-family:var(--dsw-font-mono);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);line-height:1.1}.SigSeG_clockTime[data-size=compact]{font-size:22px}.SigSeG_clockTime[data-size=regular]{font-size:32px}.SigSeG_clockTime[data-size=wide]{font-size:44px}.SigSeG_clockMeta{color:var(--dsw-alias-label-caption);font-size:12px}.SigSeG_clockRow{flex-wrap:wrap;justify-content:center;align-items:baseline;gap:10px;display:flex}.SigSeG_clockLabel{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_diag{flex-direction:column;gap:8px;height:100%;display:flex}.SigSeG_diagSummary{color:var(--dsw-alias-label-secondary);font-size:12px}.SigSeG_diagList{flex-direction:column;gap:6px;display:flex}.SigSeG_diagRow{background:var(--dsw-alias-bg-layer-2);border-radius:8px;align-items:center;gap:8px;padding:6px 8px;display:flex}.SigSeG_diagMain{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_diagActions{flex:none;align-items:center;gap:4px;display:flex}.SigSeG_diagRow[data-disabled=true]{opacity:.6}.SigSeG_diagId{font-family:var(--dsw-font-mono);text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.SigSeG_diagMeta{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_diagError{color:var(--dsw-alias-label-error);font-size:11px}.SigSeG_diagEmpty{color:var(--dsw-alias-label-caption);font-size:12px}.SigSeG_quick{flex-direction:column;gap:12px;display:flex}.SigSeG_quickSection{flex-direction:column;gap:6px;display:flex}.SigSeG_quickLabel{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_seg{flex-wrap:wrap;gap:4px;display:flex}.SigSeG_segBtn{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font-size:11px;font-family:var(--dsw-font-family);cursor:pointer;background:0 0;border-radius:999px;padding:3px 10px}.SigSeG_segBtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_segBtnActive{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.SigSeG_quickFoot{justify-content:space-between;align-items:center;gap:8px;display:flex}.SigSeG_quickNote{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_quickError{color:var(--dsw-alias-label-error);font-size:11px}.SigSeG_statusRoot{box-sizing:border-box;flex-direction:column;gap:10px;padding:12px;display:flex}.SigSeG_statusGrid{grid-template-columns:1fr 1fr;gap:8px;display:grid}.SigSeG_statusCell{background:var(--dsw-alias-bg-layer-2);border-radius:8px;flex-direction:column;gap:2px;padding:8px 10px;display:flex}.SigSeG_statusValue{font-family:var(--dsw-font-mono);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);font-size:16px;line-height:20px}.SigSeG_statusKey{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_statusHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}@media (prefers-reduced-motion:reduce){.SigSeG_card,.SigSeG_cardBody,.SigSeG_snapGhost,.SigSeG_trayAnchor,.SigSeG_trayBtn,.SigSeG_trayGhost{transition:none;animation:none}}';
 var tagId = "@dshp/widget-kit/src/client/styles.module.css";
 if (typeof document !== "undefined" && document.querySelector(`style[data-plugin-css="${tagId}"]`) === null) {
   const tag = document.createElement("style");
@@ -453,7 +462,7 @@ if (typeof document !== "undefined" && document.querySelector(`style[data-plugin
   tag.textContent = css;
   document.head.appendChild(tag);
 }
-var styles_module_css_default = { "card": "SigSeG_card", "cardAction": "SigSeG_cardAction", "cardActionDanger": "SigSeG_cardActionDanger", "cardActions": "SigSeG_cardActions", "cardBody": "SigSeG_cardBody", "cardBodyHidden": "SigSeG_cardBodyHidden", "cardDragging": "SigSeG_cardDragging", "cardHeader": "SigSeG_cardHeader", "cardIn": "SigSeG_cardIn", "cardLockAction": "SigSeG_cardLockAction", "cardLocked": "SigSeG_cardLocked", "cardMinimized": "SigSeG_cardMinimized", "cardSubtitle": "SigSeG_cardSubtitle", "cardTitle": "SigSeG_cardTitle", "clock": "SigSeG_clock", "clockLabel": "SigSeG_clockLabel", "clockMeta": "SigSeG_clockMeta", "clockRow": "SigSeG_clockRow", "clockTime": "SigSeG_clockTime", "contentHost": "SigSeG_contentHost", "diag": "SigSeG_diag", "diagActions": "SigSeG_diagActions", "diagEmpty": "SigSeG_diagEmpty", "diagError": "SigSeG_diagError", "diagId": "SigSeG_diagId", "diagList": "SigSeG_diagList", "diagMain": "SigSeG_diagMain", "diagMeta": "SigSeG_diagMeta", "diagRow": "SigSeG_diagRow", "diagSummary": "SigSeG_diagSummary", "empty": "SigSeG_empty", "footer": "SigSeG_footer", "gestureShield": "SigSeG_gestureShield", "ghostIn": "SigSeG_ghostIn", "group": "SigSeG_group", "layer": "SigSeG_layer", "list": "SigSeG_list", "listActions": "SigSeG_listActions", "listId": "SigSeG_listId", "listMain": "SigSeG_listMain", "listMeta": "SigSeG_listMeta", "listRow": "SigSeG_listRow", "listRowOff": "SigSeG_listRowOff", "notice": "SigSeG_notice", "noticeBad": "SigSeG_noticeBad", "noticeOk": "SigSeG_noticeOk", "popover": "SigSeG_popover", "popoverBody": "SigSeG_popoverBody", "popoverHeader": "SigSeG_popoverHeader", "popoverPinned": "SigSeG_popoverPinned", "popoverTitle": "SigSeG_popoverTitle", "quick": "SigSeG_quick", "quickError": "SigSeG_quickError", "quickFoot": "SigSeG_quickFoot", "quickLabel": "SigSeG_quickLabel", "quickNote": "SigSeG_quickNote", "quickSection": "SigSeG_quickSection", "resizeHandle": "SigSeG_resizeHandle", "row": "SigSeG_row", "rowControl": "SigSeG_rowControl", "rowHint": "SigSeG_rowHint", "rowLabel": "SigSeG_rowLabel", "rowTitle": "SigSeG_rowTitle", "section": "SigSeG_section", "sectionHint": "SigSeG_sectionHint", "sectionTitle": "SigSeG_sectionTitle", "seg": "SigSeG_seg", "segBtn": "SigSeG_segBtn", "segBtnActive": "SigSeG_segBtnActive", "snapGhost": "SigSeG_snapGhost", "statusCell": "SigSeG_statusCell", "statusGrid": "SigSeG_statusGrid", "statusHint": "SigSeG_statusHint", "statusKey": "SigSeG_statusKey", "statusRoot": "SigSeG_statusRoot", "statusValue": "SigSeG_statusValue", "tray": "SigSeG_tray", "trayAnchor": "SigSeG_trayAnchor", "trayAnchorDragging": "SigSeG_trayAnchorDragging", "trayBadge": "SigSeG_trayBadge", "trayBadgeText": "SigSeG_trayBadgeText", "trayBtn": "SigSeG_trayBtn", "trayBtnActive": "SigSeG_trayBtnActive", "trayBtnDragging": "SigSeG_trayBtnDragging", "trayGhost": "SigSeG_trayGhost", "trayGlyph": "SigSeG_trayGlyph" };
+var styles_module_css_default = { "card": "SigSeG_card", "cardAction": "SigSeG_cardAction", "cardActionDanger": "SigSeG_cardActionDanger", "cardActions": "SigSeG_cardActions", "cardBody": "SigSeG_cardBody", "cardBodyHidden": "SigSeG_cardBodyHidden", "cardDragging": "SigSeG_cardDragging", "cardHeader": "SigSeG_cardHeader", "cardIn": "SigSeG_cardIn", "cardLockAction": "SigSeG_cardLockAction", "cardLocked": "SigSeG_cardLocked", "cardMinimized": "SigSeG_cardMinimized", "cardSubtitle": "SigSeG_cardSubtitle", "cardTitle": "SigSeG_cardTitle", "clock": "SigSeG_clock", "clockLabel": "SigSeG_clockLabel", "clockMeta": "SigSeG_clockMeta", "clockRow": "SigSeG_clockRow", "clockTime": "SigSeG_clockTime", "contentHost": "SigSeG_contentHost", "diag": "SigSeG_diag", "diagActions": "SigSeG_diagActions", "diagEmpty": "SigSeG_diagEmpty", "diagError": "SigSeG_diagError", "diagId": "SigSeG_diagId", "diagList": "SigSeG_diagList", "diagMain": "SigSeG_diagMain", "diagMeta": "SigSeG_diagMeta", "diagRow": "SigSeG_diagRow", "diagSummary": "SigSeG_diagSummary", "empty": "SigSeG_empty", "footer": "SigSeG_footer", "gestureShield": "SigSeG_gestureShield", "ghostIn": "SigSeG_ghostIn", "group": "SigSeG_group", "layer": "SigSeG_layer", "list": "SigSeG_list", "listActions": "SigSeG_listActions", "listId": "SigSeG_listId", "listMain": "SigSeG_listMain", "listMeta": "SigSeG_listMeta", "listRow": "SigSeG_listRow", "listRowOff": "SigSeG_listRowOff", "notice": "SigSeG_notice", "noticeBad": "SigSeG_noticeBad", "noticeOk": "SigSeG_noticeOk", "popover": "SigSeG_popover", "popoverBody": "SigSeG_popoverBody", "popoverHeader": "SigSeG_popoverHeader", "popoverPinned": "SigSeG_popoverPinned", "popoverTitle": "SigSeG_popoverTitle", "quick": "SigSeG_quick", "quickError": "SigSeG_quickError", "quickFoot": "SigSeG_quickFoot", "quickLabel": "SigSeG_quickLabel", "quickNote": "SigSeG_quickNote", "quickSection": "SigSeG_quickSection", "resizeHandle": "SigSeG_resizeHandle", "row": "SigSeG_row", "rowControl": "SigSeG_rowControl", "rowHint": "SigSeG_rowHint", "rowLabel": "SigSeG_rowLabel", "rowTitle": "SigSeG_rowTitle", "section": "SigSeG_section", "sectionHint": "SigSeG_sectionHint", "sectionTitle": "SigSeG_sectionTitle", "seg": "SigSeG_seg", "segBtn": "SigSeG_segBtn", "segBtnActive": "SigSeG_segBtnActive", "slider": "SigSeG_slider", "sliderInput": "SigSeG_sliderInput", "sliderValue": "SigSeG_sliderValue", "snapGhost": "SigSeG_snapGhost", "statusCell": "SigSeG_statusCell", "statusGrid": "SigSeG_statusGrid", "statusHint": "SigSeG_statusHint", "statusKey": "SigSeG_statusKey", "statusRoot": "SigSeG_statusRoot", "statusValue": "SigSeG_statusValue", "tray": "SigSeG_tray", "trayAnchor": "SigSeG_trayAnchor", "trayAnchorDragging": "SigSeG_trayAnchorDragging", "trayBadge": "SigSeG_trayBadge", "trayBadgeText": "SigSeG_trayBadgeText", "trayBtn": "SigSeG_trayBtn", "trayBtnActive": "SigSeG_trayBtnActive", "trayBtnDragging": "SigSeG_trayBtnDragging", "trayGhost": "SigSeG_trayGhost", "trayGlyph": "SigSeG_trayGlyph" };
 
 // src/client/ErrorBoundary.tsx
 var import_jsx_runtime = require("react/jsx-runtime");
@@ -1396,6 +1405,35 @@ function Popover({
   );
 }
 
+// src/client/appearance.ts
+function radiusOf(mode) {
+  if (mode === "round") return SPEC_DEFAULTS.cardRadiusRound;
+  if (mode === "square") return 0;
+  return SPEC_DEFAULTS.cardRadius;
+}
+function borderWidthOf(mode) {
+  if (mode === "on") return SPEC_DEFAULTS.cardBorderWidthStrong;
+  if (mode === "off") return 0;
+  return SPEC_DEFAULTS.cardBorderWidth;
+}
+function motionOf(ms) {
+  if (!Number.isFinite(ms)) return SPEC_DEFAULTS.motionMs;
+  return Math.min(500, Math.max(0, Math.round(ms)));
+}
+function surfaceVars(prefs) {
+  const opacity = Math.min(1, Math.max(0.2, prefs.cardOpacity));
+  const blur = Math.min(32, Math.max(0, Math.round(prefs.cardBlur)));
+  return {
+    "--dshp-card-alpha": `${String(Math.round(opacity * 100))}%`,
+    "--dshp-card-blur": blur === 0 ? "none" : `blur(${String(blur)}px)`,
+    "--dshp-card-radius": `${String(radiusOf(prefs.cardRadius))}px`,
+    // 最小化的胶囊形态：两端全圆；「直角」档才跟着拉平
+    "--dshp-card-capsule-radius": prefs.cardRadius === "square" ? "0px" : "999px",
+    "--dshp-card-border-width": `${String(borderWidthOf(prefs.cardBorder))}px`,
+    "--dshp-motion-ms": `${String(motionOf(prefs.motionMs))}ms`
+  };
+}
+
 // src/client/CardLayer.tsx
 var import_jsx_runtime6 = require("react/jsx-runtime");
 function GestureShieldHost({ runtime }) {
@@ -1444,7 +1482,7 @@ function CardLayer({
   };
   const transient = panelOf(snapshot.transientId);
   const pinned = panelOf(snapshot.pinnedId);
-  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: styles_module_css_default.layer, "data-plugin-widget-kit-layer": "", children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: styles_module_css_default.layer, "data-plugin-widget-kit-layer": "", style: surfaceVars(snapshot.prefs), children: [
     /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(GestureShieldHost, { runtime }),
     /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(SnapGhostHost, { runtime }),
     cards.map((widget) => /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Card, { runtime, widget, onError }, widget.id)),
@@ -1487,6 +1525,44 @@ function SettingRow({
       hint !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: styles_module_css_default.rowHint, children: hint })
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: styles_module_css_default.rowControl, children })
+  ] });
+}
+function PrefSlider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  format,
+  onChange,
+  onCommit
+}) {
+  return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: styles_module_css_default.slider, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+      "input",
+      {
+        type: "range",
+        className: styles_module_css_default.sliderInput,
+        "aria-label": label,
+        min,
+        max,
+        step,
+        value,
+        onChange: (event) => {
+          onChange(Number(event.target.value));
+        },
+        onPointerUp: () => {
+          onCommit(value);
+        },
+        onKeyUp: () => {
+          onCommit(value);
+        },
+        onBlur: () => {
+          onCommit(value);
+        }
+      }
+    ),
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: styles_module_css_default.sliderValue, children: format(value) })
   ] });
 }
 function PrefSelect({
@@ -1549,6 +1625,19 @@ var ICON_LIMIT_OPTIONS = [
   { value: 5, label: "5 \u4E2A" },
   { value: 6, label: "6 \u4E2A" },
   { value: 8, label: "8 \u4E2A" }
+];
+var MOTION_OPTIONS = SPEC_DEFAULTS.motionChoices.map(
+  (ms) => ({ value: ms, label: ms === 0 ? "\u5173\u95ED\uFF08\u4E0D\u505A\u8FC7\u6E21\uFF09" : `${String(ms)} ms` })
+);
+var CARD_BORDER_OPTIONS = [
+  { value: "auto", label: "\u9ED8\u8BA4\uFF08\u8DDF\u968F\u6846\u67B6\uFF09" },
+  { value: "on", label: "\u663E\u793A\u8FB9\u6846" },
+  { value: "off", label: "\u65E0\u8FB9\u6846" }
+];
+var CARD_RADIUS_OPTIONS = [
+  { value: "auto", label: "\u9ED8\u8BA4\uFF08\u8DDF\u968F\u6846\u67B6\uFF09" },
+  { value: "round", label: "\u5706\u89D2" },
+  { value: "square", label: "\u76F4\u89D2" }
 ];
 var BADGE_INTERVAL_OPTIONS = [
   { value: 5e3, label: "5 \u79D2" },
@@ -1685,6 +1774,114 @@ function SettingsSection({
           )
         }
       )
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h3", { className: styles_module_css_default.sectionTitle, children: "\u5361\u7247\u5916\u89C2\u4E0E\u52A8\u6548" }),
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("p", { className: styles_module_css_default.sectionHint, children: [
+        "\u7EDF\u4E00\u4F5C\u7528\u4E8E\u6240\u6709\u5361\u7247\u4E0E\u5C0F\u9762\u677F\uFF08\u542B\u6807\u9898\u680F\uFF09\uFF1A\u62D6\u52A8\u6ED1\u5757\u5373\u65F6\u9884\u89C8\uFF0C\u677E\u624B\u5199\u5165 ",
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("code", { children: "settings.yaml" }),
+        "\uFF0C\u5237\u65B0\u4E0E\u6362\u8BBE\u5907\u90FD\u4FDD\u6301\u3002"
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: styles_module_css_default.group, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+          SettingRow,
+          {
+            title: "\u80CC\u666F\u4E0D\u900F\u660E\u5EA6",
+            hint: "100% = \u5B8C\u5168\u7528\u4E3B\u9898\u5E95\u8272\uFF1B\u8D8A\u5C0F\u8D8A\u900F\uFF0C\u914D\u5408\u4E0B\u9762\u7684\u6BDB\u73BB\u7483\u5C31\u662F\u300C\u6DE1\u5E95\u73BB\u7483\u300D\u6548\u679C\u3002",
+            children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+              PrefSlider,
+              {
+                label: "\u5361\u7247\u80CC\u666F\u4E0D\u900F\u660E\u5EA6",
+                value: prefs.cardOpacity,
+                min: 0.2,
+                max: 1,
+                step: 0.05,
+                format: (next) => `${String(Math.round(next * 100))}%`,
+                onChange: (next) => {
+                  void runtime.setPrefs({ cardOpacity: next }, { save: false });
+                },
+                onCommit: (next) => {
+                  save({ cardOpacity: next });
+                }
+              }
+            )
+          }
+        ),
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+          SettingRow,
+          {
+            title: "\u6BDB\u73BB\u7483\u6A21\u7CCA",
+            hint: "0 = \u5173\u95ED\uFF08\u4E0D\u542F\u7528 backdrop-filter\uFF09\uFF1B\u900F\u660E\u5EA6\u8D8A\u4F4E\uFF0C\u6A21\u7CCA\u8D8A\u770B\u5F97\u51FA\u6765\u3002",
+            children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+              PrefSlider,
+              {
+                label: "\u5361\u7247\u6BDB\u73BB\u7483\u6A21\u7CCA\u534A\u5F84",
+                value: prefs.cardBlur,
+                min: 0,
+                max: 32,
+                step: 1,
+                format: (next) => next === 0 ? "\u5173\u95ED" : `${String(next)} px`,
+                onChange: (next) => {
+                  void runtime.setPrefs({ cardBlur: next }, { save: false });
+                },
+                onCommit: (next) => {
+                  save({ cardBlur: next });
+                }
+              }
+            )
+          }
+        ),
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(SettingRow, { title: "\u8FB9\u6846", hint: "\u9ED8\u8BA4\u8DDF\u968F\u6846\u67B6\uFF080.5px \u7EC6\u8FB9\uFF09\uFF1B\u4E5F\u53EF\u4EE5\u66F4\u660E\u663E\u3001\u6216\u5B8C\u5168\u4E0D\u8981\u8FB9\u6846\u3002", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+          PrefSelect,
+          {
+            label: "\u5361\u7247\u8FB9\u6846",
+            value: prefs.cardBorder,
+            options: CARD_BORDER_OPTIONS,
+            disabled: saving,
+            onChange: (next) => {
+              save({ cardBorder: next });
+            }
+          }
+        ) }),
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+          SettingRow,
+          {
+            title: "\u5706\u89D2",
+            hint: "\u9ED8\u8BA4\u8DDF\u968F\u6846\u67B6\uFF0812px \u5706\u89D2\uFF09\uFF1B\u300C\u5706\u89D2\u300D\u66F4\u5706\uFF0820px\uFF09\uFF0C\u300C\u76F4\u89D2\u300D\u4E3A 0\uFF08\u6700\u5C0F\u5316\u7684\u80F6\u56CA\u4E5F\u4E00\u8D77\u62C9\u5E73\uFF09\u3002",
+            children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+              PrefSelect,
+              {
+                label: "\u5361\u7247\u5706\u89D2",
+                value: prefs.cardRadius,
+                options: CARD_RADIUS_OPTIONS,
+                disabled: saving,
+                onChange: (next) => {
+                  save({ cardRadius: next });
+                }
+              }
+            )
+          }
+        ),
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+          SettingRow,
+          {
+            title: "\u52A8\u753B\u8FC7\u6E21",
+            hint: "\u5361\u7247\u51FA\u73B0 / \u6536\u653E / \u843D\u4F4D\u3001\u5438\u9644\u9884\u89C8\u6ED1\u52A8\u3001\u6258\u76D8\u56FE\u6807\u8BA9\u4F4D\u90FD\u6309\u8FD9\u4E2A\u65F6\u957F\u8FC7\u6E21\uFF1B\u62D6\u52A8\u8DDF\u624B\u4E0E\u624B\u52BF\u76FE\u4E0D\u53D7\u5F71\u54CD\u3002\u7CFB\u7EDF\u300C\u51CF\u5C11\u52A8\u6548\u300D\u4F18\u5148\u3002",
+            children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+              PrefSelect,
+              {
+                label: "\u52A8\u753B\u8FC7\u6E21\u65F6\u957F",
+                value: prefs.motionMs,
+                options: MOTION_OPTIONS,
+                disabled: saving,
+                onChange: (next) => {
+                  save({ motionMs: next });
+                }
+              }
+            )
+          }
+        )
+      ] })
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
       /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("h3", { className: styles_module_css_default.sectionTitle, children: [
@@ -2238,106 +2435,116 @@ function Tray({
   const overflowBadge = overflow.some((widget) => (snapshot.badges[widget.id] ?? null) !== null);
   if (!snapshot.ready || !snapshot.prefs.trayEnabled || ready.length === 0) return null;
   const dragging = dragView !== null;
-  return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: styles_module_css_default.tray, role: "group", "aria-label": "\u5C0F\u7EC4\u4EF6\u6258\u76D8", ref: containerRef, children: [
-    dragView?.slot != null && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
-      "span",
-      {
-        className: styles_module_css_default.trayGhost,
-        style: { left: dragView.slot.left, width: dragView.slot.width },
-        "aria-hidden": "true"
-      }
-    ),
-    shown.map((widget) => {
-      const badge = snapshot.badges[widget.id] ?? null;
-      const active = runtime.isOpen(widget.id);
-      const isDragged = dragView?.id === widget.id;
-      const shifted = dragView?.shift[widget.id] ?? 0;
-      const title = resolveText3(widget.title);
-      const label = badge?.title !== void 0 && badge.title !== "" ? `${title} \xB7 ${badge.title}` : title;
-      const hoverTriggered = widget.presentation === "popover" && widget.popover?.trigger === "hover";
-      const tone = badge?.tone ?? "info";
-      return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
-        "span",
-        {
-          className: styles_module_css_default.trayAnchor + (isDragged ? " " + styles_module_css_default.trayAnchorDragging : ""),
-          "data-tray-id": widget.id,
-          style: isDragged ? { transform: `translateX(${String(dragView.dx)}px)`, zIndex: 3 } : shifted === 0 ? void 0 : { transform: `translateX(${String(shifted)}px)` },
-          ref: (element) => {
-            runtime.setAnchor(widget.id, element);
-          },
-          onPointerEnter: () => {
-            runtime.hoverEnter(widget.id);
-          },
-          onPointerLeave: () => {
-            runtime.hoverLeave(widget.id);
-          },
-          children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
-            import_dsh_client_ui_primitives6.Tooltip,
+  return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
+    "div",
+    {
+      className: styles_module_css_default.tray,
+      role: "group",
+      "aria-label": "\u5C0F\u7EC4\u4EF6\u6258\u76D8",
+      ref: containerRef,
+      style: surfaceVars(snapshot.prefs),
+      children: [
+        dragView?.slot != null && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+          "span",
+          {
+            className: styles_module_css_default.trayGhost,
+            style: { left: dragView.slot.left, width: dragView.slot.width },
+            "aria-hidden": "true"
+          }
+        ),
+        shown.map((widget) => {
+          const badge = snapshot.badges[widget.id] ?? null;
+          const active = runtime.isOpen(widget.id);
+          const isDragged = dragView?.id === widget.id;
+          const shifted = dragView?.shift[widget.id] ?? 0;
+          const title = resolveText3(widget.title);
+          const label = badge?.title !== void 0 && badge.title !== "" ? `${title} \xB7 ${badge.title}` : title;
+          const hoverTriggered = widget.presentation === "popover" && widget.popover?.trigger === "hover";
+          const tone = badge?.tone ?? "info";
+          return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+            "span",
             {
-              label,
-              side: "bottom",
-              delayMs: 400,
-              disabled: hoverTriggered || dragging,
-              children: /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
-                "button",
+              className: styles_module_css_default.trayAnchor + (isDragged ? " " + styles_module_css_default.trayAnchorDragging : ""),
+              "data-tray-id": widget.id,
+              style: isDragged ? { transform: `translateX(${String(dragView.dx)}px)`, zIndex: 3 } : shifted === 0 ? void 0 : { transform: `translateX(${String(shifted)}px)` },
+              ref: (element) => {
+                runtime.setAnchor(widget.id, element);
+              },
+              onPointerEnter: () => {
+                runtime.hoverEnter(widget.id);
+              },
+              onPointerLeave: () => {
+                runtime.hoverLeave(widget.id);
+              },
+              children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+                import_dsh_client_ui_primitives6.Tooltip,
                 {
-                  type: "button",
-                  className: styles_module_css_default.trayBtn + (active ? " " + styles_module_css_default.trayBtnActive : "") + (isDragged ? " " + styles_module_css_default.trayBtnDragging : ""),
-                  "data-dragging": isDragged ? "true" : void 0,
-                  "aria-label": label,
-                  "aria-haspopup": "dialog",
-                  "aria-expanded": active,
-                  onPointerDown: (event) => {
-                    onIconPointerDown(event, widget.id);
-                  },
-                  onClick: () => {
-                    onIconClick(widget.id);
-                  },
-                  children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayGlyph, children: widget.icon }),
-                    badge !== null && badge.text !== void 0 && badge.text !== "" ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayBadgeText, "data-tone": tone, children: badge.text.slice(0, 2) }) : badge !== null && (badge.dot === true || badge.tone !== void 0) ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayBadge, "data-tone": tone }) : null
-                  ]
+                  label,
+                  side: "bottom",
+                  delayMs: 400,
+                  disabled: hoverTriggered || dragging,
+                  children: /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
+                    "button",
+                    {
+                      type: "button",
+                      className: styles_module_css_default.trayBtn + (active ? " " + styles_module_css_default.trayBtnActive : "") + (isDragged ? " " + styles_module_css_default.trayBtnDragging : ""),
+                      "data-dragging": isDragged ? "true" : void 0,
+                      "aria-label": label,
+                      "aria-haspopup": "dialog",
+                      "aria-expanded": active,
+                      onPointerDown: (event) => {
+                        onIconPointerDown(event, widget.id);
+                      },
+                      onClick: () => {
+                        onIconClick(widget.id);
+                      },
+                      children: [
+                        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayGlyph, children: widget.icon }),
+                        badge !== null && badge.text !== void 0 && badge.text !== "" ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayBadgeText, "data-tone": tone, children: badge.text.slice(0, 2) }) : badge !== null && (badge.dot === true || badge.tone !== void 0) ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayBadge, "data-tone": tone }) : null
+                      ]
+                    }
+                  )
                 }
               )
-            }
-          )
-        },
-        widget.id
-      );
-    }),
-    overflow.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayAnchor, children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
-      import_dsh_client_ui_primitives6.Menu,
-      {
-        open: menuOpen,
-        dense: true,
-        portal: true,
-        autoFocus: true,
-        align: "end",
-        items: menuItems,
-        onSelect: onMenuSelect,
-        onClose: () => {
-          setMenuOpen(false);
-        },
-        anchor: /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
-          "button",
-          {
-            type: "button",
-            className: styles_module_css_default.trayBtn,
-            "aria-label": `\u8FD8\u6709 ${String(overflow.length)} \u4E2A\u7EC4\u4EF6`,
-            "aria-haspopup": "menu",
-            "aria-expanded": menuOpen,
-            onClick: () => {
-              setMenuOpen((prev) => !prev);
             },
-            children: [
-              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayGlyph, children: "\u22EF" }),
-              overflowBadge && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayBadge, "data-tone": "info" })
-            ]
+            widget.id
+          );
+        }),
+        overflow.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayAnchor, children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+          import_dsh_client_ui_primitives6.Menu,
+          {
+            open: menuOpen,
+            dense: true,
+            portal: true,
+            autoFocus: true,
+            align: "end",
+            items: menuItems,
+            onSelect: onMenuSelect,
+            onClose: () => {
+              setMenuOpen(false);
+            },
+            anchor: /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
+              "button",
+              {
+                type: "button",
+                className: styles_module_css_default.trayBtn,
+                "aria-label": `\u8FD8\u6709 ${String(overflow.length)} \u4E2A\u7EC4\u4EF6`,
+                "aria-haspopup": "menu",
+                "aria-expanded": menuOpen,
+                onClick: () => {
+                  setMenuOpen((prev) => !prev);
+                },
+                children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayGlyph, children: "\u22EF" }),
+                  overflowBadge && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayBadge, "data-tone": "info" })
+                ]
+              }
+            )
           }
-        )
-      }
-    ) })
-  ] });
+        ) })
+      ]
+    }
+  );
 }
 
 // src/client/service.ts
@@ -2966,10 +3173,11 @@ function createWidgetRuntime(deps) {
     persist();
     publish();
   }
-  async function setPrefs(patch) {
+  async function setPrefs(patch, options) {
     const before = prefs;
     prefs = { ...prefs, ...patch };
     publish();
+    if (options?.save === false) return { ok: true };
     if (deps.savePrefs === void 0) return { ok: true };
     const result = await deps.savePrefs(prefs);
     if (!result.ok) {
@@ -3038,9 +3246,9 @@ function createWidgetRuntime(deps) {
       const size = card.minimized ? collapsed.get(id) : void 0;
       const visual = size === void 0 ? card : { ...card, w: size.w, h: size.h };
       const clamped = clampRect(visual, constraintsFor(widget), viewport);
-      const next2 = card.minimized ? { ...clamped, w: card.w, h: card.h } : clamped;
-      if (isSameRect(card, next2)) continue;
-      nextCards[id] = { ...card, ...next2 };
+      const placed = card.minimized ? { ...clamped, w: card.w, h: card.h } : clamped;
+      if (isSameRect(card, placed)) continue;
+      nextCards[id] = { ...card, ...placed };
       changed = true;
     }
     if (changed) {
@@ -3602,7 +3810,14 @@ var DEFAULT_PREFS = {
   maxVisibleIcons: SPEC_DEFAULTS.maxVisibleIcons,
   badgeIntervalMs: SPEC_DEFAULTS.badgeIntervalMs,
   hoverPreview: true,
-  referenceWidgets: true
+  referenceWidgets: true,
+  // 外观默认值 = 「保持不变」：与 src/host/config.ts 的 DEFAULT_CONFIG 必须一致
+  // （scripts/check-spec-drift.mjs 会比对这几个数字）
+  cardOpacity: 1,
+  cardBlur: 0,
+  cardBorder: "auto",
+  cardRadius: "auto",
+  motionMs: 300
 };
 function readStorage() {
   try {

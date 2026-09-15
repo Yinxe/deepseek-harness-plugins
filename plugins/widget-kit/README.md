@@ -125,13 +125,18 @@ ctx.effect(
 
 存 `settings.yaml` 的 `dshp-widget-kit` 分节（改动即时生效，无需重启）：
 
-| 字段               | 类型    | 默认    | 说明                                |
-| ------------------ | ------- | ------- | ----------------------------------- |
-| `trayEnabled`      | boolean | `true`  | 是否在会话顶部显示组件托盘          |
-| `maxVisibleIcons`  | number  | `4`     | 可见图标上限 1–8，超出的进 `⋯` 菜单 |
-| `badgeIntervalMs`  | number  | `30000` | 徽标默认刷新间隔 5000–600000        |
-| `hoverPreview`     | boolean | `true`  | 图标悬停是否显示说明                |
-| `referenceWidgets` | boolean | `true`  | 是否装载自带的四个参考组件          |
+| 字段               | 类型    | 默认    | 说明                                            |
+| ------------------ | ------- | ------- | ----------------------------------------------- |
+| `trayEnabled`      | boolean | `true`  | 是否在会话顶部显示组件托盘                      |
+| `maxVisibleIcons`  | number  | `4`     | 可见图标上限 1–8，超出的进 `⋯` 菜单             |
+| `badgeIntervalMs`  | number  | `30000` | 徽标默认刷新间隔 5000–600000                    |
+| `hoverPreview`     | boolean | `true`  | 图标悬停是否显示说明                            |
+| `referenceWidgets` | boolean | `true`  | 是否装载自带的四个参考组件                      |
+| `cardOpacity`      | number  | `1`     | 卡片 / 小面板背景不透明度 0.2–1（含标题栏）     |
+| `cardBlur`         | number  | `0`     | 毛玻璃模糊半径 0–32 px（0 = 关）                |
+| `cardBorder`       | enum    | `auto`  | 边框：`auto` 跟随框架 / `on` 1px / `off` 无边框 |
+| `cardRadius`       | enum    | `auto`  | 圆角：`auto` 12px / `round` 20px / `square` 0   |
+| `motionMs`         | number  | `300`   | 动效时长 0–500 ms（0 = 关闭过渡）               |
 
 **本机布局**（托盘顺序、隐藏与禁用集合、卡片位置/尺寸/最小化/锁定、卡片层叠顺序、当前展开的常驻面板）
 **不在** settings.yaml：它存在浏览器 `localStorage` 的 `dshp-widget-kit:v1`，只属于这台浏览器；

@@ -21,6 +21,16 @@ export interface FrameworkConfig {
   hoverPreview: boolean;
   /** 是否装载本插件自带的两个参考组件（时钟 / 注册表诊断）。 */
   referenceWidgets: boolean;
+  /** 卡片背景不透明度（0.2–1）：1 = 完全用主题底色，越小越透。 */
+  cardOpacity: number;
+  /** 卡片毛玻璃模糊半径（px，0–32）：0 = 关（不写 backdrop-filter）。 */
+  cardBlur: number;
+  /** 卡片边框：`auto` 跟随框架默认（0.5px）/ `on` 明显一点（1px）/ `off` 无边框。 */
+  cardBorder: 'auto' | 'on' | 'off';
+  /** 卡片圆角：`auto` 跟随框架默认（12px）/ `round` 圆角（20px）/ `square` 直角（0）。 */
+  cardRadius: 'auto' | 'round' | 'square';
+  /** 动效时长（ms，0–500）：`0` = 关闭过渡与入场动画；拖动跟手不受影响。 */
+  motionMs: number;
 }
 
 /** `GET /ext/dshp-widget-kit/state` 的回包。 */
@@ -39,6 +49,11 @@ export interface ConfigPatch {
   badgeIntervalMs?: number;
   hoverPreview?: boolean;
   referenceWidgets?: boolean;
+  cardOpacity?: number;
+  cardBlur?: number;
+  cardBorder?: 'auto' | 'on' | 'off';
+  cardRadius?: 'auto' | 'round' | 'square';
+  motionMs?: number;
 }
 
 /** 带 label 的图标的可访问名（托盘图标与卡片标题都用它）。 */

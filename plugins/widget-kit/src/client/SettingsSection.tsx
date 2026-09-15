@@ -16,7 +16,8 @@ import { Button, Switch } from '@deepseek-ai/dsh-client-ui-primitives';
 import { useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { fetchState } from './api.js';
-import { Notice, PrefSelect, SettingRow } from './components.js';
+import { SPEC_DEFAULTS } from './spec.js';
+import { Notice, PrefSelect, PrefSlider, SettingRow } from './components.js';
 import { useFramework } from './hooks.js';
 import type { WidgetRuntime } from './service.js';
 import type { ConfigPatch } from './types.js';
@@ -29,6 +30,26 @@ const ICON_LIMIT_OPTIONS: ReadonlyArray<{ value: number; label: string }> = [
   { value: 5, label: '5 个' },
   { value: 6, label: '6 个' },
   { value: 8, label: '8 个' },
+];
+
+const MOTION_OPTIONS: ReadonlyArray<{ value: number; label: string }> = SPEC_DEFAULTS.motionChoices.map(
+  (ms) => ({ value: ms, label: ms === 0 ? '关闭（不做过渡）' : `${String(ms)} ms` }),
+);
+
+/** 边框 / 圆角 / 动效三组枚举（显式写类型，避免可选属性把 `undefined` 带进泛型）。 */
+type CardBorderMode = 'auto' | 'on' | 'off';
+type CardRadiusMode = 'auto' | 'round' | 'square';
+
+const CARD_BORDER_OPTIONS: ReadonlyArray<{ value: CardBorderMode; label: string }> = [
+  { value: 'auto', label: '默认（跟随框架）' },
+  { value: 'on', label: '显示边框' },
+  { value: 'off', label: '无边框' },
+];
+
+const CARD_RADIUS_OPTIONS: ReadonlyArray<{ value: CardRadiusMode; label: string }> = [
+  { value: 'auto', label: '默认（跟随框架）' },
+  { value: 'round', label: '圆角' },
+  { value: 'square', label: '直角' },
 ];
 
 const BADGE_INTERVAL_OPTIONS: ReadonlyArray<{ value: number; label: string }> = [
@@ -163,6 +184,94 @@ export function SettingsSection({
             }}
           />
         </SettingRow>
+      </div>
+
+      <div>
+        <h3 className={styles.sectionTitle}>卡片外观与动效</h3>
+        <p className={styles.sectionHint}>
+          统一作用于所有卡片与小面板（含标题栏）：拖动滑块即时预览，松手写入 <code>settings.yaml</code>
+          ，刷新与换设备都保持。
+        </p>
+        <div className={styles.group}>
+          <SettingRow
+            title="背景不透明度"
+            hint="100% = 完全用主题底色；越小越透，配合下面的毛玻璃就是「淡底玻璃」效果。"
+          >
+            <PrefSlider
+              label="卡片背景不透明度"
+              value={prefs.cardOpacity}
+              min={0.2}
+              max={1}
+              step={0.05}
+              format={(next) => `${String(Math.round(next * 100))}%`}
+              onChange={(next) => {
+                // 拖动中只改本地快照：每帧都往宿主写会刷爆 settings.yaml
+                void runtime.setPrefs({ cardOpacity: next }, { save: false });
+              }}
+              onCommit={(next) => {
+                save({ cardOpacity: next });
+              }}
+            />
+          </SettingRow>
+          <SettingRow
+            title="毛玻璃模糊"
+            hint="0 = 关闭（不启用 backdrop-filter）；透明度越低，模糊越看得出来。"
+          >
+            <PrefSlider
+              label="卡片毛玻璃模糊半径"
+              value={prefs.cardBlur}
+              min={0}
+              max={32}
+              step={1}
+              format={(next) => (next === 0 ? '关闭' : `${String(next)} px`)}
+              onChange={(next) => {
+                void runtime.setPrefs({ cardBlur: next }, { save: false });
+              }}
+              onCommit={(next) => {
+                save({ cardBlur: next });
+              }}
+            />
+          </SettingRow>
+          <SettingRow title="边框" hint="默认跟随框架（0.5px 细边）；也可以更明显、或完全不要边框。">
+            <PrefSelect
+              label="卡片边框"
+              value={prefs.cardBorder}
+              options={CARD_BORDER_OPTIONS}
+              disabled={saving}
+              onChange={(next) => {
+                save({ cardBorder: next });
+              }}
+            />
+          </SettingRow>
+          <SettingRow
+            title="圆角"
+            hint="默认跟随框架（12px 圆角）；「圆角」更圆（20px），「直角」为 0（最小化的胶囊也一起拉平）。"
+          >
+            <PrefSelect
+              label="卡片圆角"
+              value={prefs.cardRadius}
+              options={CARD_RADIUS_OPTIONS}
+              disabled={saving}
+              onChange={(next) => {
+                save({ cardRadius: next });
+              }}
+            />
+          </SettingRow>
+          <SettingRow
+            title="动画过渡"
+            hint="卡片出现 / 收放 / 落位、吸附预览滑动、托盘图标让位都按这个时长过渡；拖动跟手与手势盾不受影响。系统「减少动效」优先。"
+          >
+            <PrefSelect
+              label="动画过渡时长"
+              value={prefs.motionMs}
+              options={MOTION_OPTIONS}
+              disabled={saving}
+              onChange={(next) => {
+                save({ motionMs: next });
+              }}
+            />
+          </SettingRow>
+        </div>
       </div>
 
       <div>

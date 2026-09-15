@@ -16,6 +16,11 @@
  * 小面板（popover）分两层渲染，**可以同时出现**：常驻层（`persistent: true`，手风琴：最多一个）
  * 与临时层（悬停速览 / 一次性菜单：自己单开）。悬停展开一个速览不会收起常驻面板。
  *
+ * 卡片 / 小面板的**外观与动效**（背景透明度、毛玻璃模糊、边框、圆角、动效时长）是**用户偏好**
+ * （settings.yaml），由 `appearance.surfaceVars` 翻成一组 CSS 自定义属性、钉在这一层的根上：
+ * `.card` / `.cardHeader` / `.popover` / `.popoverHeader` 都吃同一套值 —— 所以「淡底 + 毛玻璃」时
+ * 标题栏跟着一起透，不会出现半张卡实心的断层；托盘那一棵树自己钉同一套值（见 Tray.tsx）。
+ *
  * @module @dshp/widget-kit/client/CardLayer
  */
 import type { ReactNode } from 'react';
@@ -23,6 +28,7 @@ import { Card } from './Card.js';
 import { Popover } from './Popover.js';
 import { useFramework, useGestureCursor, useLiveSnap } from './hooks.js';
 import type { WidgetRuntime } from './service.js';
+import { surfaceVars } from './appearance.js';
 import type { NormalizedWidget } from './spec.js';
 import styles from './styles.module.css';
 
@@ -94,7 +100,7 @@ export function CardLayer({
   const pinned = panelOf(snapshot.pinnedId);
 
   return (
-    <div className={styles.layer} data-plugin-widget-kit-layer="">
+    <div className={styles.layer} data-plugin-widget-kit-layer="" style={surfaceVars(snapshot.prefs)}>
       <GestureShieldHost runtime={runtime} />
       <SnapGhostHost runtime={runtime} />
       {cards.map((widget) => (

@@ -20,6 +20,7 @@ import { Menu, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives';
 import type { MenuEntry, MenuItem } from '@deepseek-ai/dsh-client-ui-primitives';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react';
+import { surfaceVars } from './appearance.js';
 import { mergeVisibleOrder, planTrayDrag } from './store.js';
 import type { TraySlot } from './store.js';
 import { useFramework } from './hooks.js';
@@ -308,7 +309,14 @@ export function Tray({
 
   const dragging = dragView !== null;
   return (
-    <div className={styles.tray} role="group" aria-label="小组件托盘" ref={containerRef}>
+    <div
+      className={styles.tray}
+      role="group"
+      aria-label="小组件托盘"
+      ref={containerRef}
+      // 托盘与卡片层是两个槽位、两棵树：外观/动效偏好各钉一份，不写 documentElement
+      style={surfaceVars(snapshot.prefs)}
+    >
       {/* 预览块：主题色填充 + 柔光，落在「松手会去」的那个槽位（被让出来的空位） */}
       {dragView?.slot != null && (
         <span

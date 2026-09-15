@@ -15,6 +15,14 @@ export interface FrameworkConfig {
   badgeIntervalMs: number;
   hoverPreview: boolean;
   referenceWidgets: boolean;
+  /** 卡片背景不透明度（0.2–1）与毛玻璃模糊半径（px，0–32）：用户偏好，写进 settings.yaml。 */
+  cardOpacity: number;
+  cardBlur: number;
+  /** 卡片边框与圆角样式档。 */
+  cardBorder: 'auto' | 'on' | 'off';
+  cardRadius: 'auto' | 'round' | 'square';
+  /** 动效时长（ms，0–500）：`0` = 关闭过渡与入场动画。 */
+  motionMs: number;
 }
 
 /** 路由 body 允许的部分覆盖。 */
@@ -24,4 +32,9 @@ export interface FrameworkConfigPatch {
   badgeIntervalMs?: number;
   hoverPreview?: boolean;
   referenceWidgets?: boolean;
+  cardOpacity?: number;
+  cardBlur?: number;
+  cardBorder?: 'auto' | 'on' | 'off';
+  cardRadius?: 'auto' | 'round' | 'square';
+  motionMs?: number;
 }
