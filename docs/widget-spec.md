@@ -150,6 +150,61 @@ ctx.effect(
 
 （`header: false` 时框架不画标题栏与关闭按钮，整块归你；用户仍可用 `Esc`、点外部、再点图标关闭。）
 
+### 2.1 依赖与加载：哪些半必须同时在场
+
+**注册是「client 半对 client 半」的事，跟双方的 Host 半都无关。**
+
+```
+你的插件 client 半 ──ctx.get('widgets')──▶ widget-kit client 半 ──▶ 槽位（托盘 / 卡片层 / 设置节）
+        （注册描述符、给内容）                    （画窗口、管几何与持久化）
+```
+
+| 必须同时加载的东西            | 缺了会怎样                                                                                              |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **你插件的 client 半**        | 没有插件就没有描述符，什么都不存在                                                                      |
+| **widget-kit 的 client 半**   | `ctx.get('widgets')` 拿到 `undefined`；**你仍然要能正常跑**（见下面的可选依赖写法），只是没有窗口       |
+| widget-kit 的 Host 半         | 只影响**框架偏好**（外观/动效/托盘上限存 `settings.yaml`）与 `/ext/dshp-widget-kit/*`；不影响注册与渲染 |
+| 其它插件（组件箱、参考组件…） | 与本契约无关。谁都能用 `ctx.widgets.open/close/toggle(id)` 打开你注册的卡片，别人不参与注册             |
+
+两半在同一个 bundle 行里（`dshp.client` 声明），实际部署中一起出现；上表的作用是让你知道**边界在哪**：
+Host 半挂了（路由没挂、设置命名空间读不到）时，client 半会在 3 秒后用默认偏好起步并继续工作。
+
+**写法上有一条硬规矩：可选依赖不要写进顶层 `inject`。**
+
+```ts
+// ✗ 这样写 = 「没有 widget-kit 我就不激活」：用户停用/没装框架时，你的额度面板、设置页全都没了
+export const inject = ['widgets'];
+
+// ✓ 增强型依赖用 ctx.inject：服务来了才跑这段，服务走了作用域自动销毁
+export const inject = ['slots'];
+
+export function apply(ctx: ClientContext): void {
+  // …你自己的槽位注册…
+
+  ctx.inject(['widgets'], (scope) => {
+    const widgets = scope.get('widgets') as WidgetsService | undefined;
+    if (widgets === undefined) return;
+    scope.effect(() => () => widgets.close('my-quota:daily'), 'my-quota: widget teardown');
+    scope.effect(() => widgets.register({ id: 'my-quota:daily' /* … */ }), 'my-quota: daily widget');
+  });
+}
+```
+
+同一个 `widgets` 服务上也拿得到「我的卡片现在开着吗」，用来让原位内容让位（`HiddenWhenFloated` 式写法）：
+
+```tsx
+function useOpen(widgets: WidgetsService, id: string): boolean {
+  const [, force] = useReducer((x: number) => x + 1, 0);
+  useEffect(() => widgets.subscribe(force), [widgets]); // 注册表 / 开合状态变化
+  return widgets.isOpen(id);
+}
+```
+
+**`trayIcon: false` 的卡片必须提前注册。** 框架渲染一张卡片的前提是描述符在册，而这类卡片没有图标可点：
+刷新后布局里「还开着」的卡片，只能靠你在启动时（以及数据变化时）主动注册回来。
+本仓的 `@dshp/token-meter` 就是第一个按这套契约接入的实例：它的额度卡 / 统计图表 / 峰谷显示器
+全是 `trayIcon: false` 的自由卡片，由中心区里的「⧉」按钮开合，启动与供应商增删时对齐注册表。
+
 ## 3. 描述符逐字段
 
 | 字段                        | 类型                                                   | 必填                            | 默认                   | 说明                                                                     |
@@ -539,6 +594,11 @@ load: async (ctx) => (await fetch('/ext/my-plugin/data', { signal: ctx.signal })
 
 - `SPEC_VERSION`（当前 **1**）是契约版本：字段改名、语义变化、默认值改变 → **+1**，
   并在本节写下迁移步骤；字段**新增**（可选、有默认）不升版本 —— 例如 `popover` 形态选项就是 v1 内的新增。
+- **0.10.1（框架版本，契约仍为 v1）**：**只改文档**——新增 §2.1「依赖与加载」把边界写死
+  （注册是 client 半对 client 半、Host 半只影响偏好、其它插件不参与注册），并纠正「快速开始」里
+  那句会误导的 `inject: ['slots', 'widgets']`：**增强型依赖必须用 `ctx.inject(['widgets'], …)`**，
+  否则没装框架时整个插件都不激活。第一个按本契约接入的真实实例是 `@dshp/token-meter`
+  （三种小组件、全是 `trayIcon: false` 的自由卡片）。
 - **0.10.0（框架版本，契约仍为 v1）**：外观默认值改成 **70% 透明 + 5px 毛玻璃**；
   新增活动栏文字扩展点 `tray.label`（≤6 字，可写函数）与 `trayIcon: false`（卡片不占图标、由别的组件打开
   —— 一菜单多卡片）；临时（悬停）面板的层内 z-index 提到常驻面板之上；

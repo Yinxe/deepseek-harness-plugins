@@ -23,6 +23,9 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
+/** 版本从 package.json 读（不再手写常量：bump 版本时这里以前会漏改成红色）。 */
+const PKG_VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
+
 // ── 最小 React / primitives 替身 ─────────────────────────────────────────
 let liveHook = null;
 
@@ -137,7 +140,7 @@ globalThis.fetch = async (url, init) => {
     async json() {
       return {
         ok: true,
-        version: '0.10.0',
+        version: PKG_VERSION,
         specVersion: 1,
         config: {
           trayEnabled: true,
@@ -250,7 +253,7 @@ const expectedServiceKeys = [...EXPECTED_SERVICE_KEYS];
 expectedServiceKeys.sort();
 assert.deepEqual(actualServiceKeys, expectedServiceKeys, 'widgets 服务的成员必须与 SPEC_KEYS.service 一致');
 assert.equal(service.specVersion, 1);
-assert.equal(service.frameworkVersion, '0.10.0');
+assert.equal(service.frameworkVersion, PKG_VERSION);
 
 // ── 2. 槽位注册 ──────────────────────────────────────────────────────────
 assert.deepEqual(injections, ['conversation.session.header.utilities', 'shell.overlay', 'settings.section']);

@@ -6,15 +6,15 @@
 
 ## 身份
 
-| 项     | 值                                                                                                                                                                                                |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 包名   | `@dshp/widget-kit`                                                                                                                                                                                |
-| NS     | `dshp-widget-kit`（settings 命名空间 / 路由前缀 / patch id / 设置节 id 四处同名）                                                                                                                 |
-| 契约   | `SPEC_VERSION = 1`（0.2.0 起的改动全是向后兼容新增），公开类型在 `spec.d.ts`（其它插件 `import type` 的唯一入口）                                                                                 |
-| inject | host：`['webServer']`；client：`['slots', 'timer']`                                                                                                                                               |
-| 槽位   | `conversation.session.header.utilities` id `dshp-widget-kit-tray` order **30**<br>`shell.overlay` id `dshp-widget-kit-cards` order **10**<br>`settings.section` id `dshp-widget-kit` order **32** |
-| 路由   | `GET /ext/dshp-widget-kit/state` / `POST /ext/dshp-widget-kit/config`                                                                                                                             |
-| 服务   | `ctx.reflect.provide('widgets', …)` —— 别的插件通过 `inject: ['widgets']` 拿到                                                                                                                    |
+| 项     | 值                                                                                                                                                                                                                          |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 包名   | `@dshp/widget-kit`                                                                                                                                                                                                          |
+| NS     | `dshp-widget-kit`（settings 命名空间 / 路由前缀 / patch id / 设置节 id 四处同名）                                                                                                                                           |
+| 契约   | `SPEC_VERSION = 1`（0.2.0 起的改动全是向后兼容新增），公开类型在 `spec.d.ts`（其它插件 `import type` 的唯一入口）                                                                                                           |
+| inject | host：`['webServer']`；client：`['slots', 'timer']`                                                                                                                                                                         |
+| 槽位   | `conversation.session.header.utilities` id `dshp-widget-kit-tray` order **30**<br>`shell.overlay` id `dshp-widget-kit-cards` order **10**<br>`settings.section` id `dshp-widget-kit` order **32**                           |
+| 路由   | `GET /ext/dshp-widget-kit/state` / `POST /ext/dshp-widget-kit/config`                                                                                                                                                       |
+| 服务   | `ctx.reflect.provide('widgets', …)`。**只有「没有宿主就没有这个插件」的提供方才写顶层 `inject: ['widgets']`**；增强型接入用 `ctx.inject(['widgets'], …)`（否则没装框架时对方整个插件不激活，见 `docs/widget-spec.md` §2.1） |
 
 ## 结构与职责
 
@@ -24,7 +24,8 @@
   绝不写 `document.documentElement`。
 - `spec.d.ts` —— 给别的插件 `import type` 的手写契约；与 `spec.ts` 由 `check-spec-drift.mjs` 逐字段比对。
 - `src/client/geometry.ts` —— 全部卡片几何（视口夹紧 / 八向缩放 / 内容盒 / 尺寸档 / z 序），
-  以及**移动落点的吸附与防重叠**（`dockRect` + `snapAxis` / `alignAxis` / `escapeConflicts` / `conflicts`），纯函数。
+  以及**移动落点的吸附候选**（`snapRect`：视口边 / 邻卡边 + 8px 间隔 / 边缘对齐线，12px 磁力），纯函数。
+  **不做防重叠**：卡片允许互相覆盖，吸附只是"靠上去"的候选，且命中与否由用户松手决定。
 - `src/client/store.ts` —— localStorage 布局（消毒 / 版本 / debounce / 合并可见顺序 / 一维拖拽排序 / 卸载清理），纯逻辑 + 注入 IO。
 - `src/client/service.ts` —— 运行时：注册表 + 布局状态 + 动作（open/close/minimize/锁定/启停/z 序/会话绑定/尺寸回环防护）。
   - **打开状态与层叠顺序也住在 `state` 里**（不是局部变量）：`zOrder` / `popoverId` / `popoverOrigin` 都要落盘，

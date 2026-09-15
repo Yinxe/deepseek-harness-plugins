@@ -89,8 +89,11 @@ dsh web
 ```
 
 ```tsx
-// 2. 你的 client 半：声明硬依赖
-import type { WidgetContentProps } from '@dshp/widget-kit/spec';
+// 2. 你的 client 半：拿类型 + 声明依赖
+import type { WidgetContentProps, WidgetsService } from '@dshp/widget-kit/spec';
+
+// 只有当「没有宿主就等于没有这个插件」时才写进顶层 inject。
+// 增强型依赖（插件本来干别的、顺手提供几个小组件）必须走 ctx.inject —— 见下。
 export const inject = ['slots', 'widgets'];
 ```
 
@@ -121,6 +124,31 @@ ctx.effect(
 （iframe / 视频 / 画布这类任意 web 视图都能塞）。
 
 逐字段表、尺寸契约、红线、反例与自检清单：**[`docs/widget-spec.md`](../../docs/widget-spec.md)**。
+
+### 增强型依赖：别把 `widgets` 写进顶层 `inject`
+
+顶层 `inject: ['widgets']` 的语义是「**没有这个服务我就不激活**」。你自己的插件如果本来还干别的
+（面板、设置页、数据路由），这么写就会让它在用户没装 / 停用了 widget-kit 时**整个消失**。
+这种「有则增强、无则退化」的依赖用 `ctx.inject`：
+
+```ts
+export const inject = ['slots']; // 只声明真正不可或缺的服务
+
+export function apply(ctx: ClientContext): void {
+  ctx.inject(['widgets'], (scope) => {
+    const widgets = scope.get('widgets') as WidgetsService | undefined;
+    if (widgets === undefined) return;
+    scope.effect(() => widgets.register(myWidget), 'my-plugin: widget');
+  });
+}
+```
+
+加载边界（谁必须和谁同时在场、Host 半挂了会怎样、`trayIcon: false` 的卡片为什么要提前注册）：
+[docs/widget-spec.md §2.1](../../docs/widget-spec.md)。
+
+**已接入的实例**：本仓 [`@dshp/token-meter`](../token-meter/README.md) —— 额度卡 / 统计图表 / 峰谷显示器
+共三种小组件全部按这套契约接入（`trayIcon: false` 的自由卡片，`ctx.inject` 挂载，启动与供应商增删时
+对齐注册表），装在同一个 profile 里就能看到实际效果。
 
 ## 配置项
 
