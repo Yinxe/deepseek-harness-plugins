@@ -31,6 +31,23 @@ export function useLiveGeometry(runtime: WidgetRuntime): LiveGeometry | null {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
+/**
+ * 订阅某个组件图标当前的锚点元素。
+ *
+ * 为什么需要它：刷新后从本机布局恢复出来的 popover 可能比托盘图标先渲染（两个槽位、两棵树），
+ * 这时它的锚点还是 `null`。`setAnchor` 在图标真正挂上时会通知一次，这个订阅让面板拿到新元素、
+ * 换掉 ref 身份，官方 `useAnchoredPosition` 的 layout effect 随之重跑并重新测量。
+ *
+ * @param runtime - 框架运行时。
+ * @param id - 组件 id。
+ * @returns 当前锚点元素，没有则为 `null`。
+ */
+export function useAnchor(runtime: WidgetRuntime, id: string): HTMLElement | null {
+  const subscribe = useCallback((listener: () => void) => runtime.subscribe(listener), [runtime]);
+  const getSnapshot = useCallback(() => runtime.getAnchor(id), [runtime, id]);
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
 export interface WidgetDataState {
   status: (typeof CONTENT_STATUS)[number];
   data: unknown;
@@ -150,6 +167,9 @@ export interface CardDragHandlers {
 /**
  * 卡片拖动 / 缩放（两者只差一个方向参数）。
  *
+ * 位置锁定的卡片在这里就被挡住（`runtime.isLocked`）：拖动标题栏与八个缩放把手都退化成普通点击，
+ * 但最小化 / 关闭 / 还原照常 —— 「锁定」锁的是几何，不是生命周期。
+ *
  * @param runtime - 框架运行时。
  * @param widget - 目标组件。
  * @param mode - `'move'` 拖动整卡，或八个缩放方向之一。
@@ -206,6 +226,7 @@ export function useCardDrag(
   const onPointerDown = useCallback(
     (event: ReactPointerEvent): void => {
       if (event.button !== 0 || capture.current !== null) return;
+      if (runtime.isLocked(widget.id)) return; // 位置锁定：不进入拖拽（也就不会有 live 几何）
       event.preventDefault();
       event.stopPropagation();
       const element = event.currentTarget as HTMLElement;

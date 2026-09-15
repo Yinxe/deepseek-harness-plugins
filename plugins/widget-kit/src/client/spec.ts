@@ -17,7 +17,7 @@ import type { ReactNode } from 'react';
 export const SPEC_VERSION = 1;
 
 /** 框架版本。必须等于 package.json 的 version（check-spec-drift.mjs 比对）。 */
-export const FRAMEWORK_VERSION = '0.1.0';
+export const FRAMEWORK_VERSION = '0.2.0';
 
 /** 命名空间 = 本插件的 settings NS = cordis 行 id = 路由前缀段。 */
 export const NS = 'dshp-widget-kit';
@@ -71,6 +71,8 @@ export const SPEC_DEFAULTS = {
   popoverMaxHeightMax: 2000,
   hoverOpenDelayMs: 80,
   hoverCloseDelayMs: 220,
+  /** popover 默认不是常驻面板（点外部即收起）。 */
+  popoverPersistent: false,
 } as const;
 
 /** 网格尺寸（描述符与内容 props 里的 `{ w, h }` / `{ width, height }`）。 */
@@ -129,7 +131,10 @@ export interface WidgetContentProps<D = unknown> {
   sizeClass: (typeof SIZE_CLASSES)[number];
   /** 仅 `card` 存在（`popover` 为 `undefined`，不是静默 no-op）。受 min/max 与视口夹紧。 */
   setSize?(next: { w?: number; h?: number }): void;
+  /** 卡片处于「折叠成标题栏」状态（内容仍在树上，只是不显示）。`popover` 恒为 false。 */
   minimized: boolean;
+  /** 卡片位置已锁定（框架已拒掉拖动/缩放）。`popover` 恒为 false。 */
+  locked: boolean;
   refresh(): void;
   retry(): void;
   close(): void;
@@ -173,6 +178,13 @@ export interface WidgetPopoverOptions {
   hoverOpenDelayMs?: number;
   /** 悬停收起的宽限（ms，默认 220）——用来跨过「从图标移到面板」的间隙。 */
   hoverCloseDelayMs?: number;
+  /**
+   * 是否**持续显示**（默认 false）。
+   *
+   * `true` = 面板不受外部操作影响：点组件外的区域、指针移开都不会收起，只能用面板上的「✕」、
+   * 再点一次图标或 Esc 关掉。适合「常驻的快捷设置 / 实时数据面板」；不适合一次性菜单。
+   */
+  persistent?: boolean;
 }
 
 export interface WidgetContentOptions<D = unknown> {
@@ -238,6 +250,7 @@ export interface NormalizedWidget {
     header: boolean;
     hoverOpenDelayMs: number;
     hoverCloseDelayMs: number;
+    persistent: boolean;
   } | null;
 }
 
@@ -497,6 +510,7 @@ export function normalizeDescriptor(
       header: readBool('popover.header', popoverObj['header'], true),
       hoverOpenDelayMs,
       hoverCloseDelayMs,
+      persistent: readBool('popover.persistent', popoverObj['persistent'], SPEC_DEFAULTS.popoverPersistent),
     };
   }
 
@@ -614,6 +628,7 @@ export const SPEC_KEYS = {
     'header',
     'hoverOpenDelayMs',
     'hoverCloseDelayMs',
+    'persistent',
   ],
   content: ['title', 'load', 'refreshMs', 'render'],
   card: ['defaultSize', 'minSize', 'maxSize', 'sizeClassBreakpoints', 'resizable', 'minimizable', 'closable'],
@@ -635,6 +650,7 @@ export const SPEC_KEYS = {
     'sizeClass',
     'setSize',
     'minimized',
+    'locked',
     'refresh',
     'retry',
     'close',
@@ -651,5 +667,9 @@ export const SPEC_KEYS = {
     'isOpen',
     'minimize',
     'restore',
+    'setEnabled',
+    'isEnabled',
+    'setLocked',
+    'isLocked',
   ],
 } as const;

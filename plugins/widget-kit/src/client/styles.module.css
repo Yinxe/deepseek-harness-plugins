@@ -153,6 +153,17 @@
   box-shadow: var(--dsw-shadow-lv1);
 }
 
+/* 锁定：标题栏不再是「可抓」的手型（几何已冻，只留最小化 / 关闭 / 菜单） */
+.cardLocked .cardHeader {
+  cursor: default;
+  border-bottom-color: var(--dsw-alias-border-l2);
+}
+
+.cardActionActive {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
 .cardHeader {
   display: flex;
   align-items: center;
@@ -239,6 +250,11 @@
   min-height: 0;
   padding: 10px;
   box-sizing: border-box;
+}
+
+/* 最小化 = 折叠成一条标题栏：内容留在树上（保留组件状态）但不显示、不占位 */
+.cardBodyHidden {
+  display: none;
 }
 
 /* 内容盒：给提供方做容器查询的锚点；尺寸由卡片外层决定，故用 100% + container-type: size */
@@ -359,6 +375,16 @@
   font-weight: 500;
 }
 
+.popoverPinned {
+  flex: none;
+  padding: 1px 6px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: 999px;
+  font-size: 10px;
+  line-height: 16px;
+  color: var(--dsw-alias-label-caption);
+}
+
 .popoverBody {
   flex: 1 1 auto;
   min-height: 0;
@@ -476,6 +502,15 @@
 
 .listRow + .listRow {
   border-top: 0.5px solid var(--dsw-alias-border-l1);
+}
+
+/* 已禁用的组件：整行压暗，但开关仍可点（那是唯一的复活路径） */
+.listRowOff {
+  opacity: 0.6;
+}
+
+.listRowOff .listActions {
+  opacity: 1;
 }
 
 .listMain {
@@ -605,6 +640,17 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.diagActions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.diagRow[data-disabled='true'] {
+  opacity: 0.6;
 }
 
 .diagId {

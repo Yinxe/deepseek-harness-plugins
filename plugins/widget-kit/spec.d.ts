@@ -69,7 +69,10 @@ export interface WidgetContentProps<D = unknown> {
   size: WidgetBox | null;
   sizeClass: 'compact' | 'regular' | 'wide';
   setSize?(next: { w?: number; h?: number }): void;
+  /** 卡片处于「折叠成标题栏」状态（内容仍在树上，只是不显示）。`popover` 恒为 false。 */
   minimized: boolean;
+  /** 卡片位置已锁定（框架已拒掉拖动/缩放）。`popover` 恒为 false。 */
+  locked: boolean;
   refresh(): void;
   retry(): void;
   close(): void;
@@ -113,6 +116,13 @@ export interface WidgetPopoverOptions {
   hoverOpenDelayMs?: number;
   /** 悬停收起的宽限（ms，默认 220）——用来跨过「从图标移到面板」的间隙。 */
   hoverCloseDelayMs?: number;
+  /**
+   * 是否**持续显示**（默认 false）。
+   *
+   * `true` = 面板不受外部操作影响：点组件外的区域、指针移开都不会收起，只能用面板上的「✕」、
+   * 再点一次图标或 Esc 关掉。适合「常驻的快捷设置 / 实时数据面板」；不适合一次性菜单。
+   */
+  persistent?: boolean;
 }
 
 export interface WidgetContentOptions<D = unknown> {
@@ -157,4 +167,10 @@ export interface WidgetsService {
   isOpen(id: string): boolean;
   minimize(id: string): void;
   restore(id: string): void;
+  /** 启用 / 禁用（禁用 = 图标、卡片、内容面、徽标全部停用；状态记在本机布局里）。 */
+  setEnabled(id: string, enabled: boolean): void;
+  isEnabled(id: string): boolean;
+  /** 锁定 / 解锁位置（锁定后不可拖动、不可缩放，仍可最小化与关闭）。 */
+  setLocked(id: string, locked: boolean): void;
+  isLocked(id: string): boolean;
 }

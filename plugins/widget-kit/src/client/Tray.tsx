@@ -3,7 +3,12 @@
  *
  * 像系统状态栏：每个组件一个常驻图标（可带徽标），点击开/最小化/还原（任务栏语义），
  * 超出可见上限的进溢出菜单（菜单里有完整的键盘通道：打开、显示/隐藏、上移/下移）。
- * 图标之间可拖拽换序（点击阈值 8px，`pointercancel` 丢弃本次手势）。
+ * 图标之间可拖拽换序（点击阈值 8px，`pointercancel` 丢弃本次手势）；被禁用的组件不出现在这里
+ * （启用/禁用走设置页或「组件诊断」卡片）。
+ *
+ * 换序用 `reorderByPointer`：命中判定只看**其余图标**的中心线，因此左右两个方向对称可用 ——
+ * 旧实现拿 `elementFromPoint` 找落点，被拖的图标自己也在指针下面，于是渲染顺序一换就回到原地，
+ * 表现为「只能从右往左拖」。
  *
  * @module @dshp/widget-kit/client/Tray
  */
@@ -11,7 +16,7 @@ import { Menu, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives';
 import type { MenuEntry, MenuItem } from '@deepseek-ai/dsh-client-ui-primitives';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react';
-import { mergeVisibleOrder } from './store.js';
+import { mergeVisibleOrder, reorderByPointer } from './store.js';
 import { useFramework } from './hooks.js';
 import type { WidgetRuntime } from './service.js';
 import type { NormalizedWidget } from './spec.js';
@@ -30,7 +35,10 @@ interface DragState {
   startX: number;
   startY: number;
   moved: boolean;
-  order: string[];
+  /** 完整可见顺序（含被「可见上限」截掉、进溢出菜单的那些）。 */
+  visible: string[];
+  /** 当前真正渲染出来的那批图标（拖拽只在这批上排序，指针也只可能落在它们身上）。 */
+  shown: string[];
 }
 
 export function Tray({
@@ -45,6 +53,8 @@ export function Tray({
   const [preview, setPreview] = useState<string[] | null>(null);
   const dragRef = useRef<DragState | null>(null);
   const suppressClick = useRef(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const disabled = useMemo(() => new Set(snapshot.layout.disabled), [snapshot.layout.disabled]);
 
   // 内容面绑定开启它的会话：把当前会话告诉运行时（切换会话时运行时会把内容面关掉）
   useEffect(() => {
@@ -65,7 +75,10 @@ export function Tray({
     () => orderIds.map((id) => snapshot.widgets.find((widget) => widget.id === id)),
     [orderIds, snapshot.widgets],
   );
-  const ready = ordered.filter((widget): widget is NormalizedWidget => widget !== undefined);
+  // 被禁用的组件不进托盘（图标、卡片、面板一并停用 —— 见 runtime.setEnabled）
+  const ready = ordered.filter(
+    (widget): widget is NormalizedWidget => widget !== undefined && !disabled.has(widget.id),
+  );
   const hidden = new Set(snapshot.layout.tray.hidden);
   const visibleIds = ready.filter((widget) => !hidden.has(widget.id)).map((widget) => widget.id);
   const displayIds = preview ?? visibleIds;
@@ -93,36 +106,55 @@ export function Tray({
         startX: event.clientX,
         startY: event.clientY,
         moved: false,
-        order: visibleIds,
+        visible: visibleIds,
+        shown: visibleIds.slice(0, limit),
       };
       setPreview(visibleIds);
     },
-    [visibleIds],
+    [limit, visibleIds],
   );
 
-  const onIconPointerMove = useCallback((event: ReactPointerEvent<HTMLButtonElement>): void => {
-    const drag = dragRef.current;
-    if (drag === null || drag.pointerId !== event.pointerId) return;
-    if (
-      !drag.moved &&
-      Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < DRAG_THRESHOLD
-    ) {
-      return;
+  /** 读当前渲染出来的各图标中心线（顺序 = DOM 顺序 = 预览顺序）。 */
+  const readCenters = useCallback((ids: readonly string[]): number[] => {
+    const root = containerRef.current;
+    if (root === null) return [];
+    const centers = new Map<string, number>();
+    for (const node of root.querySelectorAll('[data-tray-id]')) {
+      const nodeId = node.getAttribute('data-tray-id');
+      if (nodeId === null) continue;
+      const rect = node.getBoundingClientRect();
+      centers.set(nodeId, rect.left + rect.width / 2);
     }
-    drag.moved = true;
-    if (typeof document === 'undefined') return;
-    const slot = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-tray-index]');
-    const raw = slot?.getAttribute('data-tray-index') ?? null;
-    const target = raw === null ? Number.NaN : Number.parseInt(raw, 10);
-    if (!Number.isFinite(target) || target < 0) return;
-    const from = drag.order.indexOf(drag.id);
-    if (from < 0 || from === target) return;
-    const next = drag.order.slice();
-    next.splice(from, 1);
-    next.splice(Math.min(target, next.length), 0, drag.id);
-    drag.order = next;
-    setPreview(next);
+    const out: number[] = [];
+    for (const id of ids) {
+      const center = centers.get(id);
+      if (center === undefined) return []; // 少一个就不动：宁可这一次不排序，也不要错位
+      out.push(center);
+    }
+    return out;
   }, []);
+
+  const onIconPointerMove = useCallback(
+    (event: ReactPointerEvent<HTMLButtonElement>): void => {
+      const drag = dragRef.current;
+      if (drag === null || drag.pointerId !== event.pointerId) return;
+      if (
+        !drag.moved &&
+        Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < DRAG_THRESHOLD
+      ) {
+        return;
+      }
+      drag.moved = true;
+      const others = drag.shown.filter((id) => id !== drag.id);
+      const centers = readCenters(others);
+      const nextShown = reorderByPointer(drag.shown, drag.id, centers, event.clientX);
+      if (nextShown.every((id, index) => id === drag.shown[index])) return;
+      drag.shown = nextShown;
+      drag.visible = mergeVisibleOrder(drag.visible, nextShown);
+      setPreview(drag.visible);
+    },
+    [readCenters],
+  );
 
   const finishDrag = useCallback(
     (event: ReactPointerEvent<HTMLButtonElement>, commit: boolean): void => {
@@ -139,7 +171,7 @@ export function Tray({
       setPreview(null);
       if (!commit || !drag.moved) return;
       suppressClick.current = true;
-      runtime.setOrder(mergeVisibleOrder(orderIds, drag.order));
+      runtime.setOrder(mergeVisibleOrder(orderIds, drag.visible));
     },
     [orderIds, runtime],
   );
@@ -206,8 +238,8 @@ export function Tray({
   if (!snapshot.ready || !snapshot.prefs.trayEnabled || ready.length === 0) return null;
 
   return (
-    <div className={styles.tray} role="group" aria-label="小组件托盘">
-      {shown.map((widget, index) => {
+    <div className={styles.tray} role="group" aria-label="小组件托盘" ref={containerRef}>
+      {shown.map((widget) => {
         const badge = snapshot.badges[widget.id] ?? null;
         const active = runtime.isOpen(widget.id);
         const dragging = preview !== null && dragRef.current?.id === widget.id;
@@ -219,7 +251,7 @@ export function Tray({
           <span
             key={widget.id}
             className={styles.trayAnchor}
-            data-tray-index={index}
+            data-tray-id={widget.id}
             ref={(element) => {
               runtime.setAnchor(widget.id, element);
             }}

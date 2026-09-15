@@ -29,6 +29,7 @@ import {
   loadState,
   moveInOrder,
   pruneId,
+  setDisabledInList,
   setHiddenInList,
 } from './store.js';
 import type { CardState, DebouncedSaver, PersistedState, StorageLike } from './store.js';
@@ -50,7 +51,12 @@ export interface FrameworkSnapshot {
   degraded: boolean;
   widgets: readonly NormalizedWidget[];
   layout: PersistedState;
-  /** popover 的单开目标（card 允许多开，状态在 `layout.cards[id].open`）。 */
+  /**
+   * popover 的单开目标（card 允许多开，状态在 `layout.cards[id].open`）。
+   *
+   * 刷新后从 localStorage 恢复，因此 `openId` 有可能指向一个「还没注册 / 已被禁用」的 id ——
+   * 消费方（卡片层）按 `presentation === 'popover'` 与启用状态过滤，不会渲染出空面板。
+   */
   openId: string | null;
   /** 当前 popover 是被点开的还是被悬停打开的（决定移开指针要不要自动收起）。 */
   openOrigin: 'click' | 'hover' | null;
@@ -74,6 +80,12 @@ export interface WidgetRuntime {
   isOpen(id: string): boolean;
   minimize(id: string): void;
   restore(id: string): void;
+  /** 启用 / 禁用（禁用 = 图标、卡片、内容面、徽标全部停用；状态记在本机布局里）。 */
+  setEnabled(id: string, enabled: boolean): void;
+  isEnabled(id: string): boolean;
+  /** 锁定 / 解锁位置（锁定后不可拖动、不可缩放，仍可最小化与关闭）。 */
+  setLocked(id: string, locked: boolean): void;
+  isLocked(id: string): boolean;
 
   // ── UI 内部 ──
   getSnapshot(): FrameworkSnapshot;
@@ -154,6 +166,8 @@ function defaultConstraints(): RectConstraints {
 export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   const registry = new Map<string, NormalizedWidget>();
   const anchors = new Map<string, HTMLElement | null>();
+  /** 上一次「真挂上」的锚点元素：用来区分「新挂载」与「同一次 commit 里的 detach + attach」。 */
+  const lastAnchors = new Map<string, HTMLElement>();
   const badges: Record<string, WidgetBadge | null> = {};
   /** 尺寸回环防护：每个组件的请求时间戳与「已冻结」标记。 */
   const sizeCalls = new Map<string, number[]>();
@@ -161,12 +175,10 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
 
   let prefs: FrameworkConfig = { ...deps.prefs };
   let viewport: Viewport = { ...deps.viewport };
+  /** `null` = 还没拿到会话（首帧）；首个真实会话**不算切换**，见 `setSession`。 */
   let sessionId: string | null = null;
-  let openId: string | null = null;
-  let openOrigin: 'click' | 'hover' | null = null;
   /** 悬停展开/收起用的挂起定时器（按组件 id 存取消函数）。 */
   const hoverTimers = new Map<string, () => void>();
-  let zOrder: string[] = [];
   let live: LiveGeometry | null = null;
 
   const listeners = new Set<() => void>();
@@ -203,9 +215,10 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     degraded,
     widgets: [],
     layout: state,
-    openId: null,
-    openOrigin: null,
-    zOrder: [],
+    // 刷新即恢复：上次展开的面板与卡片层叠顺序都从本机布局里读回来（见 docs/widget-spec.md §7）
+    openId: state.popoverId,
+    openOrigin: state.popoverOrigin,
+    zOrder: [...state.zOrder],
     badges,
     prefs,
   };
@@ -227,9 +240,9 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       degraded,
       widgets: sortedWidgets(),
       layout: state,
-      openId,
-      openOrigin,
-      zOrder: [...zOrder],
+      openId: state.popoverId,
+      openOrigin: state.popoverOrigin,
+      zOrder: [...state.zOrder],
       badges: { ...badges },
       prefs,
     };
@@ -256,6 +269,23 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     saver.schedule(state);
   }
 
+  // ── state 里的两处「非卡片」布局：内容面目标与层叠顺序 ────────────────
+  // 放在 state 里（而不是局部变量）就是为了刷新后原地恢复。
+
+  function setPopoverTarget(id: string | null, origin: 'click' | 'hover' | null): void {
+    if (state.popoverId === id && state.popoverOrigin === origin) return;
+    state = { ...state, popoverId: id, popoverOrigin: origin };
+    persist();
+  }
+
+  function setZOrder(next: readonly string[], persistNow: boolean): void {
+    const unchanged =
+      next.length === state.zOrder.length && next.every((id, index) => state.zOrder[index] === id);
+    if (unchanged) return;
+    state = { ...state, zOrder: [...next] };
+    if (persistNow) persist();
+  }
+
   function scheduleTimeout(callback: () => void, ms: number): () => void {
     if (deps.timeout !== undefined) return deps.timeout(callback, ms);
     const handle = setTimeout(callback, ms);
@@ -279,7 +309,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     const constraints = constraintsFor(widget);
     const wanted: Size = widget.card?.defaultSize ?? SPEC_DEFAULTS.cardDefaultSize;
     const rect = defaultRect(index, wanted, constraints, viewport);
-    return { ...rect, minimized: false, open: false };
+    return { ...rect, minimized: false, open: false, locked: false };
   }
 
   function cardStateOf(widget: NormalizedWidget): CardState {
@@ -297,7 +327,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   /** 同屏卡片超上限：把最旧的一张（z 序最底、开着、未最小化）收起来。 */
   function enforceCardLimit(exceptId: string): void {
     if (visibleCardCount() <= SPEC_DEFAULTS.maxOpenCards) return;
-    for (const id of zOrder) {
+    for (const id of state.zOrder) {
       if (id === exceptId) continue;
       const card = state.cards[id];
       if (card === undefined || !card.open || card.minimized) continue;
@@ -308,8 +338,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   }
 
   function raiseOrder(id: string): void {
-    const next = bringToFront(zOrder, id);
-    if (next !== zOrder) zOrder = [...next];
+    setZOrder(bringToFront(state.zOrder, id), true);
   }
 
   function widgetOf(id: string): NormalizedWidget | undefined {
@@ -324,6 +353,10 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     // 注意：owner 是从 id 前缀推出来的，框架无法验证调用者身份 —— 两个插件若声明同一个 id，
     // 后注册者胜。这条限制写在 docs/widget-spec.md 的「已知边界」里。
     registry.set(value.id, value);
+    // 覆盖注册时，历史 popover 目标可能已经不合法（呈现方式改了）—— 清掉，避免渲染出空面板
+    if (state.popoverId === value.id && value.presentation !== 'popover') {
+      state = { ...state, popoverId: null, popoverOrigin: null };
+    }
     if (!state.tray.order.includes(value.id)) {
       state = { ...state, tray: { ...state.tray, order: [...state.tray.order, value.id] } };
       persist();
@@ -336,14 +369,10 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       disposed = true;
       registry.delete(value.id);
       cancelHoverTimer(value.id);
-      if (openId === value.id) {
-        openId = null;
-        openOrigin = null;
-      }
-      zOrder = zOrder.filter((x) => x !== value.id);
       if (live?.id === value.id) live = null;
       delete badges[value.id];
       const hadCard = state.cards[value.id] !== undefined;
+      // pruneId 一并清掉卡片、托盘顺序/隐藏、层叠顺序、内容面目标与禁用记录
       state = pruneId(state, value.id);
       if (hadCard) {
         deps.onNotice?.(`组件「${value.id}」已卸载，它的卡片与本机布局记录一并清除`);
@@ -390,17 +419,16 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   function showPopover(id: string, origin: 'click' | 'hover'): void {
     const widget = widgetOf(id);
     if (widget === undefined || widget.presentation !== 'popover') return;
+    if (!isEnabled(id)) return;
     cancelAllHoverTimers();
-    openId = id;
-    openOrigin = origin;
+    setPopoverTarget(id, origin);
     publish();
   }
 
   function hidePopover(id: string): void {
     cancelHoverTimer(id);
-    if (openId !== id) return;
-    openId = null;
-    openOrigin = null;
+    if (state.popoverId !== id) return;
+    setPopoverTarget(null, null);
     publish();
   }
 
@@ -413,9 +441,10 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   function hoverEnter(id: string): void {
     const widget = widgetOf(id);
     if (widget === undefined || widget.presentation !== 'popover') return;
+    if (!isEnabled(id)) return;
     const options = widget.popover;
     if (options === null || options.trigger !== 'hover') return;
-    if (openId === widget.id) {
+    if (state.popoverId === widget.id) {
       cancelHoverTimer(id);
       return;
     }
@@ -442,7 +471,9 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     const options = widget.popover;
     if (options === null || options.trigger !== 'hover') return;
     cancelHoverTimer(id);
-    if (openId !== widget.id || openOrigin !== 'hover') return;
+    if (state.popoverId !== widget.id || state.popoverOrigin !== 'hover') return;
+    // 常驻面板：指针移开也不收起（只有 ✕ / 再点图标 / Esc 能关）
+    if (options.persistent) return;
     if (options.hoverCloseDelayMs <= 0) {
       hidePopover(id);
       return;
@@ -451,7 +482,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       id,
       scheduleTimeout(() => {
         hoverTimers.delete(id);
-        if (openId === id && openOrigin === 'hover') hidePopover(id);
+        if (state.popoverId === id && state.popoverOrigin === 'hover') hidePopover(id);
       }, options.hoverCloseDelayMs),
     );
   }
@@ -459,6 +490,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   function open(id: string): void {
     const widget = widgetOf(id);
     if (widget === undefined || widget.presentation === 'tray') return;
+    if (!isEnabled(id)) return;
     if (widget.presentation === 'popover') {
       showPopover(id, 'click');
       return;
@@ -484,7 +516,10 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     }
     const existing = state.cards[id];
     if (existing === undefined) return;
-    zOrder = zOrder.filter((x) => x !== id);
+    setZOrder(
+      state.zOrder.filter((x) => x !== id),
+      false,
+    );
     state = { ...state, cards: { ...state.cards, [id]: { ...existing, open: false, minimized: false } } };
     persist();
     publish();
@@ -509,8 +544,8 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
 
   function isOpen(id: string): boolean {
     const widget = widgetOf(id);
-    if (widget === undefined) return false;
-    if (widget.presentation === 'popover') return openId === id;
+    if (widget === undefined || !isEnabled(id)) return false;
+    if (widget.presentation === 'popover') return state.popoverId === id;
     const card = state.cards[id];
     return card !== undefined && card.open;
   }
@@ -518,8 +553,9 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   function toggle(id: string): void {
     const widget = widgetOf(id);
     if (widget === undefined || widget.presentation === 'tray') return;
+    if (!isEnabled(id)) return;
     if (widget.presentation === 'popover') {
-      if (openId === id) close(id);
+      if (state.popoverId === id) close(id);
       else open(id);
       return;
     }
@@ -533,7 +569,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       return;
     }
     // 任务栏语义：点已经开在最前的卡片 = 最小化；点被压在下面的 = 提到最前
-    if (zOrder[zOrder.length - 1] === id) minimize(id);
+    if (state.zOrder[state.zOrder.length - 1] === id) minimize(id);
     else {
       raiseOrder(id);
       publish();
@@ -541,16 +577,83 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   }
 
   function toggleMinimize(id: string): void {
+    if (!isEnabled(id)) return;
     const card = state.cards[id];
     if (card === undefined) return;
     if (card.minimized) restore(id);
     else minimize(id);
   }
 
+  // ── 启用 / 禁用（动态卸载）──────────────────────────────────────────────
+
+  /**
+   * 启用 / 禁用某个组件。
+   *
+   * 禁用 = 一次「软卸载」：图标从托盘消失、卡片与面板立刻收起、徽标清掉、内容面随之卸载
+   * （React 不再渲染它，`load` 轮询随 effect 一起停），但**注册记录与本机布局保留** ——
+   * 再次启用时卡片回到原来的位置、尺寸与锁定状态，不需要组件重新注册。
+   */
+  function setEnabled(id: string, enabled: boolean): void {
+    if (widgetOf(id) === undefined) return;
+    if (state.disabled.includes(id) === !enabled) return; // 已经是目标状态，不重复落盘
+    const next = setDisabledInList(state.disabled, id, !enabled);
+    cancelHoverTimer(id);
+    setZOrder(
+      state.zOrder.filter((x) => x !== id),
+      false,
+    );
+    let cards = state.cards;
+    const card = state.cards[id];
+    if (!enabled && card !== undefined && (card.open || card.minimized)) {
+      cards = { ...cards, [id]: { ...card, open: false, minimized: false } };
+    }
+    const wasPopover = state.popoverId === id;
+    state = {
+      ...state,
+      cards,
+      disabled: next,
+      popoverId: wasPopover ? null : state.popoverId,
+      popoverOrigin: wasPopover ? null : state.popoverOrigin,
+    };
+    if (!enabled) delete badges[id];
+    if (live?.id === id) live = null;
+    persist();
+    publish();
+    notifyLive();
+    deps.onNotice?.(
+      enabled ? `组件「${id}」已启用` : `组件「${id}」已禁用：图标、卡片与面板一并停用（可随时重新启用）`,
+    );
+  }
+
+  function isEnabled(id: string): boolean {
+    return !state.disabled.includes(id);
+  }
+
+  // ── 锁定位置（不可移动 / 不可缩放，仍可最小化与关闭）──────────────────
+
+  function setLocked(id: string, locked: boolean): void {
+    const widget = widgetOf(id);
+    if (widget === undefined || widget.presentation !== 'card') return;
+    const existing = state.cards[id];
+    if (existing !== undefined && existing.locked === locked) return;
+    const base: CardState = existing ?? makeCardState(widget, trackedCardCount());
+    if (locked && live?.id === id) {
+      live = null;
+      notifyLive();
+    }
+    writeCard(id, { ...base, locked }, true);
+  }
+
+  function isLocked(id: string): boolean {
+    return state.cards[id]?.locked === true;
+  }
+
   // ── live 几何（拖拽/缩放每帧） ────────────────────────────────────────
 
   function beginLive(id: string, mode: 'move' | ResizeDir): void {
     if (widgetOf(id) === undefined) return;
+    // 锁定 = 位置与尺寸都不可改：拖拽/缩放在入口就被挡住（键盘与菜单走 applyRect 的同一道锁）
+    if (isLocked(id)) return;
     live = { id, rect: rectOf(id), mode };
     notifyLive();
   }
@@ -570,7 +673,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     notifyLive();
     if (widget === undefined || widget.presentation !== 'card') return;
     const existing = state.cards[id];
-    const base: CardState = existing ?? { ...rect, minimized: false, open: true };
+    const base: CardState = existing ?? { ...rect, minimized: false, open: true, locked: false };
     if (isSameRect(base, rect)) return;
     writeCard(id, { ...base, ...rect }, true);
   }
@@ -600,9 +703,11 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   function applyRect(id: string, rect: Rect): void {
     const widget = widgetOf(id);
     if (widget === undefined || widget.presentation !== 'card') return;
+    // 锁定后：键盘微调、尺寸预设、内容 setSize、居中全部无效（只有解锁或最小化/关闭能动它）
+    if (isLocked(id)) return;
     const clamped = clampRect(rect, constraintsFor(widget), viewport);
     const existing = state.cards[id];
-    const base: CardState = existing ?? { ...clamped, minimized: false, open: true };
+    const base: CardState = existing ?? { ...clamped, minimized: false, open: true, locked: false };
     if (isSameRect(base, clamped)) return;
     writeCard(id, { ...base, ...clamped }, true);
   }
@@ -741,14 +846,14 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
           order: state.tray.order.filter(isKnown),
           hidden: state.tray.hidden.filter(isKnown),
         },
+        disabled: state.disabled.filter(isKnown),
       };
       persist();
     }
-    if (openId !== null && !isKnown(openId)) {
-      openId = null;
-      openOrigin = null;
+    if (state.popoverId !== null && !isKnown(state.popoverId)) {
+      state = { ...state, popoverId: null, popoverOrigin: null };
     }
-    zOrder = zOrder.filter(isKnown);
+    setZOrder(state.zOrder.filter(isKnown), false);
     publish();
     return removed;
   }
@@ -757,10 +862,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     saver.cancel();
     const ok = clearState(deps.storage);
     state = emptyState();
-    zOrder = [];
     cancelAllHoverTimers();
-    openId = null;
-    openOrigin = null;
     live = null;
     for (const key of Object.keys(badges)) delete badges[key];
     publish();
@@ -801,13 +903,20 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
 
   function setSession(next: string | null): void {
     if (sessionId === next) return;
+    // 首帧拿到会话**不算切换**：托盘是会话槽位里的条目，刷新后它会带着真实 sessionId 挂载，
+    // 而运行时此时还是 null。旧实现把这一步当成「切会话」，于是每次刷新都把恢复出来的卡片与
+    // 面板全部关掉 —— 这次修复的核心（见 docs/widget-spec.md §7）。
+    const firstBinding = sessionId === null;
     sessionId = next;
-    // 内容面绑定开启它的会话：切会话 = 关掉当前内容面（v1 规则，见 docs/widget-spec.md）
+    if (firstBinding) {
+      publish();
+      return;
+    }
+    // 真的换会话：内容面绑定开启它的会话，全部收起（v1 规则，见 docs/widget-spec.md §6）
     let changed = false;
     cancelAllHoverTimers();
-    if (openId !== null) {
-      openId = null;
-      openOrigin = null;
+    if (state.popoverId !== null) {
+      setPopoverTarget(null, null);
       changed = true;
     }
     const nextCards: Record<string, CardState> = { ...state.cards };
@@ -816,7 +925,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       nextCards[id] = { ...card, open: false, minimized: false };
       changed = true;
     }
-    zOrder = [];
+    setZOrder([], false);
     if (changed) {
       state = { ...state, cards: nextCards };
       persist();
@@ -850,6 +959,10 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     isOpen,
     minimize,
     restore,
+    setEnabled,
+    isEnabled,
+    setLocked,
+    isLocked,
     getSnapshot: () => snapshot,
     subscribeLive(listener) {
       liveListeners.add(listener);
@@ -881,8 +994,16 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     setSession,
     getSession: () => sessionId,
     setAnchor: (id, el) => {
+      const before = anchors.get(id) ?? null;
       if (el === null) anchors.delete(id);
       else anchors.set(id, el);
+      if (before === el) return;
+      // React 每次 commit 都会用新的 ref 回调先 detach（null）再 attach（同一个元素）：
+      // 只有「换了一个真的新元素」才算挂载，否则会 publish ↔ 重渲染 无限循环。
+      if (el === null || lastAnchors.get(id) === el) return;
+      lastAnchors.set(id, el);
+      // 通知一次：刷新后恢复出来的 popover 需要知道它的图标刚刚挂上，才能重新测量位置。
+      publish();
     },
     getAnchor: (id) => anchors.get(id) ?? null,
     setBadge,
@@ -929,6 +1050,10 @@ export function createWidgetsService(runtime: WidgetRuntime): {
   isOpen: (id: string) => boolean;
   minimize: (id: string) => void;
   restore: (id: string) => void;
+  setEnabled: (id: string, enabled: boolean) => void;
+  isEnabled: (id: string) => boolean;
+  setLocked: (id: string, locked: boolean) => void;
+  isLocked: (id: string) => boolean;
 } {
   return {
     specVersion: runtime.specVersion,
@@ -952,5 +1077,13 @@ export function createWidgetsService(runtime: WidgetRuntime): {
     restore: (id) => {
       runtime.restore(id);
     },
+    setEnabled: (id, enabled) => {
+      runtime.setEnabled(id, enabled);
+    },
+    isEnabled: (id) => runtime.isEnabled(id),
+    setLocked: (id, locked) => {
+      runtime.setLocked(id, locked);
+    },
+    isLocked: (id) => runtime.isLocked(id),
   };
 }

@@ -1,9 +1,12 @@
 /**
  * 本机布局存储 —— 纯逻辑 + 可注入 IO，Node 里直接可测
  *
- * 存 localStorage 的**只有本机布局**（托盘顺序/隐藏、卡片矩形/最小化、上次打开的组件）；
- * 用户**配置**（托盘开关、图标上限、刷新间隔…）走 settings.yaml 的 NS 分节，两者的边界见
- * `docs/widget-spec.md`。
+ * 存 localStorage 的**只有本机布局**（托盘顺序/隐藏/禁用、卡片矩形与最小化/锁定、层叠顺序、
+ * 当前展开的面板）；用户**配置**（托盘开关、图标上限、刷新间隔…）走 settings.yaml 的 NS 分节，
+ * 两者的边界见 `docs/widget-spec.md`。
+ *
+ * 新字段一律**向后兼容地追加**（旧值缺字段 = 用默认值），因此存储结构版本不需要 bump；
+ * 只有**破坏性**改动才动 `STORE_VERSION`（届时整份丢弃，不做迁移）。
  *
  * 与 geometry.ts 一样，本文件必须自包含（只允许 `import type`）——`scripts/check-store.mjs`
  * 直接 import 它。类型层面从 geometry 借，值层面靠注入（`deps.clampRect`）。
@@ -21,7 +24,7 @@ export const STORE_VERSION = 1;
 /** 最多跟踪多少张卡片（防脏数据把 store 撑爆）。 */
 export const MAX_TRACKED = 64;
 
-/** 列表（托盘顺序 / 隐藏集合）长度上限。 */
+/** 列表（托盘顺序 / 隐藏集合 / 禁用集合 / 层叠顺序）长度上限。 */
 export const MAX_LIST = 64;
 
 /** 拖拽/缩放结束后落盘的延迟（合并抖动）。 */
@@ -31,10 +34,13 @@ export const SAVE_DEBOUNCE_MS = 300;
 export interface CardState extends Rect {
   minimized: boolean;
   open: boolean;
+  /** 位置锁定：不可拖动、不可缩放，但仍可最小化 / 关闭（`setLocked`）。 */
+  locked: boolean;
 }
 
 export interface TrayState {
   order: string[];
+  /** 从托盘隐藏（组件仍在运行，只是没有图标）。 */
   hidden: string[];
 }
 
@@ -42,7 +48,16 @@ export interface PersistedState {
   v: typeof STORE_VERSION;
   tray: TrayState;
   cards: Record<string, CardState>;
+  /** 最近一次打开的内容面（诊断 / 兼容用）。 */
   lastOpenId: string | null;
+  /** 卡片层自下而上的顺序（末尾最上）—— 刷新后层叠顺序不重置。 */
+  zOrder: string[];
+  /** 当前展开的 popover（单开）；刷新后原地恢复。 */
+  popoverId: string | null;
+  /** 它是怎么被打开的（决定移开指针要不要自动收起）。 */
+  popoverOrigin: 'click' | 'hover' | null;
+  /** 被用户禁用的组件：图标、卡片、内容面与徽标一并停用（`setEnabled`）。 */
+  disabled: string[];
 }
 
 /** localStorage 的最小接口（测试里传假实现）。 */
@@ -66,7 +81,16 @@ export interface SanitizeDeps {
 }
 
 export function emptyState(): PersistedState {
-  return { v: STORE_VERSION, tray: { order: [], hidden: [] }, cards: {}, lastOpenId: null };
+  return {
+    v: STORE_VERSION,
+    tray: { order: [], hidden: [] },
+    cards: {},
+    lastOpenId: null,
+    zOrder: [],
+    popoverId: null,
+    popoverOrigin: null,
+    disabled: [],
+  };
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -103,6 +127,8 @@ export function sanitizeState(raw: unknown, deps: SanitizeDeps): PersistedState 
   const trayRaw = isRecord(raw['tray']) ? raw['tray'] : {};
   const order = readIdList(trayRaw['order'], deps);
   const hidden = readIdList(trayRaw['hidden'], deps);
+  const disabled = readIdList(raw['disabled'], deps);
+  const zOrder = readIdList(raw['zOrder'], deps);
 
   const cardsRaw = isRecord(raw['cards']) ? raw['cards'] : {};
   const cards: Record<string, CardState> = {};
@@ -125,6 +151,7 @@ export function sanitizeState(raw: unknown, deps: SanitizeDeps): PersistedState 
       h: rect.h,
       minimized: value['minimized'] === true,
       open: value['open'] === true,
+      locked: value['locked'] === true,
     };
     tracked += 1;
   }
@@ -132,7 +159,22 @@ export function sanitizeState(raw: unknown, deps: SanitizeDeps): PersistedState 
   const lastRaw = raw['lastOpenId'];
   const lastOpenId = typeof lastRaw === 'string' && deps.isKnown(lastRaw) ? lastRaw : null;
 
-  return { v: STORE_VERSION, tray: { order, hidden }, cards, lastOpenId };
+  const popoverRaw = raw['popoverId'];
+  const popoverId = typeof popoverRaw === 'string' && deps.isKnown(popoverRaw) ? popoverRaw : null;
+  const originRaw = raw['popoverOrigin'];
+  const popoverOrigin =
+    popoverId !== null && (originRaw === 'click' || originRaw === 'hover') ? originRaw : null;
+
+  return {
+    v: STORE_VERSION,
+    tray: { order, hidden },
+    cards,
+    lastOpenId,
+    zOrder,
+    popoverId,
+    popoverOrigin,
+    disabled,
+  };
 }
 
 /** 读一次；任何异常都降级为「默认 + degraded」（隐私模式 / 配额满 / 坏 JSON）。 */
@@ -272,26 +314,66 @@ export function mergeVisibleOrder(full: readonly string[], nextVisible: readonly
   return out;
 }
 
-/** 增删隐藏集合。 */
-export function setHiddenInList(hidden: readonly string[], id: string, isHidden: boolean): string[] {
-  if (isHidden) {
-    if (hidden.includes(id)) return hidden.slice();
-    return [...hidden, id].slice(0, MAX_LIST);
+/** 增删一个「成员集合」里的 id（隐藏集合与禁用集合共用同一语义，越界截断）。 */
+export function setMembershipInList(list: readonly string[], id: string, present: boolean): string[] {
+  if (present) {
+    if (list.includes(id)) return list.slice();
+    return [...list, id].slice(0, MAX_LIST);
   }
-  return hidden.filter((x) => x !== id);
+  return list.filter((x) => x !== id);
 }
 
-/** 组件被卸载后清掉它的全部残留（卡片、托盘顺序、隐藏集合、lastOpenId）。 */
+/** 增删隐藏集合。 */
+export const setHiddenInList = setMembershipInList;
+
+/** 增删禁用集合。 */
+export const setDisabledInList = setMembershipInList;
+
+/** 组件被卸载后清掉它的全部残留（卡片、托盘顺序、隐藏/禁用集合、层叠顺序、面板目标）。 */
 export function pruneId(state: PersistedState, id: string): PersistedState {
-  const next: PersistedState = {
+  const cards = { ...state.cards };
+  delete cards[id];
+  return {
     v: STORE_VERSION,
     tray: {
       order: state.tray.order.filter((x) => x !== id),
       hidden: state.tray.hidden.filter((x) => x !== id),
     },
-    cards: { ...state.cards },
+    cards,
     lastOpenId: state.lastOpenId === id ? null : state.lastOpenId,
+    zOrder: state.zOrder.filter((x) => x !== id),
+    popoverId: state.popoverId === id ? null : state.popoverId,
+    popoverOrigin: state.popoverId === id ? null : state.popoverOrigin,
+    disabled: state.disabled.filter((x) => x !== id),
   };
-  delete next.cards[id];
-  return next;
+}
+
+/**
+ * 一维拖拽排序的纯函数（托盘图标换序）。
+ *
+ * 治的是「拖拽项自己也在指针下面」这个经典抖动：命中测试**只**看其余项的中心点，
+ * 于是把 A 往右拖过 B 的中线就插到 B 后面，再往右拖过 C 的中线就插到 C 后面 —— 两个方向对称，
+ * 不会出现「只能从右往左拖」。渲染顺序怎么变都不会让结果振荡（中线判定与自身位置无关）。
+ *
+ * @param order - 当前顺序（含被拖项）。
+ * @param draggingId - 被拖的 id。
+ * @param centers - 其余项的中心坐标，顺序必须与 `order` 去掉 `draggingId` 后一致。
+ * @param pointerX - 指针横坐标。
+ * @returns 新顺序；参数不自洽（被拖项不在列表里 / 坐标数量不匹配）时原样返回副本。
+ */
+export function reorderByPointer(
+  order: readonly string[],
+  draggingId: string,
+  centers: readonly number[],
+  pointerX: number,
+): string[] {
+  const others = order.filter((id) => id !== draggingId);
+  if (others.length === order.length) return order.slice();
+  if (centers.length !== others.length) return order.slice();
+  let insertAt = 0;
+  for (const center of centers) {
+    if (Number.isFinite(center) && center < pointerX) insertAt += 1;
+  }
+  others.splice(insertAt, 0, draggingId);
+  return others;
 }

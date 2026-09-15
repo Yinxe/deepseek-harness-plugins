@@ -2,8 +2,11 @@
  * 设置节：`设置 → 小组件`
  *
  * 这里放的是**用户配置**（进 settings.yaml 的 `dshp-widget-kit` 分节）；**本机布局**（托盘顺序、
- * 卡片位置尺寸、隐藏集合）留在浏览器 localStorage，只提供一个「清空本机布局」的动作 ——
- * 这条边界写在 docs/widget-spec.md 里。
+ * 卡片位置尺寸与锁定、隐藏/禁用集合、层叠顺序）留在浏览器 localStorage，只提供一个
+ * 「清空本机布局」的动作 —— 这条边界写在 docs/widget-spec.md 里。
+ *
+ * 下面的组件列表同时是**动态启停**的入口：禁用 = 图标、卡片、面板、徽标一并停用（软卸载），
+ * 注册记录与本机布局都保留，随时可以再启用。
  *
  * @module @dshp/widget-kit/client/SettingsSection
  */
@@ -47,6 +50,7 @@ export function SettingsSection({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const prefs = snapshot.prefs;
+  const disabled = new Set(snapshot.layout.disabled);
 
   useEffect(() => {
     let cancelled = false;
@@ -162,7 +166,9 @@ export function SettingsSection({
       <div>
         <h3 className={styles.sectionTitle}>已注册组件（{String(snapshot.widgets.length)}）</h3>
         <p className={styles.sectionHint}>
-          本机布局（托盘顺序、卡片位置与尺寸、隐藏集合）只存在这台浏览器里；换设备或清缓存会回到默认布局。
+          本机布局（托盘顺序、卡片位置尺寸与锁定、隐藏与禁用、层叠顺序）只存在这台浏览器里；
+          换设备或清缓存会回到默认布局。「启用」开关就是动态启停：关掉后图标、卡片、面板与徽标一并停用，
+          但注册记录与布局都留着，随时可以再打开。
         </p>
         {snapshot.widgets.length === 0 ? (
           <div className={styles.empty}>暂无插件注册小组件。</div>
@@ -170,26 +176,46 @@ export function SettingsSection({
           <div className={styles.list}>
             {snapshot.widgets.map((widget) => {
               const title = typeof widget.title === 'function' ? widget.title() : widget.title;
+              const enabled = !disabled.has(widget.id);
               const open = runtime.isOpen(widget.id);
+              const locked = widget.presentation === 'card' && runtime.isLocked(widget.id);
               return (
-                <div key={widget.id} className={styles.listRow}>
+                <div
+                  key={widget.id}
+                  className={styles.listRow + (enabled ? '' : ' ' + styles.listRowOff)}
+                  data-disabled={enabled ? 'false' : 'true'}
+                >
                   <div className={styles.listMain}>
                     <span className={styles.listId}>{widget.id}</span>
                     <span className={styles.listMeta}>
                       {title} · 来源 {widget.owner} · {widget.presentation}
+                      {locked ? ' · 位置已锁定' : ''}
+                      {enabled ? '' : ' · 已禁用'}
                     </span>
                   </div>
                   <div className={styles.listActions}>
                     <Button
                       variant="ghost"
                       size="sm"
-                      disabled={widget.presentation === 'tray'}
+                      disabled={!enabled || widget.presentation === 'tray'}
                       onClick={() => {
                         runtime.toggle(widget.id);
                       }}
                     >
                       {open ? '收起' : '打开'}
                     </Button>
+                    <Switch
+                      checked={enabled}
+                      label={`启用「${title}」`}
+                      onChange={(next) => {
+                        runtime.setEnabled(widget.id, next);
+                        setNotice(
+                          next
+                            ? `「${title}」已启用：图标与卡片回到原来的位置。`
+                            : `「${title}」已禁用：图标、卡片与面板一并停用，布局保留。`,
+                        );
+                      }}
+                    />
                   </div>
                 </div>
               );
@@ -206,7 +232,7 @@ export function SettingsSection({
             const ok = runtime.resetLocal();
             setNotice(
               ok
-                ? '本机布局已清空：托盘顺序、卡片位置与尺寸都回到默认。'
+                ? '本机布局已清空：托盘顺序、卡片位置尺寸与锁定、隐藏与禁用都回到默认。'
                 : '本机布局存储不可用（隐私模式或配额满），已经在用默认布局。',
             );
           }}

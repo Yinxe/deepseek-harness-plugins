@@ -829,7 +829,7 @@ function readBody(req, limit = 1024 * 1024) {
 
 // src/host/config.ts
 var NS = settingsNamespace("dshp-widget-kit");
-var FRAMEWORK_VERSION = "0.1.0";
+var FRAMEWORK_VERSION = "0.2.0";
 var SPEC_VERSION = 1;
 var DEFAULT_CONFIG = {
   trayEnabled: true,

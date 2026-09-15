@@ -2,9 +2,10 @@
 /**
  * 本机布局存储自检（纯逻辑 + 注入式 IO）
  *
- * 覆盖：消毒（坏结构 / 版本不符 / 类型不符 / 不在册 id / 超长列表 / 几何夹紧 / 布尔强制）、
- * 读写的降级路径（storage 抛错 / 坏 JSON / 无 storage）、合并写盘（debounce / flush / cancel / onError）、
- * 菜单操作（上移下移、隐藏集合）与卸载清理（pruneId）。
+ * 覆盖：消毒（坏结构 / 版本不符 / 类型不符 / 不在册 id / 超长列表 / 几何夹紧 / 布尔强制 /
+ * 新增字段默认值）、读写的降级路径（storage 抛错 / 坏 JSON / 无 storage）、合并写盘
+ * （debounce / flush / cancel / onError）、菜单操作（上移下移、隐藏与禁用集合）、
+ * 一维拖拽排序（reorderByPointer：左右两个方向都要能过）、卸载清理（pruneId）。
  */
 
 import assert from 'node:assert/strict';
@@ -19,8 +20,10 @@ import {
   loadState,
   moveInOrder,
   pruneId,
+  reorderByPointer,
   sanitizeState,
   saveState,
+  setDisabledInList,
   setHiddenInList,
 } from '../src/client/store.ts';
 
@@ -71,6 +74,10 @@ check(() =>
     tray: { order: [], hidden: [] },
     cards: {},
     lastOpenId: null,
+    zOrder: [],
+    popoverId: null,
+    popoverOrigin: null,
+    disabled: [],
   }),
 );
 
@@ -95,11 +102,15 @@ check(() => {
         hidden: ['gamma:three', 'delta:nope'],
       },
       cards: {
-        'alpha:one': { x: 420, y: 260, w: 400, h: 300, minimized: true, open: true },
+        'alpha:one': { x: 420, y: 260, w: 400, h: 300, minimized: true, open: true, locked: true },
         'delta:nope': { x: 1, y: 1, w: 300, h: 200 },
-        'beta:two': { x: 10, y: 10, w: 10, h: 10, minimized: 'yes', open: 0 },
+        'beta:two': { x: 10, y: 10, w: 10, h: 10, minimized: 'yes', open: 0, locked: 'yes' },
       },
       lastOpenId: 'delta:nope',
+      zOrder: ['beta:two', 'delta:nope', 'alpha:one'],
+      popoverId: 'delta:nope',
+      popoverOrigin: 'hover',
+      disabled: ['gamma:three', 'delta:nope', 'gamma:three'],
     },
     DEPS,
   );
@@ -108,10 +119,55 @@ check(() => {
   const cardIds = Object.keys(out.cards);
   cardIds.sort();
   assert.deepEqual(cardIds, ['alpha:one', 'beta:two']);
-  assert.deepEqual(out.cards['alpha:one'], { x: 420, y: 260, w: 400, h: 300, minimized: true, open: true });
-  // 尺寸被夹到 min，布尔被强制
-  assert.deepEqual(out.cards['beta:two'], { x: 10, y: 10, w: 240, h: 140, minimized: false, open: false });
+  assert.deepEqual(out.cards['alpha:one'], {
+    x: 420,
+    y: 260,
+    w: 400,
+    h: 300,
+    minimized: true,
+    open: true,
+    locked: true,
+  });
+  // 尺寸被夹到 min，布尔被强制（'yes' / 0 都不等于 true）
+  assert.deepEqual(out.cards['beta:two'], {
+    x: 10,
+    y: 10,
+    w: 240,
+    h: 140,
+    minimized: false,
+    open: false,
+    locked: false,
+  });
   assert.equal(out.lastOpenId, null, '不在册的 lastOpenId 必须清掉');
+  assert.deepEqual(out.zOrder, ['beta:two', 'alpha:one'], '层叠顺序去重 + 丢未在册');
+  assert.equal(out.popoverId, null, '不在册的 popoverId 必须清掉');
+  assert.equal(out.popoverOrigin, null);
+  assert.deepEqual(out.disabled, ['gamma:three'], '禁用集合去重 + 丢未在册');
+});
+
+check(() => {
+  // 旧结构（没有新增字段）必须能读：缺字段 = 用默认值，而不是整份丢弃
+  const out = sanitizeState(
+    {
+      v: STORE_VERSION,
+      tray: { order: ['alpha:one'], hidden: [] },
+      cards: { 'alpha:one': { x: 10, y: 10, w: 300, h: 200, open: true, minimized: false } },
+      lastOpenId: 'alpha:one',
+    },
+    DEPS,
+  );
+  assert.deepEqual(out.zOrder, []);
+  assert.equal(out.popoverId, null);
+  assert.deepEqual(out.disabled, []);
+  assert.equal(out.cards['alpha:one'].locked, false, '缺 locked 的老记录 = 未锁定');
+  assert.equal(out.cards['alpha:one'].open, true, '老记录的 open 必须保留（刷新后要恢复）');
+
+  // popoverOrigin 只在有 popoverId 时才认
+  const loose = sanitizeState({ v: STORE_VERSION, popoverId: null, popoverOrigin: 'hover' }, DEPS);
+  assert.equal(loose.popoverOrigin, null, '没有 popoverId 时的 origin 必须丢掉');
+  const bad = sanitizeState({ v: STORE_VERSION, popoverId: 'alpha:one', popoverOrigin: 'nope' }, DEPS);
+  assert.equal(bad.popoverId, 'alpha:one');
+  assert.equal(bad.popoverOrigin, null, '非法 origin 必须丢掉');
 });
 
 check(() => {
@@ -224,6 +280,32 @@ check(() => {
   assert.deepEqual(setHiddenInList(['a'], 'b', true), ['a', 'b']);
   assert.deepEqual(setHiddenInList(['a'], 'a', true), ['a'], '重复隐藏必须幂等');
   assert.deepEqual(setHiddenInList(['a', 'b'], 'a', false), ['b']);
+  // 禁用集合与隐藏集合是同一套成员语义
+  assert.deepEqual(setDisabledInList([], 'a', true), ['a']);
+  assert.deepEqual(setDisabledInList(['a'], 'a', true), ['a'], '重复禁用必须幂等');
+  assert.deepEqual(setDisabledInList(['a', 'b'], 'a', false), ['b']);
+});
+
+// ── 一维拖拽排序（托盘图标换序）：左右两个方向都要能过 ──────────────────
+check(() => {
+  const order = ['a', 'b', 'c'];
+  // 从左往右：拖 a 到最右（其余项中心线都落在指针左边）→ 必须成功
+  assert.deepEqual(reorderByPointer(order, 'a', [10, 50], 100), ['b', 'c', 'a']);
+  // 从右往左：拖 c 到最左 → 必须成功（旧实现只有这个方向能用）
+  assert.deepEqual(reorderByPointer(order, 'c', [10, 50], 0), ['c', 'a', 'b']);
+  // 中线判定：其余项是 [b, c]，中心线分别在 10 / 50
+  assert.deepEqual(reorderByPointer(order, 'a', [10, 50], 9), order.slice(), '没过 b 的中线不动');
+  assert.deepEqual(reorderByPointer(order, 'a', [10, 50], 11), ['b', 'a', 'c'], '过了 b 的中线就换位');
+  assert.deepEqual(reorderByPointer(order, 'a', [10, 50], 30), ['b', 'a', 'c'], '在 b 与 c 之间');
+  assert.deepEqual(reorderByPointer(order, 'a', [10, 50], 51), ['b', 'c', 'a'], '过了 c 的中线到末尾');
+  // 幂等：结果再算一次还是它自己（这是「不振荡」的判据）
+  const once = reorderByPointer(order, 'a', [10, 50], 100);
+  assert.deepEqual(reorderByPointer(once, 'a', [10, 50], 100), once);
+  // 参数不自洽时原样返回副本（少一个坐标就不动，宁可这一次不排序）
+  assert.deepEqual(reorderByPointer(order, 'a', [10], 100), order, '坐标数量不匹配必须不动');
+  assert.deepEqual(reorderByPointer(order, 'zz', [10, 50], 100), order, '不在列表里必须不动');
+  assert.notEqual(reorderByPointer(order, 'zz', [10, 50], 100), order, '必须返回副本而不是同一引用');
+  assert.deepEqual(order, ['a', 'b', 'c'], '入参不得被改动');
 });
 
 check(() => {
@@ -231,16 +313,24 @@ check(() => {
     v: STORE_VERSION,
     tray: { order: ['alpha:one', 'beta:two'], hidden: ['alpha:one'] },
     cards: {
-      'alpha:one': { x: 0, y: 0, w: 300, h: 200, minimized: false, open: true },
-      'beta:two': { x: 0, y: 0, w: 300, h: 200, minimized: false, open: false },
+      'alpha:one': { x: 0, y: 0, w: 300, h: 200, minimized: false, open: true, locked: true },
+      'beta:two': { x: 0, y: 0, w: 300, h: 200, minimized: false, open: false, locked: false },
     },
     lastOpenId: 'alpha:one',
+    zOrder: ['beta:two', 'alpha:one'],
+    popoverId: 'alpha:one',
+    popoverOrigin: 'click',
+    disabled: ['alpha:one'],
   };
   const out = pruneId(state, 'alpha:one');
   assert.deepEqual(out.tray.order, ['beta:two']);
   assert.deepEqual(out.tray.hidden, []);
   assert.deepEqual(Object.keys(out.cards), ['beta:two']);
   assert.equal(out.lastOpenId, null);
+  assert.deepEqual(out.zOrder, ['beta:two'], '卸载必须把层叠顺序里的残留清掉');
+  assert.equal(out.popoverId, null, '卸载必须把内容面目标清掉');
+  assert.equal(out.popoverOrigin, null);
+  assert.deepEqual(out.disabled, [], '卸载必须把禁用记录清掉');
   assert.deepEqual(Object.keys(state.cards).length, 2, 'pruneId 不得改动入参');
 });
 

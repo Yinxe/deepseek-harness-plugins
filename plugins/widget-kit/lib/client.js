@@ -30,7 +30,7 @@ module.exports = __toCommonJS(client_exports);
 
 // src/client/spec.ts
 var SPEC_VERSION = 1;
-var FRAMEWORK_VERSION = "0.1.0";
+var FRAMEWORK_VERSION = "0.2.0";
 var WIDGET_ID_PATTERN = /^[a-z0-9-]{2,32}:[a-z0-9-]{2,32}$/;
 var PRESENTATIONS = ["tray", "popover", "card"];
 var SPEC_DEFAULTS = {
@@ -62,7 +62,9 @@ var SPEC_DEFAULTS = {
   popoverWidthMax: 420,
   popoverMaxHeightMax: 2e3,
   hoverOpenDelayMs: 80,
-  hoverCloseDelayMs: 220
+  hoverCloseDelayMs: 220,
+  /** popover 默认不是常驻面板（点外部即收起）。 */
+  popoverPersistent: false
 };
 var WidgetSpecError = class extends Error {
   constructor(field, detail) {
@@ -253,7 +255,8 @@ function normalizeDescriptor(raw, frameworkVersion = FRAMEWORK_VERSION) {
       side: sideRaw,
       header: readBool("popover.header", popoverObj["header"], true),
       hoverOpenDelayMs,
-      hoverCloseDelayMs
+      hoverCloseDelayMs,
+      persistent: readBool("popover.persistent", popoverObj["persistent"], SPEC_DEFAULTS.popoverPersistent)
     };
   }
   const cardRaw = raw["card"];
@@ -400,6 +403,7 @@ function createBadgeScheduler(deps) {
     const alive = /* @__PURE__ */ new Set();
     for (const widget of snapshot.widgets) {
       if (widget.tray.badge === null) continue;
+      if (!deps.runtime.isEnabled(widget.id)) continue;
       alive.add(widget.id);
       const entry = ensure(widget.id);
       if (entry.inFlight) continue;
@@ -439,7 +443,7 @@ var import_react = require("react");
 var import_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
 
 // dsh-css-module:dsh-css:src/client/styles.module.css.mjs
-var css = ".SigSeG_tray{flex:none;align-items:center;gap:2px;display:flex}.SigSeG_trayAnchor{display:inline-flex}.SigSeG_trayBtn{width:28px;height:28px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:8px;justify-content:center;align-items:center;padding:0;display:inline-flex;position:relative}.SigSeG_trayBtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_trayBtn:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:2px}.SigSeG_trayBtnActive{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.SigSeG_trayBtnDragging{opacity:.55}.SigSeG_trayGlyph{justify-content:center;align-items:center;width:18px;height:18px;display:inline-flex}.SigSeG_trayGlyph>svg{width:18px;height:18px}.SigSeG_trayBadge{background:var(--dsw-alias-state-business-primary);border-radius:999px;width:6px;height:6px;position:absolute;top:2px;right:2px}.SigSeG_trayBadge[data-tone=ok]{background:var(--dsw-alias-state-success-primary)}.SigSeG_trayBadge[data-tone=warn]{background:var(--dsw-alias-state-warn-primary)}.SigSeG_trayBadge[data-tone=bad]{background:var(--dsw-alias-state-error-primary)}.SigSeG_trayBadgeText{background:var(--dsw-alias-state-business-primary);min-width:14px;height:14px;color:var(--dsw-alias-label-primary-foreground);text-align:center;font-size:9px;line-height:14px;font-family:var(--dsw-font-family);border-radius:999px;padding:0 3px;position:absolute;top:-2px;right:-4px}.SigSeG_trayBadgeText[data-tone=ok]{background:var(--dsw-alias-state-success-primary)}.SigSeG_trayBadgeText[data-tone=warn]{background:var(--dsw-alias-state-warn-primary)}.SigSeG_trayBadgeText[data-tone=bad]{background:var(--dsw-alias-state-error-primary)}.SigSeG_layer{z-index:1;isolation:isolate;pointer-events:none;position:fixed;inset:0}.SigSeG_card{pointer-events:auto;box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);border-radius:12px;flex-direction:column;display:flex;position:fixed;overflow:hidden}.SigSeG_cardDragging{user-select:none}.SigSeG_cardMinimized{box-shadow:var(--dsw-shadow-lv1)}.SigSeG_cardHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);cursor:grab;touch-action:none;flex:none;align-items:center;gap:6px;height:36px;padding:0 6px 0 10px;display:flex}.SigSeG_cardMinimized .SigSeG_cardHeader{border-bottom:none}.SigSeG_cardDragging .SigSeG_cardHeader{cursor:grabbing}.SigSeG_cardHeader:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:-2px}.SigSeG_cardTitle{text-overflow:ellipsis;white-space:nowrap;min-width:0;color:var(--dsw-alias-label-primary);flex:1;font-size:13px;font-weight:500;overflow:hidden}.SigSeG_cardSubtitle{text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-caption);flex:none;font-size:11px;overflow:hidden}.SigSeG_cardActions{flex:none;align-items:center;gap:2px;display:flex}.SigSeG_cardAction{width:24px;height:24px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:6px;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:1;display:inline-flex}.SigSeG_cardAction:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_cardActionDanger:hover{background:var(--dsw-alias-interactive-bg-hover-danger);color:var(--dsw-alias-label-error)}.SigSeG_cardBody{box-sizing:border-box;flex:auto;min-height:0;padding:10px;position:relative}.SigSeG_contentHost{box-sizing:border-box;width:100%;height:100%;overflow:auto;container-type:size}.SigSeG_resizeHandle{z-index:2;touch-action:none;position:absolute}.SigSeG_resizeHandle[data-dir=n]{cursor:ns-resize;height:6px;top:0;left:8px;right:8px}.SigSeG_resizeHandle[data-dir=s]{cursor:ns-resize;height:6px;bottom:0;left:8px;right:8px}.SigSeG_resizeHandle[data-dir=e]{cursor:ew-resize;width:6px;top:8px;bottom:8px;right:0}.SigSeG_resizeHandle[data-dir=w]{cursor:ew-resize;width:6px;top:8px;bottom:8px;left:0}.SigSeG_resizeHandle[data-dir=ne]{cursor:nesw-resize;width:12px;height:12px;top:0;right:0}.SigSeG_resizeHandle[data-dir=nw]{cursor:nwse-resize;width:12px;height:12px;top:0;left:0}.SigSeG_resizeHandle[data-dir=se]{cursor:nwse-resize;width:12px;height:12px;bottom:0;right:0}.SigSeG_resizeHandle[data-dir=sw]{cursor:nesw-resize;width:12px;height:12px;bottom:0;left:0}.SigSeG_popover{pointer-events:auto;box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-overlay);width:min(420px,100vw - 24px);max-height:min(60vh,520px);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);border-radius:12px;flex-direction:column;display:flex;position:fixed;overflow:hidden}.SigSeG_popoverHeader{border-bottom:.5px solid var(--dsw-alias-border-l1);flex:none;align-items:center;gap:6px;height:34px;padding:0 6px 0 12px;display:flex}.SigSeG_popoverTitle{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-size:13px;font-weight:500;overflow:hidden}.SigSeG_popoverBody{box-sizing:border-box;flex:auto;min-height:0;padding:12px;overflow:auto;container-type:inline-size}.SigSeG_section{flex-direction:column;gap:14px;display:flex}.SigSeG_sectionTitle{color:var(--dsw-alias-label-primary);margin:0;font-size:15px;font-weight:600}.SigSeG_sectionHint{color:var(--dsw-alias-label-caption);margin:0;font-size:12px;line-height:18px}.SigSeG_group{border:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:2px;padding:4px 12px;display:flex}.SigSeG_row{align-items:center;gap:12px;padding:10px 0;display:flex}.SigSeG_row+.SigSeG_row{border-top:.5px solid var(--dsw-alias-border-l1)}.SigSeG_rowLabel{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_rowTitle{color:var(--dsw-alias-label-primary);font-size:13px}.SigSeG_rowHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}.SigSeG_rowControl{flex:none;align-items:center;gap:8px;display:flex}.SigSeG_notice{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);border-radius:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px}.SigSeG_noticeBad{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-error)}.SigSeG_noticeOk{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-state-success-primary)}.SigSeG_list{border:.5px solid var(--dsw-alias-border-l1);border-radius:10px;flex-direction:column;gap:0;display:flex;overflow:hidden}.SigSeG_listRow{background:var(--dsw-alias-bg-layer-1);align-items:center;gap:10px;padding:8px 12px;display:flex}.SigSeG_listRow+.SigSeG_listRow{border-top:.5px solid var(--dsw-alias-border-l1)}.SigSeG_listMain{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_listId{font-family:var(--dsw-font-mono);color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.SigSeG_listMeta{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_listActions{flex:none;align-items:center;gap:6px;display:flex}.SigSeG_empty{color:var(--dsw-alias-label-caption);background:var(--dsw-alias-bg-layer-1);padding:14px 12px;font-size:12px}.SigSeG_footer{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.SigSeG_clock{text-align:center;flex-direction:column;justify-content:center;align-items:center;gap:6px;height:100%;display:flex}.SigSeG_clockTime{font-family:var(--dsw-font-mono);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);line-height:1.1}.SigSeG_clockTime[data-size=compact]{font-size:22px}.SigSeG_clockTime[data-size=regular]{font-size:32px}.SigSeG_clockTime[data-size=wide]{font-size:44px}.SigSeG_clockMeta{color:var(--dsw-alias-label-caption);font-size:12px}.SigSeG_clockRow{flex-wrap:wrap;justify-content:center;align-items:baseline;gap:10px;display:flex}.SigSeG_clockLabel{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_diag{flex-direction:column;gap:8px;height:100%;display:flex}.SigSeG_diagSummary{color:var(--dsw-alias-label-secondary);font-size:12px}.SigSeG_diagList{flex-direction:column;gap:6px;display:flex}.SigSeG_diagRow{background:var(--dsw-alias-bg-layer-2);border-radius:8px;align-items:center;gap:8px;padding:6px 8px;display:flex}.SigSeG_diagMain{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_diagId{font-family:var(--dsw-font-mono);text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.SigSeG_diagMeta{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_diagError{color:var(--dsw-alias-label-error);font-size:11px}.SigSeG_diagEmpty{color:var(--dsw-alias-label-caption);font-size:12px}.SigSeG_quick{flex-direction:column;gap:12px;display:flex}.SigSeG_quickSection{flex-direction:column;gap:6px;display:flex}.SigSeG_quickLabel{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_seg{flex-wrap:wrap;gap:4px;display:flex}.SigSeG_segBtn{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font-size:11px;font-family:var(--dsw-font-family);cursor:pointer;background:0 0;border-radius:999px;padding:3px 10px}.SigSeG_segBtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_segBtnActive{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.SigSeG_quickFoot{justify-content:space-between;align-items:center;gap:8px;display:flex}.SigSeG_quickNote{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_quickError{color:var(--dsw-alias-label-error);font-size:11px}.SigSeG_statusRoot{box-sizing:border-box;flex-direction:column;gap:10px;padding:12px;display:flex}.SigSeG_statusGrid{grid-template-columns:1fr 1fr;gap:8px;display:grid}.SigSeG_statusCell{background:var(--dsw-alias-bg-layer-2);border-radius:8px;flex-direction:column;gap:2px;padding:8px 10px;display:flex}.SigSeG_statusValue{font-family:var(--dsw-font-mono);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);font-size:16px;line-height:20px}.SigSeG_statusKey{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_statusHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}";
+var css = ".SigSeG_tray{flex:none;align-items:center;gap:2px;display:flex}.SigSeG_trayAnchor{display:inline-flex}.SigSeG_trayBtn{width:28px;height:28px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:8px;justify-content:center;align-items:center;padding:0;display:inline-flex;position:relative}.SigSeG_trayBtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_trayBtn:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:2px}.SigSeG_trayBtnActive{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.SigSeG_trayBtnDragging{opacity:.55}.SigSeG_trayGlyph{justify-content:center;align-items:center;width:18px;height:18px;display:inline-flex}.SigSeG_trayGlyph>svg{width:18px;height:18px}.SigSeG_trayBadge{background:var(--dsw-alias-state-business-primary);border-radius:999px;width:6px;height:6px;position:absolute;top:2px;right:2px}.SigSeG_trayBadge[data-tone=ok]{background:var(--dsw-alias-state-success-primary)}.SigSeG_trayBadge[data-tone=warn]{background:var(--dsw-alias-state-warn-primary)}.SigSeG_trayBadge[data-tone=bad]{background:var(--dsw-alias-state-error-primary)}.SigSeG_trayBadgeText{background:var(--dsw-alias-state-business-primary);min-width:14px;height:14px;color:var(--dsw-alias-label-primary-foreground);text-align:center;font-size:9px;line-height:14px;font-family:var(--dsw-font-family);border-radius:999px;padding:0 3px;position:absolute;top:-2px;right:-4px}.SigSeG_trayBadgeText[data-tone=ok]{background:var(--dsw-alias-state-success-primary)}.SigSeG_trayBadgeText[data-tone=warn]{background:var(--dsw-alias-state-warn-primary)}.SigSeG_trayBadgeText[data-tone=bad]{background:var(--dsw-alias-state-error-primary)}.SigSeG_layer{z-index:1;isolation:isolate;pointer-events:none;position:fixed;inset:0}.SigSeG_card{pointer-events:auto;box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);border-radius:12px;flex-direction:column;display:flex;position:fixed;overflow:hidden}.SigSeG_cardDragging{user-select:none}.SigSeG_cardMinimized{box-shadow:var(--dsw-shadow-lv1)}.SigSeG_cardLocked .SigSeG_cardHeader{cursor:default;border-bottom-color:var(--dsw-alias-border-l2)}.SigSeG_cardActionActive{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_cardHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);cursor:grab;touch-action:none;flex:none;align-items:center;gap:6px;height:36px;padding:0 6px 0 10px;display:flex}.SigSeG_cardMinimized .SigSeG_cardHeader{border-bottom:none}.SigSeG_cardDragging .SigSeG_cardHeader{cursor:grabbing}.SigSeG_cardHeader:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:-2px}.SigSeG_cardTitle{text-overflow:ellipsis;white-space:nowrap;min-width:0;color:var(--dsw-alias-label-primary);flex:1;font-size:13px;font-weight:500;overflow:hidden}.SigSeG_cardSubtitle{text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-caption);flex:none;font-size:11px;overflow:hidden}.SigSeG_cardActions{flex:none;align-items:center;gap:2px;display:flex}.SigSeG_cardAction{width:24px;height:24px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:6px;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:1;display:inline-flex}.SigSeG_cardAction:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_cardActionDanger:hover{background:var(--dsw-alias-interactive-bg-hover-danger);color:var(--dsw-alias-label-error)}.SigSeG_cardBody{box-sizing:border-box;flex:auto;min-height:0;padding:10px;position:relative}.SigSeG_cardBodyHidden{display:none}.SigSeG_contentHost{box-sizing:border-box;width:100%;height:100%;overflow:auto;container-type:size}.SigSeG_resizeHandle{z-index:2;touch-action:none;position:absolute}.SigSeG_resizeHandle[data-dir=n]{cursor:ns-resize;height:6px;top:0;left:8px;right:8px}.SigSeG_resizeHandle[data-dir=s]{cursor:ns-resize;height:6px;bottom:0;left:8px;right:8px}.SigSeG_resizeHandle[data-dir=e]{cursor:ew-resize;width:6px;top:8px;bottom:8px;right:0}.SigSeG_resizeHandle[data-dir=w]{cursor:ew-resize;width:6px;top:8px;bottom:8px;left:0}.SigSeG_resizeHandle[data-dir=ne]{cursor:nesw-resize;width:12px;height:12px;top:0;right:0}.SigSeG_resizeHandle[data-dir=nw]{cursor:nwse-resize;width:12px;height:12px;top:0;left:0}.SigSeG_resizeHandle[data-dir=se]{cursor:nwse-resize;width:12px;height:12px;bottom:0;right:0}.SigSeG_resizeHandle[data-dir=sw]{cursor:nesw-resize;width:12px;height:12px;bottom:0;left:0}.SigSeG_popover{pointer-events:auto;box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-overlay);width:min(420px,100vw - 24px);max-height:min(60vh,520px);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);border-radius:12px;flex-direction:column;display:flex;position:fixed;overflow:hidden}.SigSeG_popoverHeader{border-bottom:.5px solid var(--dsw-alias-border-l1);flex:none;align-items:center;gap:6px;height:34px;padding:0 6px 0 12px;display:flex}.SigSeG_popoverTitle{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-size:13px;font-weight:500;overflow:hidden}.SigSeG_popoverPinned{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-caption);border-radius:999px;flex:none;padding:1px 6px;font-size:10px;line-height:16px}.SigSeG_popoverBody{box-sizing:border-box;flex:auto;min-height:0;padding:12px;overflow:auto;container-type:inline-size}.SigSeG_section{flex-direction:column;gap:14px;display:flex}.SigSeG_sectionTitle{color:var(--dsw-alias-label-primary);margin:0;font-size:15px;font-weight:600}.SigSeG_sectionHint{color:var(--dsw-alias-label-caption);margin:0;font-size:12px;line-height:18px}.SigSeG_group{border:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:2px;padding:4px 12px;display:flex}.SigSeG_row{align-items:center;gap:12px;padding:10px 0;display:flex}.SigSeG_row+.SigSeG_row{border-top:.5px solid var(--dsw-alias-border-l1)}.SigSeG_rowLabel{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_rowTitle{color:var(--dsw-alias-label-primary);font-size:13px}.SigSeG_rowHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}.SigSeG_rowControl{flex:none;align-items:center;gap:8px;display:flex}.SigSeG_notice{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);border-radius:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px}.SigSeG_noticeBad{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-error)}.SigSeG_noticeOk{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-state-success-primary)}.SigSeG_list{border:.5px solid var(--dsw-alias-border-l1);border-radius:10px;flex-direction:column;gap:0;display:flex;overflow:hidden}.SigSeG_listRow{background:var(--dsw-alias-bg-layer-1);align-items:center;gap:10px;padding:8px 12px;display:flex}.SigSeG_listRow+.SigSeG_listRow{border-top:.5px solid var(--dsw-alias-border-l1)}.SigSeG_listRowOff{opacity:.6}.SigSeG_listRowOff .SigSeG_listActions{opacity:1}.SigSeG_listMain{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_listId{font-family:var(--dsw-font-mono);color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.SigSeG_listMeta{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_listActions{flex:none;align-items:center;gap:6px;display:flex}.SigSeG_empty{color:var(--dsw-alias-label-caption);background:var(--dsw-alias-bg-layer-1);padding:14px 12px;font-size:12px}.SigSeG_footer{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.SigSeG_clock{text-align:center;flex-direction:column;justify-content:center;align-items:center;gap:6px;height:100%;display:flex}.SigSeG_clockTime{font-family:var(--dsw-font-mono);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);line-height:1.1}.SigSeG_clockTime[data-size=compact]{font-size:22px}.SigSeG_clockTime[data-size=regular]{font-size:32px}.SigSeG_clockTime[data-size=wide]{font-size:44px}.SigSeG_clockMeta{color:var(--dsw-alias-label-caption);font-size:12px}.SigSeG_clockRow{flex-wrap:wrap;justify-content:center;align-items:baseline;gap:10px;display:flex}.SigSeG_clockLabel{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_diag{flex-direction:column;gap:8px;height:100%;display:flex}.SigSeG_diagSummary{color:var(--dsw-alias-label-secondary);font-size:12px}.SigSeG_diagList{flex-direction:column;gap:6px;display:flex}.SigSeG_diagRow{background:var(--dsw-alias-bg-layer-2);border-radius:8px;align-items:center;gap:8px;padding:6px 8px;display:flex}.SigSeG_diagMain{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_diagActions{flex:none;align-items:center;gap:4px;display:flex}.SigSeG_diagRow[data-disabled=true]{opacity:.6}.SigSeG_diagId{font-family:var(--dsw-font-mono);text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.SigSeG_diagMeta{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_diagError{color:var(--dsw-alias-label-error);font-size:11px}.SigSeG_diagEmpty{color:var(--dsw-alias-label-caption);font-size:12px}.SigSeG_quick{flex-direction:column;gap:12px;display:flex}.SigSeG_quickSection{flex-direction:column;gap:6px;display:flex}.SigSeG_quickLabel{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_seg{flex-wrap:wrap;gap:4px;display:flex}.SigSeG_segBtn{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font-size:11px;font-family:var(--dsw-font-family);cursor:pointer;background:0 0;border-radius:999px;padding:3px 10px}.SigSeG_segBtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_segBtnActive{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.SigSeG_quickFoot{justify-content:space-between;align-items:center;gap:8px;display:flex}.SigSeG_quickNote{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_quickError{color:var(--dsw-alias-label-error);font-size:11px}.SigSeG_statusRoot{box-sizing:border-box;flex-direction:column;gap:10px;padding:12px;display:flex}.SigSeG_statusGrid{grid-template-columns:1fr 1fr;gap:8px;display:grid}.SigSeG_statusCell{background:var(--dsw-alias-bg-layer-2);border-radius:8px;flex-direction:column;gap:2px;padding:8px 10px;display:flex}.SigSeG_statusValue{font-family:var(--dsw-font-mono);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);font-size:16px;line-height:20px}.SigSeG_statusKey{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_statusHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}";
 var tagId = "@dshp/widget-kit/src/client/styles.module.css";
 if (typeof document !== "undefined" && document.querySelector(`style[data-plugin-css="${tagId}"]`) === null) {
   const tag = document.createElement("style");
@@ -448,7 +452,7 @@ if (typeof document !== "undefined" && document.querySelector(`style[data-plugin
   tag.textContent = css;
   document.head.appendChild(tag);
 }
-var styles_module_css_default = { "card": "SigSeG_card", "cardAction": "SigSeG_cardAction", "cardActionDanger": "SigSeG_cardActionDanger", "cardActions": "SigSeG_cardActions", "cardBody": "SigSeG_cardBody", "cardDragging": "SigSeG_cardDragging", "cardHeader": "SigSeG_cardHeader", "cardMinimized": "SigSeG_cardMinimized", "cardSubtitle": "SigSeG_cardSubtitle", "cardTitle": "SigSeG_cardTitle", "clock": "SigSeG_clock", "clockLabel": "SigSeG_clockLabel", "clockMeta": "SigSeG_clockMeta", "clockRow": "SigSeG_clockRow", "clockTime": "SigSeG_clockTime", "contentHost": "SigSeG_contentHost", "diag": "SigSeG_diag", "diagEmpty": "SigSeG_diagEmpty", "diagError": "SigSeG_diagError", "diagId": "SigSeG_diagId", "diagList": "SigSeG_diagList", "diagMain": "SigSeG_diagMain", "diagMeta": "SigSeG_diagMeta", "diagRow": "SigSeG_diagRow", "diagSummary": "SigSeG_diagSummary", "empty": "SigSeG_empty", "footer": "SigSeG_footer", "group": "SigSeG_group", "layer": "SigSeG_layer", "list": "SigSeG_list", "listActions": "SigSeG_listActions", "listId": "SigSeG_listId", "listMain": "SigSeG_listMain", "listMeta": "SigSeG_listMeta", "listRow": "SigSeG_listRow", "notice": "SigSeG_notice", "noticeBad": "SigSeG_noticeBad", "noticeOk": "SigSeG_noticeOk", "popover": "SigSeG_popover", "popoverBody": "SigSeG_popoverBody", "popoverHeader": "SigSeG_popoverHeader", "popoverTitle": "SigSeG_popoverTitle", "quick": "SigSeG_quick", "quickError": "SigSeG_quickError", "quickFoot": "SigSeG_quickFoot", "quickLabel": "SigSeG_quickLabel", "quickNote": "SigSeG_quickNote", "quickSection": "SigSeG_quickSection", "resizeHandle": "SigSeG_resizeHandle", "row": "SigSeG_row", "rowControl": "SigSeG_rowControl", "rowHint": "SigSeG_rowHint", "rowLabel": "SigSeG_rowLabel", "rowTitle": "SigSeG_rowTitle", "section": "SigSeG_section", "sectionHint": "SigSeG_sectionHint", "sectionTitle": "SigSeG_sectionTitle", "seg": "SigSeG_seg", "segBtn": "SigSeG_segBtn", "segBtnActive": "SigSeG_segBtnActive", "statusCell": "SigSeG_statusCell", "statusGrid": "SigSeG_statusGrid", "statusHint": "SigSeG_statusHint", "statusKey": "SigSeG_statusKey", "statusRoot": "SigSeG_statusRoot", "statusValue": "SigSeG_statusValue", "tray": "SigSeG_tray", "trayAnchor": "SigSeG_trayAnchor", "trayBadge": "SigSeG_trayBadge", "trayBadgeText": "SigSeG_trayBadgeText", "trayBtn": "SigSeG_trayBtn", "trayBtnActive": "SigSeG_trayBtnActive", "trayBtnDragging": "SigSeG_trayBtnDragging", "trayGlyph": "SigSeG_trayGlyph" };
+var styles_module_css_default = { "card": "SigSeG_card", "cardAction": "SigSeG_cardAction", "cardActionActive": "SigSeG_cardActionActive", "cardActionDanger": "SigSeG_cardActionDanger", "cardActions": "SigSeG_cardActions", "cardBody": "SigSeG_cardBody", "cardBodyHidden": "SigSeG_cardBodyHidden", "cardDragging": "SigSeG_cardDragging", "cardHeader": "SigSeG_cardHeader", "cardLocked": "SigSeG_cardLocked", "cardMinimized": "SigSeG_cardMinimized", "cardSubtitle": "SigSeG_cardSubtitle", "cardTitle": "SigSeG_cardTitle", "clock": "SigSeG_clock", "clockLabel": "SigSeG_clockLabel", "clockMeta": "SigSeG_clockMeta", "clockRow": "SigSeG_clockRow", "clockTime": "SigSeG_clockTime", "contentHost": "SigSeG_contentHost", "diag": "SigSeG_diag", "diagActions": "SigSeG_diagActions", "diagEmpty": "SigSeG_diagEmpty", "diagError": "SigSeG_diagError", "diagId": "SigSeG_diagId", "diagList": "SigSeG_diagList", "diagMain": "SigSeG_diagMain", "diagMeta": "SigSeG_diagMeta", "diagRow": "SigSeG_diagRow", "diagSummary": "SigSeG_diagSummary", "empty": "SigSeG_empty", "footer": "SigSeG_footer", "group": "SigSeG_group", "layer": "SigSeG_layer", "list": "SigSeG_list", "listActions": "SigSeG_listActions", "listId": "SigSeG_listId", "listMain": "SigSeG_listMain", "listMeta": "SigSeG_listMeta", "listRow": "SigSeG_listRow", "listRowOff": "SigSeG_listRowOff", "notice": "SigSeG_notice", "noticeBad": "SigSeG_noticeBad", "noticeOk": "SigSeG_noticeOk", "popover": "SigSeG_popover", "popoverBody": "SigSeG_popoverBody", "popoverHeader": "SigSeG_popoverHeader", "popoverPinned": "SigSeG_popoverPinned", "popoverTitle": "SigSeG_popoverTitle", "quick": "SigSeG_quick", "quickError": "SigSeG_quickError", "quickFoot": "SigSeG_quickFoot", "quickLabel": "SigSeG_quickLabel", "quickNote": "SigSeG_quickNote", "quickSection": "SigSeG_quickSection", "resizeHandle": "SigSeG_resizeHandle", "row": "SigSeG_row", "rowControl": "SigSeG_rowControl", "rowHint": "SigSeG_rowHint", "rowLabel": "SigSeG_rowLabel", "rowTitle": "SigSeG_rowTitle", "section": "SigSeG_section", "sectionHint": "SigSeG_sectionHint", "sectionTitle": "SigSeG_sectionTitle", "seg": "SigSeG_seg", "segBtn": "SigSeG_segBtn", "segBtnActive": "SigSeG_segBtnActive", "statusCell": "SigSeG_statusCell", "statusGrid": "SigSeG_statusGrid", "statusHint": "SigSeG_statusHint", "statusKey": "SigSeG_statusKey", "statusRoot": "SigSeG_statusRoot", "statusValue": "SigSeG_statusValue", "tray": "SigSeG_tray", "trayAnchor": "SigSeG_trayAnchor", "trayBadge": "SigSeG_trayBadge", "trayBadgeText": "SigSeG_trayBadgeText", "trayBtn": "SigSeG_trayBtn", "trayBtnActive": "SigSeG_trayBtnActive", "trayBtnDragging": "SigSeG_trayBtnDragging", "trayGlyph": "SigSeG_trayGlyph" };
 
 // src/client/ErrorBoundary.tsx
 var import_jsx_runtime = require("react/jsx-runtime");
@@ -612,6 +616,11 @@ function useLiveGeometry(runtime) {
   const getSnapshot = (0, import_react2.useCallback)(() => runtime.getLive(), [runtime]);
   return (0, import_react2.useSyncExternalStore)(subscribe, getSnapshot, getSnapshot);
 }
+function useAnchor(runtime, id) {
+  const subscribe = (0, import_react2.useCallback)((listener) => runtime.subscribe(listener), [runtime]);
+  const getSnapshot = (0, import_react2.useCallback)(() => runtime.getAnchor(id), [runtime, id]);
+  return (0, import_react2.useSyncExternalStore)(subscribe, getSnapshot, getSnapshot);
+}
 var IDLE = {
   status: "ready",
   data: void 0,
@@ -726,6 +735,7 @@ function useCardDrag(runtime, widget, mode) {
   const onPointerDown = (0, import_react2.useCallback)(
     (event) => {
       if (event.button !== 0 || capture.current !== null) return;
+      if (runtime.isLocked(widget.id)) return;
       event.preventDefault();
       event.stopPropagation();
       const element = event.currentTarget;
@@ -817,8 +827,56 @@ function ResizeHandles({
   return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_jsx_runtime2.Fragment, { children: RESIZE_DIRS.map((dir) => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(ResizeHandle, { runtime, widget, dir }, dir)) });
 }
 
-// src/client/Card.tsx
+// src/client/glyphs.tsx
 var import_jsx_runtime3 = require("react/jsx-runtime");
+function Glyph({ children, size = 18 }) {
+  return /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+    "svg",
+    {
+      viewBox: "0 0 18 18",
+      width: size,
+      height: size,
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "1.4",
+      "aria-hidden": "true",
+      children
+    }
+  );
+}
+function LockGlyph({ locked }) {
+  return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(Glyph, { size: 13, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("rect", { x: "3.4", y: "8", width: "11.2", height: "7.6", rx: "1.8" }),
+    locked ? /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("path", { d: "M6.4 8V6.2a2.6 2.6 0 0 1 5.2 0V8", strokeLinecap: "round" }) : /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("path", { d: "M6.4 8V6.2a2.6 2.6 0 0 1 5.2 0", strokeLinecap: "round" }),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("circle", { cx: "9", cy: "11.6", r: "0.9" })
+  ] });
+}
+function ClockGlyph() {
+  return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(Glyph, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("circle", { cx: "9", cy: "9", r: "6.5" }),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("path", { d: "M9 5.4V9l2.6 1.6", strokeLinecap: "round" })
+  ] });
+}
+function RegistryGlyph() {
+  return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(Glyph, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("rect", { x: "2.6", y: "3.4", width: "12.8", height: "11.2", rx: "2.2" }),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("path", { d: "M5.6 7h6.8M5.6 9.6h6.8M5.6 12.2h4", strokeLinecap: "round" })
+  ] });
+}
+function SlidersGlyph() {
+  return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(Glyph, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("path", { d: "M3 5.5h12M3 9h12M3 12.5h12", strokeLinecap: "round" }),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("circle", { cx: "7", cy: "5.5", r: "1.6" }),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("circle", { cx: "11.5", cy: "9", r: "1.6" }),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("circle", { cx: "6", cy: "12.5", r: "1.6" })
+  ] });
+}
+function PulseGlyph() {
+  return /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Glyph, { children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("path", { d: "M2 9.5h3.2l1.6-4 2.4 7.4 1.8-4.4 1.2 2.4H16", strokeLinecap: "round", strokeLinejoin: "round" }) });
+}
+
+// src/client/Card.tsx
+var import_jsx_runtime4 = require("react/jsx-runtime");
 var SIZE_PRESET_FACTOR = { compact: 0.75, regular: 1, wide: 1.35 };
 function resolveText(value, fallback) {
   if (value === null || value === void 0) return fallback;
@@ -838,7 +896,8 @@ function Card({
   const card = snapshot.layout.cards[widget.id];
   const open = card?.open === true;
   const minimized = card?.minimized === true;
-  const data = useWidgetData(runtime, widget, open && !minimized);
+  const locked = card?.locked === true;
+  const data = useWidgetData(runtime, widget, open);
   const setSize = (0, import_react3.useCallback)(
     (next) => {
       if (renderDepth.current > 0) {
@@ -859,30 +918,41 @@ function Card({
   );
   const menuItems = (0, import_react3.useMemo)(() => {
     const size = widget.card?.defaultSize ?? SPEC_DEFAULTS.cardDefaultSize;
-    return [
+    const entries = [
       { id: "minimize", label: minimized ? "\u8FD8\u539F\u5361\u7247" : "\u6700\u5C0F\u5316" },
-      { id: "reset", label: "\u6062\u590D\u9ED8\u8BA4\u5C3A\u5BF8" },
-      { id: "center", label: "\u5C45\u4E2D" },
-      { type: "label", id: "size-label", text: "\u5C3A\u5BF8" },
-      {
-        id: "size:compact",
-        label: `\u7D27\u51D1 ${String(Math.round(size.w * SIZE_PRESET_FACTOR.compact))}\xD7${String(Math.round(size.h * SIZE_PRESET_FACTOR.compact))}`
-      },
-      { id: "size:regular", label: `\u5E38\u89C4 ${String(size.w)}\xD7${String(size.h)}` },
-      {
-        id: "size:wide",
-        label: `\u5BBD ${String(Math.round(size.w * SIZE_PRESET_FACTOR.wide))}\xD7${String(Math.round(size.h * SIZE_PRESET_FACTOR.wide))}`
-      },
-      { type: "separator", id: "sep-1" },
-      { id: "close", label: "\u5173\u95ED\u5361\u7247", danger: true }
+      { id: "lock", label: locked ? "\u89E3\u9501\u4F4D\u7F6E" : "\u9501\u5B9A\u4F4D\u7F6E\uFF08\u4E0D\u53EF\u79FB\u52A8\u4E0E\u7F29\u653E\uFF09" }
     ];
-  }, [minimized, widget.card]);
+    if (locked) {
+      entries.push({ type: "label", id: "locked-label", text: "\u4F4D\u7F6E\u5DF2\u9501\u5B9A" });
+    } else {
+      entries.push(
+        { id: "reset", label: "\u6062\u590D\u9ED8\u8BA4\u5C3A\u5BF8" },
+        { id: "center", label: "\u5C45\u4E2D" },
+        { type: "label", id: "size-label", text: "\u5C3A\u5BF8" },
+        {
+          id: "size:compact",
+          label: `\u7D27\u51D1 ${String(Math.round(size.w * SIZE_PRESET_FACTOR.compact))}\xD7${String(Math.round(size.h * SIZE_PRESET_FACTOR.compact))}`
+        },
+        { id: "size:regular", label: `\u5E38\u89C4 ${String(size.w)}\xD7${String(size.h)}` },
+        {
+          id: "size:wide",
+          label: `\u5BBD ${String(Math.round(size.w * SIZE_PRESET_FACTOR.wide))}\xD7${String(Math.round(size.h * SIZE_PRESET_FACTOR.wide))}`
+        }
+      );
+    }
+    entries.push({ type: "separator", id: "sep-1" }, { id: "close", label: "\u5173\u95ED\u5361\u7247", danger: true });
+    return entries;
+  }, [locked, minimized, widget.card]);
   const onMenuSelect = (0, import_react3.useCallback)(
     (id) => {
       setMenuOpen(false);
       const size = widget.card?.defaultSize ?? SPEC_DEFAULTS.cardDefaultSize;
       if (id === "minimize") {
         runtime.toggleMinimize(widget.id);
+        return;
+      }
+      if (id === "lock") {
+        runtime.setLocked(widget.id, !locked);
         return;
       }
       if (id === "reset") {
@@ -904,10 +974,11 @@ function Card({
         runtime.resizeTo(widget.id, { w: Math.round(size.w * factor), h: Math.round(size.h * factor) });
       }
     },
-    [runtime, widget.card, widget.id]
+    [locked, runtime, widget.card, widget.id]
   );
   const onHeaderKeyDown = (0, import_react3.useCallback)(
     (event) => {
+      if (locked) return;
       const step = event.shiftKey ? 32 : 8;
       const resizeStep = 16;
       const key = event.key;
@@ -924,10 +995,13 @@ function Card({
           key === "ArrowUp" ? -resizeStep : key === "ArrowDown" ? resizeStep : 0
         );
     },
-    [runtime, widget.id]
+    [locked, runtime, widget.id]
   );
   if (card === void 0 || !card.open) return null;
-  const rect = live !== null && live.id === widget.id ? live.rect : card;
+  const stored = live !== null && live.id === widget.id ? live.rect : card;
+  const rect = minimized ? { ...stored, h: SPEC_DEFAULTS.titleBarHeight } : stored;
+  const contentSize = runtime.contentSize(stored);
+  const sizeClass = runtime.sizeClassOf(widget, stored);
   const content = widget.content;
   const contentProps = {
     frame: "card",
@@ -937,10 +1011,11 @@ function Card({
     ...data.error === void 0 ? {} : { error: data.error },
     stale: data.stale,
     lastUpdatedAt: data.lastUpdatedAt,
-    size: runtime.contentSize(rect),
-    sizeClass: runtime.sizeClassOf(widget, rect),
+    size: contentSize,
+    sizeClass,
     setSize,
     minimized,
+    locked,
     refresh: data.refresh,
     retry: data.retry,
     close: () => {
@@ -957,31 +1032,33 @@ function Card({
   } finally {
     renderDepth.current -= 1;
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
     "div",
     {
-      className: styles_module_css_default.card + (drag.dragging ? " " + styles_module_css_default.cardDragging : "") + (minimized ? " " + styles_module_css_default.cardMinimized : ""),
+      className: styles_module_css_default.card + (drag.dragging ? " " + styles_module_css_default.cardDragging : "") + (minimized ? " " + styles_module_css_default.cardMinimized : "") + (locked ? " " + styles_module_css_default.cardLocked : ""),
       style: { left: rect.x, top: rect.y, width: rect.w, height: rect.h, zIndex },
       role: "dialog",
       "aria-label": title,
       "data-widget": widget.id,
-      "data-size-class": contentProps.sizeClass,
+      "data-size-class": sizeClass,
+      "data-minimized": minimized ? "true" : "false",
+      "data-locked": locked ? "true" : "false",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
           "div",
           {
             className: styles_module_css_default.cardHeader,
             tabIndex: 0,
-            "aria-label": `\u62D6\u52A8\u6807\u9898\u680F\u79FB\u52A8\u5361\u7247\uFF1B\u65B9\u5411\u952E\u79FB\u52A8\uFF0CAlt+\u65B9\u5411\u952E\u7F29\u653E\uFF1B\u53CC\u51FB\u6700\u5C0F\u5316`,
+            "aria-label": locked ? "\u4F4D\u7F6E\u5DF2\u9501\u5B9A\uFF1B\u53CC\u51FB\u6700\u5C0F\u5316\uFF08\u5728 \u22EF \u83DC\u5355\u91CC\u89E3\u9501\uFF09" : "\u62D6\u52A8\u6807\u9898\u680F\u79FB\u52A8\u5361\u7247\uFF1B\u65B9\u5411\u952E\u79FB\u52A8\uFF0CAlt+\u65B9\u5411\u952E\u7F29\u653E\uFF1B\u53CC\u51FB\u6700\u5C0F\u5316",
             onKeyDown: onHeaderKeyDown,
             onDoubleClick: () => {
               runtime.toggleMinimize(widget.id);
             },
-            ...drag.handlers,
+            ...locked ? {} : drag.handlers,
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: styles_module_css_default.cardTitle, children: title }),
-              subtitle !== "" && !minimized && /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: styles_module_css_default.cardSubtitle, children: subtitle }),
-              /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: styles_module_css_default.cardTitle, children: title }),
+              subtitle !== "" && !minimized && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: styles_module_css_default.cardSubtitle, children: subtitle }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
                 "span",
                 {
                   className: styles_module_css_default.cardActions,
@@ -989,7 +1066,20 @@ function Card({
                     event.stopPropagation();
                   },
                   children: [
-                    widget.card?.minimizable !== false && /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+                    widget.card?.resizable !== false && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                      "button",
+                      {
+                        type: "button",
+                        className: styles_module_css_default.cardAction + (locked ? " " + styles_module_css_default.cardActionActive : ""),
+                        "aria-label": locked ? `\u89E3\u9501\u300C${title}\u300D\u7684\u4F4D\u7F6E` : `\u9501\u5B9A\u300C${title}\u300D\u7684\u4F4D\u7F6E`,
+                        "aria-pressed": locked,
+                        onClick: () => {
+                          runtime.setLocked(widget.id, !locked);
+                        },
+                        children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(LockGlyph, { locked })
+                      }
+                    ),
+                    widget.card?.minimizable !== false && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
                       "button",
                       {
                         type: "button",
@@ -1001,7 +1091,7 @@ function Card({
                         children: minimized ? "\u25A2" : "\u2014"
                       }
                     ),
-                    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+                    /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
                       import_dsh_client_ui_primitives2.Menu,
                       {
                         open: menuOpen,
@@ -1014,7 +1104,7 @@ function Card({
                         onClose: () => {
                           setMenuOpen(false);
                         },
-                        anchor: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+                        anchor: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
                           "button",
                           {
                             type: "button",
@@ -1030,7 +1120,7 @@ function Card({
                         )
                       }
                     ),
-                    widget.card?.closable !== false && /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
+                    widget.card?.closable !== false && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
                       "button",
                       {
                         type: "button",
@@ -1048,10 +1138,17 @@ function Card({
             ]
           }
         ),
-        !minimized && /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: styles_module_css_default.cardBody, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("div", { className: styles_module_css_default.contentHost, children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(WidgetErrorBoundary, { label: title, onError, onRetry: data.retry, children: body }) }),
-          widget.card?.resizable !== false && /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(ResizeHandles, { runtime, widget })
-        ] })
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
+          "div",
+          {
+            className: styles_module_css_default.cardBody + (minimized ? " " + styles_module_css_default.cardBodyHidden : ""),
+            "aria-hidden": minimized,
+            children: [
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: styles_module_css_default.contentHost, children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(WidgetErrorBoundary, { label: title, onError, onRetry: data.retry, children: body }) }),
+              widget.card?.resizable !== false && !locked && !minimized && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(ResizeHandles, { runtime, widget })
+            ]
+          }
+        )
       ]
     }
   );
@@ -1060,7 +1157,7 @@ function Card({
 // src/client/Popover.tsx
 var import_dsh_client_ui_primitives3 = require("@deepseek-ai/dsh-client-ui-primitives");
 var import_react4 = require("react");
-var import_jsx_runtime4 = require("react/jsx-runtime");
+var import_jsx_runtime5 = require("react/jsx-runtime");
 function resolveText2(value, fallback) {
   if (value === null || value === void 0) return fallback;
   return typeof value === "function" ? value() : value;
@@ -1072,7 +1169,8 @@ function Popover({
   onError
 }) {
   const panelRef = (0, import_react4.useRef)(null);
-  const anchorRef = (0, import_react4.useMemo)(() => ({ current: runtime.getAnchor(widget.id) }), [runtime, widget.id]);
+  const anchor = useAnchor(runtime, widget.id);
+  const anchorRef = (0, import_react4.useMemo)(() => ({ current: anchor }), [anchor]);
   const options = widget.popover ?? {
     trigger: "click",
     width: null,
@@ -1081,7 +1179,8 @@ function Popover({
     side: "bottom",
     header: true,
     hoverOpenDelayMs: SPEC_DEFAULTS.hoverOpenDelayMs,
-    hoverCloseDelayMs: SPEC_DEFAULTS.hoverCloseDelayMs
+    hoverCloseDelayMs: SPEC_DEFAULTS.hoverCloseDelayMs,
+    persistent: SPEC_DEFAULTS.popoverPersistent
   };
   const anchored = (0, import_dsh_client_ui_primitives3.useAnchoredPosition)({
     open: true,
@@ -1102,6 +1201,7 @@ function Popover({
   (0, import_react4.useEffect)(() => {
     if (typeof document === "undefined") return void 0;
     const onPointerDown = (event) => {
+      if (options.persistent) return;
       const target = event.target;
       if (panelRef.current !== null && panelRef.current.contains(target)) return;
       if (anchorRef.current !== null && anchorRef.current.contains(target)) return;
@@ -1119,7 +1219,7 @@ function Popover({
       document.removeEventListener("pointerdown", onPointerDown, true);
       document.removeEventListener("keydown", onKeyDown, true);
     };
-  }, [anchorRef, close]);
+  }, [anchorRef, close, options.persistent]);
   const title = resolveText2(widget.content?.title ?? widget.title, widget.id);
   const content = widget.content;
   const contentProps = {
@@ -1133,6 +1233,7 @@ function Popover({
     size: null,
     sizeClass: "regular",
     minimized: false,
+    locked: false,
     refresh: data.refresh,
     retry: data.retry,
     close
@@ -1147,7 +1248,7 @@ function Popover({
     ...options.width === null ? {} : { width: options.width },
     ...options.maxHeight === null ? {} : { maxHeight: options.maxHeight }
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(
     "div",
     {
       ref: panelRef,
@@ -1158,6 +1259,7 @@ function Popover({
       tabIndex: -1,
       "data-widget": widget.id,
       "data-trigger": options.trigger,
+      "data-persistent": options.persistent ? "true" : "false",
       onPointerEnter: () => {
         runtime.hoverEnter(widget.id);
       },
@@ -1165,32 +1267,34 @@ function Popover({
         runtime.hoverLeave(widget.id);
       },
       children: [
-        options.header && /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: styles_module_css_default.popoverHeader, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: styles_module_css_default.popoverTitle, children: title }),
-          /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("button", { type: "button", className: styles_module_css_default.cardAction, "aria-label": `\u5173\u95ED\u300C${title}\u300D`, onClick: close, children: "\u2715" })
+        options.header && /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: styles_module_css_default.popoverHeader, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: styles_module_css_default.popoverTitle, children: title }),
+          options.persistent && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("span", { className: styles_module_css_default.popoverPinned, title: "\u5E38\u9A7B\u9762\u677F\uFF1A\u70B9\u5916\u90E8\u4E0D\u4F1A\u5173\u95ED", children: "\u5E38\u9A7B" }),
+          /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("button", { type: "button", className: styles_module_css_default.cardAction, "aria-label": `\u5173\u95ED\u300C${title}\u300D`, onClick: close, children: "\u2715" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: styles_module_css_default.popoverBody, style: { padding: options.padding }, children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(WidgetErrorBoundary, { label: title, onError, onRetry: data.retry, children: body }) })
+        /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: styles_module_css_default.popoverBody, style: { padding: options.padding }, children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(WidgetErrorBoundary, { label: title, onError, onRetry: data.retry, children: body }) })
       ]
     }
   );
 }
 
 // src/client/CardLayer.tsx
-var import_jsx_runtime5 = require("react/jsx-runtime");
+var import_jsx_runtime6 = require("react/jsx-runtime");
 function CardLayer({
   runtime,
   onError
 }) {
   const snapshot = useFramework(runtime);
   const byId = new Map(snapshot.widgets.map((widget) => [widget.id, widget]));
+  const disabled = new Set(snapshot.layout.disabled);
   const cards = snapshot.zOrder.map((id) => byId.get(id)).filter(
-    (widget) => widget !== void 0 && widget.presentation === "card"
+    (widget) => widget !== void 0 && widget.presentation === "card" && !disabled.has(widget.id)
   );
   const popoverWidget = snapshot.openId === null ? void 0 : byId.get(snapshot.openId);
-  const popover = popoverWidget !== void 0 && popoverWidget.presentation === "popover" ? popoverWidget : void 0;
-  return /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: styles_module_css_default.layer, "data-plugin-widget-kit-layer": "", children: [
-    cards.map((widget) => /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(Card, { runtime, widget, onError }, widget.id)),
-    popover !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(Popover, { runtime, widget: popover, onError })
+  const popover = snapshot.ready && popoverWidget !== void 0 && popoverWidget.presentation === "popover" && !disabled.has(popoverWidget.id) ? popoverWidget : void 0;
+  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: styles_module_css_default.layer, "data-plugin-widget-kit-layer": "", children: [
+    cards.map((widget) => /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Card, { runtime, widget, onError }, widget.id)),
+    popover !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Popover, { runtime, widget: popover, onError })
   ] });
 }
 
@@ -1216,18 +1320,18 @@ var import_react6 = require("react");
 // src/client/components.tsx
 var import_dsh_client_ui_primitives4 = require("@deepseek-ai/dsh-client-ui-primitives");
 var import_react5 = require("react");
-var import_jsx_runtime6 = require("react/jsx-runtime");
+var import_jsx_runtime7 = require("react/jsx-runtime");
 function SettingRow({
   title,
   hint,
   children
 }) {
-  return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: styles_module_css_default.row, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: styles_module_css_default.rowLabel, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: styles_module_css_default.rowTitle, children: title }),
-      hint !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: styles_module_css_default.rowHint, children: hint })
+  return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: styles_module_css_default.row, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: styles_module_css_default.rowLabel, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: styles_module_css_default.rowTitle, children: title }),
+      hint !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: styles_module_css_default.rowHint, children: hint })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("div", { className: styles_module_css_default.rowControl, children })
+    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: styles_module_css_default.rowControl, children })
   ] });
 }
 function PrefSelect({
@@ -1240,7 +1344,7 @@ function PrefSelect({
   const [open, setOpen] = (0, import_react5.useState)(false);
   const current = options.find((option) => option.value === value);
   const items = options.map((option) => ({ id: String(option.value), label: option.label }));
-  return /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
     import_dsh_client_ui_primitives4.Menu,
     {
       open,
@@ -1257,7 +1361,7 @@ function PrefSelect({
         const next = options.find((option) => String(option.value) === id);
         if (next !== void 0) onChange(next.value);
       },
-      anchor: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+      anchor: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
         import_dsh_client_ui_primitives4.Button,
         {
           variant: "outline",
@@ -1278,11 +1382,11 @@ function Notice({
   children
 }) {
   const toneClass = tone === "bad" ? styles_module_css_default.noticeBad : tone === "ok" ? styles_module_css_default.noticeOk : "";
-  return /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("p", { className: styles_module_css_default.notice + (toneClass === "" ? "" : " " + toneClass), children });
+  return /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("p", { className: styles_module_css_default.notice + (toneClass === "" ? "" : " " + toneClass), children });
 }
 
 // src/client/SettingsSection.tsx
-var import_jsx_runtime7 = require("react/jsx-runtime");
+var import_jsx_runtime8 = require("react/jsx-runtime");
 var ICON_LIMIT_OPTIONS = [
   { value: 2, label: "2 \u4E2A" },
   { value: 3, label: "3 \u4E2A" },
@@ -1308,6 +1412,7 @@ function SettingsSection({
   const [error, setError] = (0, import_react6.useState)(null);
   const [notice, setNotice] = (0, import_react6.useState)(null);
   const prefs = snapshot.prefs;
+  const disabled = new Set(snapshot.layout.disabled);
   (0, import_react6.useEffect)(() => {
     let cancelled = false;
     void fetchState().then((state) => {
@@ -1340,21 +1445,21 @@ function SettingsSection({
     },
     [onPrefsApplied, runtime]
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: styles_module_css_default.section, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("h2", { className: styles_module_css_default.sectionTitle, children: "\u5C0F\u7EC4\u4EF6" }),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("p", { className: styles_module_css_default.sectionHint, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: styles_module_css_default.section, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("h2", { className: styles_module_css_default.sectionTitle, children: "\u5C0F\u7EC4\u4EF6" }),
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("p", { className: styles_module_css_default.sectionHint, children: [
         "\u672C\u63D2\u4EF6\u53EA\u662F**\u5C0F\u7EC4\u4EF6\u7684\u5BBF\u4E3B\u4E0E\u89C4\u8303**\uFF0C\u81EA\u8EAB\u4E0D\u542B\u4E1A\u52A1\u7EC4\u4EF6\uFF08\u4E0B\u9762\u4E24\u4E2A\u53C2\u8003\u7EC4\u4EF6\u53EF\u4EE5\u5173\u6389\uFF09\u3002 \u5176\u4ED6\u63D2\u4EF6\u6309",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("code", { children: "docs/widget-spec.md" }),
+        /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("code", { children: "docs/widget-spec.md" }),
         " \u6CE8\u518C\u7EC4\u4EF6\u540E\uFF0C\u4F1A\u81EA\u52A8\u51FA\u73B0\u5728\u4F1A\u8BDD\u9876\u90E8\u6258\u76D8\u91CC\u3002"
       ] })
     ] }),
-    error !== null && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Notice, { tone: "bad", children: error }),
-    notice !== null && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Notice, { tone: "ok", children: notice }),
-    !loaded && /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Notice, { children: "\u6B63\u5728\u8BFB\u53D6\u914D\u7F6E\u2026" }),
-    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: styles_module_css_default.group, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(SettingRow, { title: "\u4F1A\u8BDD\u9876\u90E8\u6258\u76D8", hint: "\u5173\u6389\u540E\u6240\u6709\u7EC4\u4EF6\u56FE\u6807\u90FD\u4F1A\u9690\u85CF\uFF08\u5361\u7247\u4E5F\u4F1A\u4E00\u5E76\u6536\u8D77\uFF09\u3002", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+    error !== null && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Notice, { tone: "bad", children: error }),
+    notice !== null && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Notice, { tone: "ok", children: notice }),
+    !loaded && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Notice, { children: "\u6B63\u5728\u8BFB\u53D6\u914D\u7F6E\u2026" }),
+    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: styles_module_css_default.group, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(SettingRow, { title: "\u4F1A\u8BDD\u9876\u90E8\u6258\u76D8", hint: "\u5173\u6389\u540E\u6240\u6709\u7EC4\u4EF6\u56FE\u6807\u90FD\u4F1A\u9690\u85CF\uFF08\u5361\u7247\u4E5F\u4F1A\u4E00\u5E76\u6536\u8D77\uFF09\u3002", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
         import_dsh_client_ui_primitives5.Switch,
         {
           checked: prefs.trayEnabled,
@@ -1365,7 +1470,7 @@ function SettingsSection({
           }
         }
       ) }),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(SettingRow, { title: "\u53EF\u89C1\u56FE\u6807\u4E0A\u9650", hint: "\u8D85\u51FA\u7684\u7EC4\u4EF6\u8FDB\u6EA2\u51FA\u83DC\u5355\uFF08\u22EF\uFF09\uFF0C\u4ECD\u53EF\u7528\u952E\u76D8\u6253\u5F00\u3001\u6392\u5E8F\u4E0E\u9690\u85CF\u3002", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(SettingRow, { title: "\u53EF\u89C1\u56FE\u6807\u4E0A\u9650", hint: "\u8D85\u51FA\u7684\u7EC4\u4EF6\u8FDB\u6EA2\u51FA\u83DC\u5355\uFF08\u22EF\uFF09\uFF0C\u4ECD\u53EF\u7528\u952E\u76D8\u6253\u5F00\u3001\u6392\u5E8F\u4E0E\u9690\u85CF\u3002", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
         PrefSelect,
         {
           label: "\u53EF\u89C1\u56FE\u6807\u4E0A\u9650",
@@ -1377,12 +1482,12 @@ function SettingsSection({
           }
         }
       ) }),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
         SettingRow,
         {
           title: "\u5FBD\u6807\u5237\u65B0\u95F4\u9694",
           hint: "\u6846\u67B6\u7EDF\u4E00\u8C03\u5EA6\uFF1A\u9875\u9762\u4E0D\u53EF\u89C1\u65F6\u6682\u505C\uFF0C\u5355\u7EC4\u4EF6\u5931\u8D25\u6309 5s\u219210s\u219230s\u219260s \u9000\u907F\u3002",
-          children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+          children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
             PrefSelect,
             {
               label: "\u5FBD\u6807\u5237\u65B0\u95F4\u9694",
@@ -1396,7 +1501,7 @@ function SettingsSection({
           )
         }
       ),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(SettingRow, { title: "\u56FE\u6807\u60AC\u505C\u9884\u89C8", hint: "\u60AC\u505C\u6258\u76D8\u56FE\u6807\u65F6\u663E\u793A\u7EC4\u4EF6\u540D\u4E0E\u5FBD\u6807\u8BF4\u660E\u3002", children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(SettingRow, { title: "\u56FE\u6807\u60AC\u505C\u9884\u89C8", hint: "\u60AC\u505C\u6258\u76D8\u56FE\u6807\u65F6\u663E\u793A\u7EC4\u4EF6\u540D\u4E0E\u5FBD\u6807\u8BF4\u660E\u3002", children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
         import_dsh_client_ui_primitives5.Switch,
         {
           checked: prefs.hoverPreview,
@@ -1407,12 +1512,12 @@ function SettingsSection({
           }
         }
       ) }),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
         SettingRow,
         {
           title: "\u53C2\u8003\u7EC4\u4EF6",
           hint: "\u672C\u63D2\u4EF6\u81EA\u5E26\u7684\u56DB\u4E2A\u89C4\u8303\u793A\u4F8B\uFF08\u4E0D\u662F\u4E1A\u52A1\uFF09\uFF1A\u4E24\u5F20\u5361\u7247\u300C\u65F6\u949F / \u7EC4\u4EF6\u8BCA\u65AD\u300D\uFF0C\u4E24\u4E2A\u5C0F\u9762\u677F\u300C\u5FEB\u901F\u8BBE\u7F6E\uFF08\u70B9\u51FB\u5C55\u5F00\uFF09/ \u72B6\u6001\u901F\u89C8\uFF08\u60AC\u505C\u5C55\u5F00\uFF09\u300D\u3002",
-          children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+          children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
             import_dsh_client_ui_primitives5.Switch,
             {
               checked: prefs.referenceWidgets,
@@ -1426,44 +1531,71 @@ function SettingsSection({
         }
       )
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("h3", { className: styles_module_css_default.sectionTitle, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("h3", { className: styles_module_css_default.sectionTitle, children: [
         "\u5DF2\u6CE8\u518C\u7EC4\u4EF6\uFF08",
         String(snapshot.widgets.length),
         "\uFF09"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("p", { className: styles_module_css_default.sectionHint, children: "\u672C\u673A\u5E03\u5C40\uFF08\u6258\u76D8\u987A\u5E8F\u3001\u5361\u7247\u4F4D\u7F6E\u4E0E\u5C3A\u5BF8\u3001\u9690\u85CF\u96C6\u5408\uFF09\u53EA\u5B58\u5728\u8FD9\u53F0\u6D4F\u89C8\u5668\u91CC\uFF1B\u6362\u8BBE\u5907\u6216\u6E05\u7F13\u5B58\u4F1A\u56DE\u5230\u9ED8\u8BA4\u5E03\u5C40\u3002" }),
-      snapshot.widgets.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: styles_module_css_default.empty, children: "\u6682\u65E0\u63D2\u4EF6\u6CE8\u518C\u5C0F\u7EC4\u4EF6\u3002" }) : /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: styles_module_css_default.list, children: snapshot.widgets.map((widget) => {
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("p", { className: styles_module_css_default.sectionHint, children: "\u672C\u673A\u5E03\u5C40\uFF08\u6258\u76D8\u987A\u5E8F\u3001\u5361\u7247\u4F4D\u7F6E\u5C3A\u5BF8\u4E0E\u9501\u5B9A\u3001\u9690\u85CF\u4E0E\u7981\u7528\u3001\u5C42\u53E0\u987A\u5E8F\uFF09\u53EA\u5B58\u5728\u8FD9\u53F0\u6D4F\u89C8\u5668\u91CC\uFF1B \u6362\u8BBE\u5907\u6216\u6E05\u7F13\u5B58\u4F1A\u56DE\u5230\u9ED8\u8BA4\u5E03\u5C40\u3002\u300C\u542F\u7528\u300D\u5F00\u5173\u5C31\u662F\u52A8\u6001\u542F\u505C\uFF1A\u5173\u6389\u540E\u56FE\u6807\u3001\u5361\u7247\u3001\u9762\u677F\u4E0E\u5FBD\u6807\u4E00\u5E76\u505C\u7528\uFF0C \u4F46\u6CE8\u518C\u8BB0\u5F55\u4E0E\u5E03\u5C40\u90FD\u7559\u7740\uFF0C\u968F\u65F6\u53EF\u4EE5\u518D\u6253\u5F00\u3002" }),
+      snapshot.widgets.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: styles_module_css_default.empty, children: "\u6682\u65E0\u63D2\u4EF6\u6CE8\u518C\u5C0F\u7EC4\u4EF6\u3002" }) : /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("div", { className: styles_module_css_default.list, children: snapshot.widgets.map((widget) => {
         const title = typeof widget.title === "function" ? widget.title() : widget.title;
+        const enabled = !disabled.has(widget.id);
         const open = runtime.isOpen(widget.id);
-        return /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: styles_module_css_default.listRow, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: styles_module_css_default.listMain, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("span", { className: styles_module_css_default.listId, children: widget.id }),
-            /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: styles_module_css_default.listMeta, children: [
-              title,
-              " \xB7 \u6765\u6E90 ",
-              widget.owner,
-              " \xB7 ",
-              widget.presentation
-            ] })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("div", { className: styles_module_css_default.listActions, children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
-            import_dsh_client_ui_primitives5.Button,
-            {
-              variant: "ghost",
-              size: "sm",
-              disabled: widget.presentation === "tray",
-              onClick: () => {
-                runtime.toggle(widget.id);
-              },
-              children: open ? "\u6536\u8D77" : "\u6253\u5F00"
-            }
-          ) })
-        ] }, widget.id);
+        const locked = widget.presentation === "card" && runtime.isLocked(widget.id);
+        return /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
+          "div",
+          {
+            className: styles_module_css_default.listRow + (enabled ? "" : " " + styles_module_css_default.listRowOff),
+            "data-disabled": enabled ? "false" : "true",
+            children: [
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: styles_module_css_default.listMain, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: styles_module_css_default.listId, children: widget.id }),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: styles_module_css_default.listMeta, children: [
+                  title,
+                  " \xB7 \u6765\u6E90 ",
+                  widget.owner,
+                  " \xB7 ",
+                  widget.presentation,
+                  locked ? " \xB7 \u4F4D\u7F6E\u5DF2\u9501\u5B9A" : "",
+                  enabled ? "" : " \xB7 \u5DF2\u7981\u7528"
+                ] })
+              ] }),
+              /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: styles_module_css_default.listActions, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                  import_dsh_client_ui_primitives5.Button,
+                  {
+                    variant: "ghost",
+                    size: "sm",
+                    disabled: !enabled || widget.presentation === "tray",
+                    onClick: () => {
+                      runtime.toggle(widget.id);
+                    },
+                    children: open ? "\u6536\u8D77" : "\u6253\u5F00"
+                  }
+                ),
+                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+                  import_dsh_client_ui_primitives5.Switch,
+                  {
+                    checked: enabled,
+                    label: `\u542F\u7528\u300C${title}\u300D`,
+                    onChange: (next) => {
+                      runtime.setEnabled(widget.id, next);
+                      setNotice(
+                        next ? `\u300C${title}\u300D\u5DF2\u542F\u7528\uFF1A\u56FE\u6807\u4E0E\u5361\u7247\u56DE\u5230\u539F\u6765\u7684\u4F4D\u7F6E\u3002` : `\u300C${title}\u300D\u5DF2\u7981\u7528\uFF1A\u56FE\u6807\u3001\u5361\u7247\u4E0E\u9762\u677F\u4E00\u5E76\u505C\u7528\uFF0C\u5E03\u5C40\u4FDD\u7559\u3002`
+                      );
+                    }
+                  }
+                )
+              ] })
+            ]
+          },
+          widget.id
+        );
       }) })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("div", { className: styles_module_css_default.footer, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: styles_module_css_default.footer, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
         import_dsh_client_ui_primitives5.Button,
         {
           variant: "outline",
@@ -1471,13 +1603,13 @@ function SettingsSection({
           onClick: () => {
             const ok = runtime.resetLocal();
             setNotice(
-              ok ? "\u672C\u673A\u5E03\u5C40\u5DF2\u6E05\u7A7A\uFF1A\u6258\u76D8\u987A\u5E8F\u3001\u5361\u7247\u4F4D\u7F6E\u4E0E\u5C3A\u5BF8\u90FD\u56DE\u5230\u9ED8\u8BA4\u3002" : "\u672C\u673A\u5E03\u5C40\u5B58\u50A8\u4E0D\u53EF\u7528\uFF08\u9690\u79C1\u6A21\u5F0F\u6216\u914D\u989D\u6EE1\uFF09\uFF0C\u5DF2\u7ECF\u5728\u7528\u9ED8\u8BA4\u5E03\u5C40\u3002"
+              ok ? "\u672C\u673A\u5E03\u5C40\u5DF2\u6E05\u7A7A\uFF1A\u6258\u76D8\u987A\u5E8F\u3001\u5361\u7247\u4F4D\u7F6E\u5C3A\u5BF8\u4E0E\u9501\u5B9A\u3001\u9690\u85CF\u4E0E\u7981\u7528\u90FD\u56DE\u5230\u9ED8\u8BA4\u3002" : "\u672C\u673A\u5E03\u5C40\u5B58\u50A8\u4E0D\u53EF\u7528\uFF08\u9690\u79C1\u6A21\u5F0F\u6216\u914D\u989D\u6EE1\uFF09\uFF0C\u5DF2\u7ECF\u5728\u7528\u9ED8\u8BA4\u5E03\u5C40\u3002"
             );
           },
           children: "\u6E05\u7A7A\u672C\u673A\u5E03\u5C40"
         }
       ),
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsxs)("span", { className: styles_module_css_default.rowHint, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: styles_module_css_default.rowHint, children: [
         "\u6846\u67B6 v",
         runtime.frameworkVersion,
         " \xB7 \u5951\u7EA6 SPEC v",
@@ -1498,7 +1630,16 @@ var MAX_TRACKED = 64;
 var MAX_LIST = 64;
 var SAVE_DEBOUNCE_MS = 300;
 function emptyState() {
-  return { v: STORE_VERSION, tray: { order: [], hidden: [] }, cards: {}, lastOpenId: null };
+  return {
+    v: STORE_VERSION,
+    tray: { order: [], hidden: [] },
+    cards: {},
+    lastOpenId: null,
+    zOrder: [],
+    popoverId: null,
+    popoverOrigin: null,
+    disabled: []
+  };
 }
 function isRecord2(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
@@ -1524,6 +1665,8 @@ function sanitizeState(raw, deps) {
   const trayRaw = isRecord2(raw["tray"]) ? raw["tray"] : {};
   const order = readIdList(trayRaw["order"], deps);
   const hidden = readIdList(trayRaw["hidden"], deps);
+  const disabled = readIdList(raw["disabled"], deps);
+  const zOrder = readIdList(raw["zOrder"], deps);
   const cardsRaw = isRecord2(raw["cards"]) ? raw["cards"] : {};
   const cards = {};
   let tracked = 0;
@@ -1544,13 +1687,27 @@ function sanitizeState(raw, deps) {
       w: rect.w,
       h: rect.h,
       minimized: value["minimized"] === true,
-      open: value["open"] === true
+      open: value["open"] === true,
+      locked: value["locked"] === true
     };
     tracked += 1;
   }
   const lastRaw = raw["lastOpenId"];
   const lastOpenId = typeof lastRaw === "string" && deps.isKnown(lastRaw) ? lastRaw : null;
-  return { v: STORE_VERSION, tray: { order, hidden }, cards, lastOpenId };
+  const popoverRaw = raw["popoverId"];
+  const popoverId = typeof popoverRaw === "string" && deps.isKnown(popoverRaw) ? popoverRaw : null;
+  const originRaw = raw["popoverOrigin"];
+  const popoverOrigin = popoverId !== null && (originRaw === "click" || originRaw === "hover") ? originRaw : null;
+  return {
+    v: STORE_VERSION,
+    tray: { order, hidden },
+    cards,
+    lastOpenId,
+    zOrder,
+    popoverId,
+    popoverOrigin,
+    disabled
+  };
 }
 function loadState(storage, deps) {
   if (storage === null) return { state: emptyState(), degraded: true };
@@ -1646,29 +1803,46 @@ function mergeVisibleOrder(full, nextVisible) {
   }
   return out;
 }
-function setHiddenInList(hidden, id, isHidden) {
-  if (isHidden) {
-    if (hidden.includes(id)) return hidden.slice();
-    return [...hidden, id].slice(0, MAX_LIST);
+function setMembershipInList(list, id, present) {
+  if (present) {
+    if (list.includes(id)) return list.slice();
+    return [...list, id].slice(0, MAX_LIST);
   }
-  return hidden.filter((x) => x !== id);
+  return list.filter((x) => x !== id);
 }
+var setHiddenInList = setMembershipInList;
+var setDisabledInList = setMembershipInList;
 function pruneId(state, id) {
-  const next = {
+  const cards = { ...state.cards };
+  delete cards[id];
+  return {
     v: STORE_VERSION,
     tray: {
       order: state.tray.order.filter((x) => x !== id),
       hidden: state.tray.hidden.filter((x) => x !== id)
     },
-    cards: { ...state.cards },
-    lastOpenId: state.lastOpenId === id ? null : state.lastOpenId
+    cards,
+    lastOpenId: state.lastOpenId === id ? null : state.lastOpenId,
+    zOrder: state.zOrder.filter((x) => x !== id),
+    popoverId: state.popoverId === id ? null : state.popoverId,
+    popoverOrigin: state.popoverId === id ? null : state.popoverOrigin,
+    disabled: state.disabled.filter((x) => x !== id)
   };
-  delete next.cards[id];
-  return next;
+}
+function reorderByPointer(order, draggingId, centers, pointerX) {
+  const others = order.filter((id) => id !== draggingId);
+  if (others.length === order.length) return order.slice();
+  if (centers.length !== others.length) return order.slice();
+  let insertAt = 0;
+  for (const center of centers) {
+    if (Number.isFinite(center) && center < pointerX) insertAt += 1;
+  }
+  others.splice(insertAt, 0, draggingId);
+  return others;
 }
 
 // src/client/Tray.tsx
-var import_jsx_runtime8 = require("react/jsx-runtime");
+var import_jsx_runtime9 = require("react/jsx-runtime");
 var DRAG_THRESHOLD = 8;
 function resolveText3(value) {
   return typeof value === "function" ? value() : value;
@@ -1682,6 +1856,8 @@ function Tray({
   const [preview, setPreview] = (0, import_react7.useState)(null);
   const dragRef = (0, import_react7.useRef)(null);
   const suppressClick = (0, import_react7.useRef)(false);
+  const containerRef = (0, import_react7.useRef)(null);
+  const disabled = (0, import_react7.useMemo)(() => new Set(snapshot.layout.disabled), [snapshot.layout.disabled]);
   (0, import_react7.useEffect)(() => {
     if (sessionId === void 0) return;
     runtime.setSession(sessionId ?? null);
@@ -1697,7 +1873,9 @@ function Tray({
     () => orderIds.map((id) => snapshot.widgets.find((widget) => widget.id === id)),
     [orderIds, snapshot.widgets]
   );
-  const ready = ordered.filter((widget) => widget !== void 0);
+  const ready = ordered.filter(
+    (widget) => widget !== void 0 && !disabled.has(widget.id)
+  );
   const hidden = new Set(snapshot.layout.tray.hidden);
   const visibleIds = ready.filter((widget) => !hidden.has(widget.id)).map((widget) => widget.id);
   const displayIds = preview ?? visibleIds;
@@ -1719,32 +1897,49 @@ function Tray({
         startX: event.clientX,
         startY: event.clientY,
         moved: false,
-        order: visibleIds
+        visible: visibleIds,
+        shown: visibleIds.slice(0, limit)
       };
       setPreview(visibleIds);
     },
-    [visibleIds]
+    [limit, visibleIds]
   );
-  const onIconPointerMove = (0, import_react7.useCallback)((event) => {
-    const drag = dragRef.current;
-    if (drag === null || drag.pointerId !== event.pointerId) return;
-    if (!drag.moved && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < DRAG_THRESHOLD) {
-      return;
+  const readCenters = (0, import_react7.useCallback)((ids) => {
+    const root = containerRef.current;
+    if (root === null) return [];
+    const centers = /* @__PURE__ */ new Map();
+    for (const node of root.querySelectorAll("[data-tray-id]")) {
+      const nodeId = node.getAttribute("data-tray-id");
+      if (nodeId === null) continue;
+      const rect = node.getBoundingClientRect();
+      centers.set(nodeId, rect.left + rect.width / 2);
     }
-    drag.moved = true;
-    if (typeof document === "undefined") return;
-    const slot = document.elementFromPoint(event.clientX, event.clientY)?.closest("[data-tray-index]");
-    const raw = slot?.getAttribute("data-tray-index") ?? null;
-    const target = raw === null ? Number.NaN : Number.parseInt(raw, 10);
-    if (!Number.isFinite(target) || target < 0) return;
-    const from = drag.order.indexOf(drag.id);
-    if (from < 0 || from === target) return;
-    const next = drag.order.slice();
-    next.splice(from, 1);
-    next.splice(Math.min(target, next.length), 0, drag.id);
-    drag.order = next;
-    setPreview(next);
+    const out = [];
+    for (const id of ids) {
+      const center = centers.get(id);
+      if (center === void 0) return [];
+      out.push(center);
+    }
+    return out;
   }, []);
+  const onIconPointerMove = (0, import_react7.useCallback)(
+    (event) => {
+      const drag = dragRef.current;
+      if (drag === null || drag.pointerId !== event.pointerId) return;
+      if (!drag.moved && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < DRAG_THRESHOLD) {
+        return;
+      }
+      drag.moved = true;
+      const others = drag.shown.filter((id) => id !== drag.id);
+      const centers = readCenters(others);
+      const nextShown = reorderByPointer(drag.shown, drag.id, centers, event.clientX);
+      if (nextShown.every((id, index) => id === drag.shown[index])) return;
+      drag.shown = nextShown;
+      drag.visible = mergeVisibleOrder(drag.visible, nextShown);
+      setPreview(drag.visible);
+    },
+    [readCenters]
+  );
   const finishDrag = (0, import_react7.useCallback)(
     (event, commit) => {
       const drag = dragRef.current;
@@ -1759,7 +1954,7 @@ function Tray({
       setPreview(null);
       if (!commit || !drag.moved) return;
       suppressClick.current = true;
-      runtime.setOrder(mergeVisibleOrder(orderIds, drag.order));
+      runtime.setOrder(mergeVisibleOrder(orderIds, drag.visible));
     },
     [orderIds, runtime]
   );
@@ -1816,8 +2011,8 @@ function Tray({
   );
   const overflowBadge = overflow.some((widget) => (snapshot.badges[widget.id] ?? null) !== null);
   if (!snapshot.ready || !snapshot.prefs.trayEnabled || ready.length === 0) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("div", { className: styles_module_css_default.tray, role: "group", "aria-label": "\u5C0F\u7EC4\u4EF6\u6258\u76D8", children: [
-    shown.map((widget, index) => {
+  return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: styles_module_css_default.tray, role: "group", "aria-label": "\u5C0F\u7EC4\u4EF6\u6258\u76D8", ref: containerRef, children: [
+    shown.map((widget) => {
       const badge = snapshot.badges[widget.id] ?? null;
       const active = runtime.isOpen(widget.id);
       const dragging = preview !== null && dragRef.current?.id === widget.id;
@@ -1825,11 +2020,11 @@ function Tray({
       const label = badge?.title !== void 0 && badge.title !== "" ? `${title} \xB7 ${badge.title}` : title;
       const hoverTriggered = widget.presentation === "popover" && widget.popover?.trigger === "hover";
       const tone = badge?.tone ?? "info";
-      return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+      return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
         "span",
         {
           className: styles_module_css_default.trayAnchor,
-          "data-tray-index": index,
+          "data-tray-id": widget.id,
           ref: (element) => {
             runtime.setAnchor(widget.id, element);
           },
@@ -1839,14 +2034,14 @@ function Tray({
           onPointerLeave: () => {
             runtime.hoverLeave(widget.id);
           },
-          children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+          children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
             import_dsh_client_ui_primitives6.Tooltip,
             {
               label,
               side: "bottom",
               delayMs: 400,
               disabled: hoverTriggered,
-              children: /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
+              children: /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
                 "button",
                 {
                   type: "button",
@@ -1871,8 +2066,8 @@ function Tray({
                     onIconClick(widget.id);
                   },
                   children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: styles_module_css_default.trayGlyph, children: widget.icon }),
-                    badge !== null && badge.text !== void 0 && badge.text !== "" ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: styles_module_css_default.trayBadgeText, "data-tone": tone, children: badge.text.slice(0, 2) }) : badge !== null && (badge.dot === true || badge.tone !== void 0) ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: styles_module_css_default.trayBadge, "data-tone": tone }) : null
+                    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayGlyph, children: widget.icon }),
+                    badge !== null && badge.text !== void 0 && badge.text !== "" ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayBadgeText, "data-tone": tone, children: badge.text.slice(0, 2) }) : badge !== null && (badge.dot === true || badge.tone !== void 0) ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayBadge, "data-tone": tone }) : null
                   ]
                 }
               )
@@ -1882,7 +2077,7 @@ function Tray({
         widget.id
       );
     }),
-    overflow.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: styles_module_css_default.trayAnchor, children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+    overflow.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayAnchor, children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
       import_dsh_client_ui_primitives6.Menu,
       {
         open: menuOpen,
@@ -1895,7 +2090,7 @@ function Tray({
         onClose: () => {
           setMenuOpen(false);
         },
-        anchor: /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
+        anchor: /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
           "button",
           {
             type: "button",
@@ -1907,8 +2102,8 @@ function Tray({
               setMenuOpen((prev) => !prev);
             },
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: styles_module_css_default.trayGlyph, children: "\u22EF" }),
-              overflowBadge && /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: styles_module_css_default.trayBadge, "data-tone": "info" })
+              /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayGlyph, children: "\u22EF" }),
+              overflowBadge && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.trayBadge, "data-tone": "info" })
             ]
           }
         )
@@ -1924,16 +2119,14 @@ function defaultConstraints() {
 function createWidgetRuntime(deps) {
   const registry = /* @__PURE__ */ new Map();
   const anchors = /* @__PURE__ */ new Map();
+  const lastAnchors = /* @__PURE__ */ new Map();
   const badges = {};
   const sizeCalls = /* @__PURE__ */ new Map();
   const sizeFrozen = /* @__PURE__ */ new Set();
   let prefs = { ...deps.prefs };
   let viewport = { ...deps.viewport };
   let sessionId = null;
-  let openId = null;
-  let openOrigin = null;
   const hoverTimers = /* @__PURE__ */ new Map();
-  let zOrder = [];
   let live = null;
   const listeners = /* @__PURE__ */ new Set();
   const liveListeners = /* @__PURE__ */ new Set();
@@ -1962,9 +2155,10 @@ function createWidgetRuntime(deps) {
     degraded,
     widgets: [],
     layout: state,
-    openId: null,
-    openOrigin: null,
-    zOrder: [],
+    // 刷新即恢复：上次展开的面板与卡片层叠顺序都从本机布局里读回来（见 docs/widget-spec.md §7）
+    openId: state.popoverId,
+    openOrigin: state.popoverOrigin,
+    zOrder: [...state.zOrder],
     badges,
     prefs
   };
@@ -1982,9 +2176,9 @@ function createWidgetRuntime(deps) {
       degraded,
       widgets: sortedWidgets(),
       layout: state,
-      openId,
-      openOrigin,
-      zOrder: [...zOrder],
+      openId: state.popoverId,
+      openOrigin: state.popoverOrigin,
+      zOrder: [...state.zOrder],
       badges: { ...badges },
       prefs
     };
@@ -2008,6 +2202,17 @@ function createWidgetRuntime(deps) {
   function persist() {
     saver.schedule(state);
   }
+  function setPopoverTarget(id, origin) {
+    if (state.popoverId === id && state.popoverOrigin === origin) return;
+    state = { ...state, popoverId: id, popoverOrigin: origin };
+    persist();
+  }
+  function setZOrder(next, persistNow) {
+    const unchanged = next.length === state.zOrder.length && next.every((id, index) => state.zOrder[index] === id);
+    if (unchanged) return;
+    state = { ...state, zOrder: [...next] };
+    if (persistNow) persist();
+  }
   function scheduleTimeout(callback, ms) {
     if (deps.timeout !== void 0) return deps.timeout(callback, ms);
     const handle = setTimeout(callback, ms);
@@ -2025,7 +2230,7 @@ function createWidgetRuntime(deps) {
     const constraints = constraintsFor(widget);
     const wanted = widget.card?.defaultSize ?? SPEC_DEFAULTS.cardDefaultSize;
     const rect = defaultRect(index, wanted, constraints, viewport);
-    return { ...rect, minimized: false, open: false };
+    return { ...rect, minimized: false, open: false, locked: false };
   }
   function cardStateOf(widget) {
     const existing = state.cards[widget.id];
@@ -2039,7 +2244,7 @@ function createWidgetRuntime(deps) {
   }
   function enforceCardLimit(exceptId) {
     if (visibleCardCount() <= SPEC_DEFAULTS.maxOpenCards) return;
-    for (const id of zOrder) {
+    for (const id of state.zOrder) {
       if (id === exceptId) continue;
       const card = state.cards[id];
       if (card === void 0 || !card.open || card.minimized) continue;
@@ -2049,8 +2254,7 @@ function createWidgetRuntime(deps) {
     }
   }
   function raiseOrder(id) {
-    const next = bringToFront(zOrder, id);
-    if (next !== zOrder) zOrder = [...next];
+    setZOrder(bringToFront(state.zOrder, id), true);
   }
   function widgetOf(id) {
     return registry.get(id);
@@ -2058,6 +2262,9 @@ function createWidgetRuntime(deps) {
   function register(raw) {
     const value = normalizeDescriptor(raw, FRAMEWORK_VERSION);
     registry.set(value.id, value);
+    if (state.popoverId === value.id && value.presentation !== "popover") {
+      state = { ...state, popoverId: null, popoverOrigin: null };
+    }
     if (!state.tray.order.includes(value.id)) {
       state = { ...state, tray: { ...state.tray, order: [...state.tray.order, value.id] } };
       persist();
@@ -2069,11 +2276,6 @@ function createWidgetRuntime(deps) {
       disposed = true;
       registry.delete(value.id);
       cancelHoverTimer(value.id);
-      if (openId === value.id) {
-        openId = null;
-        openOrigin = null;
-      }
-      zOrder = zOrder.filter((x) => x !== value.id);
       if (live?.id === value.id) live = null;
       delete badges[value.id];
       const hadCard = state.cards[value.id] !== void 0;
@@ -2116,24 +2318,24 @@ function createWidgetRuntime(deps) {
   function showPopover(id, origin) {
     const widget = widgetOf(id);
     if (widget === void 0 || widget.presentation !== "popover") return;
+    if (!isEnabled(id)) return;
     cancelAllHoverTimers();
-    openId = id;
-    openOrigin = origin;
+    setPopoverTarget(id, origin);
     publish();
   }
   function hidePopover(id) {
     cancelHoverTimer(id);
-    if (openId !== id) return;
-    openId = null;
-    openOrigin = null;
+    if (state.popoverId !== id) return;
+    setPopoverTarget(null, null);
     publish();
   }
   function hoverEnter(id) {
     const widget = widgetOf(id);
     if (widget === void 0 || widget.presentation !== "popover") return;
+    if (!isEnabled(id)) return;
     const options = widget.popover;
     if (options === null || options.trigger !== "hover") return;
-    if (openId === widget.id) {
+    if (state.popoverId === widget.id) {
       cancelHoverTimer(id);
       return;
     }
@@ -2158,7 +2360,8 @@ function createWidgetRuntime(deps) {
     const options = widget.popover;
     if (options === null || options.trigger !== "hover") return;
     cancelHoverTimer(id);
-    if (openId !== widget.id || openOrigin !== "hover") return;
+    if (state.popoverId !== widget.id || state.popoverOrigin !== "hover") return;
+    if (options.persistent) return;
     if (options.hoverCloseDelayMs <= 0) {
       hidePopover(id);
       return;
@@ -2167,13 +2370,14 @@ function createWidgetRuntime(deps) {
       id,
       scheduleTimeout(() => {
         hoverTimers.delete(id);
-        if (openId === id && openOrigin === "hover") hidePopover(id);
+        if (state.popoverId === id && state.popoverOrigin === "hover") hidePopover(id);
       }, options.hoverCloseDelayMs)
     );
   }
   function open(id) {
     const widget = widgetOf(id);
     if (widget === void 0 || widget.presentation === "tray") return;
+    if (!isEnabled(id)) return;
     if (widget.presentation === "popover") {
       showPopover(id, "click");
       return;
@@ -2198,7 +2402,10 @@ function createWidgetRuntime(deps) {
     }
     const existing = state.cards[id];
     if (existing === void 0) return;
-    zOrder = zOrder.filter((x) => x !== id);
+    setZOrder(
+      state.zOrder.filter((x) => x !== id),
+      false
+    );
     state = { ...state, cards: { ...state.cards, [id]: { ...existing, open: false, minimized: false } } };
     persist();
     publish();
@@ -2220,16 +2427,17 @@ function createWidgetRuntime(deps) {
   }
   function isOpen(id) {
     const widget = widgetOf(id);
-    if (widget === void 0) return false;
-    if (widget.presentation === "popover") return openId === id;
+    if (widget === void 0 || !isEnabled(id)) return false;
+    if (widget.presentation === "popover") return state.popoverId === id;
     const card = state.cards[id];
     return card !== void 0 && card.open;
   }
   function toggle(id) {
     const widget = widgetOf(id);
     if (widget === void 0 || widget.presentation === "tray") return;
+    if (!isEnabled(id)) return;
     if (widget.presentation === "popover") {
-      if (openId === id) close(id);
+      if (state.popoverId === id) close(id);
       else open(id);
       return;
     }
@@ -2242,20 +2450,71 @@ function createWidgetRuntime(deps) {
       restore(id);
       return;
     }
-    if (zOrder[zOrder.length - 1] === id) minimize(id);
+    if (state.zOrder[state.zOrder.length - 1] === id) minimize(id);
     else {
       raiseOrder(id);
       publish();
     }
   }
   function toggleMinimize(id) {
+    if (!isEnabled(id)) return;
     const card = state.cards[id];
     if (card === void 0) return;
     if (card.minimized) restore(id);
     else minimize(id);
   }
+  function setEnabled(id, enabled) {
+    if (widgetOf(id) === void 0) return;
+    if (state.disabled.includes(id) === !enabled) return;
+    const next = setDisabledInList(state.disabled, id, !enabled);
+    cancelHoverTimer(id);
+    setZOrder(
+      state.zOrder.filter((x) => x !== id),
+      false
+    );
+    let cards = state.cards;
+    const card = state.cards[id];
+    if (!enabled && card !== void 0 && (card.open || card.minimized)) {
+      cards = { ...cards, [id]: { ...card, open: false, minimized: false } };
+    }
+    const wasPopover = state.popoverId === id;
+    state = {
+      ...state,
+      cards,
+      disabled: next,
+      popoverId: wasPopover ? null : state.popoverId,
+      popoverOrigin: wasPopover ? null : state.popoverOrigin
+    };
+    if (!enabled) delete badges[id];
+    if (live?.id === id) live = null;
+    persist();
+    publish();
+    notifyLive();
+    deps.onNotice?.(
+      enabled ? `\u7EC4\u4EF6\u300C${id}\u300D\u5DF2\u542F\u7528` : `\u7EC4\u4EF6\u300C${id}\u300D\u5DF2\u7981\u7528\uFF1A\u56FE\u6807\u3001\u5361\u7247\u4E0E\u9762\u677F\u4E00\u5E76\u505C\u7528\uFF08\u53EF\u968F\u65F6\u91CD\u65B0\u542F\u7528\uFF09`
+    );
+  }
+  function isEnabled(id) {
+    return !state.disabled.includes(id);
+  }
+  function setLocked(id, locked) {
+    const widget = widgetOf(id);
+    if (widget === void 0 || widget.presentation !== "card") return;
+    const existing = state.cards[id];
+    if (existing !== void 0 && existing.locked === locked) return;
+    const base = existing ?? makeCardState(widget, trackedCardCount());
+    if (locked && live?.id === id) {
+      live = null;
+      notifyLive();
+    }
+    writeCard(id, { ...base, locked }, true);
+  }
+  function isLocked(id) {
+    return state.cards[id]?.locked === true;
+  }
   function beginLive(id, mode) {
     if (widgetOf(id) === void 0) return;
+    if (isLocked(id)) return;
     live = { id, rect: rectOf(id), mode };
     notifyLive();
   }
@@ -2273,7 +2532,7 @@ function createWidgetRuntime(deps) {
     notifyLive();
     if (widget === void 0 || widget.presentation !== "card") return;
     const existing = state.cards[id];
-    const base = existing ?? { ...rect, minimized: false, open: true };
+    const base = existing ?? { ...rect, minimized: false, open: true, locked: false };
     if (isSameRect(base, rect)) return;
     writeCard(id, { ...base, ...rect }, true);
   }
@@ -2298,9 +2557,10 @@ function createWidgetRuntime(deps) {
   function applyRect(id, rect) {
     const widget = widgetOf(id);
     if (widget === void 0 || widget.presentation !== "card") return;
+    if (isLocked(id)) return;
     const clamped = clampRect(rect, constraintsFor(widget), viewport);
     const existing = state.cards[id];
-    const base = existing ?? { ...clamped, minimized: false, open: true };
+    const base = existing ?? { ...clamped, minimized: false, open: true, locked: false };
     if (isSameRect(base, clamped)) return;
     writeCard(id, { ...base, ...clamped }, true);
   }
@@ -2415,15 +2675,15 @@ function createWidgetRuntime(deps) {
         tray: {
           order: state.tray.order.filter(isKnown),
           hidden: state.tray.hidden.filter(isKnown)
-        }
+        },
+        disabled: state.disabled.filter(isKnown)
       };
       persist();
     }
-    if (openId !== null && !isKnown(openId)) {
-      openId = null;
-      openOrigin = null;
+    if (state.popoverId !== null && !isKnown(state.popoverId)) {
+      state = { ...state, popoverId: null, popoverOrigin: null };
     }
-    zOrder = zOrder.filter(isKnown);
+    setZOrder(state.zOrder.filter(isKnown), false);
     publish();
     return removed;
   }
@@ -2431,10 +2691,7 @@ function createWidgetRuntime(deps) {
     saver.cancel();
     const ok = clearState(deps.storage);
     state = emptyState();
-    zOrder = [];
     cancelAllHoverTimers();
-    openId = null;
-    openOrigin = null;
     live = null;
     for (const key of Object.keys(badges)) delete badges[key];
     publish();
@@ -2471,12 +2728,16 @@ function createWidgetRuntime(deps) {
   }
   function setSession(next) {
     if (sessionId === next) return;
+    const firstBinding = sessionId === null;
     sessionId = next;
+    if (firstBinding) {
+      publish();
+      return;
+    }
     let changed = false;
     cancelAllHoverTimers();
-    if (openId !== null) {
-      openId = null;
-      openOrigin = null;
+    if (state.popoverId !== null) {
+      setPopoverTarget(null, null);
       changed = true;
     }
     const nextCards = { ...state.cards };
@@ -2485,7 +2746,7 @@ function createWidgetRuntime(deps) {
       nextCards[id] = { ...card, open: false, minimized: false };
       changed = true;
     }
-    zOrder = [];
+    setZOrder([], false);
     if (changed) {
       state = { ...state, cards: nextCards };
       persist();
@@ -2516,6 +2777,10 @@ function createWidgetRuntime(deps) {
     isOpen,
     minimize,
     restore,
+    setEnabled,
+    isEnabled,
+    setLocked,
+    isLocked,
     getSnapshot: () => snapshot,
     subscribeLive(listener) {
       liveListeners.add(listener);
@@ -2547,8 +2812,13 @@ function createWidgetRuntime(deps) {
     setSession,
     getSession: () => sessionId,
     setAnchor: (id, el) => {
+      const before = anchors.get(id) ?? null;
       if (el === null) anchors.delete(id);
       else anchors.set(id, el);
+      if (before === el) return;
+      if (el === null || lastAnchors.get(id) === el) return;
+      lastAnchors.set(id, el);
+      publish();
     },
     getAnchor: (id) => anchors.get(id) ?? null,
     setBadge,
@@ -2603,55 +2873,20 @@ function createWidgetsService(runtime) {
     },
     restore: (id) => {
       runtime.restore(id);
-    }
+    },
+    setEnabled: (id, enabled) => {
+      runtime.setEnabled(id, enabled);
+    },
+    isEnabled: (id) => runtime.isEnabled(id),
+    setLocked: (id, locked) => {
+      runtime.setLocked(id, locked);
+    },
+    isLocked: (id) => runtime.isLocked(id)
   };
 }
 
 // src/client/widgets/clock.tsx
 var import_react8 = require("react");
-
-// src/client/glyphs.tsx
-var import_jsx_runtime9 = require("react/jsx-runtime");
-function Glyph({ children }) {
-  return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
-    "svg",
-    {
-      viewBox: "0 0 18 18",
-      width: "18",
-      height: "18",
-      fill: "none",
-      stroke: "currentColor",
-      strokeWidth: "1.4",
-      "aria-hidden": "true",
-      children
-    }
-  );
-}
-function ClockGlyph() {
-  return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(Glyph, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("circle", { cx: "9", cy: "9", r: "6.5" }),
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("path", { d: "M9 5.4V9l2.6 1.6", strokeLinecap: "round" })
-  ] });
-}
-function RegistryGlyph() {
-  return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(Glyph, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("rect", { x: "2.6", y: "3.4", width: "12.8", height: "11.2", rx: "2.2" }),
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("path", { d: "M5.6 7h6.8M5.6 9.6h6.8M5.6 12.2h4", strokeLinecap: "round" })
-  ] });
-}
-function SlidersGlyph() {
-  return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(Glyph, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("path", { d: "M3 5.5h12M3 9h12M3 12.5h12", strokeLinecap: "round" }),
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("circle", { cx: "7", cy: "5.5", r: "1.6" }),
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("circle", { cx: "11.5", cy: "9", r: "1.6" }),
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("circle", { cx: "6", cy: "12.5", r: "1.6" })
-  ] });
-}
-function PulseGlyph() {
-  return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(Glyph, { children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("path", { d: "M2 9.5h3.2l1.6-4 2.4 7.4 1.8-4.4 1.2 2.4H16", strokeLinecap: "round", strokeLinejoin: "round" }) });
-}
-
-// src/client/widgets/clock.tsx
 var import_jsx_runtime10 = require("react/jsx-runtime");
 var CLOCK_WIDGET_ID = "dshp-widget-kit:clock";
 function pad(value) {
@@ -2734,6 +2969,7 @@ var clockWidget = {
 };
 
 // src/client/widgets/diagnostics.tsx
+var import_dsh_client_ui_primitives7 = require("@deepseek-ai/dsh-client-ui-primitives");
 var import_jsx_runtime11 = require("react/jsx-runtime");
 var DIAGNOSTICS_WIDGET_ID = "dshp-widget-kit:registry";
 function DiagnosticsView({
@@ -2742,6 +2978,7 @@ function DiagnosticsView({
 }) {
   const snapshot = useFramework(runtime);
   const compact = props.sizeClass === "compact";
+  const disabled = new Set(snapshot.layout.disabled);
   return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: styles_module_css_default.diag, children: [
     /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: styles_module_css_default.diagSummary, children: [
       "\u5DF2\u6CE8\u518C ",
@@ -2753,17 +2990,34 @@ function DiagnosticsView({
       FRAMEWORK_VERSION,
       snapshot.degraded ? " \xB7 \u672C\u673A\u5E03\u5C40\u672A\u6301\u4E45\u5316" : ""
     ] }),
-    snapshot.widgets.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.diagEmpty, children: "\u8FD8\u6CA1\u6709\u4EFB\u4F55\u63D2\u4EF6\u6CE8\u518C\u7EC4\u4EF6\u3002" }) : /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.diagList, children: snapshot.widgets.map((widget) => /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.diagRow, children: /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: styles_module_css_default.diagMain, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: styles_module_css_default.diagId, children: widget.id }),
-      !compact && /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: styles_module_css_default.diagMeta, children: [
-        "\u6765\u6E90 ",
-        widget.owner,
-        " \xB7 ",
-        widget.presentation,
-        widget.tray.badge === null ? "" : " \xB7 \u6709\u5FBD\u6807",
-        widget.presentation === "card" ? ` \xB7 ${String(widget.card?.defaultSize.w ?? 0)}\xD7${String(widget.card?.defaultSize.h ?? 0)}` : ""
-      ] })
-    ] }) }, widget.id)) }),
+    snapshot.widgets.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.diagEmpty, children: "\u8FD8\u6CA1\u6709\u4EFB\u4F55\u63D2\u4EF6\u6CE8\u518C\u7EC4\u4EF6\u3002" }) : /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.diagList, children: snapshot.widgets.map((widget) => {
+      const enabled = !disabled.has(widget.id);
+      return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: styles_module_css_default.diagRow, "data-disabled": enabled ? "false" : "true", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: styles_module_css_default.diagMain, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: styles_module_css_default.diagId, children: widget.id }),
+          !compact && /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { className: styles_module_css_default.diagMeta, children: [
+            "\u6765\u6E90 ",
+            widget.owner,
+            " \xB7 ",
+            widget.presentation,
+            widget.tray.badge === null ? "" : " \xB7 \u6709\u5FBD\u6807",
+            widget.presentation === "card" ? ` \xB7 ${String(widget.card?.defaultSize.w ?? 0)}\xD7${String(widget.card?.defaultSize.h ?? 0)}` : "",
+            enabled ? "" : " \xB7 \u5DF2\u7981\u7528"
+          ] })
+        ] }),
+        !compact && /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.diagActions, children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+          import_dsh_client_ui_primitives7.Button,
+          {
+            variant: "ghost",
+            size: "sm",
+            onClick: () => {
+              runtime.setEnabled(widget.id, !enabled);
+            },
+            children: enabled ? "\u7981\u7528" : "\u542F\u7528"
+          }
+        ) })
+      ] }, widget.id);
+    }) }),
     props.error !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: styles_module_css_default.diagError, children: [
       "\u6570\u636E\u5237\u65B0\u5931\u8D25\uFF1A",
       props.error.message
@@ -2804,7 +3058,7 @@ function createDiagnosticsWidget(runtime) {
 }
 
 // src/client/widgets/quick-settings.tsx
-var import_dsh_client_ui_primitives7 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_dsh_client_ui_primitives8 = require("@deepseek-ai/dsh-client-ui-primitives");
 var import_react9 = require("react");
 var import_jsx_runtime12 = require("react/jsx-runtime");
 var QUICK_SETTINGS_WIDGET_ID = "dshp-widget-kit:quick";
@@ -2868,7 +3122,7 @@ function QuickSettingsView({ runtime }) {
       /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: styles_module_css_default.quickFoot, children: [
         /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.quickLabel, children: "\u4F1A\u8BDD\u9876\u90E8\u6258\u76D8" }),
         /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
-          import_dsh_client_ui_primitives7.Switch,
+          import_dsh_client_ui_primitives8.Switch,
           {
             checked: prefs.trayEnabled,
             disabled: busy,
@@ -2909,7 +3163,7 @@ function QuickSettingsView({ runtime }) {
       /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: styles_module_css_default.quickFoot, children: [
         /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.quickLabel, children: "\u672C\u673A\u5E03\u5C40" }),
         /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
-          import_dsh_client_ui_primitives7.Button,
+          import_dsh_client_ui_primitives8.Button,
           {
             variant: "outline",
             size: "sm",
@@ -2936,7 +3190,7 @@ function createQuickSettingsWidget(runtime) {
     icon: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(SlidersGlyph, {}),
     order: 120,
     presentation: "popover",
-    popover: { trigger: "click", width: 300 },
+    popover: { trigger: "click", width: 300, persistent: true },
     content: {
       title: "\u5FEB\u901F\u8BBE\u7F6E",
       render: (props) => {

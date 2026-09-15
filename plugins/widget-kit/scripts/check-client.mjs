@@ -11,7 +11,9 @@
  *   5. 描述符校验：12 类非法输入逐个抛中文错误；合法注册 → list() → disposer 清理；
  *   6. 同 id 重注册 = 覆盖（HMR / 重复 apply 的语义）；
  *   7. **渲染一遍**：托盘与卡片层的组件树能真的跑出元素（用 stub 的 React，不画像），
- *      卡片外层几何等于运行时给的矩形 —— 这一步能在没有浏览器的情况下抓住渲染期崩溃。
+ *      卡片外层几何等于运行时给的矩形 —— 这一步能在没有浏览器的情况下抓住渲染期崩溃；
+ *   8. 本轮新增的四件事：**刷新后恢复**（首帧会话绑定不算切会话）、**最小化折叠成标题栏**、
+ *      **位置锁定**、**启用 / 禁用**与**常驻 popover**。
  *
  * 只用 node 内建模块。
  */
@@ -97,7 +99,7 @@ globalThis.fetch = async (url, init) => {
     async json() {
       return {
         ok: true,
-        version: '0.1.0',
+        version: '0.2.0',
         specVersion: 1,
         config: {
           trayEnabled: true,
@@ -199,6 +201,10 @@ const EXPECTED_SERVICE_KEYS = [
   'isOpen',
   'minimize',
   'restore',
+  'setEnabled',
+  'isEnabled',
+  'setLocked',
+  'isLocked',
 ];
 const actualServiceKeys = Object.keys(service);
 actualServiceKeys.sort();
@@ -206,7 +212,7 @@ const expectedServiceKeys = [...EXPECTED_SERVICE_KEYS];
 expectedServiceKeys.sort();
 assert.deepEqual(actualServiceKeys, expectedServiceKeys, 'widgets 服务的成员必须与 SPEC_KEYS.service 一致');
 assert.equal(service.specVersion, 1);
-assert.equal(service.frameworkVersion, '0.1.0');
+assert.equal(service.frameworkVersion, '0.2.0');
 
 // ── 2. 槽位注册 ──────────────────────────────────────────────────────────
 assert.deepEqual(injections, ['conversation.session.header.utilities', 'shell.overlay', 'settings.section']);
@@ -586,4 +592,285 @@ assert.equal(service.isOpen('dshp-widget-kit:quick'), false);
 
 disposeClick();
 disposeHover();
-console.log('check-client.mjs ok (loader / 服务 / 槽位 / 校验 / 渲染 / popover 两种触发)');
+
+// ── 10. 本轮修复：刷新恢复 / 最小化折叠 / 位置锁定 / 启用禁用 / 常驻面板 ──
+const STORE_KEY = 'dshp-widget-kit:v1';
+const persisted = () => JSON.parse(storage.get(STORE_KEY));
+
+/** 记录每个组件最近一次拿到的内容 props（用来断言「交出去的事实」）。 */
+const seenProps = new Map();
+
+/** 造一个内容可辨认的卡片组件（内容面会在最小化时留在树上，所以在树里能查到一个探针节点）。 */
+function makeCard(id, title) {
+  return {
+    id,
+    title,
+    icon: 'i',
+    presentation: 'card',
+    content: {
+      render: (props) => {
+        seenProps.set(id, props);
+        return { type: 'span', props: { 'data-probe': id } };
+      },
+    },
+    card: { defaultSize: { w: 360, h: 240 } },
+  };
+}
+
+const cardA = makeCard('demo:persist', '持久卡片');
+const cardB = makeCard('demo:lock', '锁定卡片');
+const disposeA = service.register(cardA);
+const disposeB = service.register(cardB);
+// 这一段会注册不少组件，把可见图标上限抬上去 —— 否则断言的对象都被挤进溢出菜单了
+void runtime.setPrefs({ maxVisibleIcons: 12 });
+
+/** 按 data-widget 找卡片根节点。 */
+function cardNodeOf(id) {
+  return collect(render(layerEntry.component({}))).find((node) => node.props['data-widget'] === id);
+}
+
+/** 按 data-widget 找 popover 面板节点。 */
+function panelNodeOf(id) {
+  return collect(render(layerEntry.component({}))).find((node) => node.props['data-widget'] === id);
+}
+
+// 10.1 打开后落盘：卡片矩形、层叠顺序、打开状态都要进本机布局（刷新后靠它恢复）
+service.open('demo:persist');
+runtime.saveNow();
+assert.equal(persisted().cards['demo:persist'].open, true, '打开状态必须落盘（否则刷新就没了）');
+assert.equal(
+  persisted().zOrder.at(-1),
+  'demo:persist',
+  '层叠顺序必须落盘（末尾 = 最上层，恢复出来才不会所有卡片 z-index 都是 1）',
+);
+assert.equal(runtime.getSnapshot().zOrder.includes('demo:persist'), true);
+
+// 10.2 首帧拿到会话**不算切会话**：托盘带 sessionId 挂载时不能再把恢复出来的卡片关掉
+runtime.setSession('session-one');
+assert.equal(runtime.getSession(), 'session-one');
+assert.equal(
+  service.isOpen('demo:persist'),
+  true,
+  '首帧会话绑定不得关掉已恢复的卡片（旧实现每次刷新都清空）',
+);
+// 真的换会话才收起（v1 语义：内容面绑定开启它的会话）
+runtime.setSession('session-two');
+assert.equal(service.isOpen('demo:persist'), false, '换会话必须收起内容面');
+runtime.setSession('session-one');
+
+// 10.3 最小化 = 折叠成标题栏：不是「留一个空窗口」
+service.open('demo:lock');
+runtime.minimize('demo:lock');
+const miniCard = cardNodeOf('demo:lock');
+assert.ok(miniCard, '最小化后卡片仍然存在（不是关闭）');
+assert.equal(miniCard.props.style.height, 36, '最小化必须折叠成标题栏高度');
+assert.equal(miniCard.props['data-minimized'], 'true');
+const miniBody = collect(render(layerEntry.component({}))).find(
+  (node) => typeof node.props.className === 'string' && node.props.className.includes('cardBody'),
+);
+assert.ok(
+  miniBody.props.className.includes('cardBodyHidden'),
+  '最小化时内容区必须隐藏（但留在树上，还原即时且不丢内部状态）',
+);
+assert.ok(
+  collect(render(layerEntry.component({}))).some((node) => node.props['data-probe'] === 'demo:lock'),
+  '最小化不得卸载内容面（这是「内容一片空白」的正解：折叠而不是抽空）',
+);
+const miniProps = seenProps.get('demo:lock');
+assert.equal(miniProps.minimized, true, '内容必须知道自己在最小化状态');
+assert.ok(
+  miniProps.size !== null && miniProps.size.height > 0 && miniProps.size.width > 0,
+  `最小化不得把「内容盒尺寸」交成负数（实际 ${JSON.stringify(miniProps.size)}）`,
+);
+runtime.restore('demo:lock');
+const restoredCard = cardNodeOf('demo:lock');
+assert.equal(restoredCard.props.style.height, 240, '还原必须回到原来的高度');
+assert.equal(restoredCard.props['data-minimized'], 'false');
+
+// 10.4 位置锁定：几何动作全部无效，最小化 / 关闭照常
+const rectBefore = runtime.rectOf('demo:lock');
+runtime.setLocked('demo:lock', true);
+assert.equal(runtime.isLocked('demo:lock'), true);
+assert.equal(cardNodeOf('demo:lock').props['data-locked'], 'true');
+assert.equal(seenProps.get('demo:lock').locked, true, '锁定状态必须告诉内容提供方');
+runtime.nudge('demo:lock', 40, 40);
+runtime.nudgeResize('demo:lock', 80, 80);
+runtime.resizeTo('demo:lock', { w: 520, h: 400 });
+runtime.requestSize('demo:lock', { w: 520, h: 400 });
+runtime.center('demo:lock');
+assert.deepEqual(runtime.rectOf('demo:lock'), rectBefore, '锁定后移动 / 缩放 / 居中都必须无效');
+runtime.beginLive('demo:lock', 'move');
+assert.equal(runtime.getLive(), null, '锁定后不得进入拖拽（不会有 live 几何）');
+
+// 锁定的卡片不给几何菜单项（点了没反应是最糟的交互）
+const lockedMenu = collect(render(layerEntry.component({}))).find((node) => node.type === 'Menu');
+const lockedItems = lockedMenu.props.items.map((item) => item.id);
+assert.ok(lockedItems.includes('lock'), '菜单里必须有锁定项');
+assert.ok(lockedItems.includes('minimize'), '锁定后仍要能最小化');
+assert.ok(
+  !lockedItems.some((id) => typeof id === 'string' && id.startsWith('size:')),
+  '锁定后不得出现尺寸预设',
+);
+assert.ok(!lockedItems.includes('center'), '锁定后不得出现居中');
+assert.equal(
+  lockedMenu.props.items.find((item) => item.id === 'lock').label,
+  '解锁位置',
+  '已锁定时要把动作说清楚',
+);
+// 最小化仍然可用
+runtime.minimize('demo:lock');
+assert.equal(runtime.getSnapshot().layout.cards['demo:lock'].minimized, true, '锁定后仍可最小化');
+runtime.restore('demo:lock');
+runtime.saveNow();
+assert.equal(persisted().cards['demo:lock'].locked, true, '锁定状态必须落盘（刷新后还是锁的）');
+
+runtime.setLocked('demo:lock', false);
+runtime.nudge('demo:lock', 16, 0);
+assert.equal(runtime.rectOf('demo:lock').x, rectBefore.x + 16, '解锁后必须能再移动');
+const freeItems = collect(render(layerEntry.component({})))
+  .find((node) => node.type === 'Menu')
+  .props.items.map((item) => item.id);
+assert.ok(
+  freeItems.some((id) => typeof id === 'string' && id.startsWith('size:')),
+  '解锁后尺寸预设必须回来',
+);
+
+// 10.5 动态启用 / 禁用：图标、卡片、内容面、徽标一并停用，注册记录与布局保留
+runtime.setBadge('demo:persist', { text: '3', tone: 'info' });
+assert.ok(runtime.getSnapshot().badges['demo:persist'], '前置条件：有徽标');
+service.setEnabled('demo:persist', false);
+assert.equal(service.isEnabled('demo:persist'), false);
+assert.equal(service.isOpen('demo:persist'), false, '禁用必须把已打开的卡片收起来');
+assert.equal(runtime.getSnapshot().badges['demo:persist'], undefined, '禁用必须清掉徽标');
+assert.equal(
+  service.list().some((item) => item.id === 'demo:persist'),
+  true,
+  '禁用只是停用：注册记录必须留着，否则无法再启用',
+);
+const trayAfterDisable = collect(render(trayEntry.component({ sessionId: 'session-one' })));
+assert.ok(
+  !trayAfterDisable.some((node) => node.props['aria-label'] === '持久卡片'),
+  '禁用的组件不得出现在托盘',
+);
+assert.ok(
+  !collect(render(layerEntry.component({}))).some((node) => node.props['data-widget'] === 'demo:persist'),
+  '禁用的组件不得渲染卡片或面板',
+);
+runtime.saveNow();
+assert.deepEqual(persisted().disabled, ['demo:persist'], '禁用状态必须落盘');
+assert.equal(persisted().cards['demo:persist'].open, false, '禁用时卡片要收起来（布局仍保留）');
+
+service.setEnabled('demo:persist', true);
+assert.equal(service.isEnabled('demo:persist'), true);
+assert.ok(
+  collect(render(trayEntry.component({ sessionId: 'session-one' }))).some(
+    (node) => node.props['aria-label'] === '持久卡片',
+  ),
+  '重新启用后图标必须回来',
+);
+runtime.saveNow();
+assert.deepEqual(persisted().disabled, [], '启用后必须从禁用集合里移除');
+
+// 禁用当前展开的面板：面板立刻收起
+service.toggle('dshp-widget-kit:quick');
+assert.equal(service.isOpen('dshp-widget-kit:quick'), true);
+service.setEnabled('dshp-widget-kit:quick', false);
+assert.equal(service.isOpen('dshp-widget-kit:quick'), false, '禁用必须收起它的面板');
+service.setEnabled('dshp-widget-kit:quick', true);
+
+// 10.6 常驻面板（popover.persistent）：不受外部操作影响，只认明确的关闭意图
+const pinnedClick = {
+  id: 'demo:pinned',
+  title: '常驻面板',
+  icon: 'i',
+  presentation: 'popover',
+  popover: { trigger: 'click', width: 280, persistent: true },
+  content: { render: () => null },
+};
+const pinnedHover = {
+  id: 'demo:pinned-hover',
+  title: '常驻悬停面板',
+  icon: 'i',
+  presentation: 'popover',
+  popover: { trigger: 'hover', hoverOpenDelayMs: 40, hoverCloseDelayMs: 40, persistent: true },
+  content: { render: () => null },
+};
+const disposePinned = service.register(pinnedClick);
+const disposePinnedHover = service.register(pinnedHover);
+
+service.toggle('demo:pinned');
+assert.equal(service.isOpen('demo:pinned'), true);
+const pinnedPanel = panelNodeOf('demo:pinned');
+assert.equal(pinnedPanel.props['data-persistent'], 'true', '常驻标记必须落到面板上');
+assert.ok(
+  collect(render(layerEntry.component({}))).some(
+    (node) => typeof node.props.className === 'string' && node.props.className.includes('popoverPinned'),
+  ),
+  '常驻面板必须在标题栏标出来',
+);
+runtime.saveNow();
+assert.equal(persisted().popoverId, 'demo:pinned', '展开的面板必须落盘（刷新后原地恢复）');
+assert.equal(persisted().popoverOrigin, 'click');
+// 明确的关闭意图仍然有效
+service.toggle('demo:pinned');
+assert.equal(service.isOpen('demo:pinned'), false, '再点一次图标必须能关掉常驻面板');
+
+// 悬停式常驻：指针移开也不收起（这是「持续显示」与普通悬停面板的唯一差别）
+runtime.hoverEnter('demo:pinned-hover');
+fireTimeouts(40);
+assert.equal(service.isOpen('demo:pinned-hover'), true);
+runtime.hoverLeave('demo:pinned-hover');
+fireTimeouts(40);
+assert.equal(service.isOpen('demo:pinned-hover'), true, '常驻面板不得因指针移开而收起');
+service.close('demo:pinned-hover');
+assert.equal(service.isOpen('demo:pinned-hover'), false, '显式 close 必须能关掉它');
+
+// 对照：非常驻的悬停面板移开就收起（行为不能被这次改动带偏）
+runtime.hoverEnter('dshp-widget-kit:status');
+fireTimeouts(80);
+assert.equal(service.isOpen('dshp-widget-kit:status'), true);
+runtime.hoverLeave('dshp-widget-kit:status');
+fireTimeouts(220);
+assert.equal(service.isOpen('dshp-widget-kit:status'), false, '非常驻面板仍然移开即收起');
+
+// 10.7 托盘图标：DOM 里带 data-tray-id（拖拽换序靠它读中心线），旧的 index 落点已废弃
+const finalTrayNodes = collect(render(trayEntry.component({ sessionId: 'session-one' })));
+assert.ok(
+  finalTrayNodes.some((node) => node.props['data-tray-id'] === 'demo:lock'),
+  '托盘图标必须带 data-tray-id（拖拽排序的命中依据）',
+);
+assert.ok(
+  !finalTrayNodes.some((node) => node.props['data-tray-index'] !== undefined),
+  '旧的 data-tray-index 落点必须移除（elementFromPoint 方案只会单向可用）',
+);
+
+// 10.8 锚点通知：图标真正挂上时要通知一次（刷新后恢复的面板才能重新测量位置），
+//      而同一次 commit 里的 detach + attach 不得重复通知（否则 publish ↔ 重渲染 会死循环）
+let anchorNotices = 0;
+const stopAnchorWatch = runtime.subscribe(() => {
+  anchorNotices += 1;
+});
+const iconOne = { nodeType: 1 };
+runtime.setAnchor('demo:lock', iconOne);
+assert.equal(runtime.getAnchor('demo:lock'), iconOne, '锚点必须可读回');
+const afterAttach = anchorNotices;
+assert.ok(afterAttach >= 1, '新锚点挂上必须通知一次');
+runtime.setAnchor('demo:lock', null); // React 每次 commit 先 detach
+runtime.setAnchor('demo:lock', iconOne); // 再 attach 同一个元素
+assert.equal(
+  anchorNotices,
+  afterAttach,
+  '同一次 commit 的 detach + attach 不得再通知（否则 publish ↔ 重渲染 无限循环）',
+);
+const iconTwo = { nodeType: 1 };
+runtime.setAnchor('demo:lock', iconTwo);
+assert.equal(anchorNotices, afterAttach + 1, '换了一个新的锚点元素要通知（面板需要重新测量）');
+runtime.setAnchor('demo:lock', null);
+assert.equal(runtime.getAnchor('demo:lock'), null, '卸载后锚点必须清掉');
+stopAnchorWatch();
+
+disposePinned();
+disposePinnedHover();
+disposeA();
+disposeB();
+console.log('check-client.mjs ok (loader / 服务 / 槽位 / 校验 / 渲染 / popover / 恢复 / 折叠 / 锁定 / 启停)');

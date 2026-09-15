@@ -14,6 +14,7 @@ import { SPEC_DEFAULTS } from './spec.js';
 import type { NormalizedWidget, WidgetContentProps } from './spec.js';
 import { WidgetErrorBoundary } from './ErrorBoundary.js';
 import { ResizeHandles } from './ResizeHandles.js';
+import { LockGlyph } from './glyphs.js';
 import { useCardDrag, useFramework, useLiveGeometry, useWidgetData } from './hooks.js';
 import type { WidgetRuntime } from './service.js';
 import styles from './styles.module.css';
@@ -44,7 +45,11 @@ export function Card({
   const card = snapshot.layout.cards[widget.id];
   const open = card?.open === true;
   const minimized = card?.minimized === true;
-  const data = useWidgetData(runtime, widget, open && !minimized);
+  /** 位置锁定：不可拖动、不可缩放；最小化 / 关闭 / 还原照常。 */
+  const locked = card?.locked === true;
+  // 最小化 = 折叠成一条标题栏（不是「留一个空窗口」）。内容仍挂在树上（只是不显示），
+  // 所以还原是瞬时的、组件自己的内部状态也不会丢；数据轮询不因最小化而中断。
+  const data = useWidgetData(runtime, widget, open);
 
   /** 渲染期调 setSize = 规范禁止的尺寸回环来源：延后到微任务并只警告一次。 */
   const setSize = useCallback(
@@ -69,24 +74,32 @@ export function Card({
 
   const menuItems = useMemo<MenuEntry[]>(() => {
     const size = widget.card?.defaultSize ?? SPEC_DEFAULTS.cardDefaultSize;
-    return [
+    const entries: MenuEntry[] = [
       { id: 'minimize', label: minimized ? '还原卡片' : '最小化' },
-      { id: 'reset', label: '恢复默认尺寸' },
-      { id: 'center', label: '居中' },
-      { type: 'label', id: 'size-label', text: '尺寸' },
-      {
-        id: 'size:compact',
-        label: `紧凑 ${String(Math.round(size.w * SIZE_PRESET_FACTOR.compact))}×${String(Math.round(size.h * SIZE_PRESET_FACTOR.compact))}`,
-      },
-      { id: 'size:regular', label: `常规 ${String(size.w)}×${String(size.h)}` },
-      {
-        id: 'size:wide',
-        label: `宽 ${String(Math.round(size.w * SIZE_PRESET_FACTOR.wide))}×${String(Math.round(size.h * SIZE_PRESET_FACTOR.wide))}`,
-      },
-      { type: 'separator', id: 'sep-1' },
-      { id: 'close', label: '关闭卡片', danger: true },
+      { id: 'lock', label: locked ? '解锁位置' : '锁定位置（不可移动与缩放）' },
     ];
-  }, [minimized, widget.card]);
+    // 锁定后几何相关的项一律不出现：菜单里能点、点了没反应是最糟的一种交互
+    if (locked) {
+      entries.push({ type: 'label', id: 'locked-label', text: '位置已锁定' });
+    } else {
+      entries.push(
+        { id: 'reset', label: '恢复默认尺寸' },
+        { id: 'center', label: '居中' },
+        { type: 'label', id: 'size-label', text: '尺寸' },
+        {
+          id: 'size:compact',
+          label: `紧凑 ${String(Math.round(size.w * SIZE_PRESET_FACTOR.compact))}×${String(Math.round(size.h * SIZE_PRESET_FACTOR.compact))}`,
+        },
+        { id: 'size:regular', label: `常规 ${String(size.w)}×${String(size.h)}` },
+        {
+          id: 'size:wide',
+          label: `宽 ${String(Math.round(size.w * SIZE_PRESET_FACTOR.wide))}×${String(Math.round(size.h * SIZE_PRESET_FACTOR.wide))}`,
+        },
+      );
+    }
+    entries.push({ type: 'separator', id: 'sep-1' }, { id: 'close', label: '关闭卡片', danger: true });
+    return entries;
+  }, [locked, minimized, widget.card]);
 
   const onMenuSelect = useCallback(
     (id: string): void => {
@@ -94,6 +107,10 @@ export function Card({
       const size = widget.card?.defaultSize ?? SPEC_DEFAULTS.cardDefaultSize;
       if (id === 'minimize') {
         runtime.toggleMinimize(widget.id);
+        return;
+      }
+      if (id === 'lock') {
+        runtime.setLocked(widget.id, !locked);
         return;
       }
       if (id === 'reset') {
@@ -115,11 +132,12 @@ export function Card({
         runtime.resizeTo(widget.id, { w: Math.round(size.w * factor), h: Math.round(size.h * factor) });
       }
     },
-    [runtime, widget.card, widget.id],
+    [locked, runtime, widget.card, widget.id],
   );
 
   const onHeaderKeyDown = useCallback(
     (event: ReactKeyboardEvent<HTMLDivElement>): void => {
+      if (locked) return; // 锁定的卡片不吃几何键（服务端也会拦，这里省掉一次无谓的 preventDefault）
       const step = event.shiftKey ? 32 : 8;
       const resizeStep = 16;
       const key = event.key;
@@ -136,12 +154,18 @@ export function Card({
           key === 'ArrowUp' ? -resizeStep : key === 'ArrowDown' ? resizeStep : 0,
         );
     },
-    [runtime, widget.id],
+    [locked, runtime, widget.id],
   );
 
   if (card === undefined || !card.open) return null;
 
-  const rect = live !== null && live.id === widget.id ? live.rect : card;
+  const stored = live !== null && live.id === widget.id ? live.rect : card;
+  // 最小化时**渲染**成一条标题栏：几何仍按原矩形留着，还原后回到原位原尺寸。
+  // 注意交出去的事实（size / sizeClass）仍旧按 stored 算 —— 内容还在树上，
+  // 不能因为折叠就让它看到一个负数高度。
+  const rect = minimized ? { ...stored, h: SPEC_DEFAULTS.titleBarHeight } : stored;
+  const contentSize = runtime.contentSize(stored);
+  const sizeClass = runtime.sizeClassOf(widget, stored);
   const content = widget.content;
   const contentProps = {
     frame: 'card' as const,
@@ -151,10 +175,11 @@ export function Card({
     ...(data.error === undefined ? {} : { error: data.error }),
     stale: data.stale,
     lastUpdatedAt: data.lastUpdatedAt,
-    size: runtime.contentSize(rect),
-    sizeClass: runtime.sizeClassOf(widget, rect),
+    size: contentSize,
+    sizeClass,
     setSize,
     minimized,
+    locked,
     refresh: data.refresh,
     retry: data.retry,
     close: () => {
@@ -180,23 +205,30 @@ export function Card({
       className={
         styles.card +
         (drag.dragging ? ' ' + styles.cardDragging : '') +
-        (minimized ? ' ' + styles.cardMinimized : '')
+        (minimized ? ' ' + styles.cardMinimized : '') +
+        (locked ? ' ' + styles.cardLocked : '')
       }
       style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h, zIndex }}
       role="dialog"
       aria-label={title}
       data-widget={widget.id}
-      data-size-class={contentProps.sizeClass}
+      data-size-class={sizeClass}
+      data-minimized={minimized ? 'true' : 'false'}
+      data-locked={locked ? 'true' : 'false'}
     >
       <div
         className={styles.cardHeader}
         tabIndex={0}
-        aria-label={`拖动标题栏移动卡片；方向键移动，Alt+方向键缩放；双击最小化`}
+        aria-label={
+          locked
+            ? '位置已锁定；双击最小化（在 ⋯ 菜单里解锁）'
+            : '拖动标题栏移动卡片；方向键移动，Alt+方向键缩放；双击最小化'
+        }
         onKeyDown={onHeaderKeyDown}
         onDoubleClick={() => {
           runtime.toggleMinimize(widget.id);
         }}
-        {...drag.handlers}
+        {...(locked ? {} : drag.handlers)}
       >
         <span className={styles.cardTitle}>{title}</span>
         {subtitle !== '' && !minimized && <span className={styles.cardSubtitle}>{subtitle}</span>}
@@ -206,6 +238,19 @@ export function Card({
             event.stopPropagation();
           }}
         >
+          {widget.card?.resizable !== false && (
+            <button
+              type="button"
+              className={styles.cardAction + (locked ? ' ' + styles.cardActionActive : '')}
+              aria-label={locked ? `解锁「${title}」的位置` : `锁定「${title}」的位置`}
+              aria-pressed={locked}
+              onClick={() => {
+                runtime.setLocked(widget.id, !locked);
+              }}
+            >
+              <LockGlyph locked={locked} />
+            </button>
+          )}
           {widget.card?.minimizable !== false && (
             <button
               type="button"
@@ -259,16 +304,19 @@ export function Card({
         </span>
       </div>
 
-      {!minimized && (
-        <div className={styles.cardBody}>
-          <div className={styles.contentHost}>
-            <WidgetErrorBoundary label={title} onError={onError} onRetry={data.retry}>
-              {body}
-            </WidgetErrorBoundary>
-          </div>
-          {widget.card?.resizable !== false && <ResizeHandles runtime={runtime} widget={widget} />}
+      <div
+        className={styles.cardBody + (minimized ? ' ' + styles.cardBodyHidden : '')}
+        aria-hidden={minimized}
+      >
+        <div className={styles.contentHost}>
+          <WidgetErrorBoundary label={title} onError={onError} onRetry={data.retry}>
+            {body}
+          </WidgetErrorBoundary>
         </div>
-      )}
+        {widget.card?.resizable !== false && !locked && !minimized && (
+          <ResizeHandles runtime={runtime} widget={widget} />
+        )}
+      </div>
     </div>
   );
 }

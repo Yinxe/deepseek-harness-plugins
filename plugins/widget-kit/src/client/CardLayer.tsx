@@ -22,17 +22,26 @@ export function CardLayer({
 }): ReactNode {
   const snapshot = useFramework(runtime);
   const byId = new Map(snapshot.widgets.map((widget) => [widget.id, widget]));
+  // 禁用的组件不渲染（运行时在 setEnabled 时已经把它们收起来了，这里是第二道闸：
+  // 刷新后恢复出来的布局里也可能留着一个刚被禁用的 id）
+  const disabled = new Set(snapshot.layout.disabled);
 
   const cards = snapshot.zOrder
     .map((id) => byId.get(id))
     .filter(
       (widget): widget is NonNullable<typeof widget> =>
-        widget !== undefined && widget.presentation === 'card',
+        widget !== undefined && widget.presentation === 'card' && !disabled.has(widget.id),
     );
 
   const popoverWidget = snapshot.openId === null ? undefined : byId.get(snapshot.openId);
+  // `snapshot.ready` 之前托盘还没渲染（偏好没到），此刻挂面板只会在兜底位闪一下
   const popover =
-    popoverWidget !== undefined && popoverWidget.presentation === 'popover' ? popoverWidget : undefined;
+    snapshot.ready &&
+    popoverWidget !== undefined &&
+    popoverWidget.presentation === 'popover' &&
+    !disabled.has(popoverWidget.id)
+      ? popoverWidget
+      : undefined;
 
   return (
     <div className={styles.layer} data-plugin-widget-kit-layer="">

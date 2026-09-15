@@ -1,12 +1,15 @@
 /**
  * 参考组件之二：注册表诊断（不是业务，是这个插件的「规范示例」）
  *
- * 它示范两件事：
+ * 它示范三件事：
  *  1. 组件提供方自己的界面**也能**用框架的公开面（`useFramework` 快照）看运行时状态；
- *  2. 同样的 `sizeClass` 分档：紧凑只报数量，常规逐条列出，宽档再显示来源与呈现方式。
+ *  2. 同样的 `sizeClass` 分档：紧凑只报数量，常规逐条列出，宽档再显示来源与呈现方式；
+ *  3. **在组件里动态启停别的组件**（`runtime.setEnabled`）—— 禁用后对方图标、卡片、面板与徽标
+ *     一并停用，这里能立刻看到注册表与托盘的变化。
  *
  * @module @dshp/widget-kit/client/widgets/diagnostics
  */
+import { Button } from '@deepseek-ai/dsh-client-ui-primitives';
 import type { ReactNode } from 'react';
 import { FRAMEWORK_VERSION } from '../spec.js';
 import type { WidgetContentProps, WidgetDescriptor } from '../spec.js';
@@ -32,6 +35,7 @@ function DiagnosticsView({
 }): ReactNode {
   const snapshot = useFramework(runtime);
   const compact = props.sizeClass === 'compact';
+  const disabled = new Set(snapshot.layout.disabled);
 
   return (
     <div className={styles.diag}>
@@ -45,22 +49,39 @@ function DiagnosticsView({
         <div className={styles.diagEmpty}>还没有任何插件注册组件。</div>
       ) : (
         <div className={styles.diagList}>
-          {snapshot.widgets.map((widget) => (
-            <div key={widget.id} className={styles.diagRow}>
-              <div className={styles.diagMain}>
-                <span className={styles.diagId}>{widget.id}</span>
+          {snapshot.widgets.map((widget) => {
+            const enabled = !disabled.has(widget.id);
+            return (
+              <div key={widget.id} className={styles.diagRow} data-disabled={enabled ? 'false' : 'true'}>
+                <div className={styles.diagMain}>
+                  <span className={styles.diagId}>{widget.id}</span>
+                  {!compact && (
+                    <span className={styles.diagMeta}>
+                      来源 {widget.owner} · {widget.presentation}
+                      {widget.tray.badge === null ? '' : ' · 有徽标'}
+                      {widget.presentation === 'card'
+                        ? ` · ${String(widget.card?.defaultSize.w ?? 0)}×${String(widget.card?.defaultSize.h ?? 0)}`
+                        : ''}
+                      {enabled ? '' : ' · 已禁用'}
+                    </span>
+                  )}
+                </div>
                 {!compact && (
-                  <span className={styles.diagMeta}>
-                    来源 {widget.owner} · {widget.presentation}
-                    {widget.tray.badge === null ? '' : ' · 有徽标'}
-                    {widget.presentation === 'card'
-                      ? ` · ${String(widget.card?.defaultSize.w ?? 0)}×${String(widget.card?.defaultSize.h ?? 0)}`
-                      : ''}
-                  </span>
+                  <div className={styles.diagActions}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        runtime.setEnabled(widget.id, !enabled);
+                      }}
+                    >
+                      {enabled ? '禁用' : '启用'}
+                    </Button>
+                  </div>
                 )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
       {props.error !== undefined && (

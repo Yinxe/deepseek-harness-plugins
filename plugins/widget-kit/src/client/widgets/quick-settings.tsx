@@ -4,6 +4,9 @@
  * 它是「小面板放快捷设置」这个用法的参考实现：不可拖动、不可缩放、单开，点图标展开，
  * 面板里直接改框架偏好（走 `runtime.setPrefs` → 宿主 settings.yaml）。
  *
+ * 它同时演示 `popover.persistent: true`（**常驻面板**）：点面板外的区域不会收起，方便一边看
+ * 设置一边操作界面；关它用面板上的「✕」、再点一次图标或 Esc。
+ *
  * 刻意不用下拉菜单（官方 `Menu` 是 portal + `z-index: 1100`，技术上没问题，但在 300px 的小面板里
  * 分段按钮更顺手、也更少层级）；这样面板里只有 `Switch` 与自己的 chip 按钮，键盘路径干净。
  *
@@ -152,7 +155,8 @@ function QuickSettingsView({ runtime }: { runtime: WidgetRuntime }): ReactNode {
 }
 
 /**
- * 快速设置组件描述符：`trigger: 'click'` —— 点图标展开，点外部 / Esc / 再点图标收起。
+ * 快速设置组件描述符：`trigger: 'click'` + `persistent: true` —— 点图标展开后**常驻**，
+ * 只有 ✕ / 再点图标 / Esc 才收起（不会因为点了别处而消失）。
  *
  * @param runtime - 框架运行时（读偏好、写偏好、清本机布局）。
  */
@@ -164,7 +168,7 @@ export function createQuickSettingsWidget(runtime: WidgetRuntime): WidgetDescrip
     icon: <SlidersGlyph />,
     order: 120,
     presentation: 'popover',
-    popover: { trigger: 'click', width: 300 },
+    popover: { trigger: 'click', width: 300, persistent: true },
     content: {
       title: '快速设置',
       render: (props: WidgetContentProps) => {

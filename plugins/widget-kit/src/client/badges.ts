@@ -3,6 +3,7 @@
  *
  * 为什么不让每个组件自己 `setInterval`：那会出现「10 个组件 = 10 个定时器 + 10 份请求」，
  * 页面切到后台也照跑。这里统一到期、统一可见性门控、统一退避，并提供冻结/超时兜底。
+ * 被禁用的组件（`runtime.isEnabled === false`）不排期，在飞的那次也会被中止。
  *
  * @module @dshp/widget-kit/client/badges
  */
@@ -133,6 +134,8 @@ export function createBadgeScheduler(deps: BadgeSchedulerDeps): BadgeScheduler {
 
     for (const widget of snapshot.widgets) {
       if (widget.tray.badge === null) continue;
+      // 被禁用的组件连徽标一起停：不进 alive，下面的清理循环会中止它在飞的请求并丢掉排期
+      if (!deps.runtime.isEnabled(widget.id)) continue;
       alive.add(widget.id);
       const entry = ensure(widget.id);
       if (entry.inFlight) continue;

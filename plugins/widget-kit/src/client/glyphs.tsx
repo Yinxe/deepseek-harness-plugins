@@ -5,12 +5,12 @@
  */
 import type { ReactNode } from 'react';
 
-function Glyph({ children }: { children: ReactNode }): ReactNode {
+function Glyph({ children, size = 18 }: { children: ReactNode; size?: number }): ReactNode {
   return (
     <svg
       viewBox="0 0 18 18"
-      width="18"
-      height="18"
+      width={size}
+      height={size}
       fill="none"
       stroke="currentColor"
       strokeWidth="1.4"
@@ -18,6 +18,25 @@ function Glyph({ children }: { children: ReactNode }): ReactNode {
     >
       {children}
     </svg>
+  );
+}
+
+/**
+ * 位置锁（卡片标题栏的锁定按钮）。
+ *
+ * @param locked - `true` = 已锁定（锁梁落下），`false` = 可移动（锁梁抬起）。
+ */
+export function LockGlyph({ locked }: { locked: boolean }): ReactNode {
+  return (
+    <Glyph size={13}>
+      <rect x="3.4" y="8" width="11.2" height="7.6" rx="1.8" />
+      {locked ? (
+        <path d="M6.4 8V6.2a2.6 2.6 0 0 1 5.2 0V8" strokeLinecap="round" />
+      ) : (
+        <path d="M6.4 8V6.2a2.6 2.6 0 0 1 5.2 0" strokeLinecap="round" />
+      )}
+      <circle cx="9" cy="11.6" r="0.9" />
+    </Glyph>
   );
 }
 
