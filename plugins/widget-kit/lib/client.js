@@ -30,7 +30,7 @@ module.exports = __toCommonJS(client_exports);
 
 // src/client/spec.ts
 var SPEC_VERSION = 1;
-var FRAMEWORK_VERSION = "0.4.1";
+var FRAMEWORK_VERSION = "0.4.2";
 var WIDGET_ID_PATTERN = /^[a-z0-9-]{2,32}:[a-z0-9-]{2,32}$/;
 var PRESENTATIONS = ["tray", "popover", "card"];
 var SPEC_DEFAULTS = {
@@ -2243,6 +2243,7 @@ function createWidgetRuntime(deps) {
   let sessionId = null;
   const hoverTimers = /* @__PURE__ */ new Map();
   let live = null;
+  let liveSnapView = null;
   const listeners = /* @__PURE__ */ new Set();
   const liveListeners = /* @__PURE__ */ new Set();
   const constraintsFor = (widget) => {
@@ -2402,7 +2403,7 @@ function createWidgetRuntime(deps) {
       disposed = true;
       registry.delete(value.id);
       cancelHoverTimer(value.id);
-      if (live?.id === value.id) live = null;
+      if (live?.id === value.id) clearLive();
       delete badges[value.id];
       const hadCard = state.cards[value.id] !== void 0;
       state = pruneId(state, value.id);
@@ -2612,7 +2613,7 @@ function createWidgetRuntime(deps) {
       popoverOrigin: wasPopover ? null : state.popoverOrigin
     };
     if (!enabled) delete badges[id];
-    if (live?.id === id) live = null;
+    if (live?.id === id) clearLive();
     persist();
     publish();
     notifyLive();
@@ -2630,7 +2631,7 @@ function createWidgetRuntime(deps) {
     if (existing !== void 0 && existing.locked === locked) return;
     const base = existing ?? makeCardState(widget, trackedCardCount());
     if (locked && live?.id === id) {
-      live = null;
+      clearLive();
       notifyLive();
     }
     writeCard(id, { ...base, locked }, true);
@@ -2638,11 +2639,24 @@ function createWidgetRuntime(deps) {
   function isLocked(id) {
     return state.cards[id]?.locked === true;
   }
+  function setLiveState(next) {
+    const previous = live;
+    live = next;
+    if (next === null || next.snap === null) {
+      liveSnapView = null;
+    } else if (previous === null || previous.snap === null || previous.id !== next.id || !isSameRect(previous.snap, next.snap)) {
+      liveSnapView = { id: next.id, rect: next.snap };
+    }
+    notifyLive();
+  }
+  function clearLive() {
+    live = null;
+    liveSnapView = null;
+  }
   function beginLive(id, mode) {
     if (widgetOf(id) === void 0) return;
     if (isLocked(id)) return;
-    live = { id, rect: rectOf(id), mode, snap: null };
-    notifyLive();
+    setLiveState({ id, rect: rectOf(id), mode, snap: null });
   }
   function setLive(id, rect) {
     if (live === null || live.id !== id) return;
@@ -2655,15 +2669,13 @@ function createWidgetRuntime(deps) {
       }
     }
     if (isSameRect(live.rect, contained) && snap === live.snap) return;
-    live = { id, rect: contained, mode: live.mode, snap };
-    notifyLive();
+    setLiveState({ id, rect: contained, mode: live.mode, snap });
   }
   function commitLive(id) {
     if (live === null || live.id !== id) return;
     const widget = widgetOf(id);
     const rect = live.snap ?? live.rect;
-    live = null;
-    notifyLive();
+    setLiveState(null);
     if (widget === void 0 || widget.presentation !== "card") return;
     const existing = state.cards[id];
     if (existing === void 0) {
@@ -2675,8 +2687,7 @@ function createWidgetRuntime(deps) {
   }
   function cancelLive() {
     if (live === null) return;
-    live = null;
-    notifyLive();
+    setLiveState(null);
   }
   function rectOf(id) {
     const widget = widgetOf(id);
@@ -2829,7 +2840,7 @@ function createWidgetRuntime(deps) {
     const ok = clearState(deps.storage);
     state = emptyState();
     cancelAllHoverTimers();
-    live = null;
+    clearLive();
     for (const key of Object.keys(badges)) delete badges[key];
     publish();
     notifyLive();
@@ -2857,8 +2868,7 @@ function createWidgetRuntime(deps) {
     if (live !== null) {
       const widget = widgetOf(live.id);
       if (widget !== void 0) {
-        live = { ...live, rect: clampRect(live.rect, constraintsFor(widget), viewport) };
-        notifyLive();
+        setLiveState({ ...live, rect: clampRect(live.rect, constraintsFor(widget), viewport) });
       }
     }
     publish();
@@ -2927,7 +2937,7 @@ function createWidgetRuntime(deps) {
     },
     getLive: () => live,
     getLiveFor: (id) => live !== null && live.id === id ? live : null,
-    getLiveSnap: () => live === null || live.snap === null ? null : { id: live.id, rect: live.snap },
+    getLiveSnap: () => liveSnapView,
     beginLive,
     setLive,
     commitLive,

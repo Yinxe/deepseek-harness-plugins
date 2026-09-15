@@ -45,7 +45,21 @@ const ReactStub = {
   useCallback: (fn) => fn,
   useMemo: (fn) => fn(),
   useRef: (initial) => ({ current: initial }),
-  useSyncExternalStore: (_subscribe, getSnapshot) => getSnapshot(),
+  /**
+   * `useSyncExternalStore` 替身，但**会检查快照稳定性**：真实 React 每次渲染都会调 `getSnapshot()`，
+   * 只要连续两次拿到的不是同一个值，就判定「外部数据一直在变」并掉进无限渲染（React error #185）。
+   * 这个断言正是为了拦住那类事故 —— 实机上就因为 `getLiveSnap()` 每帧新建对象崩过整个卡片层。
+   */
+  useSyncExternalStore: (_subscribe, getSnapshot) => {
+    const first = getSnapshot();
+    const second = getSnapshot();
+    if (!Object.is(first, second)) {
+      throw new Error(
+        'getSnapshot 必须缓存：连续两次调用返回了不同引用 —— 真实 React 会因此无限重渲染（#185）',
+      );
+    }
+    return first;
+  },
 };
 
 const jsxRuntime = {
@@ -123,7 +137,7 @@ globalThis.fetch = async (url, init) => {
     async json() {
       return {
         ok: true,
-        version: '0.4.1',
+        version: '0.4.2',
         specVersion: 1,
         config: {
           trayEnabled: true,
@@ -236,7 +250,7 @@ const expectedServiceKeys = [...EXPECTED_SERVICE_KEYS];
 expectedServiceKeys.sort();
 assert.deepEqual(actualServiceKeys, expectedServiceKeys, 'widgets 服务的成员必须与 SPEC_KEYS.service 一致');
 assert.equal(service.specVersion, 1);
-assert.equal(service.frameworkVersion, '0.4.1');
+assert.equal(service.frameworkVersion, '0.4.2');
 
 // ── 2. 槽位注册 ──────────────────────────────────────────────────────────
 assert.deepEqual(injections, ['conversation.session.header.utilities', 'shell.overlay', 'settings.section']);

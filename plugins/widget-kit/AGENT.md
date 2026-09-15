@@ -68,11 +68,14 @@
    `preventDefault()`，锁定分支也要）。
    吸附参数（`snapGap` / `snapDistance`）只在 `SPEC_DEFAULTS` 与 `geometry.ts` 各一份，由
    `check-geometry.mjs` 断言相等。
-6. **两档快照 + 按 id 切开订阅**：live 快照（`subscribeLive`/`getLive`）与 layout 快照分开，
-   60fps 的拖动不得带着托盘和其它卡重渲染。订阅必须用 `useLiveGeometry(runtime, id)` /
-   `useGestureCursor` / `useLiveSnap`：它们在「这一帧与这一张卡无关」时快照**引用不变**
-   （`getLiveFor` 恒 `null`、cursor 是字符串、吸附候选没变就复用同一个对象）。
-   早先版本用全局 `getLive()` 且让卡片层直接订阅，结果拖动时**所有卡片连同内容每帧重渲染**，
+6. **两档快照 + 按 id 切开订阅 + 快照引用必须稳定**：live 快照（`subscribeLive`/`getLive`）与 layout
+   快照分开，60fps 的拖动不得带着托盘和其它卡重渲染。订阅必须用 `useLiveGeometry(runtime, id)` /
+   `useGestureCursor` / `useLiveSnap`：状态没变时 `getSnapshot()` **必须返回同一个引用**
+   （`getLiveFor` 恒 `null`、cursor 是字符串、吸附候选用 `liveSnapView` 复用对象）——
+   这是 `useSyncExternalStore` 的硬要求，每次新建对象会让 React 无限重渲染（error #185，实机崩过整个
+   卡片层）。`check-client.mjs` 的 `useSyncExternalStore` 替身会连续调两次 `getSnapshot` 并断言
+   `Object.is` 相等，专门拦这一类事故。
+   早先版本还用全局 `getLive()` 且让卡片层直接订阅，结果拖动时**所有卡片连同内容每帧重渲染**，
    表现就是「拖动有时卡」。
 7. **悬停语义只有一份实现**：延迟展开、宽限收起、`popoverOrigin`（被点开的不受移开指针影响）都在
    `service.ts`。托盘只报「指针进出图标」、面板只报「指针进出面板」，两边都调 `hoverEnter`/`hoverLeave` ——

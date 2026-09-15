@@ -101,7 +101,12 @@ export interface WidgetRuntime {
   getLive(): LiveGeometry | null;
   /** 只关心「我自己是不是正在被拖」的订阅者用它：别的卡片永远拿到 `null`（引用稳定，不触发重渲染）。 */
   getLiveFor(id: string): LiveGeometry | null;
-  /** 当前吸附预览（拖动期间画虚框用；没有候选时为 `null`，引用稳定）。 */
+  /**
+   * 当前吸附预览（拖动期间画虚框用；没有候选时为 `null`）。
+   *
+   * **引用必须稳定**：候选没变时返回同一个对象 —— `useSyncExternalStore` 每次渲染都会调用它，
+   * 每次新建对象会被判定成「外部数据变了」，直接掉进无限渲染（React error #185）。
+   */
   getLiveSnap(): { id: string; rect: Rect } | null;
   beginLive(id: string, mode: 'move' | ResizeDir): void;
   setLive(id: string, rect: Rect): void;
@@ -192,6 +197,8 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   /** 悬停展开/收起用的挂起定时器（按组件 id 存取消函数）。 */
   const hoverTimers = new Map<string, () => void>();
   let live: LiveGeometry | null = null;
+  /** `getLiveSnap()` 的返回值：只有吸附候选真的变了才换新对象（见 `setLiveState`）。 */
+  let liveSnapView: { id: string; rect: Rect } | null = null;
 
   const listeners = new Set<() => void>();
   const liveListeners = new Set<() => void>();
@@ -397,7 +404,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       disposed = true;
       registry.delete(value.id);
       cancelHoverTimer(value.id);
-      if (live?.id === value.id) live = null;
+      if (live?.id === value.id) clearLive();
       delete badges[value.id];
       const hadCard = state.cards[value.id] !== undefined;
       // pruneId 一并清掉卡片、托盘顺序/隐藏、层叠顺序、内容面目标与禁用记录
@@ -644,7 +651,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       popoverOrigin: wasPopover ? null : state.popoverOrigin,
     };
     if (!enabled) delete badges[id];
-    if (live?.id === id) live = null;
+    if (live?.id === id) clearLive();
     persist();
     publish();
     notifyLive();
@@ -666,7 +673,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     if (existing !== undefined && existing.locked === locked) return;
     const base: CardState = existing ?? makeCardState(widget, trackedCardCount());
     if (locked && live?.id === id) {
-      live = null;
+      clearLive();
       notifyLive();
     }
     writeCard(id, { ...base, locked }, true);
@@ -678,12 +685,40 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
 
   // ── live 几何（拖拽/缩放每帧） ────────────────────────────────────────
 
+  /**
+   * 写入 live 状态，并顺手维护吸附预览的**稳定快照**。
+   *
+   * 为什么需要单独一份：`useSyncExternalStore` 每次渲染都会调 `getSnapshot()`，只要返回新对象
+   * 就认为数据变了 —— 于是「每帧新建 `{ id, rect }`」会让虚框组件无限重渲染并把整个卡片层打挂
+   * （React error #185，用户实机报过一次）。候选没变时这里必须复用同一个对象。
+   */
+  function setLiveState(next: LiveGeometry | null): void {
+    const previous = live;
+    live = next;
+    if (next === null || next.snap === null) {
+      liveSnapView = null;
+    } else if (
+      previous === null ||
+      previous.snap === null ||
+      previous.id !== next.id ||
+      !isSameRect(previous.snap, next.snap)
+    ) {
+      liveSnapView = { id: next.id, rect: next.snap };
+    }
+    notifyLive();
+  }
+
+  /** 清掉 live（卸载 / 禁用 / 锁定 / 重置）：连同稳定快照一起，调用方负责 `notifyLive()`。 */
+  function clearLive(): void {
+    live = null;
+    liveSnapView = null;
+  }
+
   function beginLive(id: string, mode: 'move' | ResizeDir): void {
     if (widgetOf(id) === undefined) return;
     // 锁定 = 位置与尺寸都不可改：拖拽/缩放在入口就被挡住（键盘与菜单走 applyRect 的同一道锁）
     if (isLocked(id)) return;
-    live = { id, rect: rectOf(id), mode, snap: null };
-    notifyLive();
+    setLiveState({ id, rect: rectOf(id), mode, snap: null });
   }
 
   /**
@@ -704,8 +739,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       }
     }
     if (isSameRect(live.rect, contained) && snap === live.snap) return;
-    live = { id, rect: contained, mode: live.mode, snap };
-    notifyLive();
+    setLiveState({ id, rect: contained, mode: live.mode, snap });
   }
 
   function commitLive(id: string): void {
@@ -713,8 +747,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     const widget = widgetOf(id);
     // 松手时如果吸附预览还在，就落到预览位置；否则落回自由位置（用户「不同意」吸附）
     const rect = live.snap ?? live.rect;
-    live = null;
-    notifyLive();
+    setLiveState(null);
     if (widget === undefined || widget.presentation !== 'card') return;
     const existing = state.cards[id];
     // 还没有持久记录（理论上拖拽前一定 open 过，这里只做兜底）：直接把本次几何写进去，
@@ -729,8 +762,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
 
   function cancelLive(): void {
     if (live === null) return;
-    live = null;
-    notifyLive();
+    setLiveState(null);
   }
 
   // ── 键盘与程序化几何 ──────────────────────────────────────────────────
@@ -913,7 +945,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     const ok = clearState(deps.storage);
     state = emptyState();
     cancelAllHoverTimers();
-    live = null;
+    clearLive();
     for (const key of Object.keys(badges)) delete badges[key];
     publish();
     notifyLive();
@@ -944,8 +976,8 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     if (live !== null) {
       const widget = widgetOf(live.id);
       if (widget !== undefined) {
-        live = { ...live, rect: clampRect(live.rect, constraintsFor(widget), viewport) };
-        notifyLive();
+        // 视口变化只把活动几何夹回来；吸附候选留到下一帧重算（稳定快照由 setLiveState 维护）
+        setLiveState({ ...live, rect: clampRect(live.rect, constraintsFor(widget), viewport) });
       }
     }
     publish();
@@ -1022,7 +1054,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     },
     getLive: () => live,
     getLiveFor: (id) => (live !== null && live.id === id ? live : null),
-    getLiveSnap: () => (live === null || live.snap === null ? null : { id: live.id, rect: live.snap }),
+    getLiveSnap: () => liveSnapView,
     beginLive,
     setLive,
     commitLive,
