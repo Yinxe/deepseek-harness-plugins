@@ -21,11 +21,11 @@ export const STORE_KEY = 'dshp-widget-kit:v1';
 /** 存储结构版本。 */
 export const STORE_VERSION = 1;
 
-/** 最多跟踪多少张卡片（防脏数据把 store 撑爆）。 */
-export const MAX_TRACKED = 64;
+/** 最多跟踪多少张卡片（防脏数据把 store 撑爆）。超了保留**最新**的这批。 */
+export const MAX_TRACKED = 96;
 
 /** 列表（托盘顺序 / 隐藏集合 / 禁用集合 / 层叠顺序）长度上限。 */
-export const MAX_LIST = 64;
+export const MAX_LIST = 96;
 
 /** 拖拽/缩放结束后落盘的延迟（合并抖动）。 */
 export const SAVE_DEBOUNCE_MS = 300;
@@ -137,7 +137,9 @@ export function sanitizeState(raw: unknown, deps: SanitizeDeps): PersistedState 
   const cardsRaw = isRecord(raw['cards']) ? raw['cards'] : {};
   const cards: Record<string, CardState> = {};
   let tracked = 0;
-  for (const id of Object.keys(cardsRaw)) {
+  // 超上限时保留**最新**的记录（对象键序 = 写入顺序），别把刚拖好位置的那张挤掉
+  const cardIds = Object.keys(cardsRaw);
+  for (const id of cardIds.slice(-MAX_TRACKED)) {
     if (tracked >= MAX_TRACKED) break;
     if (!deps.isKnown(id)) continue;
     const value = cardsRaw[id];

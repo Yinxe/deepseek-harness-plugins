@@ -224,11 +224,18 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     return { gap: SPEC_DEFAULTS.snapGap, distance: SPEC_DEFAULTS.snapDistance };
   }
 
-  /** 屏幕上真正占位的其它卡片（不含自己；最小化的只留一条标题栏，不作为吸附对象）。 */
+  /**
+   * 屏幕上真正占位的其它卡片（不含自己）。
+   *
+   * 两个过滤条件都是必需的：最小化的只留一条标题栏（不作为吸附对象）；
+   * **不在册的不算** —— 卸载/热重载后布局记录会留着（见 register 的 disposer），
+   * 但它此刻并没有渲染出来，不能当成吸附对象或障碍。
+   */
   function othersOf(exceptId: string): Rect[] {
     const out: Rect[] = [];
     for (const [id, card] of Object.entries(state.cards)) {
       if (id === exceptId || !card.open || card.minimized) continue;
+      if (!registry.has(id)) continue;
       out.push({ x: card.x, y: card.y, w: card.w, h: card.h });
     }
     return out;
@@ -363,13 +370,24 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
 
   // ── 几何辅助 ──────────────────────────────────────────────────────────
 
-  /** 真正占着屏幕的卡片数（`open` 但已最小化的不算）。 */
+  /** 真正占着屏幕的卡片数（`open` 但已最小化的不算；不在册的残留记录不算）。 */
   function visibleCardCount(): number {
-    return Object.values(state.cards).filter((c) => c.open && !c.minimized).length;
+    let count = 0;
+    for (const [id, card] of Object.entries(state.cards)) {
+      if (!card.open || card.minimized) continue;
+      if (!registry.has(id)) continue;
+      count += 1;
+    }
+    return count;
   }
 
+  /** 有记录的在册卡片数：层叠落点的「第几张」用它算。残留记录（卸载后留着的）不算。 */
   function trackedCardCount(): number {
-    return Object.keys(state.cards).length;
+    let count = 0;
+    for (const id of Object.keys(state.cards)) {
+      if (registry.has(id)) count += 1;
+    }
+    return count;
   }
 
   function makeCardState(widget: NormalizedWidget, index: number): CardState {
@@ -396,7 +414,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   function enforceCardLimit(exceptId: string): void {
     if (visibleCardCount() <= SPEC_DEFAULTS.maxOpenCards) return;
     for (const id of state.zOrder) {
-      if (id === exceptId) continue;
+      if (id === exceptId || !registry.has(id)) continue;
       const card = state.cards[id];
       if (card === undefined || !card.open || card.minimized) continue;
       writeCard(id, { ...card, minimized: true }, false);
@@ -447,13 +465,10 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
         transientOrigin = null;
       }
       delete badges[value.id];
-      const hadCard = state.cards[value.id] !== undefined;
-      // pruneId 一并清掉卡片、托盘顺序/隐藏、层叠顺序、内容面目标与禁用记录
-      state = pruneId(state, value.id);
-      if (hadCard) {
-        deps.onNotice?.(`组件「${value.id}」已卸载，它的卡片与本机布局记录一并清除`);
-      }
-      persist();
+      // **卸载不动本机布局**（这是刻意的）：插件热重载 / 暂时停用 / 开发中构建失败都会走到这里，
+      // 早先版本在这条路径上 `pruneId` 把卡片、托盘顺序、隐藏/禁用、层叠顺序、内容面目标全删了 ——
+      // 于是每改一次代码布局就被重置一次。记录按 id 保存，重新注册回来时原地恢复；
+      // 真正卸载掉的插件留下的残留，由设置页的「清理已卸载组件的残留」显式清理（见 pruneOrphans）。
       publish();
       notifyLive();
     };
@@ -965,7 +980,13 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     publish();
   }
 
-  /** 清理「在册但从未注册」的残留。启动一段时间后调一次（此时各插件的 client 半都已注册）。 */
+  /**
+   * 清理「一直没人注册」的本机布局残留（设置页的手动动作，**不再自动跑**）。
+   *
+   * 自动跑过一次（启动后 5 秒），但那会在开发时误伤：插件热重载 / 正在改的插件没加载成功 /
+   * 临时禁用某个插件，都会让它的组件在这 5 秒里「不在册」，于是布局被当成残留删掉。
+   * 现在只在用户显式点「清理已卸载组件的残留」时执行。
+   */
   function pruneOrphans(): number {
     const known = [...registry.keys()];
     const isKnown = (id: string): boolean => known.includes(id);
@@ -1063,7 +1084,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     }
     const nextCards: Record<string, CardState> = { ...state.cards };
     for (const [id, card] of Object.entries(state.cards)) {
-      if (!card.open) continue;
+      if (!card.open || !registry.has(id)) continue;
       nextCards[id] = { ...card, open: false, minimized: false };
       changed = true;
     }

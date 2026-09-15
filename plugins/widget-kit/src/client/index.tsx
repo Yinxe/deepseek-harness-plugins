@@ -17,6 +17,9 @@
  *  3. 徽标调度器（`ctx.interval` 一秒一拍，随 effect 自动销毁）；
  *  4. 参考组件（时钟 + 注册表诊断，可在设置里关掉）。
  *
+ * **不做自动残留清理**：卸载 / 热重载**不动**本机布局（按 id 保留，重新注册回来即原地恢复）；
+ * 真卸载掉的插件留下的残留，由设置页的「清理已卸载组件的残留」显式清理（`runtime.pruneOrphans`）。
+ *
  * @module @dshp/widget-kit/client
  */
 import { createBadgeScheduler } from './badges.js';
@@ -210,20 +213,6 @@ export function apply(ctx: ClientContext): void {
     );
   } catch (error) {
     logError('[dshp-widget-kit] 注册偏好兜底失败：', error);
-  }
-
-  try {
-    ctx.effect(
-      () =>
-        ctx.timeout(() => {
-          // 各插件的 client 半此时都已注册：清掉「已卸载插件」留下的卡片与托盘项
-          const removed = runtime.pruneOrphans();
-          if (removed > 0) notice(`已清理 ${String(removed)} 个已卸载组件的本机布局残留`);
-        }, 5000),
-      'dshp-widget-kit: prune orphans',
-    );
-  } catch (error) {
-    logError('[dshp-widget-kit] 注册残留清理失败：', error);
   }
 
   // ── 4. 视口 / 徽标调度 ────────────────────────────────────────────────

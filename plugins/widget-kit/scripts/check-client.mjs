@@ -137,7 +137,7 @@ globalThis.fetch = async (url, init) => {
     async json() {
       return {
         ok: true,
-        version: '0.6.0',
+        version: '0.7.0',
         specVersion: 1,
         config: {
           trayEnabled: true,
@@ -250,7 +250,7 @@ const expectedServiceKeys = [...EXPECTED_SERVICE_KEYS];
 expectedServiceKeys.sort();
 assert.deepEqual(actualServiceKeys, expectedServiceKeys, 'widgets 服务的成员必须与 SPEC_KEYS.service 一致');
 assert.equal(service.specVersion, 1);
-assert.equal(service.frameworkVersion, '0.6.0');
+assert.equal(service.frameworkVersion, '0.7.0');
 
 // ── 2. 槽位注册 ──────────────────────────────────────────────────────────
 assert.deepEqual(injections, ['conversation.session.header.utilities', 'shell.overlay', 'settings.section']);
@@ -284,8 +284,11 @@ for (const entry of effects) {
 assert.ok(effects.length >= 8, `effect 数量太少（${String(effects.length)}），装配可能被吞掉了`);
 assert.ok(intervals.includes(1000), '徽标调度必须挂在 1s 的 ctx.interval 上');
 const timeoutMs = timeouts.map((entry) => entry.ms);
-assert.ok(timeoutMs.includes(5000), '启动后清理残留必须挂在 ctx.timeout 上');
 assert.ok(timeoutMs.includes(3000), '偏好读取必须有兜底超时（否则托盘可能一直不渲染）');
+assert.ok(
+  !timeoutMs.includes(5000),
+  '不得再有「启动 5 秒后自动清理残留」：插件热重载时组件会短暂不在册，自动清理会把开发中的布局误删',
+);
 
 /** 把指定延时的挂起任务「到点」（悬停展开/收起是定时器驱动的，自检里要能确定性地推进它）。 */
 function fireTimeouts(ms) {
@@ -1275,6 +1278,62 @@ assert.ok(
 );
 runtime.setLocked('demo:dock-a', false);
 assert.equal(headerButtons('demo:dock-a').length, 3, '解锁后标题栏恢复：锁定 + 最小化 + 关闭');
+
+// 10.11 卸载 / 热重载**不得**动本机布局（插件开发时每改一次代码就会走一遍这条路径）
+const reloadWidget = makeCard('demo:reload', '重载卡片');
+const disposeReload = service.register(reloadWidget);
+service.open('demo:reload');
+runtime.setLocked('demo:reload', true);
+runtime.minimize('demo:reload');
+runtime.restore('demo:reload');
+runtime.setHidden('demo:reload', true);
+runtime.saveNow();
+const reloadRect = runtime.rectOf('demo:reload');
+const beforeUnload = persisted();
+assert.equal(beforeUnload.cards['demo:reload'].open, true, '前置：卡片状态已落盘');
+assert.equal(beforeUnload.cards['demo:reload'].locked, true);
+assert.ok(beforeUnload.tray.order.includes('demo:reload'), '前置：托盘顺序里有它');
+assert.ok(beforeUnload.tray.hidden.includes('demo:reload'), '前置：隐藏集合里有它');
+
+// 卸载（= 插件热重载 / 暂时停用时发生的事）
+disposeReload();
+runtime.saveNow();
+assert.equal(
+  service.list().some((item) => item.id === 'demo:reload'),
+  false,
+  '卸载后注册表里没有它',
+);
+const afterUnload = persisted();
+assert.ok(
+  afterUnload.cards['demo:reload'] !== undefined,
+  '卸载**不得**删掉它的卡片记录（否则每改一次代码布局就重置一次）',
+);
+assert.equal(afterUnload.cards['demo:reload'].locked, true, '锁定状态必须留着');
+assert.equal(afterUnload.cards['demo:reload'].open, true, '打开状态必须留着（注册回来就恢复）');
+assert.ok(afterUnload.tray.order.includes('demo:reload'), '托盘顺序必须留着');
+assert.ok(afterUnload.tray.hidden.includes('demo:reload'), '隐藏集合必须留着');
+
+// 重新注册（= 热重载完成）：卡片原地回来，位置/锁定/隐藏一个不少
+const disposeReloadAgain = service.register(reloadWidget);
+assert.equal(service.isOpen('demo:reload'), true, '注册回来必须恢复「开着」');
+assert.deepEqual(runtime.rectOf('demo:reload'), reloadRect, '位置必须还是原来那个');
+assert.equal(runtime.isLocked('demo:reload'), true, '锁定状态必须还在');
+assert.ok(runtime.getSnapshot().layout.tray.hidden.includes('demo:reload'), '隐藏状态必须还在');
+
+// 手动清理（设置页按钮）：只清「不在册且一直没回来」的残留，在册组件不受影响
+disposeReloadAgain();
+const liveIds = service.list().map((item) => item.id);
+const removedOrphans = runtime.pruneOrphans();
+assert.ok(removedOrphans >= 1, '显式清理必须能清掉不在册的残留');
+runtime.saveNow(); // 落盘是 300ms 合并写，读盘前先 flush
+const afterPrune = persisted();
+assert.equal(afterPrune.cards['demo:reload'], undefined, '残留记录这时才被清掉');
+for (const id of liveIds) {
+  assert.ok(
+    afterPrune.tray.order.includes(id) || afterPrune.cards[id] === undefined,
+    `在册组件「${id}」的布局不得被清理动作波及`,
+  );
+}
 
 disposeDockA();
 disposeDockB();

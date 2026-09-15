@@ -2,8 +2,10 @@
  * 设置节：`设置 → 小组件`
  *
  * 这里放的是**用户配置**（进 settings.yaml 的 `dshp-widget-kit` 分节）；**本机布局**（托盘顺序、
- * 卡片位置尺寸与锁定、隐藏/禁用集合、层叠顺序）留在浏览器 localStorage，只提供一个
- * 「清空本机布局」的动作 —— 这条边界写在 docs/widget-spec.md 里。
+ * 卡片位置尺寸与锁定、隐藏/禁用集合、层叠顺序）留在浏览器 localStorage，只有两个动作：
+ * 「清空本机布局」（全清）与「清理已卸载组件的残留」（只清不在册的 id）—— 这条边界写在
+ * docs/widget-spec.md 里。后者是手动的：插件热重载/暂时停用都会短暂「不在册」，
+ * 自动清理会把开发中的布局误删。
  *
  * 下面的组件列表同时是**动态启停**的入口：禁用 = 图标、卡片、面板、徽标一并停用（软卸载），
  * 注册记录与本机布局都保留，随时可以再启用。
@@ -238,6 +240,20 @@ export function SettingsSection({
           }}
         >
           清空本机布局
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            const removed = runtime.pruneOrphans();
+            setNotice(
+              removed > 0
+                ? `已清理 ${String(removed)} 个「已卸载且一直没回来」的组件残留（在册组件的布局不受影响）。`
+                : '没有可清理的残留：当前所有布局记录都对应着在册组件。',
+            );
+          }}
+        >
+          清理已卸载组件的残留
         </Button>
         <span className={styles.rowHint}>
           框架 v{runtime.frameworkVersion} · 契约 SPEC v{String(runtime.specVersion)}

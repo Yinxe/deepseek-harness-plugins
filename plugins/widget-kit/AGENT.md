@@ -52,14 +52,19 @@
    `check-geometry.mjs` 断言相等。
 2. **父子常量不重复第四遍**：`TITLE_BAR_HEIGHT` / `CONTENT_PADDING` / `CASCADE_STEP` /
    `SNAP_GAP`+`SNAP_DISTANCE` 只在 `geometry.ts` 与 `SPEC_DEFAULTS` 各一份，靠自检对齐。
-3. **本机布局 vs 用户配置**：布局进 localStorage（`dshp-widget-kit:v1`），配置进 settings.yaml NS。
+3. **卸载 / 热重载不得动本机布局**：`register` 的 disposer 只清运行时的东西（注册表、徽标、锚点、live、
+   展开目标），**绝不 `pruneId`** —— 插件热重载、暂时停用、开发中构建失败都会走这条路径，
+   早先版本在这里删记录，于是「开发时每改一次代码组件状态就被重置」。残留只由设置页的
+   `pruneOrphans()` 显式清理。**不在册的记录不能参与任何运行时判定**：渲染、吸附对象（`othersOf`）、
+   同屏上限与层叠序号（`visibleCardCount` / `trackedCardCount`）都要先 `registry.has(id)`。
+4. **本机布局 vs 用户配置**：布局进 localStorage（`dshp-widget-kit:v1`），配置进 settings.yaml NS。
    任何新状态都要先归到这两边之一，不许开第三个坑（见 `docs/widget-spec.md` §7）。
    存储结构只允许**向后兼容地追加字段**（老记录缺字段 = 用默认值），破坏性改动才 bump `STORE_VERSION`。
    凡是「用户看得见的状态」（开着的卡片、展开的面板、层叠顺序、锁定、禁用）都必须进本机布局 ——
    只放内存的后果就是刷新即丢（0.2.0 的教训）。
-4. **几何只有一道锁**：拖动/缩放（`beginLive`）、键盘微调、菜单预设、内容 `setSize`、居中全部经过
+5. **几何只有一道锁**：拖动/缩放（`beginLive`）、键盘微调、菜单预设、内容 `setSize`、居中全部经过
    `applyRect` 或 `beginLive`，锁定判定就放在这两处；卡片 UI 另外把几何项从菜单里摘掉（点了没反应最糟）。
-5. **移动模型只有一处实现**：`geometry.snapRect` 只算**吸附候选**（视口边 / 邻卡边 / 对齐线，
+6. **移动模型只有一处实现**：`geometry.snapRect` 只算**吸附候选**（视口边 / 邻卡边 / 对齐线，
    夹进视口 + 磁力，绝不移动卡片本体），`service.setLive` 每帧把「自由位置 + 候选」一起放进
    `LiveGeometry`，`commitLive` 才决定用哪个（有候选就用候选 = 松手同意吸附）。
    **允许卡片互相覆盖**：不要在任何地方加「必须让开别人」的硬约束。
@@ -69,7 +74,7 @@
    `preventDefault()`，锁定分支也要）。
    吸附参数（`snapGap` / `snapDistance`）只在 `SPEC_DEFAULTS` 与 `geometry.ts` 各一份，由
    `check-geometry.mjs` 断言相等。
-6. **两档快照 + 按 id 切开订阅 + 快照引用必须稳定**：live 快照（`subscribeLive`/`getLive`）与 layout
+7. **两档快照 + 按 id 切开订阅 + 快照引用必须稳定**：live 快照（`subscribeLive`/`getLive`）与 layout
    快照分开，60fps 的拖动不得带着托盘和其它卡重渲染。订阅必须用 `useLiveGeometry(runtime, id)` /
    `useGestureCursor` / `useLiveSnap`：状态没变时 `getSnapshot()` **必须返回同一个引用**
    （`getLiveFor` 恒 `null`、cursor 是字符串、吸附候选用 `liveSnapView` 复用对象）——
@@ -78,22 +83,22 @@
    `Object.is` 相等，专门拦这一类事故。
    早先版本还用全局 `getLive()` 且让卡片层直接订阅，结果拖动时**所有卡片连同内容每帧重渲染**，
    表现就是「拖动有时卡」。
-7. **悬停语义只有一份实现**：延迟展开、宽限收起、`transientOrigin`（被点开的不受移开指针影响）都在
+8. **悬停语义只有一份实现**：延迟展开、宽限收起、`transientOrigin`（被点开的不受移开指针影响）都在
    `service.ts`。托盘只报「指针进出图标」、面板只报「指针进出面板」，两边都调 `hoverEnter`/`hoverLeave` ——
    这样「图标 → 面板」的间隙才被同一条宽限覆盖，被取消的定时器也不会事后自己蹦出来。
    展开状态分**两层**：`channelOf(widget)` 由 `popover.persistent` 决定 —— 常驻层（`state.popoverId`，
    手风琴、落盘）与临时层（局部变量 `transientId`，只在内存）。**两层互不干扰**是刻意的：
    `showPopover` / `hidePopover` / `hoverLeave` / `open` / `toggle` 一律只动自己那一层，
    卡片层把两层各渲染一个面板（可以同时出现）。
-8. **服务只发布 facade**：`createWidgetsService(runtime)` 只暴露 `SPEC_KEYS.service` 那几个成员，
+9. **服务只发布 facade**：`createWidgetsService(runtime)` 只暴露 `SPEC_KEYS.service` 那几个成员，
    内部方法（`setLive`/`commitLive`/`pruneOrphans`…）不出插件。
-9. **内容数据生命周期只在 `useWidgetData`**：组件提供方不写请求代码；`popover` 的 `setSize` 是
-   `undefined`（不是静默 no-op）；尺寸回环防护在 `service.requestSize` 里硬停。
-10. **错误隔离三层**：`badge` 与 `load` 各自 try/catch + 超时；`render` 走 `WidgetErrorBoundary`
+10. **内容数据生命周期只在 `useWidgetData`**：组件提供方不写请求代码；`popover` 的 `setSize` 是
+    `undefined`（不是静默 no-op）；尺寸回环防护在 `service.requestSize` 里硬停。
+11. **错误隔离三层**：`badge` 与 `load` 各自 try/catch + 超时；`render` 走 `WidgetErrorBoundary`
     （全插件唯一 class 组件）；托盘图标渲染失败不影响其它图标。
-11. **不写产品 DOM**：不使用 portal 到 `document.body`（popover 定位靠官方 `useAnchoredPosition`），
+12. **不写产品 DOM**：不使用 portal 到 `document.body`（popover 定位靠官方 `useAnchoredPosition`），
     只通过槽位落点渲染；样式里不出现字面色值。
-12. **托盘拖拽必须用「冻结槽位」**：`pointerdown` 量一次各图标槽位（`readSlots`），拖动期间**不再读 DOM**，
+13. **托盘拖拽必须用「冻结槽位」**：`pointerdown` 量一次各图标槽位（`readSlots`），拖动期间**不再读 DOM**，
     命中判定与让位位移都由纯函数 `store.planTrayDrag` 算（双向对称，`check-store.mjs` 有用例）。
     拖动期间**不重排 DOM**：被拖图标用 `translateX` 跟手、其余图标平移一格让位、目标槽位画 `.trayGhost`；
     松手才 `runtime.setOrder` 提交。历史上两次方向性 bug（先只能从右往左、后只能从左往右）都出在
@@ -103,11 +108,11 @@
 
 `pnpm --filter @dshp/widget-kit test` 串起六个检查（全部只依赖 node 内建模块）：
 
-| 脚本                                   | 覆盖                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `check-geometry.mjs`                   | 夹紧（整卡留在视口内）、层叠落点、内容盒换算、尺寸档阈值、八向缩放（对边固定/上下限/北向不越 0）、z 序、与 spec 常量不漂移，以及**吸附候选**（贴视口边与邻卡边、边缘对齐、8px 间隔、允许覆盖、结果稳定、多邻卡取最近）                                                                                                                                                                                                                                                             |
-| `check-store.mjs`                      | 消毒（坏结构/版本/类型/未知 id/超长/夹紧/布尔强制/新增字段默认值）、读写降级、debounce/flush/cancel/onError、菜单顺序、一维拖拽排序（左右双向 + 不振荡）、卸载清理                                                                                                                                                                                                                                                                                                                 |
-| `check-spec-drift.mjs`                 | `spec.d.ts` ↔ `SPEC_KEYS` 逐字段比对；`FRAMEWORK_VERSION` ↔ `package.json`；host/config.ts 同版本；`./spec` 类型入口存在                                                                                                                                                                                                                                                                                                                                                           |
-| `check-css-tokens.mjs`                 | 样式表里没有字面色值；其它插件产物里不得出现 `@dshp/widget-kit`                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `check-client.mjs`                     | 无头跑 `lib/client.js`：loader 契约、服务发布（成员 = `SPEC_KEYS.service`）、三条槽位注册、effect 前缀、16 类非法描述符、注册/覆盖/清理、**渲染一遍**托盘与卡片（含 8 个把手、几何、尺寸档变化）、**popover 两种触发**、**刷新恢复**、**最小化折叠**、**位置锁定**（含按钮状态）、**启停**、**常驻面板**、**拖动模型**（自由跟手 + 允许覆盖 + 预览虚框 + 松手才吸附 + 越界夹回 + 订阅引用稳定）、**手势**（window 兜底监听、`buttons === 0` 收尾、pointercancel 丢弃、监听摘干净） |
-| `shared/scripts/check-css-modules.mjs` | `styles.x` 拼错（类型上合法、运行时静默丢 className）                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 脚本                                   | 覆盖                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `check-geometry.mjs`                   | 夹紧（整卡留在视口内）、层叠落点、内容盒换算、尺寸档阈值、八向缩放（对边固定/上下限/北向不越 0）、z 序、与 spec 常量不漂移，以及**吸附候选**（贴视口边与邻卡边、边缘对齐、8px 间隔、允许覆盖、结果稳定、多邻卡取最近）                                                                                                                                                                                                                                                                                                                                                                          |
+| `check-store.mjs`                      | 消毒（坏结构/版本/类型/未知 id/超长/夹紧/布尔强制/新增字段默认值/超上限保留最新）、读写降级、debounce/flush/cancel/onError、菜单顺序、一维拖拽排序（左右双向 + 不振荡）、托盘拖拽计划（冻结槽位 + 双向对称）、卸载清理（pruneId）                                                                                                                                                                                                                                                                                                                                                               |
+| `check-spec-drift.mjs`                 | `spec.d.ts` ↔ `SPEC_KEYS` 逐字段比对；`FRAMEWORK_VERSION` ↔ `package.json`；host/config.ts 同版本；`./spec` 类型入口存在                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `check-css-tokens.mjs`                 | 样式表里没有字面色值；其它插件产物里不得出现 `@dshp/widget-kit`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `check-client.mjs`                     | 无头跑 `lib/client.js`：loader 契约、服务发布（成员 = `SPEC_KEYS.service`）、三条槽位注册、effect 前缀、16 类非法描述符、注册/覆盖/清理、**渲染一遍**托盘与卡片（含 8 个把手、几何、尺寸档变化）、**popover 两种触发**与**常驻/临时两层**（手风琴 + 互不干扰 + 只落盘常驻层）、**刷新恢复**、**最小化折叠**、**位置锁定**（含按钮状态）、**启停**、**拖动模型**（自由跟手 + 允许覆盖 + 预览虚框 + 松手才吸附 + 越界夹回 + 订阅引用稳定）、**手势**（window 兜底监听、`buttons === 0` 收尾、pointercancel 丢弃、监听摘干净）、**卸载/热重载不动本机布局**（注册回来原地恢复 + 显式清理只清残留） |
+| `shared/scripts/check-css-modules.mjs` | `styles.x` 拼错（类型上合法、运行时静默丢 className）                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |

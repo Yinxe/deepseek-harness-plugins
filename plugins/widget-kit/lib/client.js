@@ -30,7 +30,7 @@ module.exports = __toCommonJS(client_exports);
 
 // src/client/spec.ts
 var SPEC_VERSION = 1;
-var FRAMEWORK_VERSION = "0.6.0";
+var FRAMEWORK_VERSION = "0.7.0";
 var WIDGET_ID_PATTERN = /^[a-z0-9-]{2,32}:[a-z0-9-]{2,32}$/;
 var PRESENTATIONS = ["tray", "popover", "card"];
 var SPEC_DEFAULTS = {
@@ -1743,6 +1743,20 @@ function SettingsSection({
           children: "\u6E05\u7A7A\u672C\u673A\u5E03\u5C40"
         }
       ),
+      /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+        import_dsh_client_ui_primitives5.Button,
+        {
+          variant: "outline",
+          size: "sm",
+          onClick: () => {
+            const removed = runtime.pruneOrphans();
+            setNotice(
+              removed > 0 ? `\u5DF2\u6E05\u7406 ${String(removed)} \u4E2A\u300C\u5DF2\u5378\u8F7D\u4E14\u4E00\u76F4\u6CA1\u56DE\u6765\u300D\u7684\u7EC4\u4EF6\u6B8B\u7559\uFF08\u5728\u518C\u7EC4\u4EF6\u7684\u5E03\u5C40\u4E0D\u53D7\u5F71\u54CD\uFF09\u3002` : "\u6CA1\u6709\u53EF\u6E05\u7406\u7684\u6B8B\u7559\uFF1A\u5F53\u524D\u6240\u6709\u5E03\u5C40\u8BB0\u5F55\u90FD\u5BF9\u5E94\u7740\u5728\u518C\u7EC4\u4EF6\u3002"
+            );
+          },
+          children: "\u6E05\u7406\u5DF2\u5378\u8F7D\u7EC4\u4EF6\u7684\u6B8B\u7559"
+        }
+      ),
       /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)("span", { className: styles_module_css_default.rowHint, children: [
         "\u6846\u67B6 v",
         runtime.frameworkVersion,
@@ -1760,8 +1774,8 @@ var import_react7 = require("react");
 // src/client/store.ts
 var STORE_KEY = "dshp-widget-kit:v1";
 var STORE_VERSION = 1;
-var MAX_TRACKED = 64;
-var MAX_LIST = 64;
+var MAX_TRACKED = 96;
+var MAX_LIST = 96;
 var SAVE_DEBOUNCE_MS = 300;
 function emptyState() {
   return {
@@ -1804,7 +1818,8 @@ function sanitizeState(raw, deps) {
   const cardsRaw = isRecord2(raw["cards"]) ? raw["cards"] : {};
   const cards = {};
   let tracked = 0;
-  for (const id of Object.keys(cardsRaw)) {
+  const cardIds = Object.keys(cardsRaw);
+  for (const id of cardIds.slice(-MAX_TRACKED)) {
     if (tracked >= MAX_TRACKED) break;
     if (!deps.isKnown(id)) continue;
     const value = cardsRaw[id];
@@ -2337,6 +2352,7 @@ function createWidgetRuntime(deps) {
     const out = [];
     for (const [id, card] of Object.entries(state.cards)) {
       if (id === exceptId || !card.open || card.minimized) continue;
+      if (!registry.has(id)) continue;
       out.push({ x: card.x, y: card.y, w: card.w, h: card.h });
     }
     return out;
@@ -2443,10 +2459,20 @@ function createWidgetRuntime(deps) {
     };
   }
   function visibleCardCount() {
-    return Object.values(state.cards).filter((c) => c.open && !c.minimized).length;
+    let count = 0;
+    for (const [id, card] of Object.entries(state.cards)) {
+      if (!card.open || card.minimized) continue;
+      if (!registry.has(id)) continue;
+      count += 1;
+    }
+    return count;
   }
   function trackedCardCount() {
-    return Object.keys(state.cards).length;
+    let count = 0;
+    for (const id of Object.keys(state.cards)) {
+      if (registry.has(id)) count += 1;
+    }
+    return count;
   }
   function makeCardState(widget, index) {
     const constraints = constraintsFor(widget);
@@ -2467,7 +2493,7 @@ function createWidgetRuntime(deps) {
   function enforceCardLimit(exceptId) {
     if (visibleCardCount() <= SPEC_DEFAULTS.maxOpenCards) return;
     for (const id of state.zOrder) {
-      if (id === exceptId) continue;
+      if (id === exceptId || !registry.has(id)) continue;
       const card = state.cards[id];
       if (card === void 0 || !card.open || card.minimized) continue;
       writeCard(id, { ...card, minimized: true }, false);
@@ -2508,12 +2534,6 @@ function createWidgetRuntime(deps) {
         transientOrigin = null;
       }
       delete badges[value.id];
-      const hadCard = state.cards[value.id] !== void 0;
-      state = pruneId(state, value.id);
-      if (hadCard) {
-        deps.onNotice?.(`\u7EC4\u4EF6\u300C${value.id}\u300D\u5DF2\u5378\u8F7D\uFF0C\u5B83\u7684\u5361\u7247\u4E0E\u672C\u673A\u5E03\u5C40\u8BB0\u5F55\u4E00\u5E76\u6E05\u9664`);
-      }
-      persist();
       publish();
       notifyLive();
     };
@@ -3005,7 +3025,7 @@ function createWidgetRuntime(deps) {
     }
     const nextCards = { ...state.cards };
     for (const [id, card] of Object.entries(state.cards)) {
-      if (!card.open) continue;
+      if (!card.open || !registry.has(id)) continue;
       nextCards[id] = { ...card, open: false, minimized: false };
       changed = true;
     }
@@ -3669,17 +3689,6 @@ function apply(ctx) {
     );
   } catch (error) {
     logError("[dshp-widget-kit] \u6CE8\u518C\u504F\u597D\u515C\u5E95\u5931\u8D25\uFF1A", error);
-  }
-  try {
-    ctx.effect(
-      () => ctx.timeout(() => {
-        const removed = runtime.pruneOrphans();
-        if (removed > 0) notice(`\u5DF2\u6E05\u7406 ${String(removed)} \u4E2A\u5DF2\u5378\u8F7D\u7EC4\u4EF6\u7684\u672C\u673A\u5E03\u5C40\u6B8B\u7559`);
-      }, 5e3),
-      "dshp-widget-kit: prune orphans"
-    );
-  } catch (error) {
-    logError("[dshp-widget-kit] \u6CE8\u518C\u6B8B\u7559\u6E05\u7406\u5931\u8D25\uFF1A", error);
   }
   try {
     ctx.effect(() => {

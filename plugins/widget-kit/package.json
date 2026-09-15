@@ -1,6 +1,6 @@
 {
   "name": "@dshp/widget-kit",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "DeepSeek Harness (DSH) widget kit: a business-free standard for plugin-contributed widgets — session-header tray icons (badge / reorder / hide) plus drag-resize-minimize-close floating cards, with a frozen descriptor contract, framework-owned loading/error/refresh states and per-size rendering left to the widget author. 小组件规范：会话顶部托盘 + 可拖拽/缩放/最小化/关闭的卡片宿主，内容如何随尺寸变化由组件提供方决定。",
   "license": "MIT",
   "author": "Yinxe",
