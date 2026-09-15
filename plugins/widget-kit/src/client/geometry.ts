@@ -4,8 +4,8 @@
  * 所有「拖拽 / 缩放 / 夹紧 / 内容盒 / 尺寸档」的数学都在这里，`scripts/check-geometry.mjs`
  * 直接 import 本文件跑断言（Node 的 TS 类型擦除）。**所以本文件必须自包含**：只允许 `import type`。
  *
- * 为什么这里又写了一遍标题栏/内边距/保底可见量：`src/client/spec.ts` 也必须自包含（同一个自检脚本
- * 要 import 它），两边不能互相值导入。三处数字由 `scripts/check-geometry.mjs` 断言相等，
+ * 为什么这里又写了一遍标题栏/内边距/吸附参数：`src/client/spec.ts` 也必须自包含（同一个自检脚本
+ * 要 import 它），两边不能互相值导入。几处数字由 `scripts/check-geometry.mjs` 断言相等，
  * 漂移即测试失败。
  *
  * @module @dshp/widget-kit/geometry
@@ -17,11 +17,17 @@ export const TITLE_BAR_HEIGHT = 36;
 /** 内容区内边距（px）：内容盒 = 外层宽 − 2×它，外层高 − 标题栏 − 2×它。 */
 export const CONTENT_PADDING = 10;
 
-/** 卡片至少要有这么多 px 留在视口里（横向），纵向则保证整条标题栏可见。 */
-export const MIN_VISIBLE_TITLE_BAR = 48;
-
 /** 新卡相对上一张的层叠偏移（px）。 */
 export const CASCADE_STEP = 28;
+
+/** 相邻卡片之间的间隔（px）：贴在一起时也留这么多，不糊在一起。 */
+export const SNAP_GAP = 8;
+
+/** 同轴吸附距离（px）：与邻卡的边、或视口边缘差这么多以内就吸过去。 */
+export const SNAP_DISTANCE = 12;
+
+/** 跨轴对齐容差（px）：贴到邻卡旁边时，另一轴差这么多以内就顺带对齐（比吸附距离宽松一档）。 */
+export const SNAP_ALIGN = 28;
 
 /** 层叠位置的回绕周期（第 n 张卡用第 n % 该值 档）。 */
 export const CASCADE_WRAP = 6;
@@ -102,27 +108,32 @@ export function clampSize(size: Size, constraints: RectConstraints, viewport: Vi
 }
 
 /**
- * 把矩形夹回可用范围。
+ * 只做「整卡留在视口内」这一件事（尺寸不动，位置取整）。
  *
- * 规则（治「卡片被拖到屏幕外找不回来」）：
- *  - 横向：卡片至少有 `MIN_VISIBLE_TITLE_BAR` px 在视口内（左右都算）；
- *  - 纵向：整条标题栏（`TITLE_BAR_HEIGHT`）必须可见，即 `0 ≤ y ≤ viewport.height − TITLE_BAR_HEIGHT`。
+ * 卡片比视口还大时（视口极窄 / minSize 比视口还宽）只能贴左上角，此时横向会溢出 —— 这是无解的，
+ * 但左上角仍然保证抓得到。
+ */
+export function containRect(rect: Rect, viewport: Viewport): Rect {
+  const vp = safeViewport(viewport);
+  const w = Number.isFinite(rect.w) ? Math.max(0, Math.round(rect.w)) : 0;
+  const h = Number.isFinite(rect.h) ? Math.max(0, Math.round(rect.h)) : 0;
+  return {
+    x: Math.round(clamp(rect.x, 0, Math.max(0, vp.width - w))),
+    y: Math.round(clamp(rect.y, 0, Math.max(0, vp.height - h))),
+    w,
+    h,
+  };
+}
+
+/**
+ * 把矩形夹回可用范围：尺寸夹进 `min/max` 与视口，位置**整卡留在视口内**。
  *
- * 卡片可以比视口更高/更宽（就像真实窗口），此时按上两条保证还能抓回来。
+ * 规则（治「卡片被拖到屏幕外找不回来」）：不允许把卡片拖到屏幕之外，任何时刻它都完整可见 ——
+ * 比「至少留 48px」更严格，代价是卡片不能停在屏幕边缘外（吸附规则同样以视口边缘为吸附目标）。
  */
 export function clampRect(rect: Rect, constraints: RectConstraints, viewport: Viewport): Rect {
-  const vp = safeViewport(viewport);
   const size = clampSize(rect, constraints, viewport);
-  const xMin = MIN_VISIBLE_TITLE_BAR - size.w;
-  const xMax = Math.max(xMin, vp.width - MIN_VISIBLE_TITLE_BAR);
-  const yMin = 0;
-  const yMax = Math.max(yMin, vp.height - TITLE_BAR_HEIGHT);
-  return {
-    x: Math.round(clamp(rect.x, xMin, xMax)),
-    y: Math.round(clamp(rect.y, yMin, yMax)),
-    w: size.w,
-    h: size.h,
-  };
+  return containRect({ ...rect, ...size }, viewport);
 }
 
 /**
@@ -164,6 +175,163 @@ export function sizeClassOf(width: number, breakpoints: Breakpoints): SizeClass 
   if (width < breakpoints.compact) return 'compact';
   if (width >= breakpoints.wide) return 'wide';
   return 'regular';
+}
+
+// ── 吸附 / 防重叠（移动落点）────────────────────────────────────────────
+
+/** 吸附参数。 */
+export interface DockOptions {
+  /** 相邻卡片之间保留的间隔（px）。 */
+  gap: number;
+  /** 同轴吸附距离：与邻卡边或视口边缘差这么多以内就吸过去（px）。 */
+  distance: number;
+  /** 跨轴对齐容差：贴到邻卡旁边时另一轴对齐的容差（px）。 */
+  align: number;
+}
+
+const DEFAULT_DOCK: DockOptions = { gap: SNAP_GAP, distance: SNAP_DISTANCE, align: SNAP_ALIGN };
+
+/** 单轴上的一个区间（位置 + 尺寸），吸附算法用它描述邻卡在某一轴上的投影（数值，不依赖 Rect）。 */
+export interface AxisSpan {
+  pos: number;
+  size: number;
+}
+
+/**
+ * 两块矩形是否「冲突」：任一轴上的间隔小于 `gap` 就算冲突（`gap: 0` 时退化成普通的相交判定）。
+ */
+export function conflicts(a: Rect, b: Rect, gap: number): boolean {
+  return a.x < b.x + b.w + gap && b.x < a.x + a.w + gap && a.y < b.y + b.h + gap && b.y < a.y + a.h + gap;
+}
+
+/**
+ * 单轴吸附：候选 = 视口两端 + 邻卡两端（贴边，带 gap）+ 邻卡两端（对齐）。
+ *
+ * 取位移最小的那个；位移相同则优先「贴边」候选（贴上去比单纯对齐更可用）。
+ */
+function snapAxis(
+  pos: number,
+  size: number,
+  spans: readonly AxisSpan[],
+  limit: number,
+  options: DockOptions,
+): number {
+  const candidates: { value: number; edge: boolean }[] = [
+    { value: 0, edge: true },
+    { value: limit - size, edge: true },
+  ];
+  for (const span of spans) {
+    candidates.push({ value: span.pos + span.size + options.gap, edge: true }); // 贴在邻卡后面
+    candidates.push({ value: span.pos - options.gap - size, edge: true }); // 贴在邻卡前面
+    candidates.push({ value: span.pos, edge: false }); // 前缘对齐
+    candidates.push({ value: span.pos + span.size - size, edge: false }); // 后缘对齐
+  }
+  let bestValue = pos;
+  let bestDelta = options.distance + 1;
+  let bestEdge = true;
+  for (const candidate of candidates) {
+    const delta = Math.abs(candidate.value - pos);
+    if (!Number.isFinite(delta) || delta > options.distance) continue;
+    if (delta < bestDelta) {
+      bestValue = candidate.value;
+      bestDelta = delta;
+      bestEdge = candidate.edge;
+    } else if (delta === bestDelta && candidate.edge && !bestEdge) {
+      bestValue = candidate.value;
+      bestEdge = true;
+    }
+  }
+  return Math.round(bestValue);
+}
+
+/** 跨轴对齐：把 `pos` 拉向邻卡的前缘或后缘（取更近的那个，且都在容差内）。 */
+function alignAxis(pos: number, size: number, span: AxisSpan, tolerance: number): number {
+  const head = span.pos - pos;
+  if (Number.isFinite(head) && Math.abs(head) <= tolerance) return span.pos;
+  const tail = span.pos + span.size - size - pos;
+  if (Number.isFinite(tail) && Math.abs(tail) <= tolerance) return span.pos + span.size - size;
+  return pos;
+}
+
+/**
+ * 不许压在别的卡片上：为目标矩形找**离它最近的空位** —— 候选是「贴到每一张卡片的四条边」
+ * （另一轴尽量与那张卡对齐），取无冲突且位移最小的一个。
+ *
+ * 为什么是「全局扫候选」而不是「撞到谁就往那一边推」：多张卡片挨在一起时，局部推挤会连锁
+ * （推开的落点又撞上第三张），推着推着就没解了 —— 新卡会叠上去。扫候选一次就能找到空位。
+ *
+ * 一个候选都放不下（屏幕真的满了）时保持原样：宁可短暂重叠，也不要让卡片乱跳到莫名其妙的位置。
+ */
+function escapeConflicts(
+  rect: Rect,
+  others: readonly Rect[],
+  viewport: Viewport,
+  options: DockOptions,
+): Rect {
+  if (!others.some((other) => conflicts(rect, other, options.gap))) return rect;
+  const candidates: Rect[] = [];
+  for (const other of others) {
+    const vertical = alignAxis(rect.y, rect.h, { pos: other.y, size: other.h }, options.align);
+    const horizontal = alignAxis(rect.x, rect.w, { pos: other.x, size: other.w }, options.align);
+    candidates.push(
+      { ...rect, x: other.x + other.w + options.gap, y: vertical }, // 贴它右边
+      { ...rect, x: other.x - rect.w - options.gap, y: vertical }, // 贴它左边
+      { ...rect, y: other.y + other.h + options.gap, x: horizontal }, // 贴它下边
+      { ...rect, y: other.y - rect.h - options.gap, x: horizontal }, // 贴它上边
+    );
+  }
+  let best: Rect | null = null;
+  let bestCost = Number.POSITIVE_INFINITY;
+  for (const candidate of candidates) {
+    const placed = containRect(candidate, viewport);
+    if (others.some((other) => conflicts(placed, other, options.gap))) continue;
+    const cost = Math.abs(placed.x - rect.x) + Math.abs(placed.y - rect.y);
+    if (cost < bestCost) {
+      best = placed;
+      bestCost = cost;
+    }
+  }
+  return best ?? rect;
+}
+
+/**
+ * 移动落点（拖动与键盘移动共用）：夹进视口 → 同轴吸附（贴邻卡 / 贴视口边 / 边缘对齐）→
+ * 不许压在别的卡片上。
+ *
+ * 拖动期间**每帧**都会跑它，所以吸附是「提前渲染」出来的：卡片在指针还没松手时就贴好了，
+ * 松手只是把同一份几何写进本机布局。缩放不走这里（缩放只夹在 min/max 与视口内）。
+ *
+ * @param rect - 指针（或键盘）算出来的目标矩形。
+ * @param others - 屏幕上其它卡片的矩形（不含自己；最小化的卡片不算障碍）。
+ * @param viewport - 视口尺寸。
+ * @param options - 吸附参数（默认 `SNAP_GAP` / `SNAP_DISTANCE` / `SNAP_ALIGN`）。
+ */
+export function dockRect(
+  rect: Rect,
+  others: readonly Rect[],
+  viewport: Viewport,
+  options: DockOptions = DEFAULT_DOCK,
+): Rect {
+  const vp = safeViewport(viewport);
+  const contained = containRect(rect, vp);
+  const snapped: Rect = {
+    ...contained,
+    x: snapAxis(
+      contained.x,
+      contained.w,
+      others.map((other) => ({ pos: other.x, size: other.w })),
+      vp.width,
+      options,
+    ),
+    y: snapAxis(
+      contained.y,
+      contained.h,
+      others.map((other) => ({ pos: other.y, size: other.h })),
+      vp.height,
+      options,
+    ),
+  };
+  return escapeConflicts(snapped, others, vp, options);
 }
 
 /**

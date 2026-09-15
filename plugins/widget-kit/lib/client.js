@@ -30,7 +30,7 @@ module.exports = __toCommonJS(client_exports);
 
 // src/client/spec.ts
 var SPEC_VERSION = 1;
-var FRAMEWORK_VERSION = "0.2.0";
+var FRAMEWORK_VERSION = "0.3.0";
 var WIDGET_ID_PATTERN = /^[a-z0-9-]{2,32}:[a-z0-9-]{2,32}$/;
 var PRESENTATIONS = ["tray", "popover", "card"];
 var SPEC_DEFAULTS = {
@@ -49,8 +49,10 @@ var SPEC_DEFAULTS = {
   /** 标题栏高度与内容区内边距（内容盒 = 外层 − 标题栏 − 2×内边距）。 */
   titleBarHeight: 36,
   contentPadding: 10,
-  /** 卡片至少要有这么多 px 留在视口里（标题栏按行可抓回）。 */
-  minVisibleTitleBar: 48,
+  /** 相邻卡片之间保留的间隔、同轴吸附距离、跨轴对齐容差（px）。 */
+  snapGap: 8,
+  snapDistance: 12,
+  snapAlign: 28,
   /** 同屏卡片上限；开了第 7 张时自动最小化最旧一张。 */
   maxOpenCards: 6,
   /** 托盘可见图标上限（框架偏好的默认值，用户可在设置页改）。 */
@@ -443,7 +445,7 @@ var import_react = require("react");
 var import_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
 
 // dsh-css-module:dsh-css:src/client/styles.module.css.mjs
-var css = ".SigSeG_tray{flex:none;align-items:center;gap:2px;display:flex}.SigSeG_trayAnchor{display:inline-flex}.SigSeG_trayBtn{width:28px;height:28px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:8px;justify-content:center;align-items:center;padding:0;display:inline-flex;position:relative}.SigSeG_trayBtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_trayBtn:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:2px}.SigSeG_trayBtnActive{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.SigSeG_trayBtnDragging{opacity:.55}.SigSeG_trayGlyph{justify-content:center;align-items:center;width:18px;height:18px;display:inline-flex}.SigSeG_trayGlyph>svg{width:18px;height:18px}.SigSeG_trayBadge{background:var(--dsw-alias-state-business-primary);border-radius:999px;width:6px;height:6px;position:absolute;top:2px;right:2px}.SigSeG_trayBadge[data-tone=ok]{background:var(--dsw-alias-state-success-primary)}.SigSeG_trayBadge[data-tone=warn]{background:var(--dsw-alias-state-warn-primary)}.SigSeG_trayBadge[data-tone=bad]{background:var(--dsw-alias-state-error-primary)}.SigSeG_trayBadgeText{background:var(--dsw-alias-state-business-primary);min-width:14px;height:14px;color:var(--dsw-alias-label-primary-foreground);text-align:center;font-size:9px;line-height:14px;font-family:var(--dsw-font-family);border-radius:999px;padding:0 3px;position:absolute;top:-2px;right:-4px}.SigSeG_trayBadgeText[data-tone=ok]{background:var(--dsw-alias-state-success-primary)}.SigSeG_trayBadgeText[data-tone=warn]{background:var(--dsw-alias-state-warn-primary)}.SigSeG_trayBadgeText[data-tone=bad]{background:var(--dsw-alias-state-error-primary)}.SigSeG_layer{z-index:1;isolation:isolate;pointer-events:none;position:fixed;inset:0}.SigSeG_card{pointer-events:auto;box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);border-radius:12px;flex-direction:column;display:flex;position:fixed;overflow:hidden}.SigSeG_cardDragging{user-select:none}.SigSeG_cardMinimized{box-shadow:var(--dsw-shadow-lv1)}.SigSeG_cardLocked .SigSeG_cardHeader{cursor:default;border-bottom-color:var(--dsw-alias-border-l2)}.SigSeG_cardActionActive{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_cardHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);cursor:grab;touch-action:none;flex:none;align-items:center;gap:6px;height:36px;padding:0 6px 0 10px;display:flex}.SigSeG_cardMinimized .SigSeG_cardHeader{border-bottom:none}.SigSeG_cardDragging .SigSeG_cardHeader{cursor:grabbing}.SigSeG_cardHeader:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:-2px}.SigSeG_cardTitle{text-overflow:ellipsis;white-space:nowrap;min-width:0;color:var(--dsw-alias-label-primary);flex:1;font-size:13px;font-weight:500;overflow:hidden}.SigSeG_cardSubtitle{text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-caption);flex:none;font-size:11px;overflow:hidden}.SigSeG_cardActions{flex:none;align-items:center;gap:2px;display:flex}.SigSeG_cardAction{width:24px;height:24px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:6px;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:1;display:inline-flex}.SigSeG_cardAction:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_cardActionDanger:hover{background:var(--dsw-alias-interactive-bg-hover-danger);color:var(--dsw-alias-label-error)}.SigSeG_cardBody{box-sizing:border-box;flex:auto;min-height:0;padding:10px;position:relative}.SigSeG_cardBodyHidden{display:none}.SigSeG_contentHost{box-sizing:border-box;width:100%;height:100%;overflow:auto;container-type:size}.SigSeG_resizeHandle{z-index:2;touch-action:none;position:absolute}.SigSeG_resizeHandle[data-dir=n]{cursor:ns-resize;height:6px;top:0;left:8px;right:8px}.SigSeG_resizeHandle[data-dir=s]{cursor:ns-resize;height:6px;bottom:0;left:8px;right:8px}.SigSeG_resizeHandle[data-dir=e]{cursor:ew-resize;width:6px;top:8px;bottom:8px;right:0}.SigSeG_resizeHandle[data-dir=w]{cursor:ew-resize;width:6px;top:8px;bottom:8px;left:0}.SigSeG_resizeHandle[data-dir=ne]{cursor:nesw-resize;width:12px;height:12px;top:0;right:0}.SigSeG_resizeHandle[data-dir=nw]{cursor:nwse-resize;width:12px;height:12px;top:0;left:0}.SigSeG_resizeHandle[data-dir=se]{cursor:nwse-resize;width:12px;height:12px;bottom:0;right:0}.SigSeG_resizeHandle[data-dir=sw]{cursor:nesw-resize;width:12px;height:12px;bottom:0;left:0}.SigSeG_popover{pointer-events:auto;box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-overlay);width:min(420px,100vw - 24px);max-height:min(60vh,520px);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);border-radius:12px;flex-direction:column;display:flex;position:fixed;overflow:hidden}.SigSeG_popoverHeader{border-bottom:.5px solid var(--dsw-alias-border-l1);flex:none;align-items:center;gap:6px;height:34px;padding:0 6px 0 12px;display:flex}.SigSeG_popoverTitle{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-size:13px;font-weight:500;overflow:hidden}.SigSeG_popoverPinned{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-caption);border-radius:999px;flex:none;padding:1px 6px;font-size:10px;line-height:16px}.SigSeG_popoverBody{box-sizing:border-box;flex:auto;min-height:0;padding:12px;overflow:auto;container-type:inline-size}.SigSeG_section{flex-direction:column;gap:14px;display:flex}.SigSeG_sectionTitle{color:var(--dsw-alias-label-primary);margin:0;font-size:15px;font-weight:600}.SigSeG_sectionHint{color:var(--dsw-alias-label-caption);margin:0;font-size:12px;line-height:18px}.SigSeG_group{border:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:2px;padding:4px 12px;display:flex}.SigSeG_row{align-items:center;gap:12px;padding:10px 0;display:flex}.SigSeG_row+.SigSeG_row{border-top:.5px solid var(--dsw-alias-border-l1)}.SigSeG_rowLabel{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_rowTitle{color:var(--dsw-alias-label-primary);font-size:13px}.SigSeG_rowHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}.SigSeG_rowControl{flex:none;align-items:center;gap:8px;display:flex}.SigSeG_notice{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);border-radius:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px}.SigSeG_noticeBad{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-error)}.SigSeG_noticeOk{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-state-success-primary)}.SigSeG_list{border:.5px solid var(--dsw-alias-border-l1);border-radius:10px;flex-direction:column;gap:0;display:flex;overflow:hidden}.SigSeG_listRow{background:var(--dsw-alias-bg-layer-1);align-items:center;gap:10px;padding:8px 12px;display:flex}.SigSeG_listRow+.SigSeG_listRow{border-top:.5px solid var(--dsw-alias-border-l1)}.SigSeG_listRowOff{opacity:.6}.SigSeG_listRowOff .SigSeG_listActions{opacity:1}.SigSeG_listMain{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_listId{font-family:var(--dsw-font-mono);color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.SigSeG_listMeta{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_listActions{flex:none;align-items:center;gap:6px;display:flex}.SigSeG_empty{color:var(--dsw-alias-label-caption);background:var(--dsw-alias-bg-layer-1);padding:14px 12px;font-size:12px}.SigSeG_footer{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.SigSeG_clock{text-align:center;flex-direction:column;justify-content:center;align-items:center;gap:6px;height:100%;display:flex}.SigSeG_clockTime{font-family:var(--dsw-font-mono);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);line-height:1.1}.SigSeG_clockTime[data-size=compact]{font-size:22px}.SigSeG_clockTime[data-size=regular]{font-size:32px}.SigSeG_clockTime[data-size=wide]{font-size:44px}.SigSeG_clockMeta{color:var(--dsw-alias-label-caption);font-size:12px}.SigSeG_clockRow{flex-wrap:wrap;justify-content:center;align-items:baseline;gap:10px;display:flex}.SigSeG_clockLabel{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_diag{flex-direction:column;gap:8px;height:100%;display:flex}.SigSeG_diagSummary{color:var(--dsw-alias-label-secondary);font-size:12px}.SigSeG_diagList{flex-direction:column;gap:6px;display:flex}.SigSeG_diagRow{background:var(--dsw-alias-bg-layer-2);border-radius:8px;align-items:center;gap:8px;padding:6px 8px;display:flex}.SigSeG_diagMain{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_diagActions{flex:none;align-items:center;gap:4px;display:flex}.SigSeG_diagRow[data-disabled=true]{opacity:.6}.SigSeG_diagId{font-family:var(--dsw-font-mono);text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.SigSeG_diagMeta{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_diagError{color:var(--dsw-alias-label-error);font-size:11px}.SigSeG_diagEmpty{color:var(--dsw-alias-label-caption);font-size:12px}.SigSeG_quick{flex-direction:column;gap:12px;display:flex}.SigSeG_quickSection{flex-direction:column;gap:6px;display:flex}.SigSeG_quickLabel{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_seg{flex-wrap:wrap;gap:4px;display:flex}.SigSeG_segBtn{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font-size:11px;font-family:var(--dsw-font-family);cursor:pointer;background:0 0;border-radius:999px;padding:3px 10px}.SigSeG_segBtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_segBtnActive{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.SigSeG_quickFoot{justify-content:space-between;align-items:center;gap:8px;display:flex}.SigSeG_quickNote{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_quickError{color:var(--dsw-alias-label-error);font-size:11px}.SigSeG_statusRoot{box-sizing:border-box;flex-direction:column;gap:10px;padding:12px;display:flex}.SigSeG_statusGrid{grid-template-columns:1fr 1fr;gap:8px;display:grid}.SigSeG_statusCell{background:var(--dsw-alias-bg-layer-2);border-radius:8px;flex-direction:column;gap:2px;padding:8px 10px;display:flex}.SigSeG_statusValue{font-family:var(--dsw-font-mono);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);font-size:16px;line-height:20px}.SigSeG_statusKey{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_statusHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}";
+var css = ".SigSeG_tray{flex:none;align-items:center;gap:2px;display:flex}.SigSeG_trayAnchor{display:inline-flex}.SigSeG_trayBtn{width:28px;height:28px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:8px;justify-content:center;align-items:center;padding:0;display:inline-flex;position:relative}.SigSeG_trayBtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_trayBtn:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:2px}.SigSeG_trayBtnActive{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.SigSeG_trayBtnDragging{opacity:.55}.SigSeG_trayGlyph{justify-content:center;align-items:center;width:18px;height:18px;display:inline-flex}.SigSeG_trayGlyph>svg{width:18px;height:18px}.SigSeG_trayBadge{background:var(--dsw-alias-state-business-primary);border-radius:999px;width:6px;height:6px;position:absolute;top:2px;right:2px}.SigSeG_trayBadge[data-tone=ok]{background:var(--dsw-alias-state-success-primary)}.SigSeG_trayBadge[data-tone=warn]{background:var(--dsw-alias-state-warn-primary)}.SigSeG_trayBadge[data-tone=bad]{background:var(--dsw-alias-state-error-primary)}.SigSeG_trayBadgeText{background:var(--dsw-alias-state-business-primary);min-width:14px;height:14px;color:var(--dsw-alias-label-primary-foreground);text-align:center;font-size:9px;line-height:14px;font-family:var(--dsw-font-family);border-radius:999px;padding:0 3px;position:absolute;top:-2px;right:-4px}.SigSeG_trayBadgeText[data-tone=ok]{background:var(--dsw-alias-state-success-primary)}.SigSeG_trayBadgeText[data-tone=warn]{background:var(--dsw-alias-state-warn-primary)}.SigSeG_trayBadgeText[data-tone=bad]{background:var(--dsw-alias-state-error-primary)}.SigSeG_layer{z-index:1;isolation:isolate;pointer-events:none;position:fixed;inset:0}.SigSeG_card{pointer-events:auto;box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);border-radius:12px;flex-direction:column;display:flex;position:fixed;overflow:hidden}.SigSeG_cardDragging{user-select:none}.SigSeG_cardMinimized{box-shadow:var(--dsw-shadow-lv1)}.SigSeG_cardLocked .SigSeG_cardHeader{cursor:default;border-bottom-color:var(--dsw-alias-border-l2)}.SigSeG_cardAction.SigSeG_cardLockAction[data-locked=true]{color:var(--dsw-alias-state-error-primary)}.SigSeG_cardAction.SigSeG_cardLockAction[data-locked=false]{color:var(--dsw-alias-state-success-primary)}.SigSeG_cardHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);cursor:grab;touch-action:none;user-select:none;flex:none;align-items:center;gap:6px;height:36px;padding:0 6px 0 10px;display:flex}.SigSeG_cardMinimized .SigSeG_cardHeader{border-bottom:none}.SigSeG_cardDragging .SigSeG_cardHeader{cursor:grabbing}.SigSeG_cardHeader:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:-2px}.SigSeG_cardTitle{text-overflow:ellipsis;white-space:nowrap;min-width:0;color:var(--dsw-alias-label-primary);flex:1;font-size:13px;font-weight:500;overflow:hidden}.SigSeG_cardSubtitle{text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-caption);flex:none;font-size:11px;overflow:hidden}.SigSeG_cardActions{flex:none;align-items:center;gap:2px;display:flex}.SigSeG_cardAction{width:24px;height:24px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:6px;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:1;display:inline-flex}.SigSeG_cardAction:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_cardActionDanger:hover{background:var(--dsw-alias-interactive-bg-hover-danger);color:var(--dsw-alias-label-error)}.SigSeG_cardBody{box-sizing:border-box;flex:auto;min-height:0;padding:10px;position:relative}.SigSeG_cardBodyHidden{display:none}.SigSeG_contentHost{box-sizing:border-box;width:100%;height:100%;overflow:auto;container-type:size}.SigSeG_resizeHandle{z-index:2;touch-action:none;position:absolute}.SigSeG_resizeHandle[data-dir=n]{cursor:ns-resize;height:6px;top:0;left:8px;right:8px}.SigSeG_resizeHandle[data-dir=s]{cursor:ns-resize;height:6px;bottom:0;left:8px;right:8px}.SigSeG_resizeHandle[data-dir=e]{cursor:ew-resize;width:6px;top:8px;bottom:8px;right:0}.SigSeG_resizeHandle[data-dir=w]{cursor:ew-resize;width:6px;top:8px;bottom:8px;left:0}.SigSeG_resizeHandle[data-dir=ne]{cursor:nesw-resize;width:12px;height:12px;top:0;right:0}.SigSeG_resizeHandle[data-dir=nw]{cursor:nwse-resize;width:12px;height:12px;top:0;left:0}.SigSeG_resizeHandle[data-dir=se]{cursor:nwse-resize;width:12px;height:12px;bottom:0;right:0}.SigSeG_resizeHandle[data-dir=sw]{cursor:nesw-resize;width:12px;height:12px;bottom:0;left:0}.SigSeG_popover{pointer-events:auto;box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-overlay);width:min(420px,100vw - 24px);max-height:min(60vh,520px);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);border-radius:12px;flex-direction:column;display:flex;position:fixed;overflow:hidden}.SigSeG_popoverHeader{border-bottom:.5px solid var(--dsw-alias-border-l1);flex:none;align-items:center;gap:6px;height:34px;padding:0 6px 0 12px;display:flex}.SigSeG_popoverTitle{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-size:13px;font-weight:500;overflow:hidden}.SigSeG_popoverPinned{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-caption);border-radius:999px;flex:none;padding:1px 6px;font-size:10px;line-height:16px}.SigSeG_popoverBody{box-sizing:border-box;flex:auto;min-height:0;padding:12px;overflow:auto;container-type:inline-size}.SigSeG_section{flex-direction:column;gap:14px;display:flex}.SigSeG_sectionTitle{color:var(--dsw-alias-label-primary);margin:0;font-size:15px;font-weight:600}.SigSeG_sectionHint{color:var(--dsw-alias-label-caption);margin:0;font-size:12px;line-height:18px}.SigSeG_group{border:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:2px;padding:4px 12px;display:flex}.SigSeG_row{align-items:center;gap:12px;padding:10px 0;display:flex}.SigSeG_row+.SigSeG_row{border-top:.5px solid var(--dsw-alias-border-l1)}.SigSeG_rowLabel{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_rowTitle{color:var(--dsw-alias-label-primary);font-size:13px}.SigSeG_rowHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}.SigSeG_rowControl{flex:none;align-items:center;gap:8px;display:flex}.SigSeG_notice{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);border-radius:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px}.SigSeG_noticeBad{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-error)}.SigSeG_noticeOk{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-state-success-primary)}.SigSeG_list{border:.5px solid var(--dsw-alias-border-l1);border-radius:10px;flex-direction:column;gap:0;display:flex;overflow:hidden}.SigSeG_listRow{background:var(--dsw-alias-bg-layer-1);align-items:center;gap:10px;padding:8px 12px;display:flex}.SigSeG_listRow+.SigSeG_listRow{border-top:.5px solid var(--dsw-alias-border-l1)}.SigSeG_listRowOff{opacity:.6}.SigSeG_listRowOff .SigSeG_listActions{opacity:1}.SigSeG_listMain{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_listId{font-family:var(--dsw-font-mono);color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.SigSeG_listMeta{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_listActions{flex:none;align-items:center;gap:6px;display:flex}.SigSeG_empty{color:var(--dsw-alias-label-caption);background:var(--dsw-alias-bg-layer-1);padding:14px 12px;font-size:12px}.SigSeG_footer{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.SigSeG_clock{text-align:center;flex-direction:column;justify-content:center;align-items:center;gap:6px;height:100%;display:flex}.SigSeG_clockTime{font-family:var(--dsw-font-mono);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);line-height:1.1}.SigSeG_clockTime[data-size=compact]{font-size:22px}.SigSeG_clockTime[data-size=regular]{font-size:32px}.SigSeG_clockTime[data-size=wide]{font-size:44px}.SigSeG_clockMeta{color:var(--dsw-alias-label-caption);font-size:12px}.SigSeG_clockRow{flex-wrap:wrap;justify-content:center;align-items:baseline;gap:10px;display:flex}.SigSeG_clockLabel{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_diag{flex-direction:column;gap:8px;height:100%;display:flex}.SigSeG_diagSummary{color:var(--dsw-alias-label-secondary);font-size:12px}.SigSeG_diagList{flex-direction:column;gap:6px;display:flex}.SigSeG_diagRow{background:var(--dsw-alias-bg-layer-2);border-radius:8px;align-items:center;gap:8px;padding:6px 8px;display:flex}.SigSeG_diagMain{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_diagActions{flex:none;align-items:center;gap:4px;display:flex}.SigSeG_diagRow[data-disabled=true]{opacity:.6}.SigSeG_diagId{font-family:var(--dsw-font-mono);text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.SigSeG_diagMeta{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_diagError{color:var(--dsw-alias-label-error);font-size:11px}.SigSeG_diagEmpty{color:var(--dsw-alias-label-caption);font-size:12px}.SigSeG_quick{flex-direction:column;gap:12px;display:flex}.SigSeG_quickSection{flex-direction:column;gap:6px;display:flex}.SigSeG_quickLabel{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_seg{flex-wrap:wrap;gap:4px;display:flex}.SigSeG_segBtn{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font-size:11px;font-family:var(--dsw-font-family);cursor:pointer;background:0 0;border-radius:999px;padding:3px 10px}.SigSeG_segBtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_segBtnActive{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.SigSeG_quickFoot{justify-content:space-between;align-items:center;gap:8px;display:flex}.SigSeG_quickNote{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_quickError{color:var(--dsw-alias-label-error);font-size:11px}.SigSeG_statusRoot{box-sizing:border-box;flex-direction:column;gap:10px;padding:12px;display:flex}.SigSeG_statusGrid{grid-template-columns:1fr 1fr;gap:8px;display:grid}.SigSeG_statusCell{background:var(--dsw-alias-bg-layer-2);border-radius:8px;flex-direction:column;gap:2px;padding:8px 10px;display:flex}.SigSeG_statusValue{font-family:var(--dsw-font-mono);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);font-size:16px;line-height:20px}.SigSeG_statusKey{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_statusHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}";
 var tagId = "@dshp/widget-kit/src/client/styles.module.css";
 if (typeof document !== "undefined" && document.querySelector(`style[data-plugin-css="${tagId}"]`) === null) {
   const tag = document.createElement("style");
@@ -452,7 +454,7 @@ if (typeof document !== "undefined" && document.querySelector(`style[data-plugin
   tag.textContent = css;
   document.head.appendChild(tag);
 }
-var styles_module_css_default = { "card": "SigSeG_card", "cardAction": "SigSeG_cardAction", "cardActionActive": "SigSeG_cardActionActive", "cardActionDanger": "SigSeG_cardActionDanger", "cardActions": "SigSeG_cardActions", "cardBody": "SigSeG_cardBody", "cardBodyHidden": "SigSeG_cardBodyHidden", "cardDragging": "SigSeG_cardDragging", "cardHeader": "SigSeG_cardHeader", "cardLocked": "SigSeG_cardLocked", "cardMinimized": "SigSeG_cardMinimized", "cardSubtitle": "SigSeG_cardSubtitle", "cardTitle": "SigSeG_cardTitle", "clock": "SigSeG_clock", "clockLabel": "SigSeG_clockLabel", "clockMeta": "SigSeG_clockMeta", "clockRow": "SigSeG_clockRow", "clockTime": "SigSeG_clockTime", "contentHost": "SigSeG_contentHost", "diag": "SigSeG_diag", "diagActions": "SigSeG_diagActions", "diagEmpty": "SigSeG_diagEmpty", "diagError": "SigSeG_diagError", "diagId": "SigSeG_diagId", "diagList": "SigSeG_diagList", "diagMain": "SigSeG_diagMain", "diagMeta": "SigSeG_diagMeta", "diagRow": "SigSeG_diagRow", "diagSummary": "SigSeG_diagSummary", "empty": "SigSeG_empty", "footer": "SigSeG_footer", "group": "SigSeG_group", "layer": "SigSeG_layer", "list": "SigSeG_list", "listActions": "SigSeG_listActions", "listId": "SigSeG_listId", "listMain": "SigSeG_listMain", "listMeta": "SigSeG_listMeta", "listRow": "SigSeG_listRow", "listRowOff": "SigSeG_listRowOff", "notice": "SigSeG_notice", "noticeBad": "SigSeG_noticeBad", "noticeOk": "SigSeG_noticeOk", "popover": "SigSeG_popover", "popoverBody": "SigSeG_popoverBody", "popoverHeader": "SigSeG_popoverHeader", "popoverPinned": "SigSeG_popoverPinned", "popoverTitle": "SigSeG_popoverTitle", "quick": "SigSeG_quick", "quickError": "SigSeG_quickError", "quickFoot": "SigSeG_quickFoot", "quickLabel": "SigSeG_quickLabel", "quickNote": "SigSeG_quickNote", "quickSection": "SigSeG_quickSection", "resizeHandle": "SigSeG_resizeHandle", "row": "SigSeG_row", "rowControl": "SigSeG_rowControl", "rowHint": "SigSeG_rowHint", "rowLabel": "SigSeG_rowLabel", "rowTitle": "SigSeG_rowTitle", "section": "SigSeG_section", "sectionHint": "SigSeG_sectionHint", "sectionTitle": "SigSeG_sectionTitle", "seg": "SigSeG_seg", "segBtn": "SigSeG_segBtn", "segBtnActive": "SigSeG_segBtnActive", "statusCell": "SigSeG_statusCell", "statusGrid": "SigSeG_statusGrid", "statusHint": "SigSeG_statusHint", "statusKey": "SigSeG_statusKey", "statusRoot": "SigSeG_statusRoot", "statusValue": "SigSeG_statusValue", "tray": "SigSeG_tray", "trayAnchor": "SigSeG_trayAnchor", "trayBadge": "SigSeG_trayBadge", "trayBadgeText": "SigSeG_trayBadgeText", "trayBtn": "SigSeG_trayBtn", "trayBtnActive": "SigSeG_trayBtnActive", "trayBtnDragging": "SigSeG_trayBtnDragging", "trayGlyph": "SigSeG_trayGlyph" };
+var styles_module_css_default = { "card": "SigSeG_card", "cardAction": "SigSeG_cardAction", "cardActionDanger": "SigSeG_cardActionDanger", "cardActions": "SigSeG_cardActions", "cardBody": "SigSeG_cardBody", "cardBodyHidden": "SigSeG_cardBodyHidden", "cardDragging": "SigSeG_cardDragging", "cardHeader": "SigSeG_cardHeader", "cardLockAction": "SigSeG_cardLockAction", "cardLocked": "SigSeG_cardLocked", "cardMinimized": "SigSeG_cardMinimized", "cardSubtitle": "SigSeG_cardSubtitle", "cardTitle": "SigSeG_cardTitle", "clock": "SigSeG_clock", "clockLabel": "SigSeG_clockLabel", "clockMeta": "SigSeG_clockMeta", "clockRow": "SigSeG_clockRow", "clockTime": "SigSeG_clockTime", "contentHost": "SigSeG_contentHost", "diag": "SigSeG_diag", "diagActions": "SigSeG_diagActions", "diagEmpty": "SigSeG_diagEmpty", "diagError": "SigSeG_diagError", "diagId": "SigSeG_diagId", "diagList": "SigSeG_diagList", "diagMain": "SigSeG_diagMain", "diagMeta": "SigSeG_diagMeta", "diagRow": "SigSeG_diagRow", "diagSummary": "SigSeG_diagSummary", "empty": "SigSeG_empty", "footer": "SigSeG_footer", "group": "SigSeG_group", "layer": "SigSeG_layer", "list": "SigSeG_list", "listActions": "SigSeG_listActions", "listId": "SigSeG_listId", "listMain": "SigSeG_listMain", "listMeta": "SigSeG_listMeta", "listRow": "SigSeG_listRow", "listRowOff": "SigSeG_listRowOff", "notice": "SigSeG_notice", "noticeBad": "SigSeG_noticeBad", "noticeOk": "SigSeG_noticeOk", "popover": "SigSeG_popover", "popoverBody": "SigSeG_popoverBody", "popoverHeader": "SigSeG_popoverHeader", "popoverPinned": "SigSeG_popoverPinned", "popoverTitle": "SigSeG_popoverTitle", "quick": "SigSeG_quick", "quickError": "SigSeG_quickError", "quickFoot": "SigSeG_quickFoot", "quickLabel": "SigSeG_quickLabel", "quickNote": "SigSeG_quickNote", "quickSection": "SigSeG_quickSection", "resizeHandle": "SigSeG_resizeHandle", "row": "SigSeG_row", "rowControl": "SigSeG_rowControl", "rowHint": "SigSeG_rowHint", "rowLabel": "SigSeG_rowLabel", "rowTitle": "SigSeG_rowTitle", "section": "SigSeG_section", "sectionHint": "SigSeG_sectionHint", "sectionTitle": "SigSeG_sectionTitle", "seg": "SigSeG_seg", "segBtn": "SigSeG_segBtn", "segBtnActive": "SigSeG_segBtnActive", "statusCell": "SigSeG_statusCell", "statusGrid": "SigSeG_statusGrid", "statusHint": "SigSeG_statusHint", "statusKey": "SigSeG_statusKey", "statusRoot": "SigSeG_statusRoot", "statusValue": "SigSeG_statusValue", "tray": "SigSeG_tray", "trayAnchor": "SigSeG_trayAnchor", "trayBadge": "SigSeG_trayBadge", "trayBadgeText": "SigSeG_trayBadgeText", "trayBtn": "SigSeG_trayBtn", "trayBtnActive": "SigSeG_trayBtnActive", "trayBtnDragging": "SigSeG_trayBtnDragging", "trayGlyph": "SigSeG_trayGlyph" };
 
 // src/client/ErrorBoundary.tsx
 var import_jsx_runtime = require("react/jsx-runtime");
@@ -496,8 +498,10 @@ var WidgetErrorBoundary = class extends import_react.Component {
 // src/client/geometry.ts
 var TITLE_BAR_HEIGHT = 36;
 var CONTENT_PADDING = 10;
-var MIN_VISIBLE_TITLE_BAR = 48;
 var CASCADE_STEP = 28;
+var SNAP_GAP = 8;
+var SNAP_DISTANCE = 12;
+var SNAP_ALIGN = 28;
 var CASCADE_WRAP = 6;
 var RESIZE_DIRS = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
 function clamp(value, min, max) {
@@ -527,19 +531,20 @@ function clampSize(size, constraints, viewport) {
     h: Math.round(clamp(size.h, Math.min(constraints.min.h, cap.h), cap.h))
   };
 }
-function clampRect(rect, constraints, viewport) {
+function containRect(rect, viewport) {
   const vp = safeViewport(viewport);
-  const size = clampSize(rect, constraints, viewport);
-  const xMin = MIN_VISIBLE_TITLE_BAR - size.w;
-  const xMax = Math.max(xMin, vp.width - MIN_VISIBLE_TITLE_BAR);
-  const yMin = 0;
-  const yMax = Math.max(yMin, vp.height - TITLE_BAR_HEIGHT);
+  const w = Number.isFinite(rect.w) ? Math.max(0, Math.round(rect.w)) : 0;
+  const h = Number.isFinite(rect.h) ? Math.max(0, Math.round(rect.h)) : 0;
   return {
-    x: Math.round(clamp(rect.x, xMin, xMax)),
-    y: Math.round(clamp(rect.y, yMin, yMax)),
-    w: size.w,
-    h: size.h
+    x: Math.round(clamp(rect.x, 0, Math.max(0, vp.width - w))),
+    y: Math.round(clamp(rect.y, 0, Math.max(0, vp.height - h))),
+    w,
+    h
   };
+}
+function clampRect(rect, constraints, viewport) {
+  const size = clampSize(rect, constraints, viewport);
+  return containRect({ ...rect, ...size }, viewport);
 }
 function defaultRect(index, size, constraints, viewport) {
   const vp = safeViewport(viewport);
@@ -563,6 +568,97 @@ function sizeClassOf(width, breakpoints) {
   if (width < breakpoints.compact) return "compact";
   if (width >= breakpoints.wide) return "wide";
   return "regular";
+}
+var DEFAULT_DOCK = { gap: SNAP_GAP, distance: SNAP_DISTANCE, align: SNAP_ALIGN };
+function conflicts(a, b, gap) {
+  return a.x < b.x + b.w + gap && b.x < a.x + a.w + gap && a.y < b.y + b.h + gap && b.y < a.y + a.h + gap;
+}
+function snapAxis(pos, size, spans, limit, options) {
+  const candidates = [
+    { value: 0, edge: true },
+    { value: limit - size, edge: true }
+  ];
+  for (const span of spans) {
+    candidates.push({ value: span.pos + span.size + options.gap, edge: true });
+    candidates.push({ value: span.pos - options.gap - size, edge: true });
+    candidates.push({ value: span.pos, edge: false });
+    candidates.push({ value: span.pos + span.size - size, edge: false });
+  }
+  let bestValue = pos;
+  let bestDelta = options.distance + 1;
+  let bestEdge = true;
+  for (const candidate of candidates) {
+    const delta = Math.abs(candidate.value - pos);
+    if (!Number.isFinite(delta) || delta > options.distance) continue;
+    if (delta < bestDelta) {
+      bestValue = candidate.value;
+      bestDelta = delta;
+      bestEdge = candidate.edge;
+    } else if (delta === bestDelta && candidate.edge && !bestEdge) {
+      bestValue = candidate.value;
+      bestEdge = true;
+    }
+  }
+  return Math.round(bestValue);
+}
+function alignAxis(pos, size, span, tolerance) {
+  const head = span.pos - pos;
+  if (Number.isFinite(head) && Math.abs(head) <= tolerance) return span.pos;
+  const tail = span.pos + span.size - size - pos;
+  if (Number.isFinite(tail) && Math.abs(tail) <= tolerance) return span.pos + span.size - size;
+  return pos;
+}
+function escapeConflicts(rect, others, viewport, options) {
+  if (!others.some((other) => conflicts(rect, other, options.gap))) return rect;
+  const candidates = [];
+  for (const other of others) {
+    const vertical = alignAxis(rect.y, rect.h, { pos: other.y, size: other.h }, options.align);
+    const horizontal = alignAxis(rect.x, rect.w, { pos: other.x, size: other.w }, options.align);
+    candidates.push(
+      { ...rect, x: other.x + other.w + options.gap, y: vertical },
+      // 贴它右边
+      { ...rect, x: other.x - rect.w - options.gap, y: vertical },
+      // 贴它左边
+      { ...rect, y: other.y + other.h + options.gap, x: horizontal },
+      // 贴它下边
+      { ...rect, y: other.y - rect.h - options.gap, x: horizontal }
+      // 贴它上边
+    );
+  }
+  let best = null;
+  let bestCost = Number.POSITIVE_INFINITY;
+  for (const candidate of candidates) {
+    const placed = containRect(candidate, viewport);
+    if (others.some((other) => conflicts(placed, other, options.gap))) continue;
+    const cost = Math.abs(placed.x - rect.x) + Math.abs(placed.y - rect.y);
+    if (cost < bestCost) {
+      best = placed;
+      bestCost = cost;
+    }
+  }
+  return best ?? rect;
+}
+function dockRect(rect, others, viewport, options = DEFAULT_DOCK) {
+  const vp = safeViewport(viewport);
+  const contained = containRect(rect, vp);
+  const snapped = {
+    ...contained,
+    x: snapAxis(
+      contained.x,
+      contained.w,
+      others.map((other) => ({ pos: other.x, size: other.w })),
+      vp.width,
+      options
+    ),
+    y: snapAxis(
+      contained.y,
+      contained.h,
+      others.map((other) => ({ pos: other.y, size: other.h })),
+      vp.height,
+      options
+    )
+  };
+  return escapeConflicts(snapped, others, vp, options);
 }
 function applyResize(rect, dir, dx, dy, constraints, viewport) {
   const vp = safeViewport(viewport);
@@ -709,9 +805,17 @@ function useCardDrag(runtime, widget, mode) {
     if (start === null) return null;
     const dx = latest.current.x - origin.current.x;
     const dy = latest.current.y - origin.current.y;
+    if (modeRef.current === "move") {
+      return runtime.resolveMove(widget.id, {
+        x: start.x + dx,
+        y: start.y + dy,
+        w: start.w,
+        h: start.h
+      });
+    }
     const constraints = runtime.constraintsOf(widget);
     const viewport = runtime.viewport();
-    return modeRef.current === "move" ? clampRect({ x: start.x + dx, y: start.y + dy, w: start.w, h: start.h }, constraints, viewport) : applyResize(start, modeRef.current, dx, dy, constraints, viewport);
+    return applyResize(start, modeRef.current, dx, dy, constraints, viewport);
   }, [runtime, widget]);
   const endDrag = (0, import_react2.useCallback)(
     (commit) => {
@@ -735,8 +839,11 @@ function useCardDrag(runtime, widget, mode) {
   const onPointerDown = (0, import_react2.useCallback)(
     (event) => {
       if (event.button !== 0 || capture.current !== null) return;
-      if (runtime.isLocked(widget.id)) return;
       event.preventDefault();
+      if (runtime.isLocked(widget.id)) {
+        runtime.raise(widget.id);
+        return;
+      }
       event.stopPropagation();
       const element = event.currentTarget;
       try {
@@ -1054,7 +1161,7 @@ function Card({
             onDoubleClick: () => {
               runtime.toggleMinimize(widget.id);
             },
-            ...locked ? {} : drag.handlers,
+            ...drag.handlers,
             children: [
               /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: styles_module_css_default.cardTitle, children: title }),
               subtitle !== "" && !minimized && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: styles_module_css_default.cardSubtitle, children: subtitle }),
@@ -1066,11 +1173,12 @@ function Card({
                     event.stopPropagation();
                   },
                   children: [
-                    widget.card?.resizable !== false && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                    /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
                       "button",
                       {
                         type: "button",
-                        className: styles_module_css_default.cardAction + (locked ? " " + styles_module_css_default.cardActionActive : ""),
+                        className: styles_module_css_default.cardAction + " " + styles_module_css_default.cardLockAction,
+                        "data-locked": locked ? "true" : "false",
                         "aria-label": locked ? `\u89E3\u9501\u300C${title}\u300D\u7684\u4F4D\u7F6E` : `\u9501\u5B9A\u300C${title}\u300D\u7684\u4F4D\u7F6E`,
                         "aria-pressed": locked,
                         onClick: () => {
@@ -2135,6 +2243,24 @@ function createWidgetRuntime(deps) {
     const min = widget.card?.minSize ?? floor;
     return { min, max: widget.card?.maxSize ?? null };
   };
+  function dockOptions(magnet = true) {
+    return {
+      gap: SPEC_DEFAULTS.snapGap,
+      distance: magnet ? SPEC_DEFAULTS.snapDistance : 0,
+      align: magnet ? SPEC_DEFAULTS.snapAlign : 0
+    };
+  }
+  function othersOf(exceptId) {
+    const out = [];
+    for (const [id, card] of Object.entries(state.cards)) {
+      if (id === exceptId || !card.open || card.minimized) continue;
+      out.push({ x: card.x, y: card.y, w: card.w, h: card.h });
+    }
+    return out;
+  }
+  function resolveMove(id, next, magnet = true) {
+    return dockRect(next, othersOf(id), viewport, dockOptions(magnet));
+  }
   const initial = loadState(deps.storage, {
     isKnown: () => true,
     constraintsOf: () => defaultConstraints(),
@@ -2229,7 +2355,8 @@ function createWidgetRuntime(deps) {
   function makeCardState(widget, index) {
     const constraints = constraintsFor(widget);
     const wanted = widget.card?.defaultSize ?? SPEC_DEFAULTS.cardDefaultSize;
-    const rect = defaultRect(index, wanted, constraints, viewport);
+    const fallback = defaultRect(index, wanted, constraints, viewport);
+    const rect = dockRect(fallback, othersOf(widget.id), viewport, dockOptions());
     return { ...rect, minimized: false, open: false, locked: false };
   }
   function cardStateOf(widget) {
@@ -2532,9 +2659,12 @@ function createWidgetRuntime(deps) {
     notifyLive();
     if (widget === void 0 || widget.presentation !== "card") return;
     const existing = state.cards[id];
-    const base = existing ?? { ...rect, minimized: false, open: true, locked: false };
-    if (isSameRect(base, rect)) return;
-    writeCard(id, { ...base, ...rect }, true);
+    if (existing === void 0) {
+      writeCard(id, { ...rect, minimized: false, open: true, locked: false }, true);
+      return;
+    }
+    if (isSameRect(existing, rect)) return;
+    writeCard(id, { ...existing, ...rect }, true);
   }
   function cancelLive() {
     if (live === null) return;
@@ -2567,7 +2697,7 @@ function createWidgetRuntime(deps) {
   function nudge(id, dx, dy) {
     const rect = rectOf(id);
     raiseOrder(id);
-    applyRect(id, { ...rect, x: rect.x + dx, y: rect.y + dy });
+    applyRect(id, resolveMove(id, { ...rect, x: rect.x + dx, y: rect.y + dy }, false));
   }
   function nudgeResize(id, dw, dh) {
     const widget = widgetOf(id);
@@ -2584,11 +2714,18 @@ function createWidgetRuntime(deps) {
     const widget = widgetOf(id);
     if (widget === void 0 || widget.presentation !== "card") return;
     const rect = rectOf(id);
-    applyRect(id, {
-      ...rect,
-      x: Math.round((viewport.width - rect.w) / 2),
-      y: Math.round((viewport.height - rect.h) / 2)
-    });
+    applyRect(
+      id,
+      resolveMove(
+        id,
+        {
+          ...rect,
+          x: Math.round((viewport.width - rect.w) / 2),
+          y: Math.round((viewport.height - rect.h) / 2)
+        },
+        false
+      )
+    );
   }
   function requestSize(id, next) {
     if (sizeFrozen.has(id)) return;
@@ -2800,6 +2937,7 @@ function createWidgetRuntime(deps) {
     toggleMinimize,
     nudge,
     nudgeResize,
+    resolveMove,
     requestSize,
     resizeTo,
     center,

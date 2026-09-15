@@ -175,7 +175,7 @@ check(() => {
     { v: STORE_VERSION, cards: { 'alpha:one': { x: 99999, y: -500, w: 300, h: 200 } } },
     DEPS,
   );
-  assert.equal(out.cards['alpha:one'].x, VP.width - 48, '越界坐标必须夹回');
+  assert.equal(out.cards['alpha:one'].x, VP.width - 300, '越界坐标必须夹回（整卡留在视口内）');
   assert.equal(out.cards['alpha:one'].y, 0);
 });
 

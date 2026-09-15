@@ -6,12 +6,14 @@
  * - `useWidgetData`：`load` 的加载/错误/陈旧/轮询全在这一处，组件提供方不写任何请求生命周期代码。
  * - `useCardDrag`：**照抄官方 `dsh-client-ui-layout` 的 `DragHandle` 范式** —— 指针捕获 + rAF 合并 +
  *   `pointerup` 补最终值 + `pointercancel`/`onLostPointerCapture` 收尾 + 卸载 effect 兜底。
+ *   移动落点交给 `runtime.resolveMove`（夹进视口 + 邻卡吸附 + 防重叠），所以**吸附在拖动期间就渲染出来**，
+ *   松手只是把同一份几何写进本机布局。
  *
  * @module @dshp/widget-kit/client/hooks
  */
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import { applyResize, clampRect } from './geometry.js';
+import { applyResize } from './geometry.js';
 import type { Rect, RectConstraints, ResizeDir, Viewport } from './geometry.js';
 import type { FrameworkSnapshot, LiveGeometry, WidgetRuntime } from './service.js';
 import type { NormalizedWidget } from './spec.js';
@@ -194,11 +196,18 @@ export function useCardDrag(
     if (start === null) return null;
     const dx = latest.current.x - origin.current.x;
     const dy = latest.current.y - origin.current.y;
+    if (modeRef.current === 'move') {
+      // 移动落点由框架算：夹进视口 + 邻卡吸附 + 防重叠（吸附因此在拖动期间就可见）
+      return runtime.resolveMove(widget.id, {
+        x: start.x + dx,
+        y: start.y + dy,
+        w: start.w,
+        h: start.h,
+      });
+    }
     const constraints: RectConstraints = runtime.constraintsOf(widget);
     const viewport: Viewport = runtime.viewport();
-    return modeRef.current === 'move'
-      ? clampRect({ x: start.x + dx, y: start.y + dy, w: start.w, h: start.h }, constraints, viewport)
-      : applyResize(start, modeRef.current, dx, dy, constraints, viewport);
+    return applyResize(start, modeRef.current, dx, dy, constraints, viewport);
   }, [runtime, widget]);
 
   /** 收尾：`commit` = 落盘当前几何；`false` = 丢弃本次手势（pointercancel / 失去捕获）。 */
@@ -226,8 +235,13 @@ export function useCardDrag(
   const onPointerDown = useCallback(
     (event: ReactPointerEvent): void => {
       if (event.button !== 0 || capture.current !== null) return;
-      if (runtime.isLocked(widget.id)) return; // 位置锁定：不进入拖拽（也就不会有 live 几何）
+      // 先吃掉这次 pointerdown：否则锁定后按住标题栏拖动会选中页面上的文字（用户反馈的那类误触）
       event.preventDefault();
+      if (runtime.isLocked(widget.id)) {
+        // 位置锁定：不进入拖拽（也就不会有 live 几何），但点一下仍然把它提到最前
+        runtime.raise(widget.id);
+        return;
+      }
       event.stopPropagation();
       const element = event.currentTarget as HTMLElement;
       try {

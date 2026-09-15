@@ -159,9 +159,13 @@
   border-bottom-color: var(--dsw-alias-border-l2);
 }
 
-.cardActionActive {
-  background: var(--dsw-alias-interactive-bg-hover);
-  color: var(--dsw-alias-label-primary);
+/* 锁定按钮的两个状态用语义色：锁定 = 红锁，解锁 = 绿开锁（都走 token，深浅主题自动跟随） */
+.cardAction.cardLockAction[data-locked='true'] {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.cardAction.cardLockAction[data-locked='false'] {
+  color: var(--dsw-alias-state-success-primary);
 }
 
 .cardHeader {
@@ -176,6 +180,8 @@
   background: var(--dsw-alias-bg-layer-2);
   cursor: grab;
   touch-action: none;
+  /* 标题栏是拖拽把手：任何时候都不允许选中文字（锁定后没有指针处理，更容易误选） */
+  user-select: none;
 }
 
 .cardMinimized .cardHeader {

@@ -18,6 +18,7 @@ import {
   clampRect,
   contentBox,
   defaultRect,
+  dockRect,
   isSameRect,
   sizeClassOf,
 } from './geometry.js';
@@ -99,6 +100,14 @@ export interface WidgetRuntime {
   toggleMinimize(id: string): void;
   nudge(id: string, dx: number, dy: number): void;
   nudgeResize(id: string, dw: number, dh: number): void;
+  /**
+   * 移动落点：夹进视口 + 与其它卡片吸附 / 防重叠（拖动每帧与键盘移动共用）。
+   * 拖动期间调用它，吸附效果就是**提前渲染**出来的。
+   *
+   * @param magnet - 是否开启吸附磁力（默认 true）。键盘微调与「居中」传 false：
+   *   否则贴着邻卡时每一步都会被磁力吸回去，键盘就再也挪不开了 —— 防重叠仍然生效。
+   */
+  resolveMove(id: string, next: Rect, magnet?: boolean): Rect;
   requestSize(id: string, next: { w?: number | undefined; h?: number | undefined }): void;
   /** 框架自己改尺寸（菜单预设 / 恢复默认）：不受内容回环防护限制。 */
   resizeTo(id: string, next: { w?: number | undefined; h?: number | undefined }): void;
@@ -189,6 +198,30 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     const min = widget.card?.minSize ?? floor;
     return { min, max: widget.card?.maxSize ?? null };
   };
+
+  /** 吸附参数（数字只在 spec.ts 的 SPEC_DEFAULTS 里写一遍）。`magnet: false` 关掉磁力，只留防重叠。 */
+  function dockOptions(magnet = true): { gap: number; distance: number; align: number } {
+    return {
+      gap: SPEC_DEFAULTS.snapGap,
+      distance: magnet ? SPEC_DEFAULTS.snapDistance : 0,
+      align: magnet ? SPEC_DEFAULTS.snapAlign : 0,
+    };
+  }
+
+  /** 屏幕上真正占位的其它卡片（不含自己；最小化的只留一条标题栏，不算障碍）。 */
+  function othersOf(exceptId: string): Rect[] {
+    const out: Rect[] = [];
+    for (const [id, card] of Object.entries(state.cards)) {
+      if (id === exceptId || !card.open || card.minimized) continue;
+      out.push({ x: card.x, y: card.y, w: card.w, h: card.h });
+    }
+    return out;
+  }
+
+  /** 移动落点：夹进视口 + 吸附 + 不许压在别的卡片上。拖动与键盘移动共用这一处。 */
+  function resolveMove(id: string, next: Rect, magnet = true): Rect {
+    return dockRect(next, othersOf(id), viewport, dockOptions(magnet));
+  }
 
   // 启动时**宽松**读盘：此刻注册表还是空的（各插件的 client 半随后才注册），按 id 过滤会把
   // 整份布局清空。残留由启动后的 pruneOrphans() 负责清理。
@@ -308,7 +341,10 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   function makeCardState(widget: NormalizedWidget, index: number): CardState {
     const constraints = constraintsFor(widget);
     const wanted: Size = widget.card?.defaultSize ?? SPEC_DEFAULTS.cardDefaultSize;
-    const rect = defaultRect(index, wanted, constraints, viewport);
+    // 层叠落点只是「从哪冒出来」的锚，真正落位还要避让已在屏幕上的卡片：
+    // 新卡宁可贴到旁边，也不要压在别人身上（见 docs/widget-spec.md §6 卡片 · 吸附）。
+    const fallback = defaultRect(index, wanted, constraints, viewport);
+    const rect = dockRect(fallback, othersOf(widget.id), viewport, dockOptions());
     return { ...rect, minimized: false, open: false, locked: false };
   }
 
@@ -673,9 +709,14 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     notifyLive();
     if (widget === undefined || widget.presentation !== 'card') return;
     const existing = state.cards[id];
-    const base: CardState = existing ?? { ...rect, minimized: false, open: true, locked: false };
-    if (isSameRect(base, rect)) return;
-    writeCard(id, { ...base, ...rect }, true);
+    // 还没有持久记录（理论上拖拽前一定 open 过，这里只做兜底）：直接把本次几何写进去，
+    // 否则 base 是从 rect 现造的，isSameRect 必然为真，这一拖就白拖了。
+    if (existing === undefined) {
+      writeCard(id, { ...rect, minimized: false, open: true, locked: false }, true);
+      return;
+    }
+    if (isSameRect(existing, rect)) return;
+    writeCard(id, { ...existing, ...rect }, true);
   }
 
   function cancelLive(): void {
@@ -715,7 +756,8 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   function nudge(id: string, dx: number, dy: number): void {
     const rect = rectOf(id);
     raiseOrder(id);
-    applyRect(id, { ...rect, x: rect.x + dx, y: rect.y + dy });
+    // 键盘微调要「说走就走」：关掉磁力（否则贴着邻卡时每步都被吸回去），但防重叠照旧
+    applyRect(id, resolveMove(id, { ...rect, x: rect.x + dx, y: rect.y + dy }, false));
   }
 
   function nudgeResize(id: string, dw: number, dh: number): void {
@@ -741,11 +783,18 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     const widget = widgetOf(id);
     if (widget === undefined || widget.presentation !== 'card') return;
     const rect = rectOf(id);
-    applyRect(id, {
-      ...rect,
-      x: Math.round((viewport.width - rect.w) / 2),
-      y: Math.round((viewport.height - rect.h) / 2),
-    });
+    applyRect(
+      id,
+      resolveMove(
+        id,
+        {
+          ...rect,
+          x: Math.round((viewport.width - rect.w) / 2),
+          y: Math.round((viewport.height - rect.h) / 2),
+        },
+        false,
+      ),
+    );
   }
 
   function requestSize(id: string, next: { w?: number | undefined; h?: number | undefined }): void {
@@ -982,6 +1031,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     toggleMinimize,
     nudge,
     nudgeResize,
+    resolveMove,
     requestSize,
     resizeTo,
     center,

@@ -99,7 +99,7 @@ globalThis.fetch = async (url, init) => {
     async json() {
       return {
         ok: true,
-        version: '0.2.0',
+        version: '0.3.0',
         specVersion: 1,
         config: {
           trayEnabled: true,
@@ -212,7 +212,7 @@ const expectedServiceKeys = [...EXPECTED_SERVICE_KEYS];
 expectedServiceKeys.sort();
 assert.deepEqual(actualServiceKeys, expectedServiceKeys, 'widgets 服务的成员必须与 SPEC_KEYS.service 一致');
 assert.equal(service.specVersion, 1);
-assert.equal(service.frameworkVersion, '0.2.0');
+assert.equal(service.frameworkVersion, '0.3.0');
 
 // ── 2. 槽位注册 ──────────────────────────────────────────────────────────
 assert.deepEqual(injections, ['conversation.session.header.utilities', 'shell.overlay', 'settings.section']);
@@ -869,8 +869,160 @@ runtime.setAnchor('demo:lock', null);
 assert.equal(runtime.getAnchor('demo:lock'), null, '卸载后锚点必须清掉');
 stopAnchorWatch();
 
+// 10.9 吸附与防重叠（拖动期间就要看到吸附结果）
+/** 两块矩形是否冲突（与 framework 的 geometry.conflicts 同一判定）。 */
+function overlaps(a, b, gap) {
+  return a.x < b.x + b.w + gap && b.x < a.x + a.w + gap && a.y < b.y + b.h + gap && b.y < a.y + a.h + gap;
+}
+function insideViewport(rect) {
+  return rect.x >= 0 && rect.y >= 0 && rect.x + rect.w <= 1280 && rect.y + rect.h <= 800;
+}
+
+const disposeDockA = service.register(makeCard('demo:dock-a', '吸附甲'));
+const disposeDockB = service.register(makeCard('demo:dock-b', '吸附乙'));
+const disposeDockC = service.register(makeCard('demo:dock-c', '吸附丙'));
+
+// ① 不许拖到屏幕之外：四个越界方向都夹回视口内（整卡可见），靠近边缘则直接吸附贴边
+service.close('demo:lock');
+assert.deepEqual(runtime.resolveMove('demo:dock-c', { x: -9999, y: -9999, w: 240, h: 140 }), {
+  x: 0,
+  y: 0,
+  w: 240,
+  h: 140,
+});
+assert.deepEqual(
+  runtime.resolveMove('demo:dock-c', { x: 5, y: 4, w: 240, h: 140 }),
+  { x: 0, y: 0, w: 240, h: 140 },
+  '离边缘 5px 以内要吸附贴边',
+);
+assert.deepEqual(runtime.resolveMove('demo:dock-c', { x: 9999, y: 9999, w: 240, h: 140 }), {
+  x: 1280 - 240,
+  y: 800 - 140,
+  w: 240,
+  h: 140,
+});
+
+// ② 甲挪到左上角当基准（键盘微调不受磁力影响，落点精确）
+service.open('demo:dock-a');
+runtime.nudge('demo:dock-a', -9999, -9999);
+const dockAnchor = runtime.rectOf('demo:dock-a');
+assert.deepEqual(dockAnchor, { x: 0, y: 0, w: 360, h: 240 }, '甲应停在左上角');
+
+// ③ 拖动期间：乙拖到甲右侧 3px、往下 100px → **live 快照里就已经是吸附结果**
+service.open('demo:dock-b');
+runtime.beginLive('demo:dock-b', 'move');
+runtime.setLive(
+  'demo:dock-b',
+  runtime.resolveMove('demo:dock-b', {
+    x: dockAnchor.x + dockAnchor.w + 3,
+    y: dockAnchor.y + 100,
+    w: 360,
+    h: 240,
+  }),
+);
+const liveRect = runtime.getLive().rect;
+assert.equal(liveRect.x, dockAnchor.x + dockAnchor.w + 8, '拖动期间就要贴到邻卡右侧（间隔 8px）');
+assert.equal(liveRect.y, dockAnchor.y + 100, '纵向差得多就不对齐，跟手走');
+runtime.commitLive('demo:dock-b');
+assert.deepEqual(runtime.rectOf('demo:dock-b'), liveRect, '松手后落到同一个吸附位置（预览即结果）');
+assert.equal(overlaps(liveRect, dockAnchor, 8), false, '吸附结果不得压住邻卡');
+
+// 纵向也靠近时：顺带上对齐
+runtime.beginLive('demo:dock-b', 'move');
+runtime.setLive(
+  'demo:dock-b',
+  runtime.resolveMove('demo:dock-b', {
+    x: dockAnchor.x + dockAnchor.w + 3,
+    y: dockAnchor.y + 2,
+    w: 360,
+    h: 240,
+  }),
+);
+const alignedRect = runtime.getLive().rect;
+assert.equal(alignedRect.y, dockAnchor.y, '另一轴在容差内顺带对齐（上对齐）');
+runtime.commitLive('demo:dock-b');
+
+// ④ 再打开丙：它自己会让位，屏幕上三张卡两两不重叠
+service.open('demo:dock-c');
+assert.equal(service.isOpen('demo:lock'), false, '这一段开始时已收起「锁定卡片」');
+const openIds = ['demo:dock-a', 'demo:dock-b', 'demo:dock-c'];
+const openRects = openIds.map((id) => runtime.rectOf(id));
+for (let i = 0; i < openRects.length; i += 1) {
+  assert.ok(insideViewport(openRects[i]), `${openIds[i]} 必须完整留在视口内`);
+  for (let j = i + 1; j < openRects.length; j += 1) {
+    assert.equal(
+      overlaps(openRects[i], openRects[j], 8),
+      false,
+      `${openIds[i]} 与 ${openIds[j]} 不得叠在一起（新卡自己会让位）`,
+    );
+  }
+}
+
+// ⑤ 键盘：贴着邻卡的卡片必须还能被挪开（关掉磁力），但挪不进别的卡片里（防重叠照旧）
+const dockedB = runtime.rectOf('demo:dock-b');
+runtime.nudge('demo:dock-b', 8, 0);
+assert.deepEqual(runtime.rectOf('demo:dock-b'), { ...dockedB, x: dockedB.x + 8 }, '键盘微调不得被磁力吸住');
+runtime.nudge('demo:dock-b', -1000, 0);
+const pushed = runtime.rectOf('demo:dock-b');
+assert.equal(overlaps(pushed, runtime.rectOf('demo:dock-a'), 8), false, '键盘也不许把卡片压到别人身上');
+assert.equal(overlaps(pushed, runtime.rectOf('demo:dock-c'), 8), false);
+assert.ok(insideViewport(pushed), '键盘移动同样受视口约束');
+
+// 10.9b 锁定后拖拽入口仍要吃掉 pointerdown（否则会选中页面文字），但不能产生 live 几何
+runtime.setLocked('demo:dock-a', true);
+const lockedHandlers = cardNodeOf('demo:dock-a');
+assert.ok(lockedHandlers, '锁定的卡片仍然渲染');
+const headerNode = collect(lockedHandlers).find(
+  (node) => typeof node.props.className === 'string' && node.props.className.includes('cardHeader'),
+);
+assert.ok(headerNode, '卡片必须有标题栏');
+assert.equal(
+  typeof headerNode.props.onPointerDown,
+  'function',
+  '锁定后仍要挂 pointerdown（用来 preventDefault）',
+);
+let prevented = false;
+headerNode.props.onPointerDown({
+  button: 0,
+  pointerId: 1,
+  clientX: 10,
+  clientY: 10,
+  currentTarget: { setPointerCapture: () => {} },
+  preventDefault: () => {
+    prevented = true;
+  },
+  stopPropagation: () => {},
+});
+assert.equal(prevented, true, '锁定后的 pointerdown 必须 preventDefault（否则拖动会选中文字）');
+assert.equal(runtime.getLive(), null, '锁定后不得进入拖拽');
+runtime.setLocked('demo:dock-a', false);
+
+// 10.10 锁定按钮的状态（红色锁 / 绿色开锁靠 data-locked 选择器着色）
+const lockBtnOf = (id) => {
+  const card = collect(render(layerEntry.component({}))).find((node) => node.props['data-widget'] === id);
+  assert.ok(card, `${id} 必须渲染出来`);
+  const buttons = collect(card).filter((node) => node.type === 'button');
+  const button = buttons.find((node) => node.props['data-locked'] !== undefined);
+  assert.ok(button, `${id} 的标题栏必须有锁定按钮`);
+  return button;
+};
+assert.equal(lockBtnOf('demo:dock-a').props['data-locked'], 'false', '未锁定时必须是开锁态');
+assert.match(lockBtnOf('demo:dock-a').props['aria-label'], /锁定「吸附甲」的位置/);
+runtime.setLocked('demo:dock-a', true);
+const lockedBtn = lockBtnOf('demo:dock-a');
+assert.equal(lockedBtn.props['data-locked'], 'true', '锁定后必须切到红锁态');
+assert.equal(lockedBtn.props['aria-pressed'], true);
+assert.match(lockedBtn.props['aria-label'], /解锁「吸附甲」的位置/);
+runtime.setLocked('demo:dock-a', false);
+
+disposeDockA();
+disposeDockB();
+disposeDockC();
+
 disposePinned();
 disposePinnedHover();
 disposeA();
 disposeB();
-console.log('check-client.mjs ok (loader / 服务 / 槽位 / 校验 / 渲染 / popover / 恢复 / 折叠 / 锁定 / 启停)');
+console.log(
+  'check-client.mjs ok (loader / 服务 / 槽位 / 校验 / 渲染 / popover / 恢复 / 折叠 / 锁定 / 启停 / 吸附)',
+);

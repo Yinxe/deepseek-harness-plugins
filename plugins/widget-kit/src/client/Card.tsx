@@ -228,7 +228,7 @@ export function Card({
         onDoubleClick={() => {
           runtime.toggleMinimize(widget.id);
         }}
-        {...(locked ? {} : drag.handlers)}
+        {...drag.handlers}
       >
         <span className={styles.cardTitle}>{title}</span>
         {subtitle !== '' && !minimized && <span className={styles.cardSubtitle}>{subtitle}</span>}
@@ -238,19 +238,18 @@ export function Card({
             event.stopPropagation();
           }}
         >
-          {widget.card?.resizable !== false && (
-            <button
-              type="button"
-              className={styles.cardAction + (locked ? ' ' + styles.cardActionActive : '')}
-              aria-label={locked ? `解锁「${title}」的位置` : `锁定「${title}」的位置`}
-              aria-pressed={locked}
-              onClick={() => {
-                runtime.setLocked(widget.id, !locked);
-              }}
-            >
-              <LockGlyph locked={locked} />
-            </button>
-          )}
+          <button
+            type="button"
+            className={styles.cardAction + ' ' + styles.cardLockAction}
+            data-locked={locked ? 'true' : 'false'}
+            aria-label={locked ? `解锁「${title}」的位置` : `锁定「${title}」的位置`}
+            aria-pressed={locked}
+            onClick={() => {
+              runtime.setLocked(widget.id, !locked);
+            }}
+          >
+            <LockGlyph locked={locked} />
+          </button>
           {widget.card?.minimizable !== false && (
             <button
               type="button"
