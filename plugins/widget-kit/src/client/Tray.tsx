@@ -213,6 +213,7 @@ export function Tray({
         const dragging = preview !== null && dragRef.current?.id === widget.id;
         const title = resolveText(widget.title);
         const label = badge?.title !== undefined && badge.title !== '' ? `${title} · ${badge.title}` : title;
+        const hoverTriggered = widget.presentation === 'popover' && widget.popover?.trigger === 'hover';
         const tone = badge?.tone ?? 'info';
         return (
           <span
@@ -222,8 +223,21 @@ export function Tray({
             ref={(element) => {
               runtime.setAnchor(widget.id, element);
             }}
+            // 悬停展开的组件：指针进出图标都要告诉运行时（延迟与宽限由描述符定）
+            onPointerEnter={() => {
+              runtime.hoverEnter(widget.id);
+            }}
+            onPointerLeave={() => {
+              runtime.hoverLeave(widget.id);
+            }}
           >
-            <Tooltip label={label} side="bottom" delayMs={400}>
+            <Tooltip
+              label={label}
+              side="bottom"
+              delayMs={400}
+              // 悬停展开的 popover 本身就是它的说明，再叠一层气泡只会互相打架
+              disabled={hoverTriggered}
+            >
               <button
                 type="button"
                 className={

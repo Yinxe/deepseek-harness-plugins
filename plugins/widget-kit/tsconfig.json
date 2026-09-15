@@ -5,6 +5,6 @@
     "jsx": "react-jsx",
     "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
-  "include": ["src", "tsup.config.ts"],
+  "include": ["src", "tsup.config.ts", "spec.d.ts"],
   "exclude": ["node_modules", "lib", "dist"]
 }

@@ -56,7 +56,13 @@ var SPEC_DEFAULTS = {
   /** 托盘可见图标上限（框架偏好的默认值，用户可在设置页改）。 */
   maxVisibleIcons: 4,
   /** 新卡的层叠偏移。 */
-  cascadeStep: 28
+  cascadeStep: 28,
+  /** popover：内容内边距、悬停展开延迟、悬停收起宽限、自适应宽度上限。 */
+  popoverPadding: 12,
+  popoverWidthMax: 420,
+  popoverMaxHeightMax: 2e3,
+  hoverOpenDelayMs: 80,
+  hoverCloseDelayMs: 220
 };
 var WidgetSpecError = class extends Error {
   constructor(field, detail) {
@@ -100,6 +106,12 @@ function compareVersions(a, b) {
   if (left.pre === "") return 1;
   if (right.pre === "") return -1;
   return left.pre < right.pre ? -1 : 1;
+}
+function readPositive(field, v) {
+  if (typeof v !== "number" || !Number.isFinite(v) || v < 0) {
+    throw new WidgetSpecError(field, "\u5FC5\u987B\u662F\u975E\u8D1F\u6570\u5B57");
+  }
+  return Math.round(v);
 }
 function readSize(field, v) {
   if (!isRecord(v)) throw new WidgetSpecError(field, "\u5FC5\u987B\u662F { w, h } \u5BF9\u8C61");
@@ -150,10 +162,6 @@ function normalizeDescriptor(raw, frameworkVersion = FRAMEWORK_VERSION) {
   if (badge !== void 0 && typeof badge !== "function") {
     throw new WidgetSpecError("tray.badge", "\u5FC5\u987B\u662F\u51FD\u6570");
   }
-  const preview = trayObj["preview"];
-  if (preview !== void 0 && typeof preview !== "function") {
-    throw new WidgetSpecError("tray.preview", "\u5FC5\u987B\u662F\u51FD\u6570");
-  }
   const badgeIntervalRaw = trayObj["badgeIntervalMs"] ?? SPEC_DEFAULTS.badgeIntervalMs;
   if (typeof badgeIntervalRaw !== "number" || !Number.isFinite(badgeIntervalRaw)) {
     throw new WidgetSpecError("tray.badgeIntervalMs", "\u5FC5\u987B\u662F\u6570\u5B57\uFF08\u6BEB\u79D2\uFF09");
@@ -199,6 +207,53 @@ function normalizeDescriptor(raw, frameworkVersion = FRAMEWORK_VERSION) {
       load: load ?? null,
       refreshMs: refreshRaw,
       render
+    };
+  }
+  const popoverRaw = raw["popover"];
+  if (popoverRaw !== void 0 && !isRecord(popoverRaw)) {
+    throw new WidgetSpecError("popover", "\u5FC5\u987B\u662F\u5BF9\u8C61");
+  }
+  if (popoverRaw !== void 0 && frame !== "popover") {
+    throw new WidgetSpecError("popover", "\u53EA\u6709 presentation \u4E3A 'popover' \u65F6\u624D\u63A5\u53D7 popover \u914D\u7F6E");
+  }
+  const popoverObj = isRecord(popoverRaw) ? popoverRaw : {};
+  let popover = null;
+  if (frame === "popover") {
+    const triggerRaw = popoverObj["trigger"] ?? "click";
+    if (triggerRaw !== "click" && triggerRaw !== "hover") {
+      throw new WidgetSpecError("popover.trigger", "\u53D6 'click'\uFF08\u70B9\u56FE\u6807\u5C55\u5F00\uFF09\u6216 'hover'\uFF08\u60AC\u505C\u5C55\u5F00\uFF09");
+    }
+    const sideRaw = popoverObj["side"] ?? "bottom";
+    if (sideRaw !== "bottom" && sideRaw !== "top") {
+      throw new WidgetSpecError("popover.side", "\u53D6 'bottom' \u6216 'top'");
+    }
+    const width = popoverObj["width"] === void 0 ? null : readPositive("popover.width", popoverObj["width"]);
+    if (width !== null && (width < 160 || width > 2e3)) {
+      throw new WidgetSpecError("popover.width", "\u5FC5\u987B\u5728 160\u20132000 px \u4E4B\u95F4");
+    }
+    const maxHeight = popoverObj["maxHeight"] === void 0 ? null : readPositive("popover.maxHeight", popoverObj["maxHeight"]);
+    if (maxHeight !== null && (maxHeight < 120 || maxHeight > SPEC_DEFAULTS.popoverMaxHeightMax)) {
+      throw new WidgetSpecError(
+        "popover.maxHeight",
+        `\u5FC5\u987B\u5728 120\u2013${String(SPEC_DEFAULTS.popoverMaxHeightMax)} px \u4E4B\u95F4`
+      );
+    }
+    const padding = popoverObj["padding"] === void 0 ? SPEC_DEFAULTS.popoverPadding : readPositive("popover.padding", popoverObj["padding"]);
+    if (padding > 48) throw new WidgetSpecError("popover.padding", "\u4E0D\u5F97\u8D85\u8FC7 48 px");
+    const hoverOpenDelayMs = popoverObj["hoverOpenDelayMs"] === void 0 ? SPEC_DEFAULTS.hoverOpenDelayMs : readPositive("popover.hoverOpenDelayMs", popoverObj["hoverOpenDelayMs"]);
+    const hoverCloseDelayMs = popoverObj["hoverCloseDelayMs"] === void 0 ? SPEC_DEFAULTS.hoverCloseDelayMs : readPositive("popover.hoverCloseDelayMs", popoverObj["hoverCloseDelayMs"]);
+    if (hoverOpenDelayMs > 2e3 || hoverCloseDelayMs > 2e3) {
+      throw new WidgetSpecError("popover.hoverOpenDelayMs", "\u5EF6\u8FDF\u4E0D\u5F97\u8D85\u8FC7 2000 ms");
+    }
+    popover = {
+      trigger: triggerRaw,
+      width,
+      maxHeight,
+      padding,
+      side: sideRaw,
+      header: readBool("popover.header", popoverObj["header"], true),
+      hoverOpenDelayMs,
+      hoverCloseDelayMs
     };
   }
   const cardRaw = raw["card"];
@@ -258,11 +313,11 @@ function normalizeDescriptor(raw, frameworkVersion = FRAMEWORK_VERSION) {
     presentation: frame,
     tray: {
       badge: badge ?? null,
-      badgeIntervalMs: Math.round(badgeIntervalRaw),
-      preview: preview ?? null
+      badgeIntervalMs: Math.round(badgeIntervalRaw)
     },
     content,
-    card
+    card,
+    popover
   };
 }
 
@@ -1018,11 +1073,21 @@ function Popover({
 }) {
   const panelRef = (0, import_react4.useRef)(null);
   const anchorRef = (0, import_react4.useMemo)(() => ({ current: runtime.getAnchor(widget.id) }), [runtime, widget.id]);
+  const options = widget.popover ?? {
+    trigger: "click",
+    width: null,
+    maxHeight: null,
+    padding: SPEC_DEFAULTS.popoverPadding,
+    side: "bottom",
+    header: true,
+    hoverOpenDelayMs: SPEC_DEFAULTS.hoverOpenDelayMs,
+    hoverCloseDelayMs: SPEC_DEFAULTS.hoverCloseDelayMs
+  };
   const anchored = (0, import_dsh_client_ui_primitives3.useAnchoredPosition)({
     open: true,
     anchorRef,
     panelRef,
-    side: "bottom",
+    side: options.side,
     gap: 8,
     margin: 8
   });
@@ -1030,6 +1095,10 @@ function Popover({
   const close = (0, import_react4.useCallback)(() => {
     runtime.close(widget.id);
   }, [runtime, widget.id]);
+  (0, import_react4.useEffect)(() => {
+    if (runtime.getSnapshot().openOrigin !== "click") return;
+    panelRef.current?.focus();
+  }, [runtime]);
   (0, import_react4.useEffect)(() => {
     if (typeof document === "undefined") return void 0;
     const onPointerDown = (event) => {
@@ -1073,21 +1142,34 @@ function Popover({
     top: FALLBACK.top,
     left: Math.max(12, runtime.viewport().width - FALLBACK.left.width - FALLBACK.left.offset)
   };
+  const panelStyle = {
+    ...style,
+    ...options.width === null ? {} : { width: options.width },
+    ...options.maxHeight === null ? {} : { maxHeight: options.maxHeight }
+  };
   return /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
     "div",
     {
       ref: panelRef,
       className: styles_module_css_default.popover,
-      style,
+      style: panelStyle,
       role: "dialog",
       "aria-label": title,
+      tabIndex: -1,
       "data-widget": widget.id,
+      "data-trigger": options.trigger,
+      onPointerEnter: () => {
+        runtime.hoverEnter(widget.id);
+      },
+      onPointerLeave: () => {
+        runtime.hoverLeave(widget.id);
+      },
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: styles_module_css_default.popoverHeader, children: [
+        options.header && /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)("div", { className: styles_module_css_default.popoverHeader, children: [
           /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: styles_module_css_default.popoverTitle, children: title }),
           /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("button", { type: "button", className: styles_module_css_default.cardAction, "aria-label": `\u5173\u95ED\u300C${title}\u300D`, onClick: close, children: "\u2715" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: styles_module_css_default.popoverBody, children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(WidgetErrorBoundary, { label: title, onError, onRetry: data.retry, children: body }) })
+        /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("div", { className: styles_module_css_default.popoverBody, style: { padding: options.padding }, children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(WidgetErrorBoundary, { label: title, onError, onRetry: data.retry, children: body }) })
       ]
     }
   );
@@ -1741,6 +1823,7 @@ function Tray({
       const dragging = preview !== null && dragRef.current?.id === widget.id;
       const title = resolveText3(widget.title);
       const label = badge?.title !== void 0 && badge.title !== "" ? `${title} \xB7 ${badge.title}` : title;
+      const hoverTriggered = widget.presentation === "popover" && widget.popover?.trigger === "hover";
       const tone = badge?.tone ?? "info";
       return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
         "span",
@@ -1750,36 +1833,51 @@ function Tray({
           ref: (element) => {
             runtime.setAnchor(widget.id, element);
           },
-          children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(import_dsh_client_ui_primitives6.Tooltip, { label, side: "bottom", delayMs: 400, children: /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
-            "button",
+          onPointerEnter: () => {
+            runtime.hoverEnter(widget.id);
+          },
+          onPointerLeave: () => {
+            runtime.hoverLeave(widget.id);
+          },
+          children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+            import_dsh_client_ui_primitives6.Tooltip,
             {
-              type: "button",
-              className: styles_module_css_default.trayBtn + (active ? " " + styles_module_css_default.trayBtnActive : "") + (dragging ? " " + styles_module_css_default.trayBtnDragging : ""),
-              "aria-label": label,
-              "aria-haspopup": "dialog",
-              "aria-expanded": active,
-              onPointerDown: (event) => {
-                onIconPointerDown(event, widget.id);
-              },
-              onPointerMove: onIconPointerMove,
-              onPointerUp: (event) => {
-                finishDrag(event, true);
-              },
-              onPointerCancel: (event) => {
-                finishDrag(event, false);
-              },
-              onLostPointerCapture: (event) => {
-                finishDrag(event, false);
-              },
-              onClick: () => {
-                onIconClick(widget.id);
-              },
-              children: [
-                /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: styles_module_css_default.trayGlyph, children: widget.icon }),
-                badge !== null && badge.text !== void 0 && badge.text !== "" ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: styles_module_css_default.trayBadgeText, "data-tone": tone, children: badge.text.slice(0, 2) }) : badge !== null && (badge.dot === true || badge.tone !== void 0) ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: styles_module_css_default.trayBadge, "data-tone": tone }) : null
-              ]
+              label,
+              side: "bottom",
+              delayMs: 400,
+              disabled: hoverTriggered,
+              children: /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
+                "button",
+                {
+                  type: "button",
+                  className: styles_module_css_default.trayBtn + (active ? " " + styles_module_css_default.trayBtnActive : "") + (dragging ? " " + styles_module_css_default.trayBtnDragging : ""),
+                  "aria-label": label,
+                  "aria-haspopup": "dialog",
+                  "aria-expanded": active,
+                  onPointerDown: (event) => {
+                    onIconPointerDown(event, widget.id);
+                  },
+                  onPointerMove: onIconPointerMove,
+                  onPointerUp: (event) => {
+                    finishDrag(event, true);
+                  },
+                  onPointerCancel: (event) => {
+                    finishDrag(event, false);
+                  },
+                  onLostPointerCapture: (event) => {
+                    finishDrag(event, false);
+                  },
+                  onClick: () => {
+                    onIconClick(widget.id);
+                  },
+                  children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: styles_module_css_default.trayGlyph, children: widget.icon }),
+                    badge !== null && badge.text !== void 0 && badge.text !== "" ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: styles_module_css_default.trayBadgeText, "data-tone": tone, children: badge.text.slice(0, 2) }) : badge !== null && (badge.dot === true || badge.tone !== void 0) ? /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("span", { className: styles_module_css_default.trayBadge, "data-tone": tone }) : null
+                  ]
+                }
+              )
             }
-          ) })
+          )
         },
         widget.id
       );
@@ -1833,6 +1931,8 @@ function createWidgetRuntime(deps) {
   let viewport = { ...deps.viewport };
   let sessionId = null;
   let openId = null;
+  let openOrigin = null;
+  const hoverTimers = /* @__PURE__ */ new Map();
   let zOrder = [];
   let live = null;
   const listeners = /* @__PURE__ */ new Set();
@@ -1863,6 +1963,7 @@ function createWidgetRuntime(deps) {
     widgets: [],
     layout: state,
     openId: null,
+    openOrigin: null,
     zOrder: [],
     badges,
     prefs
@@ -1882,6 +1983,7 @@ function createWidgetRuntime(deps) {
       widgets: sortedWidgets(),
       layout: state,
       openId,
+      openOrigin,
       zOrder: [...zOrder],
       badges: { ...badges },
       prefs
@@ -1905,6 +2007,13 @@ function createWidgetRuntime(deps) {
   }
   function persist() {
     saver.schedule(state);
+  }
+  function scheduleTimeout(callback, ms) {
+    if (deps.timeout !== void 0) return deps.timeout(callback, ms);
+    const handle = setTimeout(callback, ms);
+    return () => {
+      clearTimeout(handle);
+    };
   }
   function visibleCardCount() {
     return Object.values(state.cards).filter((c) => c.open && !c.minimized).length;
@@ -1959,7 +2068,11 @@ function createWidgetRuntime(deps) {
       if (disposed) return;
       disposed = true;
       registry.delete(value.id);
-      if (openId === value.id) openId = null;
+      cancelHoverTimer(value.id);
+      if (openId === value.id) {
+        openId = null;
+        openOrigin = null;
+      }
       zOrder = zOrder.filter((x) => x !== value.id);
       if (live?.id === value.id) live = null;
       delete badges[value.id];
@@ -1981,12 +2094,88 @@ function createWidgetRuntime(deps) {
       presentation: widget.presentation
     }));
   }
+  function cancelHoverTimer(id) {
+    const cancel = hoverTimers.get(id);
+    if (cancel === void 0) return;
+    hoverTimers.delete(id);
+    try {
+      cancel();
+    } catch {
+    }
+  }
+  function cancelAllHoverTimers() {
+    const pending = Array.from(hoverTimers.entries());
+    hoverTimers.clear();
+    for (const [, cancel] of pending) {
+      try {
+        cancel();
+      } catch {
+      }
+    }
+  }
+  function showPopover(id, origin) {
+    const widget = widgetOf(id);
+    if (widget === void 0 || widget.presentation !== "popover") return;
+    cancelAllHoverTimers();
+    openId = id;
+    openOrigin = origin;
+    publish();
+  }
+  function hidePopover(id) {
+    cancelHoverTimer(id);
+    if (openId !== id) return;
+    openId = null;
+    openOrigin = null;
+    publish();
+  }
+  function hoverEnter(id) {
+    const widget = widgetOf(id);
+    if (widget === void 0 || widget.presentation !== "popover") return;
+    const options = widget.popover;
+    if (options === null || options.trigger !== "hover") return;
+    if (openId === widget.id) {
+      cancelHoverTimer(id);
+      return;
+    }
+    cancelHoverTimer(id);
+    if (options.hoverOpenDelayMs <= 0) {
+      showPopover(id, "hover");
+      return;
+    }
+    hoverTimers.set(
+      id,
+      scheduleTimeout(() => {
+        hoverTimers.delete(id);
+        const current = widgetOf(id);
+        if (current === void 0 || current.presentation !== "popover") return;
+        showPopover(id, "hover");
+      }, options.hoverOpenDelayMs)
+    );
+  }
+  function hoverLeave(id) {
+    const widget = widgetOf(id);
+    if (widget === void 0 || widget.presentation !== "popover") return;
+    const options = widget.popover;
+    if (options === null || options.trigger !== "hover") return;
+    cancelHoverTimer(id);
+    if (openId !== widget.id || openOrigin !== "hover") return;
+    if (options.hoverCloseDelayMs <= 0) {
+      hidePopover(id);
+      return;
+    }
+    hoverTimers.set(
+      id,
+      scheduleTimeout(() => {
+        hoverTimers.delete(id);
+        if (openId === id && openOrigin === "hover") hidePopover(id);
+      }, options.hoverCloseDelayMs)
+    );
+  }
   function open(id) {
     const widget = widgetOf(id);
     if (widget === void 0 || widget.presentation === "tray") return;
     if (widget.presentation === "popover") {
-      openId = id;
-      publish();
+      showPopover(id, "click");
       return;
     }
     const existing = cardStateOf(widget);
@@ -2004,10 +2193,7 @@ function createWidgetRuntime(deps) {
     const widget = widgetOf(id);
     if (widget === void 0) return;
     if (widget.presentation === "popover") {
-      if (openId === id) {
-        openId = null;
-        publish();
-      }
+      hidePopover(id);
       return;
     }
     const existing = state.cards[id];
@@ -2233,7 +2419,10 @@ function createWidgetRuntime(deps) {
       };
       persist();
     }
-    if (openId !== null && !isKnown(openId)) openId = null;
+    if (openId !== null && !isKnown(openId)) {
+      openId = null;
+      openOrigin = null;
+    }
     zOrder = zOrder.filter(isKnown);
     publish();
     return removed;
@@ -2243,7 +2432,9 @@ function createWidgetRuntime(deps) {
     const ok = clearState(deps.storage);
     state = emptyState();
     zOrder = [];
+    cancelAllHoverTimers();
     openId = null;
+    openOrigin = null;
     live = null;
     for (const key of Object.keys(badges)) delete badges[key];
     publish();
@@ -2282,8 +2473,10 @@ function createWidgetRuntime(deps) {
     if (sessionId === next) return;
     sessionId = next;
     let changed = false;
+    cancelAllHoverTimers();
     if (openId !== null) {
       openId = null;
+      openOrigin = null;
       changed = true;
     }
     const nextCards = { ...state.cards };
@@ -2376,7 +2569,16 @@ function createWidgetRuntime(deps) {
       return () => {
         clearInterval(handle);
       };
-    }
+    },
+    scheduleTimeout(callback, ms) {
+      if (deps.timeout !== void 0) return deps.timeout(callback, ms);
+      const handle = setTimeout(callback, ms);
+      return () => {
+        clearTimeout(handle);
+      };
+    },
+    hoverEnter,
+    hoverLeave
   };
 }
 function createWidgetsService(runtime) {
@@ -2640,6 +2842,7 @@ function apply(ctx) {
     storage: readStorage(),
     viewport: readViewport(),
     interval: (callback, ms) => ctx.interval(callback, ms),
+    timeout: (callback, ms) => ctx.timeout(callback, ms),
     savePrefs: async (prefs) => {
       try {
         const result = await saveConfig(prefs);

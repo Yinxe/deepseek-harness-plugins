@@ -167,9 +167,11 @@ const ctx = {
     return () => {};
   },
   timeout: (callback, ms) => {
-    timeouts.push(ms);
-    void callback;
-    return () => {};
+    const entry = { callback, ms, cancelled: false, fired: false };
+    timeouts.push(entry);
+    return () => {
+      entry.cancelled = true;
+    };
   },
   reflect: {
     provide: (serviceName, value) => {
@@ -237,8 +239,18 @@ for (const entry of effects) {
 }
 assert.ok(effects.length >= 8, `effect 数量太少（${String(effects.length)}），装配可能被吞掉了`);
 assert.ok(intervals.includes(1000), '徽标调度必须挂在 1s 的 ctx.interval 上');
-assert.ok(timeouts.includes(5000), '启动后清理残留必须挂在 ctx.timeout 上');
-assert.ok(timeouts.includes(3000), '偏好读取必须有兜底超时（否则托盘可能一直不渲染）');
+const timeoutMs = timeouts.map((entry) => entry.ms);
+assert.ok(timeoutMs.includes(5000), '启动后清理残留必须挂在 ctx.timeout 上');
+assert.ok(timeoutMs.includes(3000), '偏好读取必须有兜底超时（否则托盘可能一直不渲染）');
+
+/** 把指定延时的挂起任务「到点」（悬停展开/收起是定时器驱动的，自检里要能确定性地推进它）。 */
+function fireTimeouts(ms) {
+  for (const entry of timeouts) {
+    if (entry.ms !== ms || entry.fired || entry.cancelled) continue;
+    entry.fired = true;
+    entry.callback();
+  }
+}
 
 // ── 4. 描述符校验（12 类非法输入）───────────────────────────────────────
 const base = { id: 'demo:thing', title: 'T', icon: 'i', presentation: 'tray' };
@@ -267,6 +279,31 @@ const invalidCases = [
     },
   ],
   ['minFramework 高于当前', { ...base, minFramework: '9.0.0' }],
+  [
+    'popover.trigger 非法',
+    { ...base, presentation: 'popover', content: { render: () => null }, popover: { trigger: 'tap' } },
+  ],
+  [
+    'popover.width 太窄',
+    { ...base, presentation: 'popover', content: { render: () => null }, popover: { width: 100 } },
+  ],
+  [
+    'popover.padding 过大',
+    { ...base, presentation: 'popover', content: { render: () => null }, popover: { padding: 99 } },
+  ],
+  [
+    'popover.hoverOpenDelayMs 过大',
+    {
+      ...base,
+      presentation: 'popover',
+      content: { render: () => null },
+      popover: { hoverOpenDelayMs: 9999 },
+    },
+  ],
+  [
+    'card 用 popover 配置',
+    { ...base, presentation: 'card', content: { render: () => null }, popover: { trigger: 'hover' } },
+  ],
 ];
 for (const [label, input] of invalidCases) {
   assert.throws(
@@ -418,4 +455,93 @@ const menuNodes = layerNodes.filter((node) => node.type === 'Menu');
 assert.ok(menuNodes.length >= 1, '卡片标题栏必须有 ⋯ 菜单');
 
 disposeCard();
-console.log('check-client.mjs ok (loader / 服务 / 槽位 / 校验 / 渲染)');
+
+// ── 9. popover：点击展开 vs 悬停展开 ─────────────────────────────────────
+const clickPopover = {
+  id: 'demo:quick',
+  title: '快捷设置',
+  icon: 'i',
+  presentation: 'popover',
+  popover: { trigger: 'click' },
+  content: { render: () => null },
+};
+const hoverPopover = {
+  id: 'demo:hover',
+  title: '悬停面板',
+  icon: 'i',
+  presentation: 'popover',
+  popover: {
+    trigger: 'hover',
+    hoverOpenDelayMs: 50,
+    hoverCloseDelayMs: 60,
+    header: false,
+    padding: 0,
+    width: 520,
+  },
+  content: { render: () => null },
+};
+const disposeClick = service.register(clickPopover);
+const disposeHover = service.register(hoverPopover);
+
+// 点击触发：悬停不该打开它
+runtime.hoverEnter('demo:quick');
+fireTimeouts(50);
+assert.equal(service.isOpen('demo:quick'), false, "trigger: 'click' 的组件不该被悬停打开");
+service.toggle('demo:quick');
+assert.equal(service.isOpen('demo:quick'), true);
+assert.equal(runtime.getSnapshot().openOrigin, 'click');
+
+// 单开：悬停展开另一个会收起它
+runtime.hoverEnter('demo:hover');
+assert.equal(service.isOpen('demo:hover'), false, '悬停展开要留 hoverOpenDelayMs');
+fireTimeouts(50);
+assert.equal(service.isOpen('demo:hover'), true, '延迟到点必须展开');
+assert.equal(service.isOpen('demo:quick'), false, '同一时刻只能展开一个 popover');
+assert.equal(runtime.getSnapshot().openOrigin, 'hover');
+
+// 悬停收起：留宽限，宽限内回到面板则撤销
+runtime.hoverLeave('demo:hover');
+assert.equal(service.isOpen('demo:hover'), true, '收起要留 hoverCloseDelayMs');
+runtime.hoverEnter('demo:hover');
+fireTimeouts(60);
+assert.equal(service.isOpen('demo:hover'), true, '① 宽限内回到面板必须撤销收起');
+runtime.hoverLeave('demo:hover');
+fireTimeouts(60);
+assert.equal(service.isOpen('demo:hover'), false, '② 真正离开后必须收起');
+
+// 悬停面板的形态选项真的落到 DOM 上（任意 web 视图要能贴边）
+runtime.hoverEnter('demo:hover');
+fireTimeouts(50);
+const popoverNodes = collect(render(layerEntry.component({})));
+const panel = popoverNodes.find((node) => node.props['data-widget'] === 'demo:hover');
+assert.ok(panel, '悬停展开后必须渲染出面板');
+assert.equal(panel.props.style.width, 520, 'popover.width 必须落到面板宽度');
+assert.equal(panel.props['data-trigger'], 'hover');
+assert.equal(panel.props['aria-label'], '悬停面板');
+const bodyNode = popoverNodes.find(
+  (node) => typeof node.props.className === 'string' && node.props.className.includes('popoverBody'),
+);
+assert.ok(bodyNode, '面板必须有 body');
+assert.equal(bodyNode.props.style.padding, 0, 'popover.padding: 0 必须落到 body（贴边渲染）');
+assert.ok(
+  !popoverNodes.some(
+    (node) => typeof node.props.className === 'string' && node.props.className.includes('popoverHeader'),
+  ),
+  'popover.header: false 时不得渲染框架标题栏',
+);
+
+// 关闭要清掉挂起的悬停定时器：关掉后即使定时器到点也不该再自己蹦出来
+runtime.hoverLeave('demo:hover');
+service.close('demo:hover');
+fireTimeouts(60);
+assert.equal(service.isOpen('demo:hover'), false, '关闭后必须清掉待收起的定时器');
+runtime.hoverEnter('demo:hover');
+fireTimeouts(50);
+service.toggle('demo:hover');
+assert.equal(service.isOpen('demo:hover'), false, 'toggle 关闭后必须清掉待展开的定时器');
+fireTimeouts(50);
+assert.equal(service.isOpen('demo:hover'), false, '被取消的展开定时器不得生效');
+
+disposeClick();
+disposeHover();
+console.log('check-client.mjs ok (loader / 服务 / 槽位 / 校验 / 渲染 / popover 两种触发)');

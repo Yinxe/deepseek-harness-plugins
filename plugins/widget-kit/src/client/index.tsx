@@ -94,6 +94,7 @@ export function apply(ctx: ClientContext): void {
     storage: readStorage(),
     viewport: readViewport(),
     interval: (callback, ms) => ctx.interval(callback, ms),
+    timeout: (callback, ms) => ctx.timeout(callback, ms),
     savePrefs: async (prefs) => {
       try {
         const result = await saveConfig(prefs);

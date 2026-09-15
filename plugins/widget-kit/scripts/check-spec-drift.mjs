@@ -56,6 +56,7 @@ const groups = {
   tray: 'WidgetTrayOptions',
   content: 'WidgetContentOptions',
   card: 'WidgetCardOptions',
+  popover: 'WidgetPopoverOptions',
   size: 'WidgetSize',
   summary: 'WidgetSummary',
   box: 'WidgetBox',

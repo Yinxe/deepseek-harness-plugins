@@ -85,10 +85,34 @@ export interface WidgetCardOptions {
   closable?: boolean;
 }
 
-export interface WidgetTrayOptions<D = unknown> {
+export interface WidgetTrayOptions {
   badge?(ctx: WidgetBadgeContext): WidgetBadge | null | Promise<WidgetBadge | null>;
   badgeIntervalMs?: number;
-  preview?(props: WidgetContentProps<D>): ReactNode;
+}
+
+/**
+ * `presentation: 'popover'` 的形态选项。
+ *
+ * popover 是「小窗口」：**不可拖动、不可缩放**，同一时刻只展开一个；内容由提供方自由渲染
+ * （菜单、快捷设置、数据卡、甚至 iframe / 视频 / 画布这类任意 web 视图）。
+ */
+export interface WidgetPopoverOptions {
+  /** 展开方式：`click`（默认）点图标展开，`hover` 悬停展开（移开自动收起）。 */
+  trigger?: 'click' | 'hover';
+  /** 面板宽度（px）；不写 = 自适应内容（上限 `min(420, 视口−24)`）。 */
+  width?: number;
+  /** 面板最大高度（px）；不写 = `min(60vh, 520)`。 */
+  maxHeight?: number;
+  /** 内容内边距（px，默认 12）；要贴边渲染（iframe / 视频 / 画布）就设 0。 */
+  padding?: number;
+  /** 相对图标的位置：`bottom`（默认）或 `top`。 */
+  side?: 'bottom' | 'top';
+  /** 是否渲染框架自带的标题栏（默认 true）；`false` = 整个面板归你（Esc / 点外部仍可关闭）。 */
+  header?: boolean;
+  /** 悬停展开延迟（ms，默认 80）。 */
+  hoverOpenDelayMs?: number;
+  /** 悬停收起的宽限（ms，默认 220）——用来跨过「从图标移到面板」的间隙。 */
+  hoverCloseDelayMs?: number;
 }
 
 export interface WidgetContentOptions<D = unknown> {
@@ -105,9 +129,10 @@ export interface WidgetDescriptor<D = unknown> {
   subtitle?: string | (() => string);
   order?: number;
   presentation: 'tray' | 'popover' | 'card';
-  tray?: WidgetTrayOptions<D>;
+  tray?: WidgetTrayOptions;
   content?: WidgetContentOptions<D>;
   card?: WidgetCardOptions;
+  popover?: WidgetPopoverOptions;
   minFramework?: string;
 }
 

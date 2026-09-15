@@ -65,6 +65,12 @@ export const SPEC_DEFAULTS = {
   maxVisibleIcons: 4,
   /** 新卡的层叠偏移。 */
   cascadeStep: 28,
+  /** popover：内容内边距、悬停展开延迟、悬停收起宽限、自适应宽度上限。 */
+  popoverPadding: 12,
+  popoverWidthMax: 420,
+  popoverMaxHeightMax: 2000,
+  hoverOpenDelayMs: 80,
+  hoverCloseDelayMs: 220,
 } as const;
 
 /** 网格尺寸（描述符与内容 props 里的 `{ w, h }` / `{ width, height }`）。 */
@@ -139,10 +145,34 @@ export interface WidgetCardOptions {
   closable?: boolean;
 }
 
-export interface WidgetTrayOptions<D = unknown> {
+export interface WidgetTrayOptions {
   badge?(ctx: WidgetBadgeContext): WidgetBadge | null | Promise<WidgetBadge | null>;
   badgeIntervalMs?: number;
-  preview?(props: WidgetContentProps<D>): ReactNode;
+}
+
+/**
+ * `presentation: 'popover'` 的形态选项。
+ *
+ * popover 是「小窗口」：**不可拖动、不可缩放**，同一时刻只展开一个；内容由提供方自由渲染
+ * （菜单、快捷设置、数据卡、甚至 iframe / 视频 / 画布这类任意 web 视图）。
+ */
+export interface WidgetPopoverOptions {
+  /** 展开方式：`click`（默认）点图标展开，`hover` 悬停展开（移开自动收起）。 */
+  trigger?: 'click' | 'hover';
+  /** 面板宽度（px）；不写 = 自适应内容（上限 `min(420, 视口−24)`）。 */
+  width?: number;
+  /** 面板最大高度（px）；不写 = `min(60vh, 520)`。 */
+  maxHeight?: number;
+  /** 内容内边距（px，默认 12）；要贴边渲染（iframe / 视频 / 画布）就设 0。 */
+  padding?: number;
+  /** 相对图标的位置：`bottom`（默认）或 `top`。 */
+  side?: 'bottom' | 'top';
+  /** 是否渲染框架自带的标题栏（默认 true）；`false` = 整个面板归你（Esc / 点外部仍可关闭）。 */
+  header?: boolean;
+  /** 悬停展开延迟（ms，默认 80）。 */
+  hoverOpenDelayMs?: number;
+  /** 悬停收起的宽限（ms，默认 220）——用来跨过「从图标移到面板」的间隙。 */
+  hoverCloseDelayMs?: number;
 }
 
 export interface WidgetContentOptions<D = unknown> {
@@ -164,9 +194,10 @@ export interface WidgetDescriptor<D = unknown> {
   subtitle?: string | (() => string);
   order?: number;
   presentation: (typeof PRESENTATIONS)[number];
-  tray?: WidgetTrayOptions<D>;
+  tray?: WidgetTrayOptions;
   content?: WidgetContentOptions<D>;
   card?: WidgetCardOptions;
+  popover?: WidgetPopoverOptions;
   minFramework?: string;
 }
 
@@ -182,7 +213,6 @@ export interface NormalizedWidget {
   tray: {
     badge: ((ctx: WidgetBadgeContext) => WidgetBadge | null | Promise<WidgetBadge | null>) | null;
     badgeIntervalMs: number;
-    preview: ((props: WidgetContentProps<unknown>) => ReactNode) | null;
   };
   content: {
     title: string | (() => string) | null;
@@ -198,6 +228,16 @@ export interface NormalizedWidget {
     resizable: boolean;
     minimizable: boolean;
     closable: boolean;
+  } | null;
+  popover: {
+    trigger: 'click' | 'hover';
+    width: number | null;
+    maxHeight: number | null;
+    padding: number;
+    side: 'bottom' | 'top';
+    header: boolean;
+    hoverOpenDelayMs: number;
+    hoverCloseDelayMs: number;
   } | null;
 }
 
@@ -262,6 +302,14 @@ export function compareVersions(a: string, b: string): number {
   if (left.pre === '') return 1;
   if (right.pre === '') return -1;
   return left.pre < right.pre ? -1 : 1;
+}
+
+/** 读一个 >= 0 的有限数字（允许 0：`padding: 0` 是合法用法）。 */
+function readPositive(field: string, v: unknown): number {
+  if (typeof v !== 'number' || !Number.isFinite(v) || v < 0) {
+    throw new WidgetSpecError(field, '必须是非负数字');
+  }
+  return Math.round(v);
 }
 
 function readSize(field: string, v: unknown): WidgetSize {
@@ -337,10 +385,6 @@ export function normalizeDescriptor(
   if (badge !== undefined && typeof badge !== 'function') {
     throw new WidgetSpecError('tray.badge', '必须是函数');
   }
-  const preview = trayObj['preview'];
-  if (preview !== undefined && typeof preview !== 'function') {
-    throw new WidgetSpecError('tray.preview', '必须是函数');
-  }
   const badgeIntervalRaw = trayObj['badgeIntervalMs'] ?? SPEC_DEFAULTS.badgeIntervalMs;
   if (typeof badgeIntervalRaw !== 'number' || !Number.isFinite(badgeIntervalRaw)) {
     throw new WidgetSpecError('tray.badgeIntervalMs', '必须是数字（毫秒）');
@@ -391,6 +435,68 @@ export function normalizeDescriptor(
       load: (load as ((ctx: WidgetLoadContext) => Promise<unknown>) | undefined) ?? null,
       refreshMs: refreshRaw,
       render: render as (props: WidgetContentProps<unknown>) => ReactNode,
+    };
+  }
+
+  // ── popover ──
+  const popoverRaw = raw['popover'];
+  if (popoverRaw !== undefined && !isRecord(popoverRaw)) {
+    throw new WidgetSpecError('popover', '必须是对象');
+  }
+  if (popoverRaw !== undefined && frame !== 'popover') {
+    throw new WidgetSpecError('popover', "只有 presentation 为 'popover' 时才接受 popover 配置");
+  }
+  const popoverObj = isRecord(popoverRaw) ? popoverRaw : {};
+  let popover: NormalizedWidget['popover'] = null;
+  if (frame === 'popover') {
+    const triggerRaw = popoverObj['trigger'] ?? 'click';
+    if (triggerRaw !== 'click' && triggerRaw !== 'hover') {
+      throw new WidgetSpecError('popover.trigger', "取 'click'（点图标展开）或 'hover'（悬停展开）");
+    }
+    const sideRaw = popoverObj['side'] ?? 'bottom';
+    if (sideRaw !== 'bottom' && sideRaw !== 'top') {
+      throw new WidgetSpecError('popover.side', "取 'bottom' 或 'top'");
+    }
+    const width =
+      popoverObj['width'] === undefined ? null : readPositive('popover.width', popoverObj['width']);
+    if (width !== null && (width < 160 || width > 2000)) {
+      throw new WidgetSpecError('popover.width', '必须在 160–2000 px 之间');
+    }
+    const maxHeight =
+      popoverObj['maxHeight'] === undefined
+        ? null
+        : readPositive('popover.maxHeight', popoverObj['maxHeight']);
+    if (maxHeight !== null && (maxHeight < 120 || maxHeight > SPEC_DEFAULTS.popoverMaxHeightMax)) {
+      throw new WidgetSpecError(
+        'popover.maxHeight',
+        `必须在 120–${String(SPEC_DEFAULTS.popoverMaxHeightMax)} px 之间`,
+      );
+    }
+    const padding =
+      popoverObj['padding'] === undefined
+        ? SPEC_DEFAULTS.popoverPadding
+        : readPositive('popover.padding', popoverObj['padding']);
+    if (padding > 48) throw new WidgetSpecError('popover.padding', '不得超过 48 px');
+    const hoverOpenDelayMs =
+      popoverObj['hoverOpenDelayMs'] === undefined
+        ? SPEC_DEFAULTS.hoverOpenDelayMs
+        : readPositive('popover.hoverOpenDelayMs', popoverObj['hoverOpenDelayMs']);
+    const hoverCloseDelayMs =
+      popoverObj['hoverCloseDelayMs'] === undefined
+        ? SPEC_DEFAULTS.hoverCloseDelayMs
+        : readPositive('popover.hoverCloseDelayMs', popoverObj['hoverCloseDelayMs']);
+    if (hoverOpenDelayMs > 2000 || hoverCloseDelayMs > 2000) {
+      throw new WidgetSpecError('popover.hoverOpenDelayMs', '延迟不得超过 2000 ms');
+    }
+    popover = {
+      trigger: triggerRaw,
+      width,
+      maxHeight,
+      padding,
+      side: sideRaw,
+      header: readBool('popover.header', popoverObj['header'], true),
+      hoverOpenDelayMs,
+      hoverCloseDelayMs,
     };
   }
 
@@ -457,10 +563,10 @@ export function normalizeDescriptor(
     tray: {
       badge: (badge as NormalizedWidget['tray']['badge']) ?? null,
       badgeIntervalMs: Math.round(badgeIntervalRaw),
-      preview: (preview as ((props: WidgetContentProps<unknown>) => ReactNode) | undefined) ?? null,
     },
     content,
     card,
+    popover,
   };
 }
 
@@ -495,9 +601,20 @@ export const SPEC_KEYS = {
     'tray',
     'content',
     'card',
+    'popover',
     'minFramework',
   ],
-  tray: ['badge', 'badgeIntervalMs', 'preview'],
+  tray: ['badge', 'badgeIntervalMs'],
+  popover: [
+    'trigger',
+    'width',
+    'maxHeight',
+    'padding',
+    'side',
+    'header',
+    'hoverOpenDelayMs',
+    'hoverCloseDelayMs',
+  ],
   content: ['title', 'load', 'refreshMs', 'render'],
   card: ['defaultSize', 'minSize', 'maxSize', 'sizeClassBreakpoints', 'resizable', 'minimizable', 'closable'],
   size: ['w', 'h'],

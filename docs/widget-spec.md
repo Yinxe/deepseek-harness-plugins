@@ -18,7 +18,8 @@
         ┌───────────────────────────────────────────┴─────────────────────────┐
         │                        @dshp/widget-kit（框架）                       │
         │  注册表 → 会话顶部托盘（图标/徽标/溢出/拖拽排序）                        │
-        │         → 内容面：card（拖拽/缩放/最小化/关闭）或 popover（锚定轻面板）    │
+        │         → 内容面：card（拖拽/缩放/最小化/关闭）                          │
+        │                  或 popover（锚定小面板：点击/悬停展开，单开、不可拖动）   │
         │         → 调度：加载态 / 错误隔离 / 轮询节流 / 本机布局持久化 / a11y       │
         └───────────────────────────────────────────────────────────────────────┘
 ```
@@ -27,9 +28,13 @@
 
 | 决策                       | 字段                                 | 取值                                                                         |
 | -------------------------- | ------------------------------------ | ---------------------------------------------------------------------------- |
-| 有没有图标常驻、点开是什么 | `presentation`                       | `'tray'`（只有图标+徽标）/ `'popover'`（锚定轻面板）/ `'card'`（可拖拽窗口） |
+| 有没有图标常驻、点开是什么 | `presentation`                       | `'tray'`（只有图标+徽标）/ `'popover'`（锚定小面板）/ `'card'`（可拖拽窗口） |
 | 打开时怎么取数             | `content.load` + `content.refreshMs` | 不写 `load` = 纯展示；写了 = 框架负责加载/轮询/中止/陈旧标记                 |
 | 尺寸变化后怎么呈现         | **你的 `content.render`**            | 用 `sizeClass`、容器查询或 `size` 三种路径任选                               |
+
+> 小面板（`popover`）与卡片（`card`）是两种不同的问题：**popover 是「小窗口」** —— 不可拖动、
+> 不可缩放、同一时刻只展开一个，适合快捷设置、状态/数据速览，甚至可以整块渲染 iframe、视频或画布；
+> **card 是「窗口」** —— 可拖动/八向缩放/最小化/关闭，可同时开多张，适合图表与长列表。
 
 ## 2. 快速开始（三步）
 
@@ -49,7 +54,7 @@ dsh plugin --profile web add ./plugins/widget-kit
 // 3. 你的插件 client 半：声明硬依赖 + 在 effect 里注册
 import type { WidgetDescriptor, WidgetContentProps } from '@dshp/widget-kit/spec';
 
-export const inject = ['slots', 'widgets'];
+export const inject = ['widgets']; // 只提供组件就不需要 slots；自己还要注册槽位时再加上
 
 interface QuotaData {
   used: number;
@@ -98,6 +103,48 @@ export function apply(ctx: ClientContext): void {
 > `inject: ['widgets']` 是**硬依赖**：没装框架时你的插件停在 waiting（不报错、不半死）。
 > 这是有意的：声明了要提供组件，就该明确要求框架在场。
 
+同一个插件可以再注册**小面板**（popover）：不可拖动、单开，适合快捷设置或数据速览。
+
+```tsx
+// 悬停展开的快捷设置：小、快、扫一眼就走
+ctx.effect(
+  () =>
+    ctx.widgets.register({
+      id: 'my-quota:quick',
+      title: '快捷设置',
+      icon: <GearGlyph />,
+      presentation: 'popover',
+      popover: { trigger: 'hover', width: 320 },
+      content: { render: (props) => <QuickSettings sessionId={props.sessionId} onClose={props.close} /> },
+    }),
+  'my-quota: quick settings',
+);
+
+// 也可以整块交给「任意 web 视图」：贴边 + 不给框架标题栏 + 自定义尺寸
+ctx.effect(
+  () =>
+    ctx.widgets.register({
+      id: 'my-quota:mini-app',
+      title: '迷你面板',
+      icon: <PanelGlyph />,
+      presentation: 'popover',
+      popover: { trigger: 'click', width: 720, maxHeight: 560, padding: 0, header: false },
+      content: {
+        render: () => (
+          <iframe
+            src="/ext/my-quota/mini-app"
+            title="迷你面板"
+            style={{ width: '100%', height: '100%', border: 0 }}
+          />
+        ),
+      },
+    }),
+  'my-quota: mini app panel',
+);
+```
+
+（`header: false` 时框架不画标题栏与关闭按钮，整块归你；用户仍可用 `Esc`、点外部、再点图标关闭。）
+
 ## 3. 描述符逐字段
 
 | 字段                        | 类型                                         | 必填                            | 默认                   | 说明                                                                |
@@ -110,7 +157,6 @@ export function apply(ctx: ClientContext): void {
 | `presentation`              | `'tray' \| 'popover' \| 'card'`              | ✅                              | —                      | 没有默认值，必须明说                                                |
 | `tray.badge`                | `(ctx) => WidgetBadge \| null \| Promise<…>` | —                               | 无                     | 徽标；返回值见下                                                    |
 | `tray.badgeIntervalMs`      | `number`                                     | —                               | 框架偏好（默认 30000） | 下限 5000、上限 600000                                              |
-| `tray.preview`              | `(props) => ReactNode`                       | —                               | 无                     | 悬停预览（当前版本留位，未接线）                                    |
 | `content.title`             | `string \| () => string`                     | —                               | 用 `title`             | 卡片标题栏文案                                                      |
 | `content.load`              | `(ctx) => Promise<D>`                        | —                               | 无                     | 不写 = 纯展示组件                                                   |
 | `content.refreshMs`         | `number`                                     | —                               | `0`（不轮询）          | 要么 0，要么 ≥ 5000                                                 |
@@ -122,7 +168,25 @@ export function apply(ctx: ClientContext): void {
 | `card.resizable`            | `boolean`                                    | —                               | `true`                 | `false` 时不渲染 8 个把手，菜单里也没有尺寸项                       |
 | `card.minimizable`          | `boolean`                                    | —                               | `true`                 | `false` 时没有最小化按钮、双击无效                                  |
 | `card.closable`             | `boolean`                                    | —                               | `true`                 | `false` 时没有关闭按钮                                              |
+| `popover.*`                 | 见下表                                       | —                               | 见下表                 | **只有 `presentation: 'popover'` 接受**                             |
 | `minFramework`              | `string`                                     | —                               | 无                     | 语义化版本下限；不满足则 `register` 抛错                            |
+
+### 3.1 `popover` 形态选项（小面板）
+
+| 字段                | 类型                 | 默认             | 说明                                                                   |
+| ------------------- | -------------------- | ---------------- | ---------------------------------------------------------------------- |
+| `trigger`           | `'click' \| 'hover'` | `'click'`        | 点图标展开，或悬停展开（移开自动收起，并留宽限让指针能从图标移到面板） |
+| `width`             | `number`             | 自适应           | 面板宽度 px（160–2000）；不写 = 自适应内容，上限 `min(420, 视口−24)`   |
+| `maxHeight`         | `number`             | `min(60vh, 520)` | 面板最大高度 px（120–2000），超出内滚                                  |
+| `padding`           | `number`             | `12`             | 内容内边距（0–48）；要贴边渲染（iframe / 视频 / 画布）就设 `0`         |
+| `side`              | `'bottom' \| 'top'`  | `'bottom'`       | 相对图标在下方还是上方展开                                             |
+| `header`            | `boolean`            | `true`           | 是否渲染框架自带的标题栏（标题 + 关闭按钮）；`false` = 整块面板归你    |
+| `hoverOpenDelayMs`  | `number`             | `80`             | 悬停展开延迟（0–2000）；给「鼠标只是路过」留出撤销机会                 |
+| `hoverCloseDelayMs` | `number`             | `220`            | 悬停收起宽限（0–2000）；覆盖「从图标移到面板」的间隙                   |
+
+**`trigger: 'hover'` 的行为细节**：延迟到点才展开；移开图标后不立刻收起，宽限期内指针进入面板
+（面板自己也会 `hoverEnter`）就撤销收起；**被点开的** popover（`trigger: 'click'`，或悬停期间点了图标）
+不受移开指针影响，只由「点外部 / Esc / 再点图标 / 打开另一个」关闭。
 
 **校验**：任何字段不合法 → `register()` 抛 `WidgetSpecError`（中文、指出字段与期望），
 你的其余组件与框架都不受影响。错误信息里会告诉你「改哪里」。
@@ -201,11 +265,16 @@ export function apply(ctx: ClientContext): void {
   `⋯` 菜单里有最小化/还原、恢复默认尺寸、居中、三档尺寸预设、关闭。
 - **a11y**：卡片 `role="dialog"` + `aria-label`；8 个把手是 `aria-hidden` 的纯指针增强（不污染 tab 序）。
 
-### popover（`popover`）
+### popover（`popover`）—— 小面板
 
-- 锚定在开启它的托盘图标下方（官方 `useAnchoredPosition`：滚动/resize 跟随 + 视口夹紧 + 边距 8px）。
-- 宽度自适应（`min(420px, 100vw−24)`），高度 `min(60vh, 520px)` 内滚；**不可**拖动/缩放/最小化。
-- 单开：打开另一个 popover 会收起上一个。
+- 锚定在开启它的托盘图标上（官方 `useAnchoredPosition`：滚动/resize 跟随 + 视口夹紧 + 边距 8px）；
+  `side: 'top'` 时向上展开。
+- **不可拖动、不可缩放、不可最小化**；同一时刻**只展开一个**（打开另一个会先收起上一个）。
+- 尺寸：`width`（不写则自适应，上限 `min(420, 视口−24)`）、`maxHeight`（不写则 `min(60vh, 520)`，超出内滚）、
+  `padding`（`0` = 贴边，适合 iframe / 视频 / 画布这类「任意 web 视图」）。
+- `header: false` 时框架不画标题栏与关闭按钮，整块面板归你；关闭手段仍是 **Esc / 点外部 / 再点图标**。
+- 展开方式：`trigger: 'click'`（默认）点图标展开；`trigger: 'hover'` 悬停展开、移开自动收起（带宽限）。
+  悬停展开的组件**不再叠 Tooltip 气泡**（面板本身就是说明），且**不抢焦点**；点开的会把焦点移进面板。
 - 点外部关闭（点锚点自身除外，否则会「关掉又被打开」）；`Esc` 关闭并把焦点还给图标。
 - 锚点元素失效（会话切换/图标卸载）→ 关闭；`card` 则回退到视口右上角固定位（不消失）。
 
@@ -263,7 +332,8 @@ interface PersistedV1 {
    层叠上下文里用相对 z，不与官方层抢序。
 4. **不依赖官方 `@deepseek-ai/dsh-client-ui-dockkit`**：它是右侧栏 tab/pane 的停靠状态机
    （`planFloatTab`/`split`），不是通用窗口管理器；我们只对齐它的词汇（cascade 默认位、float/dock、rect）。
-5. **`tray.preview` 目前是留位**：字段已在契约里冻结，v1 未接线（悬停显示的是 Tooltip 文案）。
+5. **悬停面板的边界**：只有 `trigger: 'hover'` 的 popover 会在移开指针后自动收起（带宽限），
+   被点开的不会；两种都仍然单开。悬停展开依赖指针事件，触屏/键盘用户走点击与 `Esc`。
 6. **不做**：看板页与自由网格、卡片吸附/停靠/分屏/置顶常驻、同一组件多实例、组件之间直接通信、
    跨设备同步布局、`scope: 'global'` 的卡片（切会话不关）。
 
@@ -279,6 +349,9 @@ interface PersistedV1 {
 - [ ] 颜色只用 `--dsw-alias-*` token，类名走 CSS Module。
 - [ ] `package.json` 里只有 `devDependencies` 引用 `@dshp/widget-kit`（`import type`，产物里不得出现它）。
 - [ ] `ctx.effect(..., 'dshp-<你的插件>: …')` 包住了注册调用。
+- [ ] 若用 `popover`：`trigger` 想清楚（悬停只适合「扫一眼」的信息，需要输入/点选的用点击）；
+      `padding: 0` / `header: false` 时自己确保内容有边距、且用户能靠 Esc 或点外部关掉；
+      面板内部**不要**再自己监听 window 事件（宽度已由 `width` 或容器查询给出）。
 
 ## 11. 反例（会被打回）
 
@@ -309,7 +382,7 @@ load: async (ctx) => (await fetch('/ext/my-plugin/data', { signal: ctx.signal })
 ## 12. 版本政策
 
 - `SPEC_VERSION`（当前 **1**）是契约版本：字段改名、语义变化、默认值改变 → **+1**，
-  并在本节写下迁移步骤；字段**新增**（可选、有默认）不升版本。
+  并在本节写下迁移步骤；字段**新增**（可选、有默认）不升版本 —— 例如 `popover` 形态选项就是 v1 内的新增。
 - `minFramework` 让你声明「本组件需要 ≥ 某个框架版本」，不满足时 `register` 抛错而不是悄悄降级。
 - `FRAMEWORK_VERSION` 必须等于 `package.json` 的 version（`scripts/check-spec-drift.mjs` 会拦）。
 - `spec.d.ts`（你 `import type` 的那份）与实现由同一个脚本逐字段比对 —— 类型与实现不会漂移。

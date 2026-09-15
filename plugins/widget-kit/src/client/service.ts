@@ -52,6 +52,8 @@ export interface FrameworkSnapshot {
   layout: PersistedState;
   /** popover 的单开目标（card 允许多开，状态在 `layout.cards[id].open`）。 */
   openId: string | null;
+  /** 当前 popover 是被点开的还是被悬停打开的（决定移开指针要不要自动收起）。 */
+  openOrigin: 'click' | 'hover' | null;
   /** 卡片层自下而上的顺序，末尾 = 最上。 */
   zOrder: readonly string[];
   badges: Readonly<Record<string, WidgetBadge | null>>;
@@ -116,6 +118,15 @@ export interface WidgetRuntime {
   saveNow(): void;
   /** 挂一个周期任务（由 `ctx.interval` 注入；未注入时退回原生 setInterval）。 */
   scheduleInterval(callback: () => void, ms: number): () => void;
+  /** 挂一个延时任务（由 `ctx.timeout` 注入；未注入时退回原生 setTimeout）。 */
+  scheduleTimeout(callback: () => void, ms: number): () => void;
+  /**
+   * 指针进入某个组件图标（`trigger: 'hover'` 才展开，按 `hoverOpenDelayMs` 延迟）。
+   * popover 面板自己的 `pointerenter` 也调它 —— 用来撤销「待收起」。
+   */
+  hoverEnter(id: string): void;
+  /** 指针离开图标或面板（`trigger: 'hover'` 且当前是悬停打开的才收起，按 `hoverCloseDelayMs` 宽限）。 */
+  hoverLeave(id: string): void;
 }
 
 export interface RuntimeDeps {
@@ -126,6 +137,8 @@ export interface RuntimeDeps {
   savePrefs?: (prefs: FrameworkConfig) => Promise<{ ok: boolean; error?: string }>;
   /** 周期任务（`ctx.interval`）；缺省用原生 setInterval。 */
   interval?: (callback: () => void, ms: number) => () => void;
+  /** 延时任务（`ctx.timeout`）；缺省用原生 setTimeout。 */
+  timeout?: (callback: () => void, ms: number) => () => void;
   /** 用户可见的提示（超上限自动最小化、组件卸载清理…）。 */
   onNotice?: (message: string) => void;
   onError?: (message: string, error?: unknown) => void;
@@ -150,6 +163,9 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   let viewport: Viewport = { ...deps.viewport };
   let sessionId: string | null = null;
   let openId: string | null = null;
+  let openOrigin: 'click' | 'hover' | null = null;
+  /** 悬停展开/收起用的挂起定时器（按组件 id 存取消函数）。 */
+  const hoverTimers = new Map<string, () => void>();
   let zOrder: string[] = [];
   let live: LiveGeometry | null = null;
 
@@ -188,6 +204,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     widgets: [],
     layout: state,
     openId: null,
+    openOrigin: null,
     zOrder: [],
     badges,
     prefs,
@@ -211,6 +228,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       widgets: sortedWidgets(),
       layout: state,
       openId,
+      openOrigin,
       zOrder: [...zOrder],
       badges: { ...badges },
       prefs,
@@ -236,6 +254,14 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
 
   function persist(): void {
     saver.schedule(state);
+  }
+
+  function scheduleTimeout(callback: () => void, ms: number): () => void {
+    if (deps.timeout !== undefined) return deps.timeout(callback, ms);
+    const handle = setTimeout(callback, ms);
+    return () => {
+      clearTimeout(handle);
+    };
   }
 
   // ── 几何辅助 ──────────────────────────────────────────────────────────
@@ -309,7 +335,11 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       if (disposed) return;
       disposed = true;
       registry.delete(value.id);
-      if (openId === value.id) openId = null;
+      cancelHoverTimer(value.id);
+      if (openId === value.id) {
+        openId = null;
+        openOrigin = null;
+      }
       zOrder = zOrder.filter((x) => x !== value.id);
       if (live?.id === value.id) live = null;
       delete badges[value.id];
@@ -333,12 +363,104 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     }));
   }
 
+  function cancelHoverTimer(id: string): void {
+    const cancel = hoverTimers.get(id);
+    if (cancel === undefined) return;
+    hoverTimers.delete(id);
+    try {
+      cancel();
+    } catch {
+      /* ignore */
+    }
+  }
+
+  function cancelAllHoverTimers(): void {
+    // 先取出再清空：cancel() 可能重入（取消回调里又调 hoverEnter），必须拿着快照迭代
+    const pending = Array.from(hoverTimers.entries());
+    hoverTimers.clear();
+    for (const [, cancel] of pending) {
+      try {
+        cancel();
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  function showPopover(id: string, origin: 'click' | 'hover'): void {
+    const widget = widgetOf(id);
+    if (widget === undefined || widget.presentation !== 'popover') return;
+    cancelAllHoverTimers();
+    openId = id;
+    openOrigin = origin;
+    publish();
+  }
+
+  function hidePopover(id: string): void {
+    cancelHoverTimer(id);
+    if (openId !== id) return;
+    openId = null;
+    openOrigin = null;
+    publish();
+  }
+
+  /**
+   * 指针进入图标（或进入已展开的面板）。
+   *
+   * 只对 `trigger: 'hover'` 生效：延迟 `hoverOpenDelayMs` 后展开；已经开着的就直接取消待收起
+   * （所以面板自己的 `pointerenter` 也调它），这样「图标 → 面板」的间隙不会闪断。
+   */
+  function hoverEnter(id: string): void {
+    const widget = widgetOf(id);
+    if (widget === undefined || widget.presentation !== 'popover') return;
+    const options = widget.popover;
+    if (options === null || options.trigger !== 'hover') return;
+    if (openId === widget.id) {
+      cancelHoverTimer(id);
+      return;
+    }
+    cancelHoverTimer(id);
+    if (options.hoverOpenDelayMs <= 0) {
+      showPopover(id, 'hover');
+      return;
+    }
+    hoverTimers.set(
+      id,
+      scheduleTimeout(() => {
+        hoverTimers.delete(id);
+        const current = widgetOf(id);
+        if (current === undefined || current.presentation !== 'popover') return;
+        showPopover(id, 'hover');
+      }, options.hoverOpenDelayMs),
+    );
+  }
+
+  /** 指针离开图标或面板：只收起「悬停打开的」那个，并按 `hoverCloseDelayMs` 留宽限。 */
+  function hoverLeave(id: string): void {
+    const widget = widgetOf(id);
+    if (widget === undefined || widget.presentation !== 'popover') return;
+    const options = widget.popover;
+    if (options === null || options.trigger !== 'hover') return;
+    cancelHoverTimer(id);
+    if (openId !== widget.id || openOrigin !== 'hover') return;
+    if (options.hoverCloseDelayMs <= 0) {
+      hidePopover(id);
+      return;
+    }
+    hoverTimers.set(
+      id,
+      scheduleTimeout(() => {
+        hoverTimers.delete(id);
+        if (openId === id && openOrigin === 'hover') hidePopover(id);
+      }, options.hoverCloseDelayMs),
+    );
+  }
+
   function open(id: string): void {
     const widget = widgetOf(id);
     if (widget === undefined || widget.presentation === 'tray') return;
     if (widget.presentation === 'popover') {
-      openId = id;
-      publish();
+      showPopover(id, 'click');
       return;
     }
     const existing = cardStateOf(widget);
@@ -357,10 +479,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     const widget = widgetOf(id);
     if (widget === undefined) return;
     if (widget.presentation === 'popover') {
-      if (openId === id) {
-        openId = null;
-        publish();
-      }
+      hidePopover(id);
       return;
     }
     const existing = state.cards[id];
@@ -625,7 +744,10 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       };
       persist();
     }
-    if (openId !== null && !isKnown(openId)) openId = null;
+    if (openId !== null && !isKnown(openId)) {
+      openId = null;
+      openOrigin = null;
+    }
     zOrder = zOrder.filter(isKnown);
     publish();
     return removed;
@@ -636,7 +758,9 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     const ok = clearState(deps.storage);
     state = emptyState();
     zOrder = [];
+    cancelAllHoverTimers();
     openId = null;
+    openOrigin = null;
     live = null;
     for (const key of Object.keys(badges)) delete badges[key];
     publish();
@@ -680,8 +804,10 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     sessionId = next;
     // 内容面绑定开启它的会话：切会话 = 关掉当前内容面（v1 规则，见 docs/widget-spec.md）
     let changed = false;
+    cancelAllHoverTimers();
     if (openId !== null) {
       openId = null;
+      openOrigin = null;
       changed = true;
     }
     const nextCards: Record<string, CardState> = { ...state.cards };
@@ -778,6 +904,15 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
         clearInterval(handle);
       };
     },
+    scheduleTimeout(callback, ms) {
+      if (deps.timeout !== undefined) return deps.timeout(callback, ms);
+      const handle = setTimeout(callback, ms);
+      return () => {
+        clearTimeout(handle);
+      };
+    },
+    hoverEnter,
+    hoverLeave,
   };
 }
 
