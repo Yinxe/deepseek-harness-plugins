@@ -137,7 +137,7 @@ globalThis.fetch = async (url, init) => {
     async json() {
       return {
         ok: true,
-        version: '0.7.0',
+        version: '0.8.0',
         specVersion: 1,
         config: {
           trayEnabled: true,
@@ -250,7 +250,7 @@ const expectedServiceKeys = [...EXPECTED_SERVICE_KEYS];
 expectedServiceKeys.sort();
 assert.deepEqual(actualServiceKeys, expectedServiceKeys, 'widgets 服务的成员必须与 SPEC_KEYS.service 一致');
 assert.equal(service.specVersion, 1);
-assert.equal(service.frameworkVersion, '0.7.0');
+assert.equal(service.frameworkVersion, '0.8.0');
 
 // ── 2. 槽位注册 ──────────────────────────────────────────────────────────
 assert.deepEqual(injections, ['conversation.session.header.utilities', 'shell.overlay', 'settings.section']);
@@ -727,6 +727,49 @@ runtime.restore('demo:lock');
 const restoredCard = cardNodeOf('demo:lock');
 assert.equal(restoredCard.props.style.height, 240, '还原必须回到原来的高度');
 assert.equal(restoredCard.props['data-minimized'], 'false');
+
+// 10.3b 最小化 = 胶囊：宽度收缩，但**布局里的展开尺寸不动**
+runtime.minimize('demo:lock');
+const capsule = runtime.rectOf('demo:lock');
+assert.equal(runtime.getSnapshot().layout.cards['demo:lock'].minimized, true, '前置：先最小化');
+runtime.setCollapsedSize('demo:lock', { w: 148, h: 36 });
+assert.deepEqual(runtime.rectOf('demo:lock'), capsule, '胶囊尺寸不得改动布局里的矩形');
+assert.deepEqual(
+  runtime.visualRectOf('demo:lock'),
+  { x: capsule.x, y: capsule.y, w: 148, h: 36 },
+  '看起来占的是一枚 148×36 的胶囊（最小化中）',
+);
+// 键盘移动：只改位置，展开尺寸留着
+runtime.nudge('demo:lock', 10, 6);
+assert.deepEqual(runtime.rectOf('demo:lock'), {
+  ...capsule,
+  x: capsule.x + 10,
+  y: capsule.y + 6,
+});
+// 拖动提交：同样只取位置
+runtime.beginLive('demo:lock', 'move');
+runtime.setLive('demo:lock', { x: 400, y: 300, w: 148, h: 36 });
+runtime.commitLive('demo:lock');
+assert.deepEqual(runtime.rectOf('demo:lock'), {
+  ...capsule,
+  x: 400,
+  y: 300,
+});
+assert.deepEqual(runtime.visualRectOf('demo:lock'), { x: 400, y: 300, w: 148, h: 36 });
+// 胶囊参与吸附：按 148 宽算（而不是展开宽度 360）
+const capsuleSnap = runtime.getLiveSnap();
+assert.equal(capsuleSnap, null, '此时没有手势，也就没有预览');
+// 卡片渲染：最小化时不写死宽度（交给内容撑成胶囊），复原后写回展开宽度
+const capsuleNode = cardNodeOf('demo:lock');
+assert.equal(capsuleNode.props.style.width, undefined, '最小化时不得写死宽度');
+assert.equal(capsuleNode.props.style.maxWidth, capsule.w, '胶囊宽度上限 = 布局里的展开宽度');
+assert.equal(capsuleNode.props.style.height, 36);
+// 还原：展开尺寸必须原样回来
+runtime.setCollapsedSize('demo:lock', null);
+runtime.restore('demo:lock');
+assert.deepEqual(runtime.rectOf('demo:lock'), { ...capsule, x: 400, y: 300 }, '还原后仍是展开尺寸');
+assert.equal(runtime.visualRectOf('demo:lock').w, capsule.w, '展开后按布局矩形算');
+assert.equal(cardNodeOf('demo:lock').props.style.width, capsule.w, '展开后写回宽度');
 
 // 10.4 位置锁定：几何动作全部无效，最小化 / 关闭照常
 const rectBefore = runtime.rectOf('demo:lock');

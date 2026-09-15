@@ -295,8 +295,15 @@
   background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 30%, transparent);
 }
 
+/* 最小化 = 一枚胶囊：宽度被内容撑到最小（标题 + 控件），两端全圆，阴影收一档 */
 .cardMinimized {
+  width: auto;
   box-shadow: var(--dsw-shadow-lv1);
+  border-radius: 999px;
+}
+
+.cardMinimized .cardHeader {
+  padding: 0 6px 0 14px;
 }
 
 /* 锁定：标题栏不再是「可抓」的手型（几何已冻，只留最小化 / 关闭 / 菜单） */

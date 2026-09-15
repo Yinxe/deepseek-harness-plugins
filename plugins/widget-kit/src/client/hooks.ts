@@ -327,7 +327,8 @@ export function useCardDrag(
       capture.current = { element, id: pointerId };
       origin.current = { x: event.clientX, y: event.clientY };
       latest.current = { x: event.clientX, y: event.clientY };
-      startRect.current = runtime.rectOf(widget.id);
+      // 用「看起来的矩形」起步：最小化时手抓的是一枚胶囊，几何也得按它算
+      startRect.current = runtime.visualRectOf(widget.id);
       runtime.raise(widget.id);
       runtime.beginLive(widget.id, modeRef.current);
       setDragging(true);

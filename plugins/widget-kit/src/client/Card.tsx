@@ -8,7 +8,7 @@
  */
 import { Menu } from '@deepseek-ai/dsh-client-ui-primitives';
 import type { MenuEntry } from '@deepseek-ai/dsh-client-ui-primitives';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import { SPEC_DEFAULTS } from './spec.js';
 import type { NormalizedWidget, WidgetContentProps } from './spec.js';
@@ -43,6 +43,7 @@ export function Card({
   const renderDepth = useRef(0);
   const warnedRenderSize = useRef(false);
   const drag = useCardDrag(runtime, widget, 'move');
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const card = snapshot.layout.cards[widget.id];
   const open = card?.open === true;
   const minimized = card?.minimized === true;
@@ -161,6 +162,24 @@ export function Card({
 
   if (card === undefined || !card.open) return null;
 
+  /**
+   * 最小化 = 一枚胶囊：宽度收缩到「标题 + 控件」那么多（由内容撑开，`max-width` 卡在展开宽度上），
+   * 高度 36px、两端全圆。量出来的实际尺寸回报给运行时 —— 拖动/吸附/视口夹紧都按胶囊算，
+   * 而布局里存的展开尺寸原样保留，还原时回到原来的大小。
+   */
+  useEffect(() => {
+    const element = rootRef.current;
+    if (element === null) return;
+    if (!minimized) {
+      runtime.setCollapsedSize(widget.id, null);
+      return;
+    }
+    const rect = element.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      runtime.setCollapsedSize(widget.id, { w: rect.width, h: rect.height });
+    }
+  }, [minimized, locked, widget.id, runtime]);
+
   /** 这张卡上是否有手势在进行（拖动或八向缩放都算 —— 两种都走 beginLive）。 */
   const gestureActive = live !== null && live.id === widget.id;
   const stored = gestureActive ? live.rect : card;
@@ -213,7 +232,15 @@ export function Card({
         (minimized ? ' ' + styles.cardMinimized : '') +
         (locked ? ' ' + styles.cardLocked : '')
       }
-      style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h, zIndex }}
+      ref={rootRef}
+      style={{
+        left: rect.x,
+        top: rect.y,
+        // 最小化时不写死宽度：让它被内容撑成一枚胶囊（上限是布局里的展开宽度）
+        ...(minimized ? { maxWidth: rect.w } : { width: rect.w }),
+        height: rect.h,
+        zIndex,
+      }}
       role="dialog"
       aria-label={title}
       data-widget={widget.id}

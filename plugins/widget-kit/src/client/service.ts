@@ -126,6 +126,14 @@ export interface WidgetRuntime {
   requestSize(id: string, next: { w?: number | undefined; h?: number | undefined }): void;
   /** 框架自己改尺寸（菜单预设 / 恢复默认）：不受内容回环防护限制。 */
   resizeTo(id: string, next: { w?: number | undefined; h?: number | undefined }): void;
+  /**
+   * 卡片**看起来**占的那块矩形：最小化时是那枚胶囊的实际尺寸（由 Card 量出来回报），
+   * 否则就是布局里存的矩形。拖动起点、键盘移动、吸附对象、视口夹紧都用它 ——
+   * 但布局里存的 `w/h`（展开尺寸）不动，还原时原样回来。
+   */
+  visualRectOf(id: string): Rect;
+  /** Card 量到胶囊尺寸后回报（最小化期间有效）；传 `null` 表示卡片已展开，回到存的矩形。 */
+  setCollapsedSize(id: string, size: Size | null): void;
   /** 在视口里居中（菜单「居中」）。 */
   center(id: string): void;
   sizeClassOf(widget: NormalizedWidget, rect: Rect): SizeClass;
@@ -192,6 +200,8 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   const anchors = new Map<string, HTMLElement | null>();
   /** 上一次「真挂上」的锚点元素：用来区分「新挂载」与「同一次 commit 里的 detach + attach」。 */
   const lastAnchors = new Map<string, HTMLElement>();
+  /** 最小化卡片的实际尺寸（Card 量出来的胶囊），只影响「看起来占多大」，不动布局。 */
+  const collapsed = new Map<string, Size>();
   const badges: Record<string, WidgetBadge | null> = {};
   /** 尺寸回环防护：每个组件的请求时间戳与「已冻结」标记。 */
   const sizeCalls = new Map<string, number[]>();
@@ -236,7 +246,9 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     for (const [id, card] of Object.entries(state.cards)) {
       if (id === exceptId || !card.open || card.minimized) continue;
       if (!registry.has(id)) continue;
-      out.push({ x: card.x, y: card.y, w: card.w, h: card.h });
+      // 最小化的卡片是一枚小胶囊：按它**看起来**的尺寸参与吸附，而不是展开尺寸
+      const size = card.minimized ? collapsed.get(id) : undefined;
+      out.push({ x: card.x, y: card.y, w: size?.w ?? card.w, h: size?.h ?? card.h });
     }
     return out;
   }
@@ -465,6 +477,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
         transientOrigin = null;
       }
       delete badges[value.id];
+      collapsed.delete(value.id);
       // **卸载不动本机布局**（这是刻意的）：插件热重载 / 暂时停用 / 开发中构建失败都会走到这里，
       // 早先版本在这条路径上 `pruneId` 把卡片、托盘顺序、隐藏/禁用、层叠顺序、内容面目标全删了 ——
       // 于是每改一次代码布局就被重置一次。记录按 id 保存，重新注册回来时原地恢复；
@@ -787,7 +800,8 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     if (widgetOf(id) === undefined) return;
     // 锁定 = 位置与尺寸都不可改：拖拽/缩放在入口就被挡住（键盘与菜单走 applyRect 的同一道锁）
     if (isLocked(id)) return;
-    setLiveState({ id, rect: rectOf(id), mode, snap: null });
+    // 从「看起来的矩形」起步：最小化的卡片是一枚胶囊，拖动按胶囊尺寸算吸附与夹紧
+    setLiveState({ id, rect: visualRectOf(id), mode, snap: null });
   }
 
   /**
@@ -825,8 +839,10 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       writeCard(id, { ...rect, minimized: false, open: true, locked: false }, true);
       return;
     }
-    if (isSameRect(existing, rect)) return;
-    writeCard(id, { ...existing, ...rect }, true);
+    // 最小化期间拖的是胶囊：只取位置，布局里的展开尺寸保持不动
+    const next: Rect = existing.minimized ? { ...rect, w: existing.w, h: existing.h } : rect;
+    if (isSameRect(existing, next)) return;
+    writeCard(id, { ...existing, ...next }, true);
   }
 
   function cancelLive(): void {
@@ -835,6 +851,34 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   }
 
   // ── 键盘与程序化几何 ──────────────────────────────────────────────────
+
+  /**
+   * 最小化时 `true`：这时候只允许改位置，`w/h` 必须保持布局里的展开尺寸。
+   */
+  function isCollapsed(id: string): boolean {
+    return state.cards[id]?.minimized === true;
+  }
+
+  /** 卡片看起来占的矩形（见 `WidgetRuntime.visualRectOf`）。 */
+  function visualRectOf(id: string): Rect {
+    const rect = rectOf(id);
+    if (!isCollapsed(id)) return rect;
+    const size = collapsed.get(id);
+    return size === undefined ? rect : { x: rect.x, y: rect.y, w: size.w, h: size.h };
+  }
+
+  function setCollapsedSize(id: string, size: Size | null): void {
+    const before = collapsed.get(id);
+    if (size === null) {
+      if (before === undefined) return;
+      collapsed.delete(id);
+      return;
+    }
+    const w = Math.max(1, Math.round(size.w));
+    const h = Math.max(1, Math.round(size.h));
+    if (before !== undefined && before.w === w && before.h === h) return; // 量到的没变：别惊动任何人
+    collapsed.set(id, { w, h });
+  }
 
   function rectOf(id: string): Rect {
     const widget = widgetOf(id);
@@ -1020,6 +1064,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     saver.cancel();
     const ok = clearState(deps.storage);
     state = emptyState();
+    collapsed.clear();
     cancelAllHoverTimers();
     setTransientTarget(null, null);
     clearLive();
@@ -1041,9 +1086,12 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     for (const [id, card] of Object.entries(state.cards)) {
       const widget = widgetOf(id);
       if (widget === undefined) continue;
-      const clamped = clampRect(card, constraintsFor(widget), viewport);
-      if (isSameRect(card, clamped)) continue;
-      nextCards[id] = { ...card, ...clamped };
+      const size = card.minimized ? collapsed.get(id) : undefined;
+      const visual = size === undefined ? card : { ...card, w: size.w, h: size.h };
+      const clamped = clampRect(visual, constraintsFor(widget), viewport);
+      const placed = card.minimized ? { ...clamped, w: card.w, h: card.h } : clamped;
+      if (isSameRect(card, placed)) continue;
+      nextCards[id] = { ...card, ...placed };
       changed = true;
     }
     if (changed) {
@@ -1153,6 +1201,8 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     sizeClassOf: sizeClassFor,
     contentSize: (rect) => contentBox(rect),
     rectOf,
+    visualRectOf,
+    setCollapsedSize,
     constraintsOf: constraintsFor,
     viewport: () => viewport,
     setViewport,
