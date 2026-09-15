@@ -30,7 +30,7 @@ module.exports = __toCommonJS(client_exports);
 
 // src/client/spec.ts
 var SPEC_VERSION = 1;
-var FRAMEWORK_VERSION = "0.5.0";
+var FRAMEWORK_VERSION = "0.6.0";
 var WIDGET_ID_PATTERN = /^[a-z0-9-]{2,32}:[a-z0-9-]{2,32}$/;
 var PRESENTATIONS = ["tray", "popover", "card"];
 var SPEC_DEFAULTS = {
@@ -1290,9 +1290,11 @@ function Popover({
     runtime.close(widget.id);
   }, [runtime, widget.id]);
   (0, import_react4.useEffect)(() => {
-    if (runtime.getSnapshot().openOrigin !== "click") return;
+    const snapshot = runtime.getSnapshot();
+    const origin = options.persistent ? snapshot.pinnedOrigin : snapshot.transientOrigin;
+    if (origin !== "click") return;
     panelRef.current?.focus();
-  }, [runtime]);
+  }, [options.persistent, runtime]);
   (0, import_react4.useEffect)(() => {
     if (typeof document === "undefined") return void 0;
     const onPointerDown = (event) => {
@@ -1411,13 +1413,22 @@ function CardLayer({
   const cards = snapshot.zOrder.map((id) => byId.get(id)).filter(
     (widget) => widget !== void 0 && widget.presentation === "card" && !disabled.has(widget.id)
   );
-  const popoverWidget = snapshot.openId === null ? void 0 : byId.get(snapshot.openId);
-  const popover = snapshot.ready && popoverWidget !== void 0 && popoverWidget.presentation === "popover" && !disabled.has(popoverWidget.id) ? popoverWidget : void 0;
+  const panelOf = (id) => {
+    if (!snapshot.ready || id === null) return void 0;
+    const widget = byId.get(id);
+    if (widget === void 0 || widget.presentation !== "popover" || disabled.has(widget.id)) {
+      return void 0;
+    }
+    return widget;
+  };
+  const transient = panelOf(snapshot.transientId);
+  const pinned = panelOf(snapshot.pinnedId);
   return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: styles_module_css_default.layer, "data-plugin-widget-kit-layer": "", children: [
     /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(GestureShieldHost, { runtime }),
     /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(SnapGhostHost, { runtime }),
     cards.map((widget) => /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Card, { runtime, widget, onError }, widget.id)),
-    popover !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Popover, { runtime, widget: popover, onError })
+    transient !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Popover, { runtime, widget: transient, onError }),
+    pinned !== void 0 && pinned !== transient && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Popover, { runtime, widget: pinned, onError })
   ] });
 }
 
@@ -2306,6 +2317,8 @@ function createWidgetRuntime(deps) {
   const sizeFrozen = /* @__PURE__ */ new Set();
   let prefs = { ...deps.prefs };
   let viewport = { ...deps.viewport };
+  let transientId = null;
+  let transientOrigin = null;
   let sessionId = null;
   const hoverTimers = /* @__PURE__ */ new Map();
   let live = null;
@@ -2349,8 +2362,11 @@ function createWidgetRuntime(deps) {
     widgets: [],
     layout: state,
     // 刷新即恢复：上次展开的面板与卡片层叠顺序都从本机布局里读回来（见 docs/widget-spec.md §7）
-    openId: state.popoverId,
-    openOrigin: state.popoverOrigin,
+    // 常驻面板刷新即恢复；临时面板（悬停速览 / 一次性菜单）不恢复
+    transientId: null,
+    transientOrigin: null,
+    pinnedId: state.popoverId,
+    pinnedOrigin: state.popoverOrigin,
     zOrder: [...state.zOrder],
     badges,
     prefs
@@ -2369,8 +2385,10 @@ function createWidgetRuntime(deps) {
       degraded,
       widgets: sortedWidgets(),
       layout: state,
-      openId: state.popoverId,
-      openOrigin: state.popoverOrigin,
+      transientId,
+      transientOrigin,
+      pinnedId: state.popoverId,
+      pinnedOrigin: state.popoverOrigin,
       zOrder: [...state.zOrder],
       badges: { ...badges },
       prefs
@@ -2395,10 +2413,21 @@ function createWidgetRuntime(deps) {
   function persist() {
     saver.schedule(state);
   }
-  function setPopoverTarget(id, origin) {
+  function setPinnedTarget(id, origin) {
     if (state.popoverId === id && state.popoverOrigin === origin) return;
     state = { ...state, popoverId: id, popoverOrigin: origin };
     persist();
+  }
+  function setTransientTarget(id, origin) {
+    if (transientId === id && transientOrigin === origin) return;
+    transientId = id;
+    transientOrigin = origin;
+  }
+  function channelOf(widget) {
+    return widget.popover?.persistent === true ? "pinned" : "transient";
+  }
+  function isOpenId(id) {
+    return transientId === id || state.popoverId === id;
   }
   function setZOrder(next, persistNow) {
     const unchanged = next.length === state.zOrder.length && next.every((id, index) => state.zOrder[index] === id);
@@ -2455,8 +2484,12 @@ function createWidgetRuntime(deps) {
   function register(raw) {
     const value = normalizeDescriptor(raw, FRAMEWORK_VERSION);
     registry.set(value.id, value);
-    if (state.popoverId === value.id && value.presentation !== "popover") {
+    if (state.popoverId === value.id && (value.presentation !== "popover" || channelOf(value) !== "pinned")) {
       state = { ...state, popoverId: null, popoverOrigin: null };
+    }
+    if (transientId === value.id && (value.presentation !== "popover" || channelOf(value) === "pinned")) {
+      transientId = null;
+      transientOrigin = null;
     }
     if (!state.tray.order.includes(value.id)) {
       state = { ...state, tray: { ...state.tray, order: [...state.tray.order, value.id] } };
@@ -2470,6 +2503,10 @@ function createWidgetRuntime(deps) {
       registry.delete(value.id);
       cancelHoverTimer(value.id);
       if (live?.id === value.id) clearLive();
+      if (transientId === value.id) {
+        transientId = null;
+        transientOrigin = null;
+      }
       delete badges[value.id];
       const hadCard = state.cards[value.id] !== void 0;
       state = pruneId(state, value.id);
@@ -2512,15 +2549,21 @@ function createWidgetRuntime(deps) {
     const widget = widgetOf(id);
     if (widget === void 0 || widget.presentation !== "popover") return;
     if (!isEnabled(id)) return;
-    cancelAllHoverTimers();
-    setPopoverTarget(id, origin);
+    if (channelOf(widget) === "pinned") setPinnedTarget(id, origin);
+    else setTransientTarget(id, origin);
     publish();
   }
   function hidePopover(id) {
     cancelHoverTimer(id);
-    if (state.popoverId !== id) return;
-    setPopoverTarget(null, null);
-    publish();
+    if (transientId === id) {
+      setTransientTarget(null, null);
+      publish();
+      return;
+    }
+    if (state.popoverId === id) {
+      setPinnedTarget(null, null);
+      publish();
+    }
   }
   function hoverEnter(id) {
     const widget = widgetOf(id);
@@ -2528,7 +2571,7 @@ function createWidgetRuntime(deps) {
     if (!isEnabled(id)) return;
     const options = widget.popover;
     if (options === null || options.trigger !== "hover") return;
-    if (state.popoverId === widget.id) {
+    if (isOpenId(widget.id)) {
       cancelHoverTimer(id);
       return;
     }
@@ -2553,8 +2596,8 @@ function createWidgetRuntime(deps) {
     const options = widget.popover;
     if (options === null || options.trigger !== "hover") return;
     cancelHoverTimer(id);
-    if (state.popoverId !== widget.id || state.popoverOrigin !== "hover") return;
     if (options.persistent) return;
+    if (transientId !== widget.id || transientOrigin !== "hover") return;
     if (options.hoverCloseDelayMs <= 0) {
       hidePopover(id);
       return;
@@ -2563,7 +2606,7 @@ function createWidgetRuntime(deps) {
       id,
       scheduleTimeout(() => {
         hoverTimers.delete(id);
-        if (state.popoverId === id && state.popoverOrigin === "hover") hidePopover(id);
+        if (transientId === id && transientOrigin === "hover") hidePopover(id);
       }, options.hoverCloseDelayMs)
     );
   }
@@ -2621,7 +2664,7 @@ function createWidgetRuntime(deps) {
   function isOpen(id) {
     const widget = widgetOf(id);
     if (widget === void 0 || !isEnabled(id)) return false;
-    if (widget.presentation === "popover") return state.popoverId === id;
+    if (widget.presentation === "popover") return isOpenId(id);
     const card = state.cards[id];
     return card !== void 0 && card.open;
   }
@@ -2630,7 +2673,7 @@ function createWidgetRuntime(deps) {
     if (widget === void 0 || widget.presentation === "tray") return;
     if (!isEnabled(id)) return;
     if (widget.presentation === "popover") {
-      if (state.popoverId === id) close(id);
+      if (isOpenId(id)) close(id);
       else open(id);
       return;
     }
@@ -2671,6 +2714,7 @@ function createWidgetRuntime(deps) {
       cards = { ...cards, [id]: { ...card, open: false, minimized: false } };
     }
     const wasPopover = state.popoverId === id;
+    if (transientId === id) setTransientTarget(null, null);
     state = {
       ...state,
       cards,
@@ -2897,6 +2941,7 @@ function createWidgetRuntime(deps) {
     if (state.popoverId !== null && !isKnown(state.popoverId)) {
       state = { ...state, popoverId: null, popoverOrigin: null };
     }
+    if (transientId !== null && !isKnown(transientId)) setTransientTarget(null, null);
     setZOrder(state.zOrder.filter(isKnown), false);
     publish();
     return removed;
@@ -2906,6 +2951,7 @@ function createWidgetRuntime(deps) {
     const ok = clearState(deps.storage);
     state = emptyState();
     cancelAllHoverTimers();
+    setTransientTarget(null, null);
     clearLive();
     for (const key of Object.keys(badges)) delete badges[key];
     publish();
@@ -2950,7 +2996,11 @@ function createWidgetRuntime(deps) {
     let changed = false;
     cancelAllHoverTimers();
     if (state.popoverId !== null) {
-      setPopoverTarget(null, null);
+      setPinnedTarget(null, null);
+      changed = true;
+    }
+    if (transientId !== null) {
+      setTransientTarget(null, null);
       changed = true;
     }
     const nextCards = { ...state.cards };

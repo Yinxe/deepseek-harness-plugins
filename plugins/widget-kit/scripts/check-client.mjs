@@ -137,7 +137,7 @@ globalThis.fetch = async (url, init) => {
     async json() {
       return {
         ok: true,
-        version: '0.5.0',
+        version: '0.6.0',
         specVersion: 1,
         config: {
           trayEnabled: true,
@@ -250,7 +250,7 @@ const expectedServiceKeys = [...EXPECTED_SERVICE_KEYS];
 expectedServiceKeys.sort();
 assert.deepEqual(actualServiceKeys, expectedServiceKeys, 'widgets 服务的成员必须与 SPEC_KEYS.service 一致');
 assert.equal(service.specVersion, 1);
-assert.equal(service.frameworkVersion, '0.5.0');
+assert.equal(service.frameworkVersion, '0.6.0');
 
 // ── 2. 槽位注册 ──────────────────────────────────────────────────────────
 assert.deepEqual(injections, ['conversation.session.header.utilities', 'shell.overlay', 'settings.section']);
@@ -540,7 +540,7 @@ fireTimeouts(50);
 assert.equal(service.isOpen('demo:quick'), false, "trigger: 'click' 的组件不该被悬停打开");
 service.toggle('demo:quick');
 assert.equal(service.isOpen('demo:quick'), true);
-assert.equal(runtime.getSnapshot().openOrigin, 'click');
+assert.equal(runtime.getSnapshot().transientOrigin, 'click');
 
 // 单开：悬停展开另一个会收起它
 runtime.hoverEnter('demo:hover');
@@ -548,7 +548,7 @@ assert.equal(service.isOpen('demo:hover'), false, '悬停展开要留 hoverOpenD
 fireTimeouts(50);
 assert.equal(service.isOpen('demo:hover'), true, '延迟到点必须展开');
 assert.equal(service.isOpen('demo:quick'), false, '同一时刻只能展开一个 popover');
-assert.equal(runtime.getSnapshot().openOrigin, 'hover');
+assert.equal(runtime.getSnapshot().transientOrigin, 'hover');
 
 // 悬停收起：留宽限，宽限内回到面板则撤销
 runtime.hoverLeave('demo:hover');
@@ -862,6 +862,57 @@ fireTimeouts(40);
 assert.equal(service.isOpen('demo:pinned-hover'), true, '常驻面板不得因指针移开而收起');
 service.close('demo:pinned-hover');
 assert.equal(service.isOpen('demo:pinned-hover'), false, '显式 close 必须能关掉它');
+
+// 常驻层是手风琴：展开另一个常驻面板会先收起上一个
+service.toggle('demo:pinned');
+assert.equal(service.isOpen('demo:pinned'), true);
+service.toggle('demo:pinned-hover');
+assert.equal(service.isOpen('demo:pinned-hover'), true, '第二个常驻面板要能展开');
+assert.equal(service.isOpen('demo:pinned'), false, '手风琴：同一时刻只留一个常驻面板');
+// 常驻层与临时层可以**同时**展开（本次需求的核心：悬停速览不得收起常驻面板）
+const peek = {
+  id: 'demo:peek',
+  title: '悬停速览',
+  icon: 'i',
+  presentation: 'popover',
+  popover: { trigger: 'hover', hoverOpenDelayMs: 40, hoverCloseDelayMs: 40 },
+  content: { render: () => null },
+};
+const disposePeek = service.register(peek);
+service.toggle('demo:pinned');
+assert.equal(service.isOpen('demo:pinned'), true, '常驻面板先展开');
+runtime.hoverEnter('demo:peek');
+fireTimeouts(40);
+assert.equal(service.isOpen('demo:peek'), true, '临时面板（悬停速览）可以同时展开');
+assert.equal(service.isOpen('demo:pinned'), true, '悬停展开临时面板不得收起常驻面板');
+const bothPanels = collect(render(layerEntry.component({})))
+  .filter((node) => typeof node.props['data-widget'] === 'string' && node.props.className.includes('popover'))
+  .map((node) => node.props['data-widget']);
+assert.ok(bothPanels.includes('demo:peek'), '临时面板必须渲染');
+assert.ok(bothPanels.includes('demo:pinned'), '常驻面板必须同时渲染');
+// 落盘只记常驻层：临时面板不该覆盖 popoverId（悬停速览不是「固定生效」的状态）
+runtime.saveNow();
+assert.equal(persisted().popoverId, 'demo:pinned', '本机布局里只记常驻面板');
+assert.equal(runtime.getSnapshot().transientId, 'demo:peek', '临时层只在内存里');
+// 收起临时层不影响常驻层
+runtime.hoverLeave('demo:peek');
+fireTimeouts(40);
+assert.equal(service.isOpen('demo:peek'), false, '临时面板照常移开即收起');
+assert.equal(service.isOpen('demo:pinned'), true, '收起临时面板不得动常驻面板');
+// 临时层内部仍然是单开（两个速览互相替换），且同样不影响常驻层
+const peek2 = { ...peek, id: 'demo:peek2', title: '悬停速览 2' };
+const disposePeek2 = service.register(peek2);
+runtime.hoverEnter('demo:peek');
+fireTimeouts(40);
+runtime.hoverEnter('demo:peek2');
+fireTimeouts(40);
+assert.equal(service.isOpen('demo:peek2'), true);
+assert.equal(service.isOpen('demo:peek'), false, '临时层内部也是单开（互不叠加）');
+assert.equal(service.isOpen('demo:pinned'), true, '临时层之间的替换同样不影响常驻层');
+service.close('demo:pinned');
+assert.equal(service.isOpen('demo:pinned'), false, '显式关闭常驻面板');
+disposePeek();
+disposePeek2();
 
 // 对照：非常驻的悬停面板移开就收起（行为不能被这次改动带偏）
 runtime.hoverEnter('dshp-widget-kit:status');

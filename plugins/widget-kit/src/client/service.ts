@@ -60,14 +60,21 @@ export interface FrameworkSnapshot {
   widgets: readonly NormalizedWidget[];
   layout: PersistedState;
   /**
-   * popover 的单开目标（card 允许多开，状态在 `layout.cards[id].open`）。
+   * **临时层**（`persistent !== true` 的 popover：悬停速览、点开的一次性小菜单）。
    *
-   * 刷新后从 localStorage 恢复，因此 `openId` 有可能指向一个「还没注册 / 已被禁用」的 id ——
-   * 消费方（卡片层）按 `presentation === 'popover'` 与启用状态过滤，不会渲染出空面板。
+   * 这一层自己单开；它与常驻层**互不干扰** —— 悬停展开一个速览不会把常驻面板收起来。
+   * 只存在内存里：悬停速览/临时菜单不是「固定生效」的状态，刷新后不恢复。
    */
-  openId: string | null;
-  /** 当前 popover 是被点开的还是被悬停打开的（决定移开指针要不要自动收起）。 */
-  openOrigin: 'click' | 'hover' | null;
+  transientId: string | null;
+  /** 它是被点开的还是被悬停打开的（决定移开指针要不要自动收起）。 */
+  transientOrigin: 'click' | 'hover' | null;
+  /**
+   * **常驻层**（`persistent: true` 的 popover）：**手风琴**语义 —— 同时最多只有一个，
+   * 展开另一个常驻面板会先收起上一个。记在本机布局里，刷新后原地恢复。
+   */
+  pinnedId: string | null;
+  /** 常驻面板的打开方式（`hover` + `persistent` 也不会因指针移开而收起）。 */
+  pinnedOrigin: 'click' | 'hover' | null;
   /** 卡片层自下而上的顺序，末尾 = 最上。 */
   zOrder: readonly string[];
   badges: Readonly<Record<string, WidgetBadge | null>>;
@@ -192,6 +199,9 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
 
   let prefs: FrameworkConfig = { ...deps.prefs };
   let viewport: Viewport = { ...deps.viewport };
+  /** 临时层（悬停速览 / 一次性菜单）：只在内存里。 */
+  let transientId: string | null = null;
+  let transientOrigin: 'click' | 'hover' | null = null;
   /** `null` = 还没拿到会话（首帧）；首个真实会话**不算切换**，见 `setSession`。 */
   let sessionId: string | null = null;
   /** 悬停展开/收起用的挂起定时器（按组件 id 存取消函数）。 */
@@ -250,8 +260,11 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     widgets: [],
     layout: state,
     // 刷新即恢复：上次展开的面板与卡片层叠顺序都从本机布局里读回来（见 docs/widget-spec.md §7）
-    openId: state.popoverId,
-    openOrigin: state.popoverOrigin,
+    // 常驻面板刷新即恢复；临时面板（悬停速览 / 一次性菜单）不恢复
+    transientId: null,
+    transientOrigin: null,
+    pinnedId: state.popoverId,
+    pinnedOrigin: state.popoverOrigin,
     zOrder: [...state.zOrder],
     badges,
     prefs,
@@ -274,8 +287,10 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       degraded,
       widgets: sortedWidgets(),
       layout: state,
-      openId: state.popoverId,
-      openOrigin: state.popoverOrigin,
+      transientId,
+      transientOrigin,
+      pinnedId: state.popoverId,
+      pinnedOrigin: state.popoverOrigin,
       zOrder: [...state.zOrder],
       badges: { ...badges },
       prefs,
@@ -306,10 +321,28 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   // ── state 里的两处「非卡片」布局：内容面目标与层叠顺序 ────────────────
   // 放在 state 里（而不是局部变量）就是为了刷新后原地恢复。
 
-  function setPopoverTarget(id: string | null, origin: 'click' | 'hover' | null): void {
+  /** 常驻层（写本机布局，刷新后恢复）。 */
+  function setPinnedTarget(id: string | null, origin: 'click' | 'hover' | null): void {
     if (state.popoverId === id && state.popoverOrigin === origin) return;
     state = { ...state, popoverId: id, popoverOrigin: origin };
     persist();
+  }
+
+  /** 临时层（不落盘）。 */
+  function setTransientTarget(id: string | null, origin: 'click' | 'hover' | null): void {
+    if (transientId === id && transientOrigin === origin) return;
+    transientId = id;
+    transientOrigin = origin;
+  }
+
+  /** 这个 popover 属于哪一层：常驻声明决定一切。 */
+  function channelOf(widget: NormalizedWidget): 'pinned' | 'transient' {
+    return widget.popover?.persistent === true ? 'pinned' : 'transient';
+  }
+
+  /** 这个 id 现在是不是某一层的展开目标。 */
+  function isOpenId(id: string): boolean {
+    return transientId === id || state.popoverId === id;
   }
 
   function setZOrder(next: readonly string[], persistNow: boolean): void {
@@ -388,9 +421,13 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     // 注意：owner 是从 id 前缀推出来的，框架无法验证调用者身份 —— 两个插件若声明同一个 id，
     // 后注册者胜。这条限制写在 docs/widget-spec.md 的「已知边界」里。
     registry.set(value.id, value);
-    // 覆盖注册时，历史 popover 目标可能已经不合法（呈现方式改了）—— 清掉，避免渲染出空面板
-    if (state.popoverId === value.id && value.presentation !== 'popover') {
+    // 覆盖注册时，历史展开目标可能已经不合法（呈现方式改了、常驻声明改了）—— 清掉，避免渲染出空面板
+    if (state.popoverId === value.id && (value.presentation !== 'popover' || channelOf(value) !== 'pinned')) {
       state = { ...state, popoverId: null, popoverOrigin: null };
+    }
+    if (transientId === value.id && (value.presentation !== 'popover' || channelOf(value) === 'pinned')) {
+      transientId = null;
+      transientOrigin = null;
     }
     if (!state.tray.order.includes(value.id)) {
       state = { ...state, tray: { ...state.tray, order: [...state.tray.order, value.id] } };
@@ -405,6 +442,10 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       registry.delete(value.id);
       cancelHoverTimer(value.id);
       if (live?.id === value.id) clearLive();
+      if (transientId === value.id) {
+        transientId = null;
+        transientOrigin = null;
+      }
       delete badges[value.id];
       const hadCard = state.cards[value.id] !== undefined;
       // pruneId 一并清掉卡片、托盘顺序/隐藏、层叠顺序、内容面目标与禁用记录
@@ -451,20 +492,32 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     }
   }
 
+  /**
+   * 展开一个 popover。
+   *
+   * 两个通道互不干扰：常驻层是**手风琴**（同时只有一个，展开另一个会收起上一个），
+   * 临时层（悬停速览 / 一次性菜单）自己单开，**不会动常驻面板**。
+   */
   function showPopover(id: string, origin: 'click' | 'hover'): void {
     const widget = widgetOf(id);
     if (widget === undefined || widget.presentation !== 'popover') return;
     if (!isEnabled(id)) return;
-    cancelAllHoverTimers();
-    setPopoverTarget(id, origin);
+    if (channelOf(widget) === 'pinned') setPinnedTarget(id, origin);
+    else setTransientTarget(id, origin);
     publish();
   }
 
   function hidePopover(id: string): void {
     cancelHoverTimer(id);
-    if (state.popoverId !== id) return;
-    setPopoverTarget(null, null);
-    publish();
+    if (transientId === id) {
+      setTransientTarget(null, null);
+      publish();
+      return;
+    }
+    if (state.popoverId === id) {
+      setPinnedTarget(null, null);
+      publish();
+    }
   }
 
   /**
@@ -479,7 +532,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     if (!isEnabled(id)) return;
     const options = widget.popover;
     if (options === null || options.trigger !== 'hover') return;
-    if (state.popoverId === widget.id) {
+    if (isOpenId(widget.id)) {
       cancelHoverTimer(id);
       return;
     }
@@ -506,9 +559,9 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     const options = widget.popover;
     if (options === null || options.trigger !== 'hover') return;
     cancelHoverTimer(id);
-    if (state.popoverId !== widget.id || state.popoverOrigin !== 'hover') return;
     // 常驻面板：指针移开也不收起（只有 ✕ / 再点图标 / Esc 能关）
     if (options.persistent) return;
+    if (transientId !== widget.id || transientOrigin !== 'hover') return;
     if (options.hoverCloseDelayMs <= 0) {
       hidePopover(id);
       return;
@@ -517,7 +570,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       id,
       scheduleTimeout(() => {
         hoverTimers.delete(id);
-        if (state.popoverId === id && state.popoverOrigin === 'hover') hidePopover(id);
+        if (transientId === id && transientOrigin === 'hover') hidePopover(id);
       }, options.hoverCloseDelayMs),
     );
   }
@@ -580,7 +633,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   function isOpen(id: string): boolean {
     const widget = widgetOf(id);
     if (widget === undefined || !isEnabled(id)) return false;
-    if (widget.presentation === 'popover') return state.popoverId === id;
+    if (widget.presentation === 'popover') return isOpenId(id);
     const card = state.cards[id];
     return card !== undefined && card.open;
   }
@@ -590,7 +643,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     if (widget === undefined || widget.presentation === 'tray') return;
     if (!isEnabled(id)) return;
     if (widget.presentation === 'popover') {
-      if (state.popoverId === id) close(id);
+      if (isOpenId(id)) close(id);
       else open(id);
       return;
     }
@@ -643,6 +696,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       cards = { ...cards, [id]: { ...card, open: false, minimized: false } };
     }
     const wasPopover = state.popoverId === id;
+    if (transientId === id) setTransientTarget(null, null);
     state = {
       ...state,
       cards,
@@ -935,6 +989,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     if (state.popoverId !== null && !isKnown(state.popoverId)) {
       state = { ...state, popoverId: null, popoverOrigin: null };
     }
+    if (transientId !== null && !isKnown(transientId)) setTransientTarget(null, null);
     setZOrder(state.zOrder.filter(isKnown), false);
     publish();
     return removed;
@@ -945,6 +1000,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     const ok = clearState(deps.storage);
     state = emptyState();
     cancelAllHoverTimers();
+    setTransientTarget(null, null);
     clearLive();
     for (const key of Object.keys(badges)) delete badges[key];
     publish();
@@ -998,7 +1054,11 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     let changed = false;
     cancelAllHoverTimers();
     if (state.popoverId !== null) {
-      setPopoverTarget(null, null);
+      setPinnedTarget(null, null);
+      changed = true;
+    }
+    if (transientId !== null) {
+      setTransientTarget(null, null);
       changed = true;
     }
     const nextCards: Record<string, CardState> = { ...state.cards };

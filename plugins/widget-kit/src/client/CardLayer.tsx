@@ -13,6 +13,9 @@
  *  - **吸附预览虚框**：显示「松手会落到哪里」。拖动期间卡片本体自由跟手（允许与其它卡片重叠），
  *    松手才真的吸附 —— 拖开让虚框消失再松手，就是「不同意吸附」，落回自由位置。
  *
+ * 小面板（popover）分两层渲染，**可以同时出现**：常驻层（`persistent: true`，手风琴：最多一个）
+ * 与临时层（悬停速览 / 一次性菜单：自己单开）。悬停展开一个速览不会收起常驻面板。
+ *
  * @module @dshp/widget-kit/client/CardLayer
  */
 import type { ReactNode } from 'react';
@@ -20,6 +23,7 @@ import { Card } from './Card.js';
 import { Popover } from './Popover.js';
 import { useFramework, useGestureCursor, useLiveSnap } from './hooks.js';
 import type { WidgetRuntime } from './service.js';
+import type { NormalizedWidget } from './spec.js';
 import styles from './styles.module.css';
 
 /** 手势盾：`cursor` 是字符串，没有手势时是 `null` —— 不变就完全不重渲染。 */
@@ -77,15 +81,17 @@ export function CardLayer({
         widget !== undefined && widget.presentation === 'card' && !disabled.has(widget.id),
     );
 
-  const popoverWidget = snapshot.openId === null ? undefined : byId.get(snapshot.openId);
   // `snapshot.ready` 之前托盘还没渲染（偏好没到），此刻挂面板只会在兜底位闪一下
-  const popover =
-    snapshot.ready &&
-    popoverWidget !== undefined &&
-    popoverWidget.presentation === 'popover' &&
-    !disabled.has(popoverWidget.id)
-      ? popoverWidget
-      : undefined;
+  const panelOf = (id: string | null): NormalizedWidget | undefined => {
+    if (!snapshot.ready || id === null) return undefined;
+    const widget = byId.get(id);
+    if (widget === undefined || widget.presentation !== 'popover' || disabled.has(widget.id)) {
+      return undefined;
+    }
+    return widget;
+  };
+  const transient = panelOf(snapshot.transientId);
+  const pinned = panelOf(snapshot.pinnedId);
 
   return (
     <div className={styles.layer} data-plugin-widget-kit-layer="">
@@ -94,7 +100,10 @@ export function CardLayer({
       {cards.map((widget) => (
         <Card key={widget.id} runtime={runtime} widget={widget} onError={onError} />
       ))}
-      {popover !== undefined && <Popover runtime={runtime} widget={popover} onError={onError} />}
+      {transient !== undefined && <Popover runtime={runtime} widget={transient} onError={onError} />}
+      {pinned !== undefined && pinned !== transient && (
+        <Popover runtime={runtime} widget={pinned} onError={onError} />
+      )}
     </div>
   );
 }

@@ -71,11 +71,14 @@ export function Popover({
     runtime.close(widget.id);
   }, [runtime, widget.id]);
 
-  // 点开的 popover 把焦点移进面板（键盘用户立刻就位）；悬停展开的**不抢焦点**，否则鼠标划过就夺走输入
+  // 点开的 popover 把焦点移进面板（键盘用户立刻就位）；悬停展开的**不抢焦点**，否则鼠标划过就夺走输入。
+  // 两层各有自己的 origin：常驻面板（手风琴层）与临时面板（悬停速览层）互不影响。
   useEffect(() => {
-    if (runtime.getSnapshot().openOrigin !== 'click') return;
+    const snapshot = runtime.getSnapshot();
+    const origin = options.persistent ? snapshot.pinnedOrigin : snapshot.transientOrigin;
+    if (origin !== 'click') return;
     panelRef.current?.focus();
-  }, [runtime]);
+  }, [options.persistent, runtime]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return undefined;

@@ -52,9 +52,13 @@ export interface PersistedState {
   lastOpenId: string | null;
   /** 卡片层自下而上的顺序（末尾最上）—— 刷新后层叠顺序不重置。 */
   zOrder: string[];
-  /** 当前展开的 popover（单开）；刷新后原地恢复。 */
+  /**
+   * 当前展开的**常驻** popover（`persistent: true` 的那一层，手风琴：最多一个）。
+   *
+   * 临时层（悬停速览 / 一次性菜单）不落盘：它不是「固定生效」的状态，刷新后不恢复。
+   */
   popoverId: string | null;
-  /** 它是怎么被打开的（决定移开指针要不要自动收起）。 */
+  /** 常驻面板是怎么被打开的（`hover` + `persistent` 也不会因指针移开而收起）。 */
   popoverOrigin: 'click' | 'hover' | null;
   /** 被用户禁用的组件：图标、卡片、内容面与徽标一并停用（`setEnabled`）。 */
   disabled: string[];

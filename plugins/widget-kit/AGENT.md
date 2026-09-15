@@ -10,7 +10,7 @@
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 包名   | `@dshp/widget-kit`                                                                                                                                                                                |
 | NS     | `dshp-widget-kit`（settings 命名空间 / 路由前缀 / patch id / 设置节 id 四处同名）                                                                                                                 |
-| 契约   | `SPEC_VERSION = 1`（0.2.0 的改动全是向后兼容新增），公开类型在 `spec.d.ts`（其它插件 `import type` 的唯一入口）                                                                                   |
+| 契约   | `SPEC_VERSION = 1`（0.2.0 起的改动全是向后兼容新增），公开类型在 `spec.d.ts`（其它插件 `import type` 的唯一入口）                                                                                 |
 | inject | host：`['webServer']`；client：`['slots', 'timer']`                                                                                                                                               |
 | 槽位   | `conversation.session.header.utilities` id `dshp-widget-kit-tray` order **30**<br>`shell.overlay` id `dshp-widget-kit-cards` order **10**<br>`settings.section` id `dshp-widget-kit` order **32** |
 | 路由   | `GET /ext/dshp-widget-kit/state` / `POST /ext/dshp-widget-kit/config`                                                                                                                             |
@@ -78,9 +78,13 @@
    `Object.is` 相等，专门拦这一类事故。
    早先版本还用全局 `getLive()` 且让卡片层直接订阅，结果拖动时**所有卡片连同内容每帧重渲染**，
    表现就是「拖动有时卡」。
-7. **悬停语义只有一份实现**：延迟展开、宽限收起、`popoverOrigin`（被点开的不受移开指针影响）都在
+7. **悬停语义只有一份实现**：延迟展开、宽限收起、`transientOrigin`（被点开的不受移开指针影响）都在
    `service.ts`。托盘只报「指针进出图标」、面板只报「指针进出面板」，两边都调 `hoverEnter`/`hoverLeave` ——
    这样「图标 → 面板」的间隙才被同一条宽限覆盖，被取消的定时器也不会事后自己蹦出来。
+   展开状态分**两层**：`channelOf(widget)` 由 `popover.persistent` 决定 —— 常驻层（`state.popoverId`，
+   手风琴、落盘）与临时层（局部变量 `transientId`，只在内存）。**两层互不干扰**是刻意的：
+   `showPopover` / `hidePopover` / `hoverLeave` / `open` / `toggle` 一律只动自己那一层，
+   卡片层把两层各渲染一个面板（可以同时出现）。
 8. **服务只发布 facade**：`createWidgetsService(runtime)` 只暴露 `SPEC_KEYS.service` 那几个成员，
    内部方法（`setLive`/`commitLive`/`pruneOrphans`…）不出插件。
 9. **内容数据生命周期只在 `useWidgetData`**：组件提供方不写请求代码；`popover` 的 `setSize` 是
