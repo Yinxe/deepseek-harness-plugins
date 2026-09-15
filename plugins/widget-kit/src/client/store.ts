@@ -348,6 +348,70 @@ export function pruneId(state: PersistedState, id: string): PersistedState {
   };
 }
 
+/** 托盘里一个图标槽位的冻结几何（`left`/`width`/`center` 都以托盘自身左上角为原点）。 */
+export interface TraySlot {
+  id: string;
+  left: number;
+  width: number;
+  center: number;
+}
+
+/** 一次托盘拖拽的「计划」：目标下标、新顺序、预览框落点、其余图标要让位的位移。 */
+export interface TrayDragPlan {
+  /** 目标下标（0..n-1，最终顺序里被拖图标的位置）；被拖 id 不在槽位里时为 -1。 */
+  to: number;
+  /** 新顺序（直接提交这个）。 */
+  order: string[];
+  /** 预览框要落的槽位；没有槽位时为 null。 */
+  slot: TraySlot | null;
+  /** 其余图标为了让位需要移动的像素（`translateX`，相对自己当前位置）。 */
+  shift: Record<string, number>;
+}
+
+/**
+ * 托盘图标拖拽的纯几何（**手势开始时冻结槽位**，拖动期间只做纯计算）。
+ *
+ * 为什么必须冻结：边拖边重排会自我反馈 —— 指针下的槽位随渲染一起变，判定就会抖，
+ * 表现为「只能往一个方向拖」。这里只用**手势开始时**量到的中心线算一次目标下标，
+ * 于是左右两个方向完全对称；把「空位」画成预览框、其它图标用 transform 平移一格来让位。
+ *
+ * @param slots - 手势开始时冻结的槽位（按当时的可见顺序）。
+ * @param draggingId - 被拖的 id。
+ * @param pointerX - 指针横坐标（与 `slots` 同一坐标系，通常是视口坐标）。
+ * @returns 目标下标 / 新顺序 / 预览槽位 / 位移表。
+ */
+export function planTrayDrag(slots: readonly TraySlot[], draggingId: string, pointerX: number): TrayDragPlan {
+  const order = slots.map((slot) => slot.id);
+  const from = order.indexOf(draggingId);
+  if (from < 0) return { to: -1, order: order.slice(), slot: null, shift: {} };
+  const others = slots.filter((slot) => slot.id !== draggingId);
+  let to = 0;
+  for (const slot of others) {
+    if (Number.isFinite(slot.center) && slot.center < pointerX) to += 1;
+  }
+  // 其它图标让位：向右拖时 from+1..to 整体左移一格，向左拖时 to..from-1 整体右移一格
+  const shift: Record<string, number> = {};
+  if (to > from) {
+    for (let index = from + 1; index <= to && index < slots.length; index += 1) {
+      const current = slots[index];
+      const previous = slots[index - 1];
+      if (current === undefined || previous === undefined) continue;
+      shift[current.id] = previous.left - current.left;
+    }
+  } else if (to < from) {
+    for (let index = to; index < from; index += 1) {
+      const current = slots[index];
+      const next = slots[index + 1];
+      if (current === undefined || next === undefined) continue;
+      shift[current.id] = next.left - current.left;
+    }
+  }
+  const next = order.filter((id) => id !== draggingId);
+  next.splice(Math.min(Math.max(to, 0), next.length), 0, draggingId);
+  const slot = slots[Math.min(Math.max(to, 0), slots.length - 1)] ?? null;
+  return { to, order: next, slot, shift };
+}
+
 /**
  * 一维拖拽排序的纯函数（托盘图标换序）。
  *

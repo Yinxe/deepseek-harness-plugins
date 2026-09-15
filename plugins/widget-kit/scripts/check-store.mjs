@@ -5,7 +5,8 @@
  * 覆盖：消毒（坏结构 / 版本不符 / 类型不符 / 不在册 id / 超长列表 / 几何夹紧 / 布尔强制 /
  * 新增字段默认值）、读写的降级路径（storage 抛错 / 坏 JSON / 无 storage）、合并写盘
  * （debounce / flush / cancel / onError）、菜单操作（上移下移、隐藏与禁用集合）、
- * 一维拖拽排序（reorderByPointer：左右两个方向都要能过）、卸载清理（pruneId）。
+ * 一维拖拽排序（reorderByPointer：左右两个方向都要能过）、托盘拖拽计划（planTrayDrag：冻结槽位、
+ * 双向对称、让位位移与预览落点）、卸载清理（pruneId）。
  */
 
 import assert from 'node:assert/strict';
@@ -19,6 +20,7 @@ import {
   emptyState,
   loadState,
   moveInOrder,
+  planTrayDrag,
   pruneId,
   reorderByPointer,
   sanitizeState,
@@ -266,6 +268,93 @@ await (async () => {
   assert.equal(errors, 1, '写失败必须走 onError');
   checks += 1;
 })();
+
+// ── 托盘拖拽计划（planTrayDrag）─────────────────────────────────────────
+/**
+ * 四个图标的冻结槽位（宽 28、间隔 2）：left 0/30/60/90，center 14/44/74/104。
+ * 这是「手势开始时量一次」的那份数据 —— 拖动期间不再读 DOM，所以两个方向完全对称。
+ */
+const SLOTS = [
+  { id: 'a', left: 0, width: 28, center: 14 },
+  { id: 'b', left: 30, width: 28, center: 44 },
+  { id: 'c', left: 60, width: 28, center: 74 },
+  { id: 'd', left: 90, width: 28, center: 104 },
+];
+const ids = (plan) => plan.order.join('');
+
+check(() => {
+  // 原地不动（指针还没越过任何中心线）：顺序不变、没有位移、预览落在自己槽位
+  const plan = planTrayDrag(SLOTS, 'a', 20);
+  assert.equal(plan.to, 0);
+  assert.equal(ids(plan), 'abcd');
+  assert.deepEqual(plan.shift, {});
+  assert.equal(plan.slot.left, 0, '预览落在自己原来的槽位');
+  assert.equal(plan.slot.width, 28);
+});
+
+check(() => {
+  // 从左往右：拖 a 越过 b 的中心线（44）→ a 排到第 2 位，b 左移一格
+  const plan = planTrayDrag(SLOTS, 'a', 50);
+  assert.equal(plan.to, 1);
+  assert.equal(ids(plan), 'bacd');
+  assert.deepEqual(plan.shift, { b: -30 }, 'b 整格左移（让出空位）');
+  assert.equal(plan.slot.left, 30, '预览落在被让出来的那个槽位');
+
+  // 一直拖到最右
+  const end = planTrayDrag(SLOTS, 'a', 200);
+  assert.equal(end.to, 3);
+  assert.equal(ids(end), 'bcda');
+  assert.deepEqual(end.shift, { b: -30, c: -30, d: -30 }, '中间的图标各左移一格');
+  assert.equal(end.slot.left, 90);
+});
+
+check(() => {
+  // 从右往左：拖 d 越过 b/c 的中心线 → d 排到第 2 位，b/c 各右移一格
+  // （历史 bug 就是「只能单向拖」，所以两个方向都必须有用例钉着）
+  const plan = planTrayDrag(SLOTS, 'd', 40);
+  assert.equal(plan.to, 1);
+  assert.equal(ids(plan), 'adbc');
+  assert.deepEqual(plan.shift, { b: 30, c: 30 }, 'b、c 各右移一格');
+  assert.equal(plan.slot.left, 30, '预览落在空出来的那一格');
+
+  // 一直拖到最左
+  const end = planTrayDrag(SLOTS, 'd', 0);
+  assert.equal(end.to, 0);
+  assert.equal(ids(end), 'dabc');
+  assert.deepEqual(end.shift, { a: 30, b: 30, c: 30 });
+  assert.equal(end.slot.left, 0);
+});
+
+check(() => {
+  // 双向可逆：把 a 拖到最右之后的顺序，再把 a 拖回最左，应当回到原顺序
+  const right = planTrayDrag(SLOTS, 'a', 200);
+  assert.equal(ids(right), 'bcda');
+  // 用新顺序对应的槽位（a 现在在最后一格）再往左拖
+  const moved = [
+    { id: 'b', left: 0, width: 28, center: 14 },
+    { id: 'c', left: 30, width: 28, center: 44 },
+    { id: 'd', left: 60, width: 28, center: 74 },
+    { id: 'a', left: 90, width: 28, center: 104 },
+  ];
+  assert.equal(ids(planTrayDrag(moved, 'a', 0)), 'abcd', '拖回最左必须能还原');
+  // 只越过 b 的中心线（14）就排到 b 后面
+  assert.equal(ids(planTrayDrag(moved, 'a', 30)), 'bacd');
+  assert.equal(ids(planTrayDrag(moved, 'a', 50)), 'bcad', '越过 b、c 的中心线就排到 c 后面');
+});
+
+check(() => {
+  // 边界：不在槽位里的 id（例如已进溢出菜单）→ 什么都不做
+  const plan = planTrayDrag(SLOTS, 'zz', 50);
+  assert.equal(plan.to, -1);
+  assert.equal(ids(plan), 'abcd');
+  assert.deepEqual(plan.shift, {});
+  assert.equal(plan.slot, null);
+  // 单个图标：拖不动，但也不能抛
+  const single = planTrayDrag([SLOTS[0]], 'a', 9999);
+  assert.equal(ids(single), 'a');
+  assert.equal(single.to, 0);
+  assert.deepEqual(planTrayDrag([], 'a', 0).order, []);
+});
 
 // ── 菜单操作与清理 ──────────────────────────────────────────────────────
 check(() => {

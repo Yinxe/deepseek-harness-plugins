@@ -89,8 +89,11 @@
     （全插件唯一 class 组件）；托盘图标渲染失败不影响其它图标。
 11. **不写产品 DOM**：不使用 portal 到 `document.body`（popover 定位靠官方 `useAnchoredPosition`），
     只通过槽位落点渲染；样式里不出现字面色值。
-12. **一维拖拽排序不许用 `elementFromPoint` 找落点**：被拖的图标自己就在指针下面，渲染顺序一换就回到原地
-    （表现为只能单向拖）。命中判定走 `store.reorderByPointer` + 其余图标的**中心线**，纯函数、可单测。
+12. **托盘拖拽必须用「冻结槽位」**：`pointerdown` 量一次各图标槽位（`readSlots`），拖动期间**不再读 DOM**，
+    命中判定与让位位移都由纯函数 `store.planTrayDrag` 算（双向对称，`check-store.mjs` 有用例）。
+    拖动期间**不重排 DOM**：被拖图标用 `translateX` 跟手、其余图标平移一格让位、目标槽位画 `.trayGhost`；
+    松手才 `runtime.setOrder` 提交。历史上两次方向性 bug（先只能从右往左、后只能从左往右）都出在
+    「边拖边重排 / 用 `elementFromPoint` 或实时 DOM 找落点」这类自我反馈上 —— 别再走回头路。
 
 ## 自检
 

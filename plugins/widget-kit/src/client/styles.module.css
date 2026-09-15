@@ -11,6 +11,7 @@
 /* ── 会话顶部托盘 ─────────────────────────────────────────────────────── */
 
 .tray {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -19,6 +20,49 @@
 
 .trayAnchor {
   display: inline-flex;
+  /* 让位 / 落位都靠 transform 过渡：拖动期间不重排 DOM，位置变化看得见而且不抖 */
+  transition: transform 150ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* 被拖起来的那个：跟手位移由行内 transform 给，所以这里必须**关掉过渡**（否则会滞后于指针）；
+   「拿起来」的放大与阴影由 .trayBtnDragging 自己的过渡给 */
+.trayAnchorDragging {
+  z-index: 3;
+  transition: none;
+}
+
+.trayAnchorDragging .trayBtn {
+  box-shadow: 0 2px 8px var(--dsw-alias-state-business-tertiary);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--dsw-alias-state-business-primary) 22%, transparent);
+}
+
+/* 目标槽位的预览块：主题色填充 + 主题色柔光（与卡片的吸附预览同一套视觉语言） */
+.trayGhost {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  box-sizing: border-box;
+  border: 1px dashed var(--dsw-alias-state-business-primary);
+  border-radius: 8px;
+  background: var(--dsw-alias-state-business-tertiary);
+  background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 20%, transparent);
+  box-shadow: 0 0 0 3px var(--dsw-alias-state-business-tertiary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent);
+  pointer-events: none;
+  animation: ghostIn 140ms cubic-bezier(0.2, 0, 0, 1);
+  transition: left 150ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+@keyframes ghostIn {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .trayBtn {
@@ -34,6 +78,10 @@
   background: transparent;
   color: var(--dsw-alias-label-tertiary);
   cursor: pointer;
+  transition:
+    transform 140ms cubic-bezier(0.2, 0, 0, 1),
+    background 140ms ease,
+    color 140ms ease;
 }
 
 .trayBtn:hover {
@@ -51,8 +99,13 @@
   color: var(--dsw-alias-label-primary);
 }
 
+/* 拖起来：放大 + 主题色阴影（有过渡，所以「拿起来」这个动作是看得见的） */
 .trayBtnDragging {
-  opacity: 0.55;
+  transform: scale(1.12);
+  background: var(--dsw-alias-interactive-bg-active);
+  color: var(--dsw-alias-label-primary);
+  box-shadow: 0 0 0 3px var(--dsw-alias-state-business-tertiary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsw-alias-state-business-primary) 14%, transparent);
 }
 
 .trayGlyph {
@@ -892,7 +945,10 @@
 @media (prefers-reduced-motion: reduce) {
   .card,
   .cardBody,
-  .snapGhost {
+  .snapGhost,
+  .trayAnchor,
+  .trayBtn,
+  .trayGhost {
     animation: none;
     transition: none;
   }
