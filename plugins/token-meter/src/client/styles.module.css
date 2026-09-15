@@ -1889,6 +1889,24 @@ div:has(> div[data-slot='sidebar.footer.action']) {
   border-color: var(--dsw-alias-border-l1);
   color: var(--dsw-alias-label-primary);
 }
+/* 宿主卡片（@dshp/widget-kit）里的内容承载框。
+   小组件组件自带「卡片外框」（.card / .today 的边框 + 底色 + 圆角 + 内边距），
+   而宿主卡片已经给了标题栏与内边距 —— 不去掉就是「卡中卡」的双层描边。这里只拆外观、
+   保留内部布局；滚动与高度交给这一层（宿主内容区高度可变，缩到很小时要能滚）。 */
+.wkFrame {
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+}
+.wkFrame .card,
+.wkFrame .today {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+}
 .float {
   position: fixed;
   z-index: 300;

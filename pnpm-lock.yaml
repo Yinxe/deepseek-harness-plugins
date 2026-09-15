@@ -333,6 +333,9 @@ importers:
       '@deepseek-ai/schemastery':
         specifier: ^3.18.2
         version: 3.18.2
+      '@dshp/widget-kit':
+        specifier: workspace:*
+        version: link:../widget-kit
       '@types/react':
         specifier: ~18.3.1
         version: 18.3.31

@@ -27,8 +27,9 @@ import { clearStatsCache, fetchState, fetchStats } from './api.js';
 import { createQuotaSection } from './QuotaSection.js';
 import { HiddenWhenFloated, StatsSettingsPage, StatsWidget, TodayCard } from './StatsSection.js';
 import { createWidgetSystem } from './widgets.js';
+import { PEAK_TITLE, STATS_KINDS, STATS_TITLES } from './widget-bridge.js';
 import styles from './styles.module.css';
-import type { StatsSnapshot } from './types.js';
+import type { StatsSnapshot, Vendor } from './types.js';
 import { DISPLAY_NAME } from '../name.js';
 
 const STATS_WIDGET_BTNS: Array<[string, string]> = [
@@ -74,7 +75,8 @@ const widgets = createWidgetSystem();
 const quota = createQuotaSection(widgets);
 
 /** 额度 store 与设置页共用的小构件集合。 */
-const store = quota.quotaStore;
+export const quotaStore = quota.quotaStore;
+const store = quotaStore;
 const UI = quota.quotaUI;
 
 /** 小组件注册表导出：`apply` 用它清掉遗留的 `online:*` 浮窗记录。 */
@@ -730,44 +732,72 @@ export function StatsView(): ReactNode {
 }
 
 /**
- * 全局小组件浮层：渲染所有已弹出的 widget（`quota:<id>` / `stats:<kind>`）。
+ * 单个小组件的内容（**唯一的 id → 组件映射**）。
+ *
+ * 三个消费者共用它，所以「哪张卡片画什么」只有一处定义：
+ *  1. 自带浮层（`WidgetFloatLayer`，没装 widget-kit 时）；
+ *  2. 宿主卡片（`widget-kit` 的 `content.render`，见 `index.tsx` 里的 `setContentRenderer`）；
+ *  3. 未来新增的承载面。
+ *
+ * @param id - legacy id（`peak` / `stats:<kind>` / `quota:<vendorId>`）。
+ * @param withToggle - 内容里是否带「回归」开关（自带浮层需要：浮窗没有框架标题栏；
+ *   宿主卡片不需要：框架标题栏自带关闭按钮，再画一个就是两个关闭按钮）。
+ * @returns 组件节点；未知 id 返回 `null`。
+ */
+export function renderFloatContent(id: string, withToggle: boolean): ReactNode {
+  const sep = id.indexOf(':');
+  const prefix = sep >= 0 ? id.slice(0, sep) : '';
+  const rest = sep >= 0 ? id.slice(sep + 1) : id;
+  const w = withToggle ? { widgets, widgetId: id } : {};
+  if (id === 'peak') return <quota.PeakIndicator {...w} />;
+  if (prefix === 'quota') return <quota.QuotaVendorWidget vendorId={rest} />;
+  if (prefix === 'stats') return <StatsWidget kind={rest} {...w} />;
+  return null;
+}
+
+/**
+ * 把宿主注册表对齐到「当前该有的卡片」。
+ *
+ * `widget-kit` 渲染一张卡片的前提是描述符在册，而**这些卡片全是 `trayIcon: false`**
+ * （不占活动栏图标），所以「刷新后仍开着」不能靠图标重新注册 —— 必须在启动时和供应商增删时
+ * 主动对齐：新增的注册上去、删掉的注销掉、已存在的只更新标题（供应商改名）。
+ *
+ * 没挂宿主时是 no-op（`widgets.syncRegistered` 自己判）。
+ *
+ * @returns 无。
+ */
+export function syncFloatWidgets(): void {
+  const s = store.get();
+  const vendors: Vendor[] = (s && s.cfg && s.cfg.vendors) || [];
+  widgets.syncRegistered([
+    { id: 'peak', title: PEAK_TITLE },
+    ...STATS_KINDS.map((kind) => ({ id: 'stats:' + kind, title: STATS_TITLES[kind] })),
+    ...vendors.map((v) => ({
+      id: 'quota:' + v.id,
+      title: v.name ? '额度 · ' + v.name : undefined,
+    })),
+  ]);
+}
+
+/**
+ * 全局小组件浮层：渲染所有已弹出的 widget（`quota:<id>` / `stats:<kind>` / `peak`）。
  * 浮窗只有定位，没有外框 —— 组件自身的卡片即浮窗外观，与原位完全一致。
  *
- * @returns 浮层内容；没有浮窗时 null。
+ * 挂上 `@dshp/widget-kit` 后**恒为 `null`**：卡片由框架的画布渲染（拖拽/缩放/最小化/吸附/
+ * 动效/持久化都在那边），这一层连同自带拖拽逻辑一起退居「没装框架」时的兜底。
+ *
+ * @returns 浮层内容；没有浮窗（或已挂宿主）时 null。
  */
 export function WidgetFloatLayer(): ReactNode {
   const list = widgets.useWidgets() as Array<{ id: string; pos: { x: number; y: number } }>;
-  if (!list.length) return null;
+  if (widgets.isBridged() || !list.length) return null;
   return (
     <>
-      {list.map((w) => {
-        const sep = w.id.indexOf(':');
-        const prefix = sep >= 0 ? w.id.slice(0, sep) : '';
-        const rest = sep >= 0 ? w.id.slice(sep + 1) : w.id;
-        // 统一规格：所有小组件浮窗同一宽度（widgets 常量 FLOAT_W），CSS 统一限高 60vh
-        if (w.id === 'peak') {
-          return (
-            <widgets.WidgetFloat key={w.id} id={w.id}>
-              <quota.PeakIndicator widgets={widgets} widgetId={w.id} />
-            </widgets.WidgetFloat>
-          );
-        }
-        if (prefix === 'quota') {
-          return (
-            <widgets.WidgetFloat key={w.id} id={w.id}>
-              <quota.QuotaVendorWidget vendorId={rest} />
-            </widgets.WidgetFloat>
-          );
-        }
-        if (prefix === 'stats') {
-          return (
-            <widgets.WidgetFloat key={w.id} id={w.id}>
-              <StatsWidget kind={rest} widgets={widgets} widgetId={w.id} />
-            </widgets.WidgetFloat>
-          );
-        }
-        return null;
-      })}
+      {list.map((w) => (
+        <widgets.WidgetFloat key={w.id} id={w.id}>
+          {renderFloatContent(w.id, true)}
+        </widgets.WidgetFloat>
+      ))}
     </>
   );
 }
