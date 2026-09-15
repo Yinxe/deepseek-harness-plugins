@@ -65,14 +65,15 @@ client 侧的起步三件（照 vision-bridge 抄）：`src/client/index.tsx`（
 
 新插件往槽位注册前先看占位，撞车要协商：
 
-| 槽位                            | 谁在用（order / id）                                                                                                                                 |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `settings.section`              | vision-bridge 25 / mcwiki-search 26 / token-meter 27 / search-provider 28 / skill-manager 29 / mcp-manager 30 / file-change-viewer 31 / web-style 50 |
-| `conversation.view`             | token-meter 40（中心区 tab，与原生「对话 / 轨迹」并列）                                                                                              |
-| `conversation.input.right`      | skill-manager 90（输入框右侧技能按钮）                                                                                                               |
-| `conversation.chat.commandview` | mcwiki-search（按命令名 keyed：`/mcwiki`）                                                                                                           |
-| `shell.overlay`                 | token-meter（小组件浮层）                                                                                                                            |
-| `tool.call.toolview`            | file-change-viewer（keyed：`edit` / `write` / `str_replace_editor` / `patch`，影子化优先级 `-1`）                                                    |
+| 槽位                                    | 谁在用（order / id）                                                                                                                                                     |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `settings.section`                      | vision-bridge 25 / mcwiki-search 26 / token-meter 27 / search-provider 28 / skill-manager 29 / mcp-manager 30 / file-change-viewer 31 / **widget-kit 32** / web-style 50 |
+| `conversation.view`                     | token-meter 40（中心区 tab，与原生「对话 / 轨迹」并列）                                                                                                                  |
+| `conversation.input.right`              | skill-manager 90（输入框右侧技能按钮）                                                                                                                                   |
+| `conversation.chat.commandview`         | mcwiki-search（按命令名 keyed：`/mcwiki`）                                                                                                                               |
+| `shell.overlay`                         | token-meter（小组件浮层）/ **widget-kit 10**（卡片层，id `dshp-widget-kit-cards`）                                                                                       |
+| `conversation.session.header.utilities` | file-change-viewer 20（会话页头快捷开关）/ **widget-kit 30**（组件托盘，id `dshp-widget-kit-tray`）                                                                      |
+| `tool.call.toolview`                    | file-change-viewer（keyed：`edit` / `write` / `str_replace_editor` / `patch`，影子化优先级 `-1`）                                                                        |
 
 ## 标杆与阅读顺序
 

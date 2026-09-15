@@ -1,0 +1,188 @@
+# @dshp/widget-kit
+
+DeepSeek Harness（DSH）**小组件规范与宿主**：给 Web UI 定一套「任何插件都能提供小组件」的契约 ——
+**会话顶部托盘**（常驻图标 + 徽标 + 拖拽换序 + 溢出菜单）与**内容面**（可拖拽/缩放/最小化/关闭的卡片，
+或锚定的轻面板），框架统一负责加载/错误/陈旧态、轮询节流、错误隔离、z 序、几何夹紧、持久化、键盘与焦点。
+
+> 设计原则：**框架管「窗口」，提供方管「内容」**。本插件**不含任何业务** —— 它只定义契约并提供承载面；
+> 自带的两个「参考组件」（时钟 / 组件诊断）是规范示例，可在设置里关掉。
+> **内容如何随尺寸变化完全由组件提供方决定**：框架只交事实（`size` / `sizeClass` / `frame`）与一个受约束的
+> `setSize`，不干涉布局、不做内容驱动的自动尺寸。完整契约见 [`docs/widget-spec.md`](../../docs/widget-spec.md)。
+
+## 安装
+
+### 方式一（推荐）：克隆 monorepo 安装 —— 更新只需 `git pull`，旧版 DSH 可 checkout tag
+
+```sh
+# 1. 克隆 monorepo（lib/ 构建产物已提交，clone 下来就能用，无需 build）
+git clone git@github.com:Yinxe/deepseek-harness-plugins.git
+cd deepseek-harness-plugins
+pnpm install
+
+# 2. 本地安装到 profile（路径按你执行命令时的 cwd 解析）
+dsh plugin --profile web add ./plugins/widget-kit
+
+# 3. 重启生效
+dsh web
+```
+
+- **更新**：仓库内 `git pull` + `dsh web`（最快 —— lib 已提交，未改 src 无需 build）。
+- **改源码后**：`pnpm --filter @dshp/widget-kit build` 重新打出 `lib/host.js + lib/client.js`，再 `dsh web`。
+- **验证**：打开任一**已有内容**的会话，顶部标题栏右侧出现两个小组件图标（时钟 / 组件诊断）；
+  点一下弹出卡片，拖动标题栏可移动、八向可缩放、`—` 最小化、`✕` 关闭；刷新页面位置保持不变。
+  设置 → 小组件 里能看到配置与已注册组件清单。
+
+**一键 AI 安装**：把下面这段发给你的 DSH AI 即可：
+
+```text
+帮我安装小组件宿主插件（monorepo Yinxe/deepseek-harness-plugins，子目录 plugins/widget-kit，包名 @dshp/widget-kit）：
+1. git clone monorepo 并 pnpm install
+2. dsh plugin --profile web add ./plugins/widget-kit
+3. dsh web 重启，确认无报错
+4. 打开一个非空会话，确认顶部出现「时钟」与「组件诊断」两个图标，点开可拖动/缩放/最小化/关闭，刷新后位置保持
+```
+
+### 方式二：从 Release 安装（无需 clone；更新需手动重跑命令）
+
+从本仓库 Releases 下载 `dshp-plugins-*.zip`，解压后 `dsh plugin --profile web add <解压目录>/plugins/widget-kit`，再 `dsh web`。
+
+## 更新
+
+| 安装方式      | 更新方式                                                              |
+| ------------- | --------------------------------------------------------------------- |
+| 克隆 monorepo | `git pull` → `dsh web`（未改 src 无需 build）                         |
+| Release 包    | 下载新包覆盖 → 重跑 `dsh plugin --profile web add <路径>` → `dsh web` |
+| 改了 src      | `pnpm --filter @dshp/widget-kit build` → 提交 `lib/` → `dsh web`      |
+
+## 功能
+
+| 部分                                          | 内容                                                                                                                                                                                                                                                                                                                           |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Host（`src/host/` → `lib/host.js`）**       | 声明 settings 命名空间 `dshp-widget-kit`（框架偏好：托盘开关、可见图标上限、徽标刷新间隔、悬停预览、参考组件）；`schemastery` 校验 + 逐字段消毒；不做迁移、不写用户文件、不注册模型工具。                                                                                                                                      |
+| **Client（`src/client/` → `lib/client.js`）** | ① 发布 `widgets` 客户端服务（`ctx.reflect.provide`），别的插件通过 `inject: ['widgets']` + `ctx.widgets.register(descriptor)` 提供组件；② 会话顶部托盘；③ 卡片层（`shell.overlay`）：拖动/八向缩放/最小化/关闭/层内 z 序/同屏上限；④ popover 承载面；⑤ 徽标调度器（1s 全局 tick、页面隐藏暂停、5s 超时、指数退避）；⑥ 设置节。 |
+| **同源路由**                                  | `GET /ext/dshp-widget-kit/state`（版本 + 契约版本 + 偏好快照）、`POST /ext/dshp-widget-kit/config`（偏好补丁）。同源校验、`no-store`、body 上限 1MB、业务错误走 `200 + ok:false`。                                                                                                                                             |
+| **工具**                                      | 无（纯 UI / 基础设施插件，不给模型注册任何工具）。                                                                                                                                                                                                                                                                             |
+
+## 你会看到什么
+
+| 参考组件                                   | 说明                                                                                                                                                                   |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **时钟**（`dshp-widget-kit:clock`）        | 示范「提供方控制尺寸呈现」：内容盒宽度 < 300 只显示时间，≥ 300 加日期与时区，≥ 420 再显示出实测内容盒与框架版本；托盘图标显示分钟数徽标。                              |
+| **组件诊断**（`dshp-widget-kit:registry`） | 列出**所有插件**注册的组件（id、来源命名空间、承载面、是否带徽标、默认尺寸）、当前打开的卡片数、框架版本，以及本机布局是否可持久化 —— 排查「我的组件没出现」的第一站。 |
+
+两者都是规范示例，可在 设置 → 小组件 里关掉。
+
+## 写一个小组件（三步）
+
+```jsonc
+// 1. 你的插件 package.json：只加 devDependency（类型用；运行时不会被打进产物）
+"devDependencies": { "@dshp/widget-kit": "workspace:*" }
+```
+
+```tsx
+// 2. 你的 client 半：声明硬依赖
+import type { WidgetContentProps } from '@dshp/widget-kit/spec';
+export const inject = ['slots', 'widgets'];
+```
+
+```tsx
+// 3. 在 effect 里注册（disposer 随插件一起回收）
+ctx.effect(
+  () =>
+    ctx.widgets.register({
+      id: 'my-plugin:panel', // <你的命名空间>:<名字>
+      title: '我的组件',
+      icon: <Glyph />,
+      presentation: 'card', // 'tray' | 'popover' | 'card'
+      content: {
+        load: async (loadCtx) => fetchData(loadCtx.signal), // 记得用 signal
+        refreshMs: 60000,
+        render: (props) => <View props={props} />, // 尺寸怎么变由你决定
+      },
+      card: { defaultSize: { w: 360, h: 240 }, minSize: { w: 240, h: 140 } },
+    }),
+  'my-plugin: widget',
+);
+```
+
+逐字段表、尺寸契约、红线、反例与自检清单：**[`docs/widget-spec.md`](../../docs/widget-spec.md)**。
+
+## 配置项
+
+存 `settings.yaml` 的 `dshp-widget-kit` 分节（改动即时生效，无需重启）：
+
+| 字段               | 类型    | 默认    | 说明                                |
+| ------------------ | ------- | ------- | ----------------------------------- |
+| `trayEnabled`      | boolean | `true`  | 是否在会话顶部显示组件托盘          |
+| `maxVisibleIcons`  | number  | `4`     | 可见图标上限 1–8，超出的进 `⋯` 菜单 |
+| `badgeIntervalMs`  | number  | `30000` | 徽标默认刷新间隔 5000–600000        |
+| `hoverPreview`     | boolean | `true`  | 图标悬停是否显示说明                |
+| `referenceWidgets` | boolean | `true`  | 是否装载自带的两个参考组件          |
+
+**本机布局**（托盘顺序、隐藏集合、卡片位置与尺寸）**不在** settings.yaml：它存在浏览器
+`localStorage` 的 `dshp-widget-kit:v1`，只属于这台浏览器，可在 设置 → 小组件 → 「清空本机布局」里重置。
+
+## 代码结构
+
+```
+plugins/widget-kit/
+├── spec.d.ts                  # 公开契约（其它插件 import type 的唯一入口）
+├── src/host/                  # config（NS/schema/消毒）/ routes（state+config）/ http / index
+├── src/client/
+│   ├── spec.ts                # 规范单一事实来源：类型 + 默认值 + 校验器 + SPEC_KEYS
+│   ├── geometry.ts            # 几何纯函数（夹紧 / 八向缩放 / 内容盒 / 尺寸档 / z 序）
+│   ├── store.ts               # localStorage 布局：消毒 / 版本 / debounce / 卸载清理
+│   ├── service.ts             # 运行时：注册表 + 布局状态 + 全部动作
+│   ├── badges.ts              # 徽标调度（可见性门控 / 超时 / 退避）
+│   ├── hooks.ts               # 快照订阅 / 数据生命周期 / 指针拖拽（官方 DragHandle 范式）
+│   ├── Tray.tsx / Card.tsx / CardLayer.tsx / Popover.tsx / ResizeHandles.tsx / ErrorBoundary.tsx
+│   ├── SettingsSection.tsx / components.tsx / glyphs.tsx / api.ts / types.ts / styles.module.css
+│   └── widgets/               # 参考组件：clock.tsx / diagnostics.tsx
+├── scripts/                   # 六个自检（几何 / 存储 / 契约漂移 / 样式与依赖 / 无头冒烟）
+└── lib/                       # 构建产物（已提交）
+```
+
+## 常见问题
+
+**图标没出现？** ① 空白会话（还没发过消息）时 DSH 会隐藏整个会话头，托盘也随之不渲染 —— 发一条消息再看；
+② 设置 → 小组件 里确认「会话顶部托盘」开着、图标上限不是被其它组件占满（超出的在 `⋯` 里）；
+③ 打开「组件诊断」看注册表：没有你的组件 = 你的插件没注册成功（看浏览器控制台里 `[dshp-<你的插件>]` 的日志）。
+
+**卡片拖到屏幕外找不回来了？** 框架保证任何时刻至少留 48px 与整条标题栏可见，所以不会真的丢；
+实在乱了用 `⋯` → 居中 或 设置 → 清空本机布局。
+
+**我的组件要显示模块数据怎么办？** 走你自己的 Host 路由取数（`load` 里 `fetch`，记得用 `context.signal`）；
+`sessionId` 由内容 props 给到，路由按它取会话级数据。
+
+**为什么 `setSize` 有时没反应？** 框架对「渲染期调用」与「500ms 内超过 3 次」有回环防护（会记一条
+`console.error` 并冻结该组件的自动改尺寸）。把改尺寸放进事件回调即可。
+
+## 卸载
+
+```sh
+dsh plugin --profile web remove "@dshp/widget-kit"
+dsh web
+```
+
+再删掉 `settings.yaml` 里的 `dshp-widget-kit` 段（可选），并清掉浏览器里 `dshp-widget-kit:v1`
+这条 localStorage（可选，不删也无害）。依赖它的插件会停在 waiting（不会报错），
+要么重新装框架，要么去掉自己 client 半的 `inject: ['widgets']`。
+
+## 移植说明
+
+本插件**不是**从别处移植来的，是为本 monorepo 新写的规范与宿主；设计模型参考了：
+
+- VS Code 的 contribution points（清单 + 贡献点 + 按需激活 + 收窄 API 面）；
+- Backstage 的 extension points（扩展点由插件注册并导出、只允许附加式演进）；
+- Grafana panel plugin 的「清单 + 实现」两件套；
+- macOS 菜单栏 extra / GNOME 顶栏指示器（托盘图标 + 点开弹窗 + 徽标）；
+- Home Assistant Lovelace 自定义卡片（卡壳与内容分离、单卡错误不互相拖垮）。
+
+仓内既有教训：`plugins/token-meter/src/client/widgets.tsx` 那版自由浮窗（固定尺寸假设、缺 `pointercancel`、
+硬编码 z-index 基线、一次移动全量重渲染、组件卸载靠手工前缀清 localStorage）逐条对应到本规范的
+「照抄官方 `DragHandle`」「层内相对 z」「两档快照」「disposer 清理残留」等设计上。
+
+## 免责声明
+
+本插件按 MIT 许可发布，为个人维护的社区插件，与 DeepSeek 官方无关。使用前请自行评估风险并做好备份
+（尤其是 `settings.yaml`）。小组件框架是**基础设施**：它不采集、不上传任何数据；本机布局只存在你自己的浏览器里。

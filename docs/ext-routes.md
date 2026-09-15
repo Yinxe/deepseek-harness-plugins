@@ -26,5 +26,6 @@
 | skill-manager      | `GET state` / `GET read` / `POST config / create / update / toggle / remove / transfer`                                                                                       |
 | mcp-manager        | `GET state` / `POST config / create / update / toggle / remove / probe`                                                                                                       |
 | file-change-viewer | `GET state` / `POST config` / `POST locate`（hunk 真实行号 + 两侧上下文；只回行号与十几行原文，整份文件不回传）                                                               |
+| widget-kit         | `GET state`（框架版本 + 契约版本 + 偏好快照）/ `POST config`（偏好补丁：托盘开关 / 图标上限 / 徽标间隔 / 悬停预览 / 参考组件）                                                |
 
 新增路由时：同前缀、同消毒规则、同 `ok:false` 语义；回包只带契约字段，绝不回传整个文件内容。
