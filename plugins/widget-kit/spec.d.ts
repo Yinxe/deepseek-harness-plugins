@@ -23,6 +23,9 @@ export declare const FRAMEWORK_VERSION: string;
 /** 本插件的命名空间 = settings NS = cordis 行 id。组件 id 的前缀必须是自己的命名空间。 */
 export declare const NS: string;
 
+/** 活动栏图标文字（`tray.label`）的最大字数。 */
+export declare const TRAY_LABEL_MAX_CHARS: number;
+
 export interface WidgetSize {
   w: number;
   h: number;
@@ -91,6 +94,11 @@ export interface WidgetCardOptions {
 export interface WidgetTrayOptions {
   badge?(ctx: WidgetBadgeContext): WidgetBadge | null | Promise<WidgetBadge | null>;
   badgeIntervalMs?: number;
+  /**
+   * 图标旁边的一小段文字（活动栏的「图标 + 文字」扩展点），最多 6 个字。
+   * 写函数 = 每次框架重渲染时求值（徽标刷新等），适合轻量实时读数。
+   */
+  label?: string | (() => string);
 }
 
 /**
@@ -139,6 +147,12 @@ export interface WidgetDescriptor<D = unknown> {
   subtitle?: string | (() => string);
   order?: number;
   presentation: 'tray' | 'popover' | 'card';
+  /**
+   * 是否在活动栏放图标（默认 `true`）。`false` 只有 `presentation: 'card'` 能写：
+   * 卡片仍然可以由别的组件用 `ctx.widgets.toggle(id)` 打开 —— 典型用法是
+   * 「一个宿主插件只注册一个迷你菜单图标，菜单里同时挂多个自由卡片」。
+   */
+  trayIcon?: boolean;
   tray?: WidgetTrayOptions;
   content?: WidgetContentOptions<D>;
   card?: WidgetCardOptions;

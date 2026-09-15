@@ -77,9 +77,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
+  gap: 4px;
+  /* 有文字时按钮自己撑宽，没文字时还是 28×28 的方图标 */
+  min-width: 28px;
   height: 28px;
-  padding: 0;
+  padding: 0 6px;
   border: none;
   border-radius: 8px;
   background: transparent;
@@ -113,6 +115,18 @@
   color: var(--dsw-alias-label-primary);
   box-shadow: 0 0 0 3px var(--dsw-alias-state-business-tertiary);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsw-alias-state-business-primary) 14%, transparent);
+}
+
+/* 活动栏的「图标 + 少量文字」：最多 6 个字，超了省略号（描述符里已经限长，这里只是兜底） */
+.trayLabel {
+  max-width: 68px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 1;
+  color: inherit;
+  font-variant-numeric: tabular-nums;
 }
 
 .trayGlyph {
@@ -538,6 +552,9 @@
 
 .popover {
   position: fixed;
+  /* 层内层级：卡片是 1..N、虚框是卡片序、常驻面板 40、**临时（悬停）面板 50** ——
+     悬停展开的速览永远压在常驻面板之上，两者都压在所有卡片之上（层内私有刻度，不与官方层比大小） */
+  z-index: 40;
   display: flex;
   flex-direction: column;
   width: min(420px, calc(100vw - 24px));
@@ -554,6 +571,11 @@
   overflow: hidden;
   color: var(--dsw-alias-label-primary);
   font-family: var(--dsw-font-family);
+}
+
+/* 临时层（悬停速览 / 一次性菜单）压在常驻层之上：先看悬停要看的东西，常驻面板不抢焦点 */
+.popover[data-channel='transient'] {
+  z-index: 50;
 }
 
 .popoverHeader {
@@ -595,6 +617,62 @@
   box-sizing: border-box;
   overflow: auto;
   container-type: inline-size;
+}
+
+/* ── 参考组件：组件箱（菜单里挂多个自由卡片） ─────────────────────────── */
+
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.boxList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.boxRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-2);
+}
+
+.boxMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.boxTitle {
+  font-size: 12px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.boxMeta {
+  font-family: var(--dsw-font-mono);
+  font-size: 11px;
+  color: var(--dsw-alias-label-caption);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.boxHint {
+  font-size: 11px;
+  line-height: 17px;
+  color: var(--dsw-alias-label-caption);
+}
+
+.boxEmpty {
+  font-size: 12px;
+  color: var(--dsw-alias-label-caption);
 }
 
 /* ── 设置节 ───────────────────────────────────────────────────────────── */

@@ -72,6 +72,17 @@ export function SlidersGlyph(): ReactNode {
   );
 }
 
+/** 收纳箱（组件箱：自由卡片的统一入口）。 */
+export function BoxGlyph(): ReactNode {
+  return (
+    <Glyph>
+      <path d="M2.8 5.2h12.4v2.2H2.8z" strokeLinejoin="round" />
+      <path d="M4 7.4v6.2a1.4 1.4 0 0 0 1.4 1.4h7.2a1.4 1.4 0 0 0 1.4-1.4V7.4" strokeLinejoin="round" />
+      <path d="M7.4 10.2h3.2" strokeLinecap="round" />
+    </Glyph>
+  );
+}
+
 /** 脉冲（状态速览）。 */
 export function PulseGlyph(): ReactNode {
   return (

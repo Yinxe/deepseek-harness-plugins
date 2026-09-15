@@ -21,6 +21,7 @@ import type { MenuEntry, MenuItem } from '@deepseek-ai/dsh-client-ui-primitives'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react';
 import { surfaceVars } from './appearance.js';
+import { TRAY_LABEL_MAX_CHARS } from './spec.js';
 import { mergeVisibleOrder, planTrayDrag } from './store.js';
 import type { TraySlot } from './store.js';
 import { useFramework } from './hooks.js';
@@ -101,9 +102,11 @@ export function Tray({
     () => orderIds.map((id) => snapshot.widgets.find((widget) => widget.id === id)),
     [orderIds, snapshot.widgets],
   );
-  // 被禁用的组件不进托盘（图标、卡片、面板一并停用 —— 见 runtime.setEnabled）
+  // 被禁用的组件不进托盘（图标、卡片、面板一并停用 —— 见 runtime.setEnabled）；
+  // `trayIcon: false` 的卡片也不进 —— 它们由别的组件（如宿主插件的迷你菜单）打开
   const ready = ordered.filter(
-    (widget): widget is NormalizedWidget => widget !== undefined && !disabled.has(widget.id),
+    (widget): widget is NormalizedWidget =>
+      widget !== undefined && !disabled.has(widget.id) && widget.trayIcon !== false,
   );
   const hidden = new Set(snapshot.layout.tray.hidden);
   const visibleIds = ready.filter((widget) => !hidden.has(widget.id)).map((widget) => widget.id);
@@ -334,6 +337,9 @@ export function Tray({
         const label = badge?.title !== undefined && badge.title !== '' ? `${title} · ${badge.title}` : title;
         const hoverTriggered = widget.presentation === 'popover' && widget.popover?.trigger === 'hover';
         const tone = badge?.tone ?? 'info';
+        // 活动栏的「图标 + 少量文字」扩展点：写函数 = 每次重渲染时求值（徽标刷新会带来重渲染）
+        const trayLabel =
+          widget.tray.label === null ? '' : resolveText(widget.tray.label).slice(0, TRAY_LABEL_MAX_CHARS);
         return (
           <span
             key={widget.id}
@@ -384,6 +390,11 @@ export function Tray({
                 }}
               >
                 <span className={styles.trayGlyph}>{widget.icon}</span>
+                {trayLabel !== '' && (
+                  <span className={styles.trayLabel} data-tray-label={trayLabel}>
+                    {trayLabel}
+                  </span>
+                )}
                 {badge !== null && badge.text !== undefined && badge.text !== '' ? (
                   <span className={styles.trayBadgeText} data-tone={tone}>
                     {badge.text.slice(0, 2)}

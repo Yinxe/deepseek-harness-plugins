@@ -15,7 +15,7 @@
  *  1. 建运行时，并把 `widgets` 服务**发布**给别的插件（`ctx.reflect.provide`，与官方 layout/resources 同入口）；
  *  2. 注册三个槽位：会话顶部托盘 / 卡片层（shell.overlay）/ 设置节；
  *  3. 徽标调度器（`ctx.interval` 一秒一拍，随 effect 自动销毁）；
- *  4. 参考组件（时钟 + 注册表诊断，可在设置里关掉）。
+ *  4. 参考组件（时钟 / 组件箱 / 注册表诊断 / 快速设置 / 状态速览，可在设置里关掉）。
  *
  * **不做自动残留清理**：卸载 / 热重载**不动**本机布局（按 id 保留，重新注册回来即原地恢复）；
  * 真卸载掉的插件留下的残留，由设置页的「清理已卸载组件的残留」显式清理（`runtime.pruneOrphans`）。
@@ -31,6 +31,7 @@ import { createWidgetRuntime, createWidgetsService } from './service.js';
 import { SPEC_DEFAULTS } from './spec.js';
 import type { StorageLike } from './store.js';
 import type { ClientContext, FrameworkConfig, SlotsService } from './types.js';
+import { createBoxWidget } from './widgets/box.js';
 import { clockWidget } from './widgets/clock.js';
 import { createDiagnosticsWidget } from './widgets/diagnostics.js';
 import { createQuickSettingsWidget } from './widgets/quick-settings.js';
@@ -54,10 +55,10 @@ const DEFAULT_PREFS: FrameworkConfig = {
   badgeIntervalMs: SPEC_DEFAULTS.badgeIntervalMs,
   hoverPreview: true,
   referenceWidgets: true,
-  // 外观默认值 = 「保持不变」：与 src/host/config.ts 的 DEFAULT_CONFIG 必须一致
+  // 外观默认值：与 src/host/config.ts 的 DEFAULT_CONFIG 必须一致
   // （scripts/check-spec-drift.mjs 会比对这几个数字）
-  cardOpacity: 1,
-  cardBlur: 0,
+  cardOpacity: 0.7,
+  cardBlur: 5,
   cardBorder: 'auto',
   cardRadius: 'auto',
   motionMs: 300,
@@ -145,6 +146,11 @@ export function apply(ctx: ClientContext): void {
       referenceDisposers.push(runtime.register(clockWidget));
     } catch (error) {
       logError('[dshp-widget-kit] 注册参考组件「时钟」失败：', error);
+    }
+    try {
+      referenceDisposers.push(runtime.register(createBoxWidget(runtime)));
+    } catch (error) {
+      logError('[dshp-widget-kit] 注册参考组件「组件箱」失败：', error);
     }
     try {
       referenceDisposers.push(runtime.register(createDiagnosticsWidget(runtime)));

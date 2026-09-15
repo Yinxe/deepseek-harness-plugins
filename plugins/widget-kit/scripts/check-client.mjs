@@ -137,7 +137,7 @@ globalThis.fetch = async (url, init) => {
     async json() {
       return {
         ok: true,
-        version: '0.9.1',
+        version: '0.10.0',
         specVersion: 1,
         config: {
           trayEnabled: true,
@@ -250,7 +250,7 @@ const expectedServiceKeys = [...EXPECTED_SERVICE_KEYS];
 expectedServiceKeys.sort();
 assert.deepEqual(actualServiceKeys, expectedServiceKeys, 'widgets 服务的成员必须与 SPEC_KEYS.service 一致');
 assert.equal(service.specVersion, 1);
-assert.equal(service.frameworkVersion, '0.9.1');
+assert.equal(service.frameworkVersion, '0.10.0');
 
 // ── 2. 槽位注册 ──────────────────────────────────────────────────────────
 assert.deepEqual(injections, ['conversation.session.header.utilities', 'shell.overlay', 'settings.section']);
@@ -421,6 +421,11 @@ assert.ok(ids.includes('dshp-widget-kit:clock'), '参考组件「时钟」必须
 assert.ok(ids.includes('dshp-widget-kit:registry'), '参考组件「组件诊断」必须自动注册');
 assert.ok(ids.includes('dshp-widget-kit:quick'), '参考组件「快速设置」（点击 popover）必须自动注册');
 assert.ok(ids.includes('dshp-widget-kit:status'), '参考组件「状态速览」（悬停 popover）必须自动注册');
+assert.ok(ids.includes('dshp-widget-kit:box'), '参考组件「组件箱」（菜单挂多个卡片）必须自动注册');
+
+// 活动栏文字扩展点 + 「不占图标」的卡片：两者的描述符必须被规范化对
+const refs = new Map(service.list().map((item) => [item.id, item]));
+assert.equal(refs.get('dshp-widget-kit:box').presentation, 'popover');
 
 // 两个参考 popover 的形态：点击 vs 悬停、header / padding 的差异必须真的在描述符里
 const referenceWidgets = new Map(service.list().map((item) => [item.id, item]));
@@ -930,6 +935,8 @@ const peek = {
   content: { render: () => null },
 };
 const disposePeek = service.register(peek);
+const disposePinnedWidget = service.register(pinnedClick);
+void disposePinnedWidget;
 service.toggle('demo:pinned');
 assert.equal(service.isOpen('demo:pinned'), true, '常驻面板先展开');
 runtime.hoverEnter('demo:peek');
@@ -972,6 +979,27 @@ assert.equal(service.isOpen('dshp-widget-kit:status'), true);
 runtime.hoverLeave('dshp-widget-kit:status');
 fireTimeouts(220);
 assert.equal(service.isOpen('dshp-widget-kit:status'), false, '非常驻面板仍然移开即收起');
+
+// 托盘：图标 + 少量文字；trayIcon:false 的卡片不出现在托盘，但仍然注册着
+const trayWithLabel = collect(render(trayEntry.component({ sessionId: 'session-one' })));
+/** 取某个图标上的活动栏文字。 */
+const trayLabelOf = (id) => {
+  const anchor = trayWithLabel.find((node) => node.props['data-tray-id'] === id);
+  if (anchor === undefined) return null;
+  const label = collect(anchor).find((node) => node.props['data-tray-label'] !== undefined);
+  return label === undefined ? null : String(label.props['data-tray-label']);
+};
+assert.match(String(trayLabelOf('dshp-widget-kit:clock')), /^\d{2}:\d{2}$/, '时钟的文字是 HH:MM');
+assert.equal(trayLabelOf('dshp-widget-kit:box'), '组件箱', '静态文字必须原样渲染');
+assert.equal(trayLabelOf('dshp-widget-kit:status'), null, '没写 label 的组件不得凭空多出文字');
+assert.ok(
+  !trayWithLabel.some((node) => node.props['data-tray-id'] === 'dshp-widget-kit:registry'),
+  'trayIcon: false 的卡片不得出现在活动栏',
+);
+assert.ok(
+  ids.includes('dshp-widget-kit:registry'),
+  '不出现在活动栏 ≠ 没注册：卡片仍由别的组件（组件箱）打开',
+);
 
 // 10.7 托盘图标：DOM 里带 data-tray-id（拖拽换序靠它读中心线），旧的 index 落点已废弃
 const finalTrayNodes = collect(render(trayEntry.component({ sessionId: 'session-one' })));
@@ -1337,7 +1365,140 @@ await runtime.setPrefs({
   motionMs: 300,
 });
 
-// 10.10 锁定按钮的状态（红色锁 / 绿色开锁靠 data-locked 选择器着色）
+// 10.12 一菜单多卡片 + 活动栏文字：组件箱菜单能开关卡片；trayIcon:false 的卡片靠它打开
+assert.equal(
+  service.list().some((item) => item.id === 'dshp-widget-kit:registry'),
+  true,
+  '诊断卡片仍然注册着（只是不占活动栏图标）',
+);
+assert.equal(
+  service.list().some((item) => item.id === 'dshp-widget-kit:box'),
+  true,
+  '组件箱必须在册',
+);
+// 打开组件箱（临时面板）：内容里每张自由卡片一个开关按钮
+service.close('dshp-widget-kit:clock');
+service.close('dshp-widget-kit:registry');
+service.toggle('dshp-widget-kit:box');
+assert.equal(service.isOpen('dshp-widget-kit:box'), true, '组件箱要能打开');
+const boxNode = collect(render(layerEntry.component({}))).find(
+  (node) => node.props['data-widget'] === 'dshp-widget-kit:box',
+);
+assert.ok(panelNodeOf('dshp-widget-kit:box'), '组件箱必须渲染出面板');
+// 每张自由卡片一行：行里有 id 文案与开关按钮（官方 primitives 在替身里是 `{ type: 'Button' }`）
+const boxRows = collect(boxNode).filter(
+  (node) => typeof node.props.className === 'string' && node.props.className.includes('boxRow'),
+);
+assert.ok(boxRows.length >= 2, `组件箱至少要列出两张卡片（实际 ${String(boxRows.length)} 行）`);
+const boxToggleFor = (id) => {
+  const row = boxRows.find((node) =>
+    collect(node).some(
+      (child) =>
+        typeof child.props.className === 'string' &&
+        child.props.className.includes('boxMeta') &&
+        String(child.props.children).includes(id),
+    ),
+  );
+  assert.ok(row, `组件箱里应有「${id}」这一行`);
+  const button = collect(row).find((node) => node.type === 'Button' && node.props.onClick);
+  assert.ok(button, `「${id}」那一行要有开关按钮`);
+  return button;
+};
+boxToggleFor('dshp-widget-kit:clock').props.onClick();
+assert.equal(service.isOpen('dshp-widget-kit:clock'), true, '从菜单里点一下就该打开那张卡片');
+boxToggleFor('dshp-widget-kit:registry').props.onClick();
+assert.equal(
+  service.isOpen('dshp-widget-kit:registry'),
+  true,
+  '第二张卡片要能**同时**打开（trayIcon:false 的卡片只能这样打开）',
+);
+assert.equal(service.isOpen('dshp-widget-kit:clock'), true, '两张卡片互不影响，同时开着');
+service.close('dshp-widget-kit:box');
+
+// 10.13 描述符校验：tray.label / trayIcon 的边界
+const baseTray = { id: 'demo:bad', title: 'T', icon: 'i' };
+assert.doesNotThrow(
+  () =>
+    service.register({
+      ...baseTray,
+      presentation: 'card',
+      trayIcon: false,
+      content: { render: () => null },
+    })(),
+  '卡片允许 trayIcon:false',
+);
+assert.throws(
+  () =>
+    service.register({
+      ...baseTray,
+      presentation: 'popover',
+      trayIcon: false,
+      content: { render: () => null },
+    }),
+  /只有 presentation: 'card' 能不显示图标/,
+  'popover 不给 trayIcon:false（它需要图标当锚点）',
+);
+assert.throws(
+  () => service.register({ ...baseTray, presentation: 'tray', trayIcon: false }),
+  /只有 presentation: 'card' 能不显示图标/,
+  'tray 形态不给 trayIcon:false（没有图标就没有意义）',
+);
+assert.throws(
+  () => service.register({ ...baseTray, presentation: 'tray', tray: { label: '七个字的文字太长' } }),
+  /最多 6 个字/,
+  '活动栏文字限长必须被校验',
+);
+assert.throws(
+  () => service.register({ ...baseTray, presentation: 'tray', tray: { label: 42 } }),
+  /必须是字符串或返回字符串的函数/,
+  '活动栏文字必须是字符串或函数',
+);
+assert.doesNotThrow(
+  () => service.register({ ...baseTray, presentation: 'tray', tray: { label: () => 'ok' } })(),
+  '函数形式的文字是合法的',
+);
+
+// 10.14 popover 层级：临时（悬停）层压在常驻层之上
+const layerPinned = {
+  id: 'demo:layer-pinned',
+  title: '常驻层',
+  icon: 'i',
+  presentation: 'popover',
+  popover: { trigger: 'click', width: 200, persistent: true },
+  content: { render: () => null },
+};
+const layerHover = {
+  id: 'demo:layer-hover',
+  title: '临时层',
+  icon: 'i',
+  presentation: 'popover',
+  popover: { trigger: 'hover', hoverOpenDelayMs: 40, width: 200 },
+  content: { render: () => null },
+};
+const disposeLayerPinned = service.register(layerPinned);
+const disposeLayerHover = service.register(layerHover);
+service.toggle('demo:layer-pinned');
+runtime.hoverEnter('demo:layer-hover');
+fireTimeouts(40);
+assert.equal(service.isOpen('demo:layer-pinned'), true, '常驻面板必须还在（悬停不挤掉它）');
+assert.equal(service.isOpen('demo:layer-hover'), true, '临时面板必须同时展开');
+const channels = collect(render(layerEntry.component({})))
+  .filter((node) => typeof node.props['data-channel'] === 'string')
+  .map((node) => [node.props['data-widget'], node.props['data-channel']]);
+assert.deepEqual(
+  channels,
+  [
+    ['demo:layer-pinned', 'pinned'],
+    ['demo:layer-hover', 'transient'],
+  ],
+  '常驻层在前、临时层在后（DOM 顺序与 z-index 一致，临时层压在上面）',
+);
+service.close('demo:layer-hover');
+service.close('demo:layer-pinned');
+disposeLayerPinned();
+disposeLayerHover();
+
+// 10.10 锁定按钮的状态（红色锁 / 绿色开锁靠 data-locked 选择器着色）// 10.10 锁定按钮的状态（红色锁 / 绿色开锁靠 data-locked 选择器着色）
 const lockBtnOf = (id) => {
   const card = collect(render(layerEntry.component({}))).find((node) => node.props['data-widget'] === id);
   assert.ok(card, `${id} 必须渲染出来`);

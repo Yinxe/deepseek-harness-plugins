@@ -82,14 +82,10 @@ export const clockWidget: WidgetDescriptor<ClockData> = {
   order: 100,
   presentation: 'card',
   tray: {
-    badgeIntervalMs: 30000,
-    badge: () => {
+    // 活动栏文字扩展点：图标旁边直接显示 HH:MM（像系统状态栏的时钟），所以不再另放角标
+    label: () => {
       const now = new Date();
-      return {
-        text: pad(now.getMinutes()),
-        tone: 'info',
-        title: `本机时间 ${pad(now.getHours())}:${pad(now.getMinutes())}`,
-      };
+      return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
     },
   },
   content: {

@@ -148,6 +148,7 @@ export function Popover({
       data-widget={widget.id}
       data-trigger={options.trigger}
       data-persistent={options.persistent ? 'true' : 'false'}
+      data-channel={options.persistent ? 'pinned' : 'transient'}
       // 面板自己也报悬停：指针从图标移到面板的间隙里撤销「待收起」
       onPointerEnter={() => {
         runtime.hoverEnter(widget.id);

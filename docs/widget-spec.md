@@ -152,30 +152,32 @@ ctx.effect(
 
 ## 3. 描述符逐字段
 
-| 字段                        | 类型                                                   | 必填                            | 默认                   | 说明                                                                |
-| --------------------------- | ------------------------------------------------------ | ------------------------------- | ---------------------- | ------------------------------------------------------------------- |
-| `id`                        | `string`                                               | ✅                              | —                      | `^[a-z0-9-]{2,32}:[a-z0-9-]{2,32}$`，前缀必须是**你自己的命名空间** |
-| `title`                     | `string \| () => string`                               | ✅                              | —                      | 托盘 aria-label、卡片标题、菜单里的名字                             |
-| `icon`                      | `ReactNode`                                            | ✅                              | —                      | 18px 视口；用 `currentColor`；框架负责 `aria-hidden`                |
-| `subtitle`                  | `string \| () => string`                               | —                               | 无                     | 卡片标题栏右侧的小字                                                |
-| `order`                     | `number`                                               | —                               | `0`                    | 托盘排序；同值按 id 字典序（稳定）                                  |
-| `presentation`              | `'tray' \| 'popover' \| 'card'`                        | ✅                              | —                      | 没有默认值，必须明说                                                |
-| `tray.badge`                | `(ctx) => WidgetBadge \| null \| Promise<…>`           | —                               | 无                     | 徽标；返回值见下                                                    |
-| `tray.badgeIntervalMs`      | `number`                                               | —                               | 框架偏好（默认 30000） | 下限 5000、上限 600000                                              |
-| `content.title`             | `string \| () => string`                               | —                               | 用 `title`             | 卡片标题栏文案                                                      |
-| `content.load`              | `(ctx) => Promise<D>`                                  | —                               | 无                     | 不写 = 纯展示组件                                                   |
-| `content.refreshMs`         | `number`                                               | —                               | `0`（不轮询）          | 要么 0，要么 ≥ 5000                                                 |
-| `content.render`            | `(props) => ReactNode`                                 | `presentation !== 'tray'` 时 ✅ | —                      | 内容面                                                              |
-| `card.defaultSize`          | `{ w, h }`                                             | —                               | `360×240`              | 首次打开的尺寸（外层 px）                                           |
-| `card.minSize`              | `{ w, h }`                                             | —                               | `240×140`              | **不得小于框架地板 240×140**                                        |
-| `card.maxSize`              | `{ w, h }`                                             | —                               | 视口 90%               | 小于 `minSize` 直接判错                                             |
-| `card.sizeClassBreakpoints` | `{ compact, wide }`                                    | —                               | `{320, 560}`           | 内容盒宽度阈值；`compact < wide`                                    |
-| `card.resizable`            | `boolean`                                              | —                               | `true`                 | `false` 时不渲染 8 个把手，菜单里也没有尺寸项                       |
-| `card.minimizable`          | `boolean`                                              | —                               | `true`                 | `false` 时没有最小化按钮、双击无效                                  |
-| `card.closable`             | `boolean`                                              | —                               | `true`                 | `false` 时没有关闭按钮                                              |
-| —（框架行为，非字段）       | 吸附间隔 `8` / 吸附距离 `12` / 跨轴对齐容差 `28`（px） | —                               | 见左                   | 拖动时的贴边、贴邻卡与对齐，见 §6「移动、吸附与防重叠」             |
-| `popover.*`                 | 见下表                                                 | —                               | 见下表                 | **只有 `presentation: 'popover'` 接受**                             |
-| `minFramework`              | `string`                                               | —                               | 无                     | 语义化版本下限；不满足则 `register` 抛错                            |
+| 字段                        | 类型                                                   | 必填                            | 默认                   | 说明                                                                     |
+| --------------------------- | ------------------------------------------------------ | ------------------------------- | ---------------------- | ------------------------------------------------------------------------ |
+| `id`                        | `string`                                               | ✅                              | —                      | `^[a-z0-9-]{2,32}:[a-z0-9-]{2,32}$`，前缀必须是**你自己的命名空间**      |
+| `title`                     | `string \| () => string`                               | ✅                              | —                      | 托盘 aria-label、卡片标题、菜单里的名字                                  |
+| `icon`                      | `ReactNode`                                            | ✅                              | —                      | 18px 视口；用 `currentColor`；框架负责 `aria-hidden`                     |
+| `subtitle`                  | `string \| () => string`                               | —                               | 无                     | 卡片标题栏右侧的小字                                                     |
+| `order`                     | `number`                                               | —                               | `0`                    | 托盘排序；同值按 id 字典序（稳定）                                       |
+| `presentation`              | `'tray' \| 'popover' \| 'card'`                        | ✅                              | —                      | 没有默认值，必须明说                                                     |
+| `trayIcon`                  | `boolean`                                              | —                               | `true`                 | `false` = 不占活动栏图标（只有 `card` 能这么写），卡片仍可由别的组件打开 |
+| `tray.badge`                | `(ctx) => WidgetBadge \| null \| Promise<…>`           | —                               | 无                     | 徽标；返回值见下                                                         |
+| `tray.badgeIntervalMs`      | `number`                                               | —                               | 框架偏好（默认 30000） | 下限 5000、上限 600000                                                   |
+| `tray.label`                | `string \| () => string`                               | —                               | 无                     | 图标旁的少量文字（**最多 6 个字**）；写函数 = 每次重渲染求值             |
+| `content.title`             | `string \| () => string`                               | —                               | 用 `title`             | 卡片标题栏文案                                                           |
+| `content.load`              | `(ctx) => Promise<D>`                                  | —                               | 无                     | 不写 = 纯展示组件                                                        |
+| `content.refreshMs`         | `number`                                               | —                               | `0`（不轮询）          | 要么 0，要么 ≥ 5000                                                      |
+| `content.render`            | `(props) => ReactNode`                                 | `presentation !== 'tray'` 时 ✅ | —                      | 内容面                                                                   |
+| `card.defaultSize`          | `{ w, h }`                                             | —                               | `360×240`              | 首次打开的尺寸（外层 px）                                                |
+| `card.minSize`              | `{ w, h }`                                             | —                               | `240×140`              | **不得小于框架地板 240×140**                                             |
+| `card.maxSize`              | `{ w, h }`                                             | —                               | 视口 90%               | 小于 `minSize` 直接判错                                                  |
+| `card.sizeClassBreakpoints` | `{ compact, wide }`                                    | —                               | `{320, 560}`           | 内容盒宽度阈值；`compact < wide`                                         |
+| `card.resizable`            | `boolean`                                              | —                               | `true`                 | `false` 时不渲染 8 个把手，菜单里也没有尺寸项                            |
+| `card.minimizable`          | `boolean`                                              | —                               | `true`                 | `false` 时没有最小化按钮、双击无效                                       |
+| `card.closable`             | `boolean`                                              | —                               | `true`                 | `false` 时没有关闭按钮                                                   |
+| —（框架行为，非字段）       | 吸附间隔 `8` / 吸附距离 `12` / 跨轴对齐容差 `28`（px） | —                               | 见左                   | 拖动时的贴边、贴邻卡与对齐，见 §6「移动、吸附与防重叠」                  |
+| `popover.*`                 | 见下表                                                 | —                               | 见下表                 | **只有 `presentation: 'popover'` 接受**                                  |
+| `minFramework`              | `string`                                               | —                               | 无                     | 语义化版本下限；不满足则 `register` 抛错                                 |
 
 ### 3.1 `popover` 形态选项（小面板）
 
@@ -311,6 +313,17 @@ ctx.effect(
   没有这层盾就会拖出一片蓝色高亮；顺带挡住指针进入 iframe / 画布时事件被吞。提供方什么都不用做。
 - **拖动过程中还有一个虚线预览框**：它表示「松手会落到这里」（吸附候选），卡片本体自由跟手，
   见下节。
+
+### 活动栏的三种呈现（图标 / 图标 + 文字 / 只做菜单入口）
+
+1. **图标**（默认）：每个组件一个 28×28 图标。
+2. **图标 + 少量文字**：`tray: { label: '14:30' }`（也可写函数，如实时时间）—— 按钮会自己撑宽；
+   文字最多 6 个字，超了描述符直接判错。像系统状态栏那样用。
+3. **只做菜单入口**（`trayIcon: false`，仅 `presentation: 'card'` 可写）：卡片**不占**活动栏位置，
+   由别的组件打开。典型场景：一个宿主插件只注册一个常驻/迷你菜单图标，菜单里同时挂多个自由卡片 ——
+   卡片设 `trayIcon: false`，宿主用自己的 `ctx.widgets.toggle(id)` 开关它们
+   （参考实现 `widgets/box.tsx`＝「组件箱」菜单列出所有卡片；`widgets/diagnostics.tsx` 就是一张不占图标的卡片）。
+   `tray` 形态必须有图标、`popover` 需要图标当锚点，所以只有卡片能用这个开关。
 
 ### 启用 / 禁用（动态启停，用户侧）
 
@@ -526,6 +539,10 @@ load: async (ctx) => (await fetch('/ext/my-plugin/data', { signal: ctx.signal })
 
 - `SPEC_VERSION`（当前 **1**）是契约版本：字段改名、语义变化、默认值改变 → **+1**，
   并在本节写下迁移步骤；字段**新增**（可选、有默认）不升版本 —— 例如 `popover` 形态选项就是 v1 内的新增。
+- **0.10.0（框架版本，契约仍为 v1）**：外观默认值改成 **70% 透明 + 5px 毛玻璃**；
+  新增活动栏文字扩展点 `tray.label`（≤6 字，可写函数）与 `trayIcon: false`（卡片不占图标、由别的组件打开
+  —— 一菜单多卡片）；临时（悬停）面板的层内 z-index 提到常驻面板之上；
+  参考组件新增「组件箱」（`widgets/box.tsx`，演示一菜单多卡片）。
 - **0.9.1（框架版本，契约仍为 v1）**：修最小化动画 —— 胶囊宽度从「内容撑开（`width: auto`）」
   改成**显式长度** `min(布局宽度, 160px)`（长度 ↔ auto 不可插值，宽度会瞬移），
   并把副标题收起、内容区内边距也纳入同一条过渡曲线，宽高协调收拢。

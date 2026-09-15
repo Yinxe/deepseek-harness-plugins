@@ -8,7 +8,8 @@ DeepSeek Harness（DSH）**小组件规范与宿主**：给 Web UI 定一套「�
 框架统一负责加载/错误/陈旧态、轮询节流、错误隔离、z 序、几何夹紧、持久化、键盘与焦点。
 
 > 设计原则：**框架管「窗口」，提供方管「内容」**。本插件**不含任何业务** —— 它只定义契约并提供承载面；
-> 自带的**四个参考组件**是规范示例、可在设置里关掉：两张卡片（时钟 / 组件诊断）+ 两个小面板（快速设置：点击展开 / 状态速览：悬停展开）。
+> 自带的**五个参考组件**是规范示例、可在设置里关掉：两张卡片（时钟 / 组件诊断）+ 三个小面板
+> （组件箱：一菜单多卡片的入口 / 快速设置：点击展开 / 状态速览：悬停展开）。
 > **内容如何随尺寸变化完全由组件提供方决定**：框架只交事实（`size` / `sizeClass` / `frame` / `minimized` /
 > `locked`）与一个受约束的 `setSize`，不干涉布局、不做内容驱动的自动尺寸。
 > 完整契约见 [`docs/widget-spec.md`](../../docs/widget-spec.md)。
@@ -132,8 +133,8 @@ ctx.effect(
 | `badgeIntervalMs`  | number  | `30000` | 徽标默认刷新间隔 5000–600000                    |
 | `hoverPreview`     | boolean | `true`  | 图标悬停是否显示说明                            |
 | `referenceWidgets` | boolean | `true`  | 是否装载自带的四个参考组件                      |
-| `cardOpacity`      | number  | `1`     | 卡片 / 小面板背景不透明度 0.2–1（含标题栏）     |
-| `cardBlur`         | number  | `0`     | 毛玻璃模糊半径 0–32 px（0 = 关）                |
+| `cardOpacity`      | number  | `0.7`   | 卡片 / 小面板背景不透明度 0.2–1（含标题栏）     |
+| `cardBlur`         | number  | `5`     | 毛玻璃模糊半径 0–32 px（0 = 关）                |
 | `cardBorder`       | enum    | `auto`  | 边框：`auto` 跟随框架 / `on` 1px / `off` 无边框 |
 | `cardRadius`       | enum    | `auto`  | 圆角：`auto` 12px / `round` 20px / `square` 0   |
 | `motionMs`         | number  | `300`   | 动效时长 0–500 ms（0 = 关闭过渡）               |

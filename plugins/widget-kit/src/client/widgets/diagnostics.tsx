@@ -5,7 +5,9 @@
  *  1. 组件提供方自己的界面**也能**用框架的公开面（`useFramework` 快照）看运行时状态；
  *  2. 同样的 `sizeClass` 分档：紧凑只报数量，常规逐条列出，宽档再显示来源与呈现方式；
  *  3. **在组件里动态启停别的组件**（`runtime.setEnabled`）—— 禁用后对方图标、卡片、面板与徽标
- *     一并停用，这里能立刻看到注册表与托盘的变化。
+ *     一并停用，这里能立刻看到注册表与托盘的变化；
+ *  4. **`trayIcon: false`**：它自己不出现在活动栏（诊断是调试用的，不占常驻位置），
+ *     由参考组件「组件箱」的菜单打开 —— 「一个菜单图标挂多个自由卡片」的标准用法。
  *
  * @module @dshp/widget-kit/client/widgets/diagnostics
  */
@@ -100,6 +102,8 @@ export function createDiagnosticsWidget(runtime: WidgetRuntime): WidgetDescripto
     icon: <RegistryGlyph />,
     order: 110,
     presentation: 'card',
+    // 调试用卡片：不占活动栏图标，由「组件箱」菜单打开（trayIcon 只允许卡片这么写）
+    trayIcon: false,
     tray: {
       badge: () => {
         const count = runtime.list().length;

@@ -17,7 +17,7 @@ import type { ReactNode } from 'react';
 export const SPEC_VERSION = 1;
 
 /** 框架版本。必须等于 package.json 的 version（check-spec-drift.mjs 比对）。 */
-export const FRAMEWORK_VERSION = '0.9.1';
+export const FRAMEWORK_VERSION = '0.10.0';
 
 /** 命名空间 = 本插件的 settings NS = cordis 行 id = 路由前缀段。 */
 export const NS = 'dshp-widget-kit';
@@ -36,6 +36,9 @@ export const BADGE_TONES = ['info', 'ok', 'warn', 'bad'] as const;
 
 /** 打开/刷新数据的原因，给提供方区分「首次 / 轮询 / 手动重试」。 */
 export const LOAD_REASONS = ['open', 'refresh', 'retry'] as const;
+
+/** 活动栏图标文字（`tray.label`）的最大字数：活动栏很窄，只留「少量文字」的位置。 */
+export const TRAY_LABEL_MAX_CHARS = 6;
 
 /** 面板就绪状态。`empty` 由提供方表达（`data` 为空时自行渲染空态即可，框架不猜）。 */
 export const CONTENT_STATUS = ['loading', 'ready', 'error', 'empty'] as const;
@@ -168,6 +171,13 @@ export interface WidgetCardOptions {
 export interface WidgetTrayOptions {
   badge?(ctx: WidgetBadgeContext): WidgetBadge | null | Promise<WidgetBadge | null>;
   badgeIntervalMs?: number;
+  /**
+   * 图标旁边的一小段文字（活动栏的「图标 + 文字」扩展点），最多 `TRAY_LABEL_MAX_CHARS` 个字。
+   *
+   * 像系统状态栏那样用：`label: () => '14:30'` 就是一个时间显示。写函数 = 每次框架重渲染时求值
+   * （徽标刷新等会引起重渲染），所以可以做轻量的实时读数；但**别在里面做重活**（它跑在渲染路径上）。
+   */
+  label?: string | (() => string);
 }
 
 /**
@@ -222,6 +232,15 @@ export interface WidgetDescriptor<D = unknown> {
   order?: number;
   presentation: (typeof PRESENTATIONS)[number];
   tray?: WidgetTrayOptions;
+  /**
+   * 是否在活动栏放图标（默认 `true`）。
+   *
+   * `false` = **不出现在活动栏**，但卡片照旧可以由别的组件打开 —— 典型用法是「一个宿主插件只注册
+   * 一个常驻/迷你菜单图标，它的菜单里同时挂好几个自由卡片」：那些卡片设 `trayIcon: false`，
+   * 由宿主用 `ctx.widgets.toggle(id)` 打开。只有 `presentation: 'card'` 能这么写
+   * （`tray` 形态没有图标就没有意义，`popover` 需要图标当锚点）。
+   */
+  trayIcon?: boolean;
   content?: WidgetContentOptions<D>;
   card?: WidgetCardOptions;
   popover?: WidgetPopoverOptions;
@@ -240,7 +259,9 @@ export interface NormalizedWidget {
   tray: {
     badge: ((ctx: WidgetBadgeContext) => WidgetBadge | null | Promise<WidgetBadge | null>) | null;
     badgeIntervalMs: number;
+    label: string | (() => string) | null;
   };
+  trayIcon: boolean;
   content: {
     title: string | (() => string) | null;
     load: ((ctx: WidgetLoadContext) => Promise<unknown>) | null;
@@ -405,6 +426,19 @@ export function normalizeDescriptor(
     }
   }
 
+  // ── trayIcon（是否在活动栏放图标）──
+  const trayIconRaw = raw['trayIcon'];
+  if (trayIconRaw !== undefined && typeof trayIconRaw !== 'boolean') {
+    throw new WidgetSpecError('trayIcon', '必须是 boolean');
+  }
+  const trayIcon = trayIconRaw !== false;
+  if (!trayIcon && frame !== 'card') {
+    throw new WidgetSpecError(
+      'trayIcon',
+      "只有 presentation: 'card' 能不显示图标（'tray' 没有图标就没有意义，'popover' 需要图标当锚点）",
+    );
+  }
+
   // ── tray ──
   const trayRaw = raw['tray'];
   if (trayRaw !== undefined && !isRecord(trayRaw)) throw new WidgetSpecError('tray', '必须是对象');
@@ -412,6 +446,16 @@ export function normalizeDescriptor(
   const badge = trayObj['badge'];
   if (badge !== undefined && typeof badge !== 'function') {
     throw new WidgetSpecError('tray.badge', '必须是函数');
+  }
+  const labelRaw = trayObj['label'];
+  if (labelRaw !== undefined && typeof labelRaw !== 'string' && typeof labelRaw !== 'function') {
+    throw new WidgetSpecError('tray.label', '必须是字符串或返回字符串的函数');
+  }
+  if (typeof labelRaw === 'string' && labelRaw.length > TRAY_LABEL_MAX_CHARS) {
+    throw new WidgetSpecError(
+      'tray.label',
+      `最多 ${String(TRAY_LABEL_MAX_CHARS)} 个字（活动栏只留少量文字的位置）`,
+    );
   }
   const badgeIntervalRaw = trayObj['badgeIntervalMs'] ?? SPEC_DEFAULTS.badgeIntervalMs;
   if (typeof badgeIntervalRaw !== 'number' || !Number.isFinite(badgeIntervalRaw)) {
@@ -592,7 +636,9 @@ export function normalizeDescriptor(
     tray: {
       badge: (badge as NormalizedWidget['tray']['badge']) ?? null,
       badgeIntervalMs: Math.round(badgeIntervalRaw),
+      label: (labelRaw as string | (() => string) | undefined) ?? null,
     },
+    trayIcon,
     content,
     card,
     popover,
@@ -627,13 +673,14 @@ export const SPEC_KEYS = {
     'subtitle',
     'order',
     'presentation',
+    'trayIcon',
     'tray',
     'content',
     'card',
     'popover',
     'minFramework',
   ],
-  tray: ['badge', 'badgeIntervalMs'],
+  tray: ['badge', 'badgeIntervalMs', 'label'],
   popover: [
     'trigger',
     'width',

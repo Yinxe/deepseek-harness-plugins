@@ -829,7 +829,7 @@ function readBody(req, limit = 1024 * 1024) {
 
 // src/host/config.ts
 var NS = settingsNamespace("dshp-widget-kit");
-var FRAMEWORK_VERSION = "0.9.1";
+var FRAMEWORK_VERSION = "0.10.0";
 var SPEC_VERSION = 1;
 var DEFAULT_CONFIG = {
   trayEnabled: true,
@@ -837,9 +837,9 @@ var DEFAULT_CONFIG = {
   badgeIntervalMs: 3e4,
   hoverPreview: true,
   referenceWidgets: true,
-  // 外观默认值 = 「保持不变」：不透明、不模糊，用户不动滑块就跟以前长得一样
-  cardOpacity: 1,
-  cardBlur: 0,
+  // 外观默认值：70% 透明 + 5px 毛玻璃（淡底玻璃卡片）
+  cardOpacity: 0.7,
+  cardBlur: 5,
   cardBorder: "auto",
   cardRadius: "auto",
   // 动效默认 300ms（比之前写死的 120–180ms 更顺一档，也留出「关 / 更快 / 更慢」的余地）

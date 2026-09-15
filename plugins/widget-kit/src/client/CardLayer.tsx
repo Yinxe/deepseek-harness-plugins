@@ -106,9 +106,9 @@ export function CardLayer({
       {cards.map((widget) => (
         <Card key={widget.id} runtime={runtime} widget={widget} onError={onError} />
       ))}
-      {transient !== undefined && <Popover runtime={runtime} widget={transient} onError={onError} />}
-      {pinned !== undefined && pinned !== transient && (
-        <Popover runtime={runtime} widget={pinned} onError={onError} />
+      {pinned !== undefined && <Popover runtime={runtime} widget={pinned} onError={onError} />}
+      {transient !== undefined && transient !== pinned && (
+        <Popover runtime={runtime} widget={transient} onError={onError} />
       )}
     </div>
   );
