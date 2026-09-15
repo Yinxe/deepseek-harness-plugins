@@ -7,11 +7,15 @@
  *    这正是 web-style 用 token 覆盖层在做的事：插件写死颜色 = 与它对冲。
  * 2. **类型导入不得进入运行时**：其它插件的产物里不允许出现 `@dshp/widget-kit` 的 require ——
  *    业务插件只加 devDependency 做 `import type`，运行时靠 `ctx.widgets` 服务接缝。
+ * 3. **标题栏高度不许漂移**：内容盒 = 外层 − `.cardHeader` 高度 − 2×内边距，胶囊高度也用它
+ *    （`SPEC_DEFAULTS.titleBarHeight`）。样式表与常量不一致时表现是「内容被标题栏压住」，
+ *    不容易一眼归因，所以静态钉住。（胶囊**宽度**不在这里：它是量出来的，没有第二套常量可漂移。）
  */
 
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { SPEC_DEFAULTS } from '../src/client/spec.ts';
 
 const CLIENT_DIR = 'src/client';
 const PLUGINS_DIR = '../../plugins';
@@ -73,7 +77,37 @@ for (const bundle of others) {
   );
 }
 
+// ── 标题栏排版 ↔ 胶囊度量 ────────────────────────────────────────────────
+const CARD_CSS = 'src/client/styles.module.css';
+const cardCss = stripComments(readFileSync(CARD_CSS, 'utf8'));
+
+/**
+ * 取一个选择器自己的声明块（先 `}` 或行首才认，避免把 `.cardActionDanger` 当成 `.cardAction`）。
+ *
+ * @param selector - 形如 `.cardHeader` 的单条选择器。
+ * @returns 声明名到值的映射。
+ */
+function declarationsOf(selector) {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = new RegExp(`(?:^|\\})\\s*${escaped}\\s*\\{([^}]*)\\}`).exec(cardCss);
+  assert.notEqual(match, null, `${CARD_CSS} 里找不到规则 ${selector}`);
+  const out = new Map();
+  for (const part of match[1].split(';')) {
+    const colon = part.indexOf(':');
+    if (colon === -1) continue;
+    out.set(part.slice(0, colon).trim(), part.slice(colon + 1).trim());
+  }
+  return out;
+}
+
+const header = declarationsOf('.cardHeader');
+assert.equal(
+  header.get('height'),
+  `${String(SPEC_DEFAULTS.titleBarHeight)}px`,
+  `.cardHeader 的高度必须等于 titleBarHeight（胶囊高度就是它，内容盒也从它往下算）`,
+);
+
 console.log(
   `check-css-tokens.mjs ok (${String(files.length)} 个样式表 / ${String(declarations)} 行声明 / ` +
-    `${String(scanned)} 个外部产物)`,
+    `${String(scanned)} 个外部产物 / 标题栏高度一致)`,
 );

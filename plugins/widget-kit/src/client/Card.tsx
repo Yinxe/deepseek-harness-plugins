@@ -8,24 +8,21 @@
  */
 import { Menu } from '@deepseek-ai/dsh-client-ui-primitives';
 import type { MenuEntry } from '@deepseek-ai/dsh-client-ui-primitives';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
-import { SPEC_DEFAULTS } from './spec.js';
+import { SPEC_DEFAULTS, resolveText } from './spec.js';
 import type { NormalizedWidget, WidgetContentProps } from './spec.js';
+import { capsuleOverflowFix, headerActions } from './geometry.js';
 import { WidgetErrorBoundary } from './ErrorBoundary.js';
 import { ResizeHandles } from './ResizeHandles.js';
 import { LockGlyph } from './glyphs.js';
+import { measureHeaderWidth, textOverflowPx } from './measure.js';
 import { useCardDrag, useFramework, useLiveGeometry, useWidgetData } from './hooks.js';
 import type { WidgetRuntime } from './service.js';
 import styles from './styles.module.css';
 
 /** 尺寸档预设相对描述符 `defaultSize` 的倍率（菜单里的「紧凑 / 常规 / 宽」）。 */
 const SIZE_PRESET_FACTOR = { compact: 0.75, regular: 1, wide: 1.35 } as const;
-
-function resolveText(value: string | (() => string) | null | undefined, fallback: string): string {
-  if (value === null || value === undefined) return fallback;
-  return typeof value === 'function' ? value() : value;
-}
 
 export function Card({
   runtime,
@@ -42,6 +39,8 @@ export function Card({
   const [menuOpen, setMenuOpen] = useState(false);
   const renderDepth = useRef(0);
   const warnedRenderSize = useRef(false);
+  const headerRef = useRef<HTMLDivElement | null>(null);
+  const titleRef = useRef<HTMLSpanElement | null>(null);
   const drag = useCardDrag(runtime, widget, 'move');
   const card = snapshot.layout.cards[widget.id];
   const open = card?.open === true;
@@ -159,20 +158,87 @@ export function Card({
     [locked, runtime, widget.id],
   );
 
+  // 提前解析标题：下面那个「量胶囊需要多宽」的 effect 要按它决定何时重量一次
+  // （标题可以是返回字符串的函数，值变了就得重新量）。
+  const title = resolveText(widget.title, widget.id);
+  const hasSubtitle = resolveText(widget.content?.title ?? widget.subtitle, '') !== '';
+  /**
+   * 最小化时胶囊**现在**多宽（渲染用的就是它）。它是 effect 的依赖之一：兜底补差改的是回报值，
+   * 胶囊因此变宽 → 这个值变 → effect 再核对一次（溢出归零就停，不会振荡）。
+   */
+  const capsuleNow = minimized
+    ? runtime.capsuleWidthOf(widget, card?.w ?? SPEC_DEFAULTS.cardDefaultSize.w)
+    : null;
+
+  /**
+   * 把「最小化胶囊需要多宽」回报给运行时 —— 量的是**整条标题栏的自然宽度**（含真实按钮与内边距）。
+   *
+   * 量不到（没有 DOM 的宿主、元素已摘掉）就不回报：胶囊退回地板宽度，而不是拿一个猜的宽度把标题截掉。
+   * 这不是「按渲染尺寸反推尺寸」（规范禁止的回环）：只回报一个**标题栏自己需要多宽**的数，
+   * 渲染期不改任何几何，真正改宽度的是运行时（最小化时才用）。
+   *
+   * 三个触发点：
+   *  1. 每次依赖变化（标题 / 按钮集 / 锁定态 / 外观偏好带来的尺寸）；依赖里**必须带 `widget` 对象本身**：
+   *     同 id 重注册（token-meter 供应商增删时会做）拿到的是新的规范化对象，而 `CardLayer` 按 id 复用
+   *     同一个 Card 实例 —— 只依赖 `widget.id` 就不会重跑，而卸载路径已经删掉测量 → 卡片永远停在地板宽度；
+   *  2. `fonts.ready` **之后的一帧**：网络字体换装会让字形宽度变化，而 `ready` 解决的那一刻布局可能
+   *     还是回退字体（同步量会量到旧的宽度），所以推到下一帧再量；`loadingdone` 同理（后到的字体批次）；
+   *  3. 兜底：最小化时若标题**仍然**被省略号截着（字体 / 边框 / 取整带来的残余误差），按实际溢出量补一次
+   *     —— 只在胶囊还没顶到布局宽度时补，补完重量一次，溢出归零即停（见 `geometry.capsuleOverflowFix`）。
+   */
+  useLayoutEffect(() => {
+    const report = (): void => {
+      const need = measureHeaderWidth(headerRef.current, styles.cardSubtitle);
+      if (need === null) return;
+      runtime.reportCapsuleNeed(widget.id, need);
+      if (!minimized) return;
+      const layoutWidth = runtime.rectOf(widget.id).w;
+      const fix = capsuleOverflowFix({
+        need,
+        overflow: textOverflowPx(titleRef.current),
+        capsule: runtime.capsuleWidthOf(widget, layoutWidth),
+        layoutWidth,
+      });
+      if (fix !== null) runtime.reportCapsuleNeed(widget.id, fix);
+    };
+    report();
+    const fonts: FontFaceSet | undefined = typeof document === 'undefined' ? undefined : document.fonts;
+    if (fonts === undefined) return;
+    let cancelled = false;
+    /** 推到下一帧再量：字体刚就位时布局还可能是旧的（同步量会拿到回退字体的宽度）。 */
+    const reportNextFrame = (): void => {
+      const raf = globalThis.requestAnimationFrame;
+      if (typeof raf !== 'function') {
+        report();
+        return;
+      }
+      raf(() => {
+        if (!cancelled) report();
+      });
+    };
+    void fonts.ready.then(reportNextFrame, () => {});
+    fonts.addEventListener('loadingdone', reportNextFrame);
+    return () => {
+      cancelled = true;
+      fonts.removeEventListener('loadingdone', reportNextFrame);
+    };
+  }, [runtime, widget, title, hasSubtitle, locked, minimized, capsuleNow]);
+
   if (card === undefined || !card.open) return null;
 
   /** 这张卡上是否有手势在进行（拖动或八向缩放都算 —— 两种都走 beginLive）。 */
   const gestureActive = live !== null && live.id === widget.id;
   const stored = gestureActive ? live.rect : card;
   /**
-   * 最小化 = 一枚胶囊。**宽度必须写成显式长度**（`min(布局宽度, minimizedWidth)`）而不是 `auto` ——
-   * 浏览器无法在「长度 ↔ auto」之间插值，用 auto 时最小化会先瞬移一次宽度、再慢慢缩高度，很跳。
-   * 这个算式与运行时 `visualRectOf` 完全一致（两边都读 `SPEC_DEFAULTS`），所以渲染与几何不会打架。
+   * 最小化 = 一枚胶囊。**宽度必须写成显式长度**（`auto` 与长度之间不可插值，用 auto 时最小化会先
+   * 瞬移一次宽度、再慢慢缩高度，很跳）。这个长度是**算出来的**：装得下标题与控件，夹在
+   * `[SPEC_DEFAULTS.capsule.minWidth, 布局宽度]` 之间 —— 不是固定压到某个宽度（那会把标题挤成省略号）。
+   * 算式与运行时 `visualRectOf` 完全一致（两边都调 `runtime.capsuleWidthOf`），渲染与几何不会打架。
    */
   const rect = minimized
     ? {
         ...stored,
-        w: Math.min(stored.w, SPEC_DEFAULTS.minimizedWidth),
+        w: runtime.capsuleWidthOf(widget, stored.w),
         h: SPEC_DEFAULTS.titleBarHeight,
       }
     : stored;
@@ -199,8 +265,16 @@ export function Card({
     },
   } satisfies WidgetContentProps;
 
-  const title = resolveText(widget.title, widget.id);
   const subtitle = resolveText(content?.title ?? widget.subtitle, '');
+  /**
+   * 标题栏上该有哪几个按钮：渲染与「胶囊要多宽」共用同一个判定（`geometry.headerActions`）——
+   * 增删按钮时胶囊的宽度算式跟着一起变，标题不会被新按钮挤掉一截。
+   */
+  const actions = headerActions({
+    locked,
+    minimizable: widget.card?.minimizable !== false,
+    closable: widget.card?.closable !== false,
+  });
   const zIndex = Math.max(1, snapshot.zOrder.indexOf(widget.id) + 1);
 
   // 渲染期标记：内容在 render 里调 setSize 属于规范禁止的尺寸回环来源，要能识别出来（见 setSize）。
@@ -232,6 +306,7 @@ export function Card({
     >
       <div
         className={styles.cardHeader}
+        ref={headerRef}
         tabIndex={0}
         aria-label={
           locked
@@ -244,7 +319,9 @@ export function Card({
         }}
         {...drag.handlers}
       >
-        <span className={styles.cardTitle}>{title}</span>
+        <span className={styles.cardTitle} ref={titleRef}>
+          {title}
+        </span>
         {subtitle !== '' && (
           <span className={styles.cardSubtitle + (minimized ? ' ' + styles.cardSubtitleHidden : '')}>
             {subtitle}
@@ -269,8 +346,9 @@ export function Card({
             <LockGlyph locked={locked} />
           </button>
           {/* 锁定的卡片标题栏只留「解锁」与「⋯」：最小化 / 关闭都进菜单，
-              免得一排图标里点错（这两个动作本身仍然可用，只是不再占标题栏） */}
-          {!locked && widget.card?.minimizable !== false && (
+              免得一排图标里点错（这两个动作本身仍然可用，只是不再占标题栏）。
+              可见性判定来自 `actions`（与胶囊宽度算式同一个来源），不是就地写条件。 */}
+          {actions.minimize && (
             <button
               type="button"
               className={styles.cardAction}
@@ -308,7 +386,7 @@ export function Card({
               </button>
             }
           />
-          {!locked && widget.card?.closable !== false && (
+          {actions.close && (
             <button
               type="button"
               className={styles.cardAction + ' ' + styles.cardActionDanger}

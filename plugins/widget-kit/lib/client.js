@@ -30,7 +30,7 @@ module.exports = __toCommonJS(client_exports);
 
 // src/client/spec.ts
 var SPEC_VERSION = 1;
-var FRAMEWORK_VERSION = "0.10.1";
+var FRAMEWORK_VERSION = "0.11.0";
 var WIDGET_ID_PATTERN = /^[a-z0-9-]{2,32}:[a-z0-9-]{2,32}$/;
 var PRESENTATIONS = ["tray", "popover", "card"];
 var TRAY_LABEL_MAX_CHARS = 6;
@@ -61,10 +61,14 @@ var SPEC_DEFAULTS = {
   /** 动效时长（ms）：所有过渡与入场动画用它；`0` = 关闭动效。 */
   motionMs: 300,
   /**
-   * 最小化胶囊的宽度（px）：显式长度（不是 `width: auto`），宽度才能被 transition 平滑插值 ——
-   * 用 `auto` 时浏览器无法在「长度 ↔ auto」之间做动画，最小化会先瞬移再缩高度，观感很跳。
+   * 最小化胶囊的**最小宽度**（px）：再短的标题也给这么宽，免得收成一粒看不清的豆子。
+   *
+   * 胶囊要装下标题与控件**需要多宽是量出来的**（`measure.measureHeaderWidth` 量整条标题栏的自然
+   * 宽度），不在这里按「内边距 + 标题 + 间隙 + 按钮」的常量加法算 —— 那种算法只要有一处常量与真实
+   * 排版不一致（官方按钮换尺寸、锚点外多一层包装、卡片自己有 0.5px 边框）就会偏窄，而偏窄的表现
+   * 正是「折叠后标题被省略号截掉」。这里只留地板值。
    */
-  minimizedWidth: 160,
+  capsuleMinWidth: 160,
   /** 动效可选档位（设置页的「关 / 100 / 200 / 300 / 400 / 500」）。 */
   motionChoices: [0, 100, 200, 300, 400, 500],
   /** 同屏卡片上限；开了第 7 张时自动最小化最旧一张。 */
@@ -103,6 +107,10 @@ function readBool(field, v, fallback) {
   if (v === void 0) return fallback;
   if (typeof v !== "boolean") throw new WidgetSpecError(field, "\u5FC5\u987B\u662F\u5E03\u5C14\u503C");
   return v;
+}
+function resolveText(value, fallback) {
+  if (value === null || value === void 0) return fallback;
+  return typeof value === "function" ? value() : value;
 }
 function compareVersions(a, b) {
   const parse = (v) => {
@@ -182,6 +190,17 @@ function normalizeDescriptor(raw, frameworkVersion = FRAMEWORK_VERSION) {
     throw new WidgetSpecError(
       "trayIcon",
       "\u53EA\u6709 presentation: 'card' \u80FD\u4E0D\u663E\u793A\u56FE\u6807\uFF08'tray' \u6CA1\u6709\u56FE\u6807\u5C31\u6CA1\u6709\u610F\u4E49\uFF0C'popover' \u9700\u8981\u56FE\u6807\u5F53\u951A\u70B9\uFF09"
+    );
+  }
+  const listedInBoxRaw = raw["listedInBox"];
+  if (listedInBoxRaw !== void 0 && typeof listedInBoxRaw !== "boolean") {
+    throw new WidgetSpecError("listedInBox", "\u5FC5\u987B\u662F boolean");
+  }
+  const listedInBox = listedInBoxRaw === true;
+  if (listedInBox && frame !== "card") {
+    throw new WidgetSpecError(
+      "listedInBox",
+      "\u53EA\u6709 presentation: 'card' \u80FD\u88AB\u300C\u7EC4\u4EF6\u7BB1\u300D\u6536\u5F55\uFF08\u5B83\u662F\u81EA\u7531\u5361\u7247\u7684\u7EDF\u4E00\u5165\u53E3\uFF09"
     );
   }
   const trayRaw = raw["tray"];
@@ -357,6 +376,7 @@ function normalizeDescriptor(raw, frameworkVersion = FRAMEWORK_VERSION) {
       label: labelRaw ?? null
     },
     trayIcon,
+    listedInBox,
     content,
     card,
     popover
@@ -477,61 +497,6 @@ function createBadgeScheduler(deps) {
 var import_dsh_client_ui_primitives2 = require("@deepseek-ai/dsh-client-ui-primitives");
 var import_react3 = require("react");
 
-// src/client/ErrorBoundary.tsx
-var import_react = require("react");
-var import_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
-
-// dsh-css-module:dsh-css:src/client/styles.module.css.mjs
-var css = '.SigSeG_tray{--dshp-card-alpha:100%;--dshp-card-blur:none;--dshp-card-radius:12px;--dshp-card-capsule-radius:999px;--dshp-card-border-width:.5px;--dshp-motion-ms:.3s;flex:none;align-items:center;gap:2px;display:flex;position:relative}.SigSeG_trayAnchor{transition:transform var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1);display:inline-flex}.SigSeG_trayAnchorDragging{z-index:3;transition:none}.SigSeG_trayAnchorDragging .SigSeG_trayBtn{box-shadow:0 2px 8px var(--dsw-alias-state-business-tertiary);box-shadow:0 2px 8px color-mix(in srgb, var(--dsw-alias-state-business-primary) 22%, transparent)}.SigSeG_trayGhost{box-sizing:border-box;border:1px dashed var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary);background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 20%, transparent);box-shadow:0 0 0 3px var(--dsw-alias-state-business-tertiary);box-shadow:0 0 0 3px color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent);pointer-events:none;animation:SigSeG_ghostIn var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1);transition:left var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1);border-radius:8px;position:absolute;top:0;bottom:0}@keyframes SigSeG_ghostIn{0%{opacity:0;transform:scale(.86)}to{opacity:1;transform:scale(1)}}.SigSeG_trayBtn{min-width:28px;height:28px;color:var(--dsw-alias-label-tertiary);cursor:pointer;transition:transform var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), background var(--dshp-motion-ms,.3s) ease, color var(--dshp-motion-ms,.3s) ease;background:0 0;border:none;border-radius:8px;justify-content:center;align-items:center;gap:4px;padding:0 6px;display:inline-flex;position:relative}.SigSeG_trayBtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_trayBtn:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:2px}.SigSeG_trayBtnActive{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.SigSeG_trayBtnDragging{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary);box-shadow:0 0 0 3px var(--dsw-alias-state-business-tertiary);box-shadow:0 0 0 3px color-mix(in srgb, var(--dsw-alias-state-business-primary) 14%, transparent);transform:scale(1.12)}.SigSeG_trayLabel{text-overflow:ellipsis;white-space:nowrap;max-width:68px;color:inherit;font-variant-numeric:tabular-nums;font-size:11px;line-height:1;overflow:hidden}.SigSeG_trayGlyph{justify-content:center;align-items:center;width:18px;height:18px;display:inline-flex}.SigSeG_trayGlyph>svg{width:18px;height:18px}.SigSeG_trayBadge{background:var(--dsw-alias-state-business-primary);border-radius:999px;width:6px;height:6px;position:absolute;top:2px;right:2px}.SigSeG_trayBadge[data-tone=ok]{background:var(--dsw-alias-state-success-primary)}.SigSeG_trayBadge[data-tone=warn]{background:var(--dsw-alias-state-warn-primary)}.SigSeG_trayBadge[data-tone=bad]{background:var(--dsw-alias-state-error-primary)}.SigSeG_trayBadgeText{background:var(--dsw-alias-state-business-primary);min-width:14px;height:14px;color:var(--dsw-alias-label-primary-foreground);text-align:center;font-size:9px;line-height:14px;font-family:var(--dsw-font-family);border-radius:999px;padding:0 3px;position:absolute;top:-2px;right:-4px}.SigSeG_trayBadgeText[data-tone=ok]{background:var(--dsw-alias-state-success-primary)}.SigSeG_trayBadgeText[data-tone=warn]{background:var(--dsw-alias-state-warn-primary)}.SigSeG_trayBadgeText[data-tone=bad]{background:var(--dsw-alias-state-error-primary)}.SigSeG_layer{z-index:1;isolation:isolate;pointer-events:none;--dshp-card-alpha:100%;--dshp-card-blur:none;--dshp-card-radius:12px;--dshp-card-capsule-radius:999px;--dshp-card-border-width:.5px;--dshp-motion-ms:.3s;position:fixed;inset:0}.SigSeG_card{pointer-events:auto;box-sizing:border-box;border:var(--dshp-card-border-width,.5px) solid var(--dsw-alias-border-l2);border-radius:var(--dshp-card-radius,12px);background:var(--dsw-alias-bg-layer-1);background:color-mix(in srgb, var(--dsw-alias-bg-layer-1) var(--dshp-card-alpha,100%), transparent);backdrop-filter:var(--dshp-card-blur,none);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);animation:SigSeG_cardIn var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1);transition:left var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), top var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), width var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), height var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), box-shadow var(--dshp-motion-ms,.3s) ease;flex-direction:column;display:flex;position:fixed;overflow:hidden}.SigSeG_card[data-gesture=true]{transition:transform var(--dshp-motion-ms,.3s) ease, box-shadow var(--dshp-motion-ms,.3s) ease;box-shadow:var(--dsw-shadow-lv3);will-change:left, top;transform:scale(1.012)}.SigSeG_cardDragging{user-select:none}@keyframes SigSeG_cardIn{0%{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}.SigSeG_gestureShield{z-index:0;pointer-events:auto;user-select:none;position:fixed;inset:0}.SigSeG_gestureShield[data-cursor=moving]{cursor:grabbing}.SigSeG_gestureShield[data-cursor=ns]{cursor:ns-resize}.SigSeG_gestureShield[data-cursor=ew]{cursor:ew-resize}.SigSeG_gestureShield[data-cursor=nesw]{cursor:nesw-resize}.SigSeG_gestureShield[data-cursor=nwse]{cursor:nwse-resize}.SigSeG_snapGhost{z-index:0;box-sizing:border-box;border:1px dashed var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary);background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 18%, transparent);box-shadow:0 0 0 4px var(--dsw-alias-state-business-tertiary);box-shadow:0 0 0 4px color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent);pointer-events:none;transition:left var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), top var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), width var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), height var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1);border-radius:12px;position:fixed}.SigSeG_snapGhost:before{content:"";background:var(--dsw-alias-state-business-tertiary);background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 30%, transparent);border-radius:11px 11px 0 0;height:36px;position:absolute;inset:0 0 auto}.SigSeG_cardMinimized{box-shadow:var(--dsw-shadow-lv1);border-radius:var(--dshp-card-capsule-radius,999px)}.SigSeG_cardLocked .SigSeG_cardHeader{cursor:default;border-bottom-color:var(--dsw-alias-border-l2)}.SigSeG_cardAction.SigSeG_cardLockAction[data-locked=true]{color:var(--dsw-alias-state-error-primary)}.SigSeG_cardAction.SigSeG_cardLockAction[data-locked=false]{color:var(--dsw-alias-state-success-primary)}.SigSeG_cardHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);background:color-mix(in srgb, var(--dsw-alias-bg-layer-2) var(--dshp-card-alpha,100%), transparent);cursor:grab;touch-action:none;user-select:none;flex:none;align-items:center;gap:6px;height:36px;padding:0 6px 0 10px;display:flex}.SigSeG_cardMinimized .SigSeG_cardHeader{border-bottom:none}.SigSeG_cardDragging .SigSeG_cardHeader{cursor:grabbing}.SigSeG_cardHeader:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:-2px}.SigSeG_cardTitle{text-overflow:ellipsis;white-space:nowrap;min-width:0;color:var(--dsw-alias-label-primary);flex:1;font-size:13px;font-weight:500;overflow:hidden}.SigSeG_cardSubtitle{text-overflow:ellipsis;white-space:nowrap;min-width:0;max-width:50%;color:var(--dsw-alias-label-caption);transition:max-width var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), opacity var(--dshp-motion-ms,.3s) ease;flex:0 auto;font-size:11px;overflow:hidden}.SigSeG_cardSubtitleHidden{opacity:0;max-width:0}.SigSeG_cardActions{flex:none;align-items:center;gap:2px;display:flex}.SigSeG_cardAction{width:24px;height:24px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:6px;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:1;display:inline-flex}.SigSeG_cardAction:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_cardActionDanger:hover{background:var(--dsw-alias-interactive-bg-hover-danger);color:var(--dsw-alias-label-error)}.SigSeG_cardBody{box-sizing:border-box;min-height:0;transition:opacity var(--dshp-motion-ms,.3s) ease, padding var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1);flex:auto;padding:10px;position:relative}.SigSeG_cardBodyHidden{opacity:0;pointer-events:none;padding:0}.SigSeG_contentHost{box-sizing:border-box;width:100%;height:100%;overflow:auto;container-type:size}.SigSeG_resizeHandle{z-index:2;touch-action:none;user-select:none;position:absolute}.SigSeG_resizeHandle[data-dir=n]{cursor:ns-resize;height:6px;top:0;left:8px;right:8px}.SigSeG_resizeHandle[data-dir=s]{cursor:ns-resize;height:6px;bottom:0;left:8px;right:8px}.SigSeG_resizeHandle[data-dir=e]{cursor:ew-resize;width:6px;top:8px;bottom:8px;right:0}.SigSeG_resizeHandle[data-dir=w]{cursor:ew-resize;width:6px;top:8px;bottom:8px;left:0}.SigSeG_resizeHandle[data-dir=ne]{cursor:nesw-resize;width:12px;height:12px;top:0;right:0}.SigSeG_resizeHandle[data-dir=nw]{cursor:nwse-resize;width:12px;height:12px;top:0;left:0}.SigSeG_resizeHandle[data-dir=se]{cursor:nwse-resize;width:12px;height:12px;bottom:0;right:0}.SigSeG_resizeHandle[data-dir=sw]{cursor:nesw-resize;width:12px;height:12px;bottom:0;left:0}.SigSeG_popover{z-index:40;pointer-events:auto;box-sizing:border-box;border:var(--dshp-card-border-width,.5px) solid var(--dsw-alias-border-l2);border-radius:var(--dshp-card-radius,12px);background:var(--dsw-alias-bg-overlay);background:color-mix(in srgb, var(--dsw-alias-bg-overlay) var(--dshp-card-alpha,100%), transparent);width:min(420px,100vw - 24px);max-height:min(60vh,520px);backdrop-filter:var(--dshp-card-blur,none);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);flex-direction:column;display:flex;position:fixed;overflow:hidden}.SigSeG_popover[data-channel=transient]{z-index:50}.SigSeG_popoverHeader{border-bottom:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);background:color-mix(in srgb, var(--dsw-alias-bg-layer-2) var(--dshp-card-alpha,100%), transparent);flex:none;align-items:center;gap:6px;height:34px;padding:0 6px 0 12px;display:flex}.SigSeG_popoverTitle{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-size:13px;font-weight:500;overflow:hidden}.SigSeG_popoverPinned{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-caption);border-radius:999px;flex:none;padding:1px 6px;font-size:10px;line-height:16px}.SigSeG_popoverBody{box-sizing:border-box;flex:auto;min-height:0;padding:12px;overflow:auto;container-type:inline-size}.SigSeG_box{flex-direction:column;gap:10px;display:flex}.SigSeG_boxList{flex-direction:column;gap:6px;display:flex}.SigSeG_boxRow{background:var(--dsw-alias-bg-layer-2);border-radius:8px;align-items:center;gap:8px;padding:6px 8px;display:flex}.SigSeG_boxMain{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_boxTitle{color:var(--dsw-alias-label-primary);font-size:12px}.SigSeG_boxMeta{font-family:var(--dsw-font-mono);color:var(--dsw-alias-label-caption);text-overflow:ellipsis;white-space:nowrap;font-size:11px;overflow:hidden}.SigSeG_boxHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:17px}.SigSeG_boxEmpty{color:var(--dsw-alias-label-caption);font-size:12px}.SigSeG_slider{align-items:center;gap:10px;min-width:190px;display:flex}.SigSeG_sliderInput{min-width:0;accent-color:var(--dsw-alias-state-business-primary);flex:1}.SigSeG_sliderValue{text-align:right;min-width:48px;color:var(--dsw-alias-label-caption);flex:none;font-size:12px}.SigSeG_section{flex-direction:column;gap:14px;display:flex}.SigSeG_sectionTitle{color:var(--dsw-alias-label-primary);margin:0;font-size:15px;font-weight:600}.SigSeG_sectionHint{color:var(--dsw-alias-label-caption);margin:0;font-size:12px;line-height:18px}.SigSeG_group{border:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:2px;padding:4px 12px;display:flex}.SigSeG_row{align-items:center;gap:12px;padding:10px 0;display:flex}.SigSeG_row+.SigSeG_row{border-top:.5px solid var(--dsw-alias-border-l1)}.SigSeG_rowLabel{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_rowTitle{color:var(--dsw-alias-label-primary);font-size:13px}.SigSeG_rowHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}.SigSeG_rowControl{flex:none;align-items:center;gap:8px;display:flex}.SigSeG_notice{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);border-radius:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px}.SigSeG_noticeBad{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-error)}.SigSeG_noticeOk{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-state-success-primary)}.SigSeG_list{border:.5px solid var(--dsw-alias-border-l1);border-radius:10px;flex-direction:column;gap:0;display:flex;overflow:hidden}.SigSeG_listRow{background:var(--dsw-alias-bg-layer-1);align-items:center;gap:10px;padding:8px 12px;display:flex}.SigSeG_listRow+.SigSeG_listRow{border-top:.5px solid var(--dsw-alias-border-l1)}.SigSeG_listRowOff{opacity:.6}.SigSeG_listRowOff .SigSeG_listActions{opacity:1}.SigSeG_listMain{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_listId{font-family:var(--dsw-font-mono);color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.SigSeG_listMeta{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_listActions{flex:none;align-items:center;gap:6px;display:flex}.SigSeG_empty{color:var(--dsw-alias-label-caption);background:var(--dsw-alias-bg-layer-1);padding:14px 12px;font-size:12px}.SigSeG_footer{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.SigSeG_clock{text-align:center;flex-direction:column;justify-content:center;align-items:center;gap:6px;height:100%;display:flex}.SigSeG_clockTime{font-family:var(--dsw-font-mono);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);line-height:1.1}.SigSeG_clockTime[data-size=compact]{font-size:22px}.SigSeG_clockTime[data-size=regular]{font-size:32px}.SigSeG_clockTime[data-size=wide]{font-size:44px}.SigSeG_clockMeta{color:var(--dsw-alias-label-caption);font-size:12px}.SigSeG_clockRow{flex-wrap:wrap;justify-content:center;align-items:baseline;gap:10px;display:flex}.SigSeG_clockLabel{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_diag{flex-direction:column;gap:8px;height:100%;display:flex}.SigSeG_diagSummary{color:var(--dsw-alias-label-secondary);font-size:12px}.SigSeG_diagList{flex-direction:column;gap:6px;display:flex}.SigSeG_diagRow{background:var(--dsw-alias-bg-layer-2);border-radius:8px;align-items:center;gap:8px;padding:6px 8px;display:flex}.SigSeG_diagMain{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_diagActions{flex:none;align-items:center;gap:4px;display:flex}.SigSeG_diagRow[data-disabled=true]{opacity:.6}.SigSeG_diagId{font-family:var(--dsw-font-mono);text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.SigSeG_diagMeta{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_diagError{color:var(--dsw-alias-label-error);font-size:11px}.SigSeG_diagEmpty{color:var(--dsw-alias-label-caption);font-size:12px}.SigSeG_quick{flex-direction:column;gap:12px;display:flex}.SigSeG_quickSection{flex-direction:column;gap:6px;display:flex}.SigSeG_quickLabel{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_seg{flex-wrap:wrap;gap:4px;display:flex}.SigSeG_segBtn{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font-size:11px;font-family:var(--dsw-font-family);cursor:pointer;background:0 0;border-radius:999px;padding:3px 10px}.SigSeG_segBtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_segBtnActive{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.SigSeG_quickFoot{justify-content:space-between;align-items:center;gap:8px;display:flex}.SigSeG_quickNote{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_quickError{color:var(--dsw-alias-label-error);font-size:11px}.SigSeG_statusRoot{box-sizing:border-box;flex-direction:column;gap:10px;padding:12px;display:flex}.SigSeG_statusGrid{grid-template-columns:1fr 1fr;gap:8px;display:grid}.SigSeG_statusCell{background:var(--dsw-alias-bg-layer-2);border-radius:8px;flex-direction:column;gap:2px;padding:8px 10px;display:flex}.SigSeG_statusValue{font-family:var(--dsw-font-mono);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);font-size:16px;line-height:20px}.SigSeG_statusKey{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_statusHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}@media (prefers-reduced-motion:reduce){.SigSeG_card,.SigSeG_cardBody,.SigSeG_snapGhost,.SigSeG_trayAnchor,.SigSeG_trayBtn,.SigSeG_trayGhost{transition:none;animation:none}}';
-var tagId = "@dshp/widget-kit/src/client/styles.module.css";
-if (typeof document !== "undefined" && document.querySelector(`style[data-plugin-css="${tagId}"]`) === null) {
-  const tag = document.createElement("style");
-  tag.setAttribute("data-plugin", "@dshp/widget-kit");
-  tag.setAttribute("data-plugin-css", tagId);
-  tag.textContent = css;
-  document.head.appendChild(tag);
-}
-var styles_module_css_default = { "box": "SigSeG_box", "boxEmpty": "SigSeG_boxEmpty", "boxHint": "SigSeG_boxHint", "boxList": "SigSeG_boxList", "boxMain": "SigSeG_boxMain", "boxMeta": "SigSeG_boxMeta", "boxRow": "SigSeG_boxRow", "boxTitle": "SigSeG_boxTitle", "card": "SigSeG_card", "cardAction": "SigSeG_cardAction", "cardActionDanger": "SigSeG_cardActionDanger", "cardActions": "SigSeG_cardActions", "cardBody": "SigSeG_cardBody", "cardBodyHidden": "SigSeG_cardBodyHidden", "cardDragging": "SigSeG_cardDragging", "cardHeader": "SigSeG_cardHeader", "cardIn": "SigSeG_cardIn", "cardLockAction": "SigSeG_cardLockAction", "cardLocked": "SigSeG_cardLocked", "cardMinimized": "SigSeG_cardMinimized", "cardSubtitle": "SigSeG_cardSubtitle", "cardSubtitleHidden": "SigSeG_cardSubtitleHidden", "cardTitle": "SigSeG_cardTitle", "clock": "SigSeG_clock", "clockLabel": "SigSeG_clockLabel", "clockMeta": "SigSeG_clockMeta", "clockRow": "SigSeG_clockRow", "clockTime": "SigSeG_clockTime", "contentHost": "SigSeG_contentHost", "diag": "SigSeG_diag", "diagActions": "SigSeG_diagActions", "diagEmpty": "SigSeG_diagEmpty", "diagError": "SigSeG_diagError", "diagId": "SigSeG_diagId", "diagList": "SigSeG_diagList", "diagMain": "SigSeG_diagMain", "diagMeta": "SigSeG_diagMeta", "diagRow": "SigSeG_diagRow", "diagSummary": "SigSeG_diagSummary", "empty": "SigSeG_empty", "footer": "SigSeG_footer", "gestureShield": "SigSeG_gestureShield", "ghostIn": "SigSeG_ghostIn", "group": "SigSeG_group", "layer": "SigSeG_layer", "list": "SigSeG_list", "listActions": "SigSeG_listActions", "listId": "SigSeG_listId", "listMain": "SigSeG_listMain", "listMeta": "SigSeG_listMeta", "listRow": "SigSeG_listRow", "listRowOff": "SigSeG_listRowOff", "notice": "SigSeG_notice", "noticeBad": "SigSeG_noticeBad", "noticeOk": "SigSeG_noticeOk", "popover": "SigSeG_popover", "popoverBody": "SigSeG_popoverBody", "popoverHeader": "SigSeG_popoverHeader", "popoverPinned": "SigSeG_popoverPinned", "popoverTitle": "SigSeG_popoverTitle", "quick": "SigSeG_quick", "quickError": "SigSeG_quickError", "quickFoot": "SigSeG_quickFoot", "quickLabel": "SigSeG_quickLabel", "quickNote": "SigSeG_quickNote", "quickSection": "SigSeG_quickSection", "resizeHandle": "SigSeG_resizeHandle", "row": "SigSeG_row", "rowControl": "SigSeG_rowControl", "rowHint": "SigSeG_rowHint", "rowLabel": "SigSeG_rowLabel", "rowTitle": "SigSeG_rowTitle", "section": "SigSeG_section", "sectionHint": "SigSeG_sectionHint", "sectionTitle": "SigSeG_sectionTitle", "seg": "SigSeG_seg", "segBtn": "SigSeG_segBtn", "segBtnActive": "SigSeG_segBtnActive", "slider": "SigSeG_slider", "sliderInput": "SigSeG_sliderInput", "sliderValue": "SigSeG_sliderValue", "snapGhost": "SigSeG_snapGhost", "statusCell": "SigSeG_statusCell", "statusGrid": "SigSeG_statusGrid", "statusHint": "SigSeG_statusHint", "statusKey": "SigSeG_statusKey", "statusRoot": "SigSeG_statusRoot", "statusValue": "SigSeG_statusValue", "tray": "SigSeG_tray", "trayAnchor": "SigSeG_trayAnchor", "trayAnchorDragging": "SigSeG_trayAnchorDragging", "trayBadge": "SigSeG_trayBadge", "trayBadgeText": "SigSeG_trayBadgeText", "trayBtn": "SigSeG_trayBtn", "trayBtnActive": "SigSeG_trayBtnActive", "trayBtnDragging": "SigSeG_trayBtnDragging", "trayGhost": "SigSeG_trayGhost", "trayGlyph": "SigSeG_trayGlyph", "trayLabel": "SigSeG_trayLabel" };
-
-// src/client/ErrorBoundary.tsx
-var import_jsx_runtime = require("react/jsx-runtime");
-var WidgetErrorBoundary = class extends import_react.Component {
-  constructor() {
-    super(...arguments);
-    __publicField(this, "state", { message: null });
-  }
-  static getDerivedStateFromError(error) {
-    return { message: String(error?.message ?? error) };
-  }
-  componentDidCatch(error, info) {
-    this.props.onError?.(`\u7EC4\u4EF6\u300C${this.props.label}\u300D\u6E32\u67D3\u5931\u8D25\uFF08\u5DF2\u9694\u79BB\uFF0C\u5176\u4F59\u7EC4\u4EF6\u4E0D\u53D7\u5F71\u54CD\uFF09`, error);
-    void info;
-  }
-  render() {
-    if (this.state.message === null) return this.props.children;
-    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: styles_module_css_default.notice + " " + styles_module_css_default.noticeBad, role: "alert", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-        "\u7EC4\u4EF6\u300C",
-        this.props.label,
-        "\u300D\u6E32\u67D3\u5931\u8D25\uFF1A",
-        this.state.message
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: styles_module_css_default.footer, style: { marginTop: 8 }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-        import_dsh_client_ui_primitives.Button,
-        {
-          variant: "ghost",
-          size: "sm",
-          onClick: () => {
-            this.setState({ message: null });
-            this.props.onRetry?.();
-          },
-          children: "\u91CD\u8BD5"
-        }
-      ) })
-    ] });
-  }
-};
-
 // src/client/geometry.ts
 var TITLE_BAR_HEIGHT = 36;
 var CONTENT_PADDING = 10;
@@ -539,6 +504,8 @@ var SNAP_GAP = 8;
 var SNAP_DISTANCE = 12;
 var CASCADE_STEP = 28;
 var CASCADE_WRAP = 6;
+var CAPSULE_MIN_WIDTH = 160;
+var CAPSULE_SLACK = 6;
 var RESIZE_DIRS = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
 function clamp(value, min, max) {
   if (!Number.isFinite(value)) return min;
@@ -694,6 +661,83 @@ function bringToFront(order, id) {
 function isSameRect(a, b) {
   return a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h;
 }
+function headerActions(card) {
+  return {
+    lock: true,
+    minimize: !card.locked && card.minimizable,
+    menu: true,
+    close: !card.locked && card.closable
+  };
+}
+function capsuleWidth(options) {
+  const stored = options.stored;
+  const cap = Number.isFinite(stored) && stored > 0 ? Math.round(stored) : CAPSULE_MIN_WIDTH;
+  const need = options.need === void 0 || !Number.isFinite(options.need) ? CAPSULE_MIN_WIDTH : Math.max(CAPSULE_MIN_WIDTH, Math.ceil(options.need) + CAPSULE_SLACK);
+  return Math.min(need, cap);
+}
+function capsuleOverflowFix(options) {
+  const { need, overflow, capsule, layoutWidth } = options;
+  if (!Number.isFinite(overflow) || overflow <= 0) return null;
+  if (!Number.isFinite(need) || need <= 0) return null;
+  if (!Number.isFinite(layoutWidth) || layoutWidth <= 0) return null;
+  if (capsule >= Math.round(layoutWidth)) return null;
+  return Math.ceil(need + overflow) + 1;
+}
+
+// src/client/ErrorBoundary.tsx
+var import_react = require("react");
+var import_dsh_client_ui_primitives = require("@deepseek-ai/dsh-client-ui-primitives");
+
+// dsh-css-module:dsh-css:src/client/styles.module.css.mjs
+var css = '.SigSeG_tray{--dshp-card-alpha:100%;--dshp-card-blur:none;--dshp-card-radius:12px;--dshp-card-capsule-radius:999px;--dshp-card-border-width:.5px;--dshp-motion-ms:.3s;flex:none;align-items:center;gap:2px;display:flex;position:relative}.SigSeG_trayAnchor{transition:transform var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1);display:inline-flex}.SigSeG_trayAnchorDragging{z-index:3;transition:none}.SigSeG_trayAnchorDragging .SigSeG_trayBtn{box-shadow:0 2px 8px var(--dsw-alias-state-business-tertiary);box-shadow:0 2px 8px color-mix(in srgb, var(--dsw-alias-state-business-primary) 22%, transparent)}.SigSeG_trayGhost{box-sizing:border-box;border:1px dashed var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary);background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 20%, transparent);box-shadow:0 0 0 3px var(--dsw-alias-state-business-tertiary);box-shadow:0 0 0 3px color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent);pointer-events:none;animation:SigSeG_ghostIn var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1);transition:left var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1);border-radius:8px;position:absolute;top:0;bottom:0}@keyframes SigSeG_ghostIn{0%{opacity:0;transform:scale(.86)}to{opacity:1;transform:scale(1)}}.SigSeG_trayBtn{min-width:28px;height:28px;color:var(--dsw-alias-label-tertiary);cursor:pointer;transition:transform var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), background var(--dshp-motion-ms,.3s) ease, color var(--dshp-motion-ms,.3s) ease;background:0 0;border:none;border-radius:8px;justify-content:center;align-items:center;gap:4px;padding:0 6px;display:inline-flex;position:relative}.SigSeG_trayBtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_trayBtn:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:2px}.SigSeG_trayBtnActive{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.SigSeG_trayBtnDragging{background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary);box-shadow:0 0 0 3px var(--dsw-alias-state-business-tertiary);box-shadow:0 0 0 3px color-mix(in srgb, var(--dsw-alias-state-business-primary) 14%, transparent);transform:scale(1.12)}.SigSeG_trayLabel{text-overflow:ellipsis;white-space:nowrap;max-width:68px;color:inherit;font-variant-numeric:tabular-nums;font-size:11px;line-height:1;overflow:hidden}.SigSeG_trayGlyph{justify-content:center;align-items:center;width:18px;height:18px;display:inline-flex}.SigSeG_trayGlyph>svg{width:18px;height:18px}.SigSeG_trayBadge{background:var(--dsw-alias-state-business-primary);border-radius:999px;width:6px;height:6px;position:absolute;top:2px;right:2px}.SigSeG_trayBadge[data-tone=ok]{background:var(--dsw-alias-state-success-primary)}.SigSeG_trayBadge[data-tone=warn]{background:var(--dsw-alias-state-warn-primary)}.SigSeG_trayBadge[data-tone=bad]{background:var(--dsw-alias-state-error-primary)}.SigSeG_trayBadgeText{background:var(--dsw-alias-state-business-primary);min-width:14px;height:14px;color:var(--dsw-alias-label-primary-foreground);text-align:center;font-size:9px;line-height:14px;font-family:var(--dsw-font-family);border-radius:999px;padding:0 3px;position:absolute;top:-2px;right:-4px}.SigSeG_trayBadgeText[data-tone=ok]{background:var(--dsw-alias-state-success-primary)}.SigSeG_trayBadgeText[data-tone=warn]{background:var(--dsw-alias-state-warn-primary)}.SigSeG_trayBadgeText[data-tone=bad]{background:var(--dsw-alias-state-error-primary)}.SigSeG_layer{z-index:1;isolation:isolate;pointer-events:none;--dshp-card-alpha:100%;--dshp-card-blur:none;--dshp-card-radius:12px;--dshp-card-capsule-radius:999px;--dshp-card-border-width:.5px;--dshp-motion-ms:.3s;position:fixed;inset:0}.SigSeG_card{pointer-events:auto;box-sizing:border-box;border:var(--dshp-card-border-width,.5px) solid var(--dsw-alias-border-l2);border-radius:var(--dshp-card-radius,12px);background:var(--dsw-alias-bg-layer-1);background:color-mix(in srgb, var(--dsw-alias-bg-layer-1) var(--dshp-card-alpha,100%), transparent);backdrop-filter:var(--dshp-card-blur,none);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);animation:SigSeG_cardIn var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1);transition:left var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), top var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), width var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), height var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), box-shadow var(--dshp-motion-ms,.3s) ease;flex-direction:column;display:flex;position:fixed;overflow:hidden}.SigSeG_card[data-gesture=true]{transition:transform var(--dshp-motion-ms,.3s) ease, box-shadow var(--dshp-motion-ms,.3s) ease;box-shadow:var(--dsw-shadow-lv3);will-change:left, top;transform:scale(1.012)}.SigSeG_cardDragging{user-select:none}@keyframes SigSeG_cardIn{0%{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}.SigSeG_gestureShield{z-index:0;pointer-events:auto;user-select:none;position:fixed;inset:0}.SigSeG_gestureShield[data-cursor=moving]{cursor:grabbing}.SigSeG_gestureShield[data-cursor=ns]{cursor:ns-resize}.SigSeG_gestureShield[data-cursor=ew]{cursor:ew-resize}.SigSeG_gestureShield[data-cursor=nesw]{cursor:nesw-resize}.SigSeG_gestureShield[data-cursor=nwse]{cursor:nwse-resize}.SigSeG_snapGhost{z-index:0;box-sizing:border-box;border:1px dashed var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-tertiary);background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 18%, transparent);box-shadow:0 0 0 4px var(--dsw-alias-state-business-tertiary);box-shadow:0 0 0 4px color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent);pointer-events:none;transition:left var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), top var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), width var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), height var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1);border-radius:12px;position:fixed}.SigSeG_snapGhost:before{content:"";background:var(--dsw-alias-state-business-tertiary);background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 30%, transparent);border-radius:11px 11px 0 0;height:36px;position:absolute;inset:0 0 auto}.SigSeG_cardMinimized{box-shadow:var(--dsw-shadow-lv1);border-radius:var(--dshp-card-capsule-radius,999px)}.SigSeG_cardLocked .SigSeG_cardHeader{cursor:default;border-bottom-color:var(--dsw-alias-border-l2)}.SigSeG_cardAction.SigSeG_cardLockAction[data-locked=true]{color:var(--dsw-alias-state-error-primary)}.SigSeG_cardAction.SigSeG_cardLockAction[data-locked=false]{color:var(--dsw-alias-state-success-primary)}.SigSeG_cardHeader{box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);background:color-mix(in srgb, var(--dsw-alias-bg-layer-2) var(--dshp-card-alpha,100%), transparent);cursor:grab;touch-action:none;user-select:none;flex:none;align-items:center;gap:6px;height:36px;padding:0 6px 0 10px;display:flex}.SigSeG_cardMinimized .SigSeG_cardHeader{border-bottom:none}.SigSeG_cardDragging .SigSeG_cardHeader{cursor:grabbing}.SigSeG_cardHeader:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary);outline-offset:-2px}.SigSeG_cardTitle{text-overflow:ellipsis;white-space:nowrap;min-width:0;color:var(--dsw-alias-label-primary);flex:1;font-size:13px;font-weight:500;overflow:hidden}.SigSeG_cardSubtitle{text-overflow:ellipsis;white-space:nowrap;min-width:0;max-width:50%;color:var(--dsw-alias-label-caption);transition:max-width var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1), opacity var(--dshp-motion-ms,.3s) ease;flex:0 auto;font-size:11px;overflow:hidden}.SigSeG_cardSubtitleHidden{opacity:0;max-width:0}.SigSeG_cardActions{flex:none;align-items:center;gap:2px;display:flex}.SigSeG_cardAction{width:24px;height:24px;color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:6px;justify-content:center;align-items:center;padding:0;font-size:13px;line-height:1;display:inline-flex}.SigSeG_cardAction:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_cardActionDanger:hover{background:var(--dsw-alias-interactive-bg-hover-danger);color:var(--dsw-alias-label-error)}.SigSeG_cardBody{box-sizing:border-box;min-height:0;transition:opacity var(--dshp-motion-ms,.3s) ease, padding var(--dshp-motion-ms,.3s) cubic-bezier(.2, 0, 0, 1);flex:auto;padding:10px;position:relative}.SigSeG_cardBodyHidden{opacity:0;pointer-events:none;padding:0}.SigSeG_contentHost{box-sizing:border-box;width:100%;height:100%;overflow:auto;container-type:size}.SigSeG_resizeHandle{z-index:2;touch-action:none;user-select:none;position:absolute}.SigSeG_resizeHandle[data-dir=n]{cursor:ns-resize;height:6px;top:0;left:8px;right:8px}.SigSeG_resizeHandle[data-dir=s]{cursor:ns-resize;height:6px;bottom:0;left:8px;right:8px}.SigSeG_resizeHandle[data-dir=e]{cursor:ew-resize;width:6px;top:8px;bottom:8px;right:0}.SigSeG_resizeHandle[data-dir=w]{cursor:ew-resize;width:6px;top:8px;bottom:8px;left:0}.SigSeG_resizeHandle[data-dir=ne]{cursor:nesw-resize;width:12px;height:12px;top:0;right:0}.SigSeG_resizeHandle[data-dir=nw]{cursor:nwse-resize;width:12px;height:12px;top:0;left:0}.SigSeG_resizeHandle[data-dir=se]{cursor:nwse-resize;width:12px;height:12px;bottom:0;right:0}.SigSeG_resizeHandle[data-dir=sw]{cursor:nesw-resize;width:12px;height:12px;bottom:0;left:0}.SigSeG_popover{z-index:40;pointer-events:auto;box-sizing:border-box;border:var(--dshp-card-border-width,.5px) solid var(--dsw-alias-border-l2);border-radius:var(--dshp-card-radius,12px);background:var(--dsw-alias-bg-overlay);background:color-mix(in srgb, var(--dsw-alias-bg-overlay) var(--dshp-card-alpha,100%), transparent);width:min(420px,100vw - 24px);max-height:min(60vh,520px);backdrop-filter:var(--dshp-card-blur,none);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family);flex-direction:column;display:flex;position:fixed;overflow:hidden}.SigSeG_popover[data-channel=transient]{z-index:50}.SigSeG_popoverHeader{border-bottom:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);background:color-mix(in srgb, var(--dsw-alias-bg-layer-2) var(--dshp-card-alpha,100%), transparent);flex:none;align-items:center;gap:6px;height:34px;padding:0 6px 0 12px;display:flex}.SigSeG_popoverTitle{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;font-size:13px;font-weight:500;overflow:hidden}.SigSeG_popoverPinned{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-caption);border-radius:999px;flex:none;padding:1px 6px;font-size:10px;line-height:16px}.SigSeG_popoverBody{box-sizing:border-box;flex:auto;min-height:0;padding:12px;overflow:auto;container-type:inline-size}.SigSeG_box{flex-direction:column;gap:8px;display:flex}.SigSeG_boxHead{align-items:center;display:flex}.SigSeG_boxList{flex-direction:column;gap:2px;display:flex}.SigSeG_boxRow{border-radius:8px;align-items:center;gap:8px;min-width:0;padding:5px 6px;display:flex}.SigSeG_boxRow:hover{background:var(--dsw-alias-bg-layer-2)}.SigSeG_boxDot{border:1px solid var(--dsw-alias-border-l2);background:0 0;border-radius:50%;flex:none;width:6px;height:6px}.SigSeG_boxRow[data-open="1"] .SigSeG_boxDot{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-primary)}.SigSeG_boxLabel{min-width:0;color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;flex:auto;font-size:12px;line-height:18px;overflow:hidden}.SigSeG_boxFoot{border-top:1px solid var(--dsw-alias-border-l1);justify-content:space-between;align-items:center;gap:8px;padding-top:8px;display:flex}.SigSeG_boxCount{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_boxHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:17px}.SigSeG_boxEmpty{color:var(--dsw-alias-label-caption);font-size:12px;line-height:18px}.SigSeG_boxEmpty code{font-family:var(--dsw-font-mono);background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);border-radius:4px;padding:0 3px;font-size:11px}.SigSeG_slider{align-items:center;gap:10px;min-width:190px;display:flex}.SigSeG_sliderInput{min-width:0;accent-color:var(--dsw-alias-state-business-primary);flex:1}.SigSeG_sliderValue{text-align:right;min-width:48px;color:var(--dsw-alias-label-caption);flex:none;font-size:12px}.SigSeG_section{flex-direction:column;gap:14px;display:flex}.SigSeG_sectionTitle{color:var(--dsw-alias-label-primary);margin:0;font-size:15px;font-weight:600}.SigSeG_sectionHint{color:var(--dsw-alias-label-caption);margin:0;font-size:12px;line-height:18px}.SigSeG_group{border:.5px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);border-radius:10px;flex-direction:column;gap:2px;padding:4px 12px;display:flex}.SigSeG_row{align-items:center;gap:12px;padding:10px 0;display:flex}.SigSeG_row+.SigSeG_row{border-top:.5px solid var(--dsw-alias-border-l1)}.SigSeG_rowLabel{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_rowTitle{color:var(--dsw-alias-label-primary);font-size:13px}.SigSeG_rowHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}.SigSeG_rowControl{flex:none;align-items:center;gap:8px;display:flex}.SigSeG_notice{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);border-radius:8px;margin:0;padding:10px 12px;font-size:12px;line-height:18px}.SigSeG_noticeBad{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-error)}.SigSeG_noticeOk{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-state-success-primary)}.SigSeG_list{border:.5px solid var(--dsw-alias-border-l1);border-radius:10px;flex-direction:column;gap:0;display:flex;overflow:hidden}.SigSeG_listRow{background:var(--dsw-alias-bg-layer-1);align-items:center;gap:10px;padding:8px 12px;display:flex}.SigSeG_listRow+.SigSeG_listRow{border-top:.5px solid var(--dsw-alias-border-l1)}.SigSeG_listRowOff{opacity:.6}.SigSeG_listRowOff .SigSeG_listActions{opacity:1}.SigSeG_listMain{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_listId{font-family:var(--dsw-font-mono);color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.SigSeG_listMeta{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_listActions{flex:none;align-items:center;gap:6px;display:flex}.SigSeG_empty{color:var(--dsw-alias-label-caption);background:var(--dsw-alias-bg-layer-1);padding:14px 12px;font-size:12px}.SigSeG_footer{flex-wrap:wrap;align-items:center;gap:8px;display:flex}.SigSeG_clock{text-align:center;flex-direction:column;justify-content:center;align-items:center;gap:6px;height:100%;display:flex}.SigSeG_clockTime{font-family:var(--dsw-font-mono);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);line-height:1.1}.SigSeG_clockTime[data-size=compact]{font-size:22px}.SigSeG_clockTime[data-size=regular]{font-size:32px}.SigSeG_clockTime[data-size=wide]{font-size:44px}.SigSeG_clockMeta{color:var(--dsw-alias-label-caption);font-size:12px}.SigSeG_clockRow{flex-wrap:wrap;justify-content:center;align-items:baseline;gap:10px;display:flex}.SigSeG_clockLabel{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_diag{flex-direction:column;gap:8px;height:100%;display:flex}.SigSeG_diagSummary{color:var(--dsw-alias-label-secondary);font-size:12px}.SigSeG_diagList{flex-direction:column;gap:6px;display:flex}.SigSeG_diagRow{background:var(--dsw-alias-bg-layer-2);border-radius:8px;align-items:center;gap:8px;padding:6px 8px;display:flex}.SigSeG_diagMain{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.SigSeG_diagActions{flex:none;align-items:center;gap:4px;display:flex}.SigSeG_diagRow[data-disabled=true]{opacity:.6}.SigSeG_diagId{font-family:var(--dsw-font-mono);text-overflow:ellipsis;white-space:nowrap;font-size:12px;overflow:hidden}.SigSeG_diagMeta{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_diagError{color:var(--dsw-alias-label-error);font-size:11px}.SigSeG_diagEmpty{color:var(--dsw-alias-label-caption);font-size:12px}.SigSeG_quick{flex-direction:column;gap:12px;display:flex}.SigSeG_quickSection{flex-direction:column;gap:6px;display:flex}.SigSeG_quickLabel{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_seg{flex-wrap:wrap;gap:4px;display:flex}.SigSeG_segBtn{border:.5px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font-size:11px;font-family:var(--dsw-font-family);cursor:pointer;background:0 0;border-radius:999px;padding:3px 10px}.SigSeG_segBtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.SigSeG_segBtnActive{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-interactive-bg-active);color:var(--dsw-alias-label-primary)}.SigSeG_quickFoot{justify-content:space-between;align-items:center;gap:8px;display:flex}.SigSeG_quickNote{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_quickError{color:var(--dsw-alias-label-error);font-size:11px}.SigSeG_statusRoot{box-sizing:border-box;flex-direction:column;gap:10px;padding:12px;display:flex}.SigSeG_statusGrid{grid-template-columns:1fr 1fr;gap:8px;display:grid}.SigSeG_statusCell{background:var(--dsw-alias-bg-layer-2);border-radius:8px;flex-direction:column;gap:2px;padding:8px 10px;display:flex}.SigSeG_statusValue{font-family:var(--dsw-font-mono);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);font-size:16px;line-height:20px}.SigSeG_statusKey{color:var(--dsw-alias-label-caption);font-size:11px}.SigSeG_statusHint{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}@media (prefers-reduced-motion:reduce){.SigSeG_card,.SigSeG_cardBody,.SigSeG_snapGhost,.SigSeG_trayAnchor,.SigSeG_trayBtn,.SigSeG_trayGhost{transition:none;animation:none}}';
+var tagId = "@dshp/widget-kit/src/client/styles.module.css";
+if (typeof document !== "undefined" && document.querySelector(`style[data-plugin-css="${tagId}"]`) === null) {
+  const tag = document.createElement("style");
+  tag.setAttribute("data-plugin", "@dshp/widget-kit");
+  tag.setAttribute("data-plugin-css", tagId);
+  tag.textContent = css;
+  document.head.appendChild(tag);
+}
+var styles_module_css_default = { "box": "SigSeG_box", "boxCount": "SigSeG_boxCount", "boxDot": "SigSeG_boxDot", "boxEmpty": "SigSeG_boxEmpty", "boxFoot": "SigSeG_boxFoot", "boxHead": "SigSeG_boxHead", "boxHint": "SigSeG_boxHint", "boxLabel": "SigSeG_boxLabel", "boxList": "SigSeG_boxList", "boxRow": "SigSeG_boxRow", "card": "SigSeG_card", "cardAction": "SigSeG_cardAction", "cardActionDanger": "SigSeG_cardActionDanger", "cardActions": "SigSeG_cardActions", "cardBody": "SigSeG_cardBody", "cardBodyHidden": "SigSeG_cardBodyHidden", "cardDragging": "SigSeG_cardDragging", "cardHeader": "SigSeG_cardHeader", "cardIn": "SigSeG_cardIn", "cardLockAction": "SigSeG_cardLockAction", "cardLocked": "SigSeG_cardLocked", "cardMinimized": "SigSeG_cardMinimized", "cardSubtitle": "SigSeG_cardSubtitle", "cardSubtitleHidden": "SigSeG_cardSubtitleHidden", "cardTitle": "SigSeG_cardTitle", "clock": "SigSeG_clock", "clockLabel": "SigSeG_clockLabel", "clockMeta": "SigSeG_clockMeta", "clockRow": "SigSeG_clockRow", "clockTime": "SigSeG_clockTime", "contentHost": "SigSeG_contentHost", "diag": "SigSeG_diag", "diagActions": "SigSeG_diagActions", "diagEmpty": "SigSeG_diagEmpty", "diagError": "SigSeG_diagError", "diagId": "SigSeG_diagId", "diagList": "SigSeG_diagList", "diagMain": "SigSeG_diagMain", "diagMeta": "SigSeG_diagMeta", "diagRow": "SigSeG_diagRow", "diagSummary": "SigSeG_diagSummary", "empty": "SigSeG_empty", "footer": "SigSeG_footer", "gestureShield": "SigSeG_gestureShield", "ghostIn": "SigSeG_ghostIn", "group": "SigSeG_group", "layer": "SigSeG_layer", "list": "SigSeG_list", "listActions": "SigSeG_listActions", "listId": "SigSeG_listId", "listMain": "SigSeG_listMain", "listMeta": "SigSeG_listMeta", "listRow": "SigSeG_listRow", "listRowOff": "SigSeG_listRowOff", "notice": "SigSeG_notice", "noticeBad": "SigSeG_noticeBad", "noticeOk": "SigSeG_noticeOk", "popover": "SigSeG_popover", "popoverBody": "SigSeG_popoverBody", "popoverHeader": "SigSeG_popoverHeader", "popoverPinned": "SigSeG_popoverPinned", "popoverTitle": "SigSeG_popoverTitle", "quick": "SigSeG_quick", "quickError": "SigSeG_quickError", "quickFoot": "SigSeG_quickFoot", "quickLabel": "SigSeG_quickLabel", "quickNote": "SigSeG_quickNote", "quickSection": "SigSeG_quickSection", "resizeHandle": "SigSeG_resizeHandle", "row": "SigSeG_row", "rowControl": "SigSeG_rowControl", "rowHint": "SigSeG_rowHint", "rowLabel": "SigSeG_rowLabel", "rowTitle": "SigSeG_rowTitle", "section": "SigSeG_section", "sectionHint": "SigSeG_sectionHint", "sectionTitle": "SigSeG_sectionTitle", "seg": "SigSeG_seg", "segBtn": "SigSeG_segBtn", "segBtnActive": "SigSeG_segBtnActive", "slider": "SigSeG_slider", "sliderInput": "SigSeG_sliderInput", "sliderValue": "SigSeG_sliderValue", "snapGhost": "SigSeG_snapGhost", "statusCell": "SigSeG_statusCell", "statusGrid": "SigSeG_statusGrid", "statusHint": "SigSeG_statusHint", "statusKey": "SigSeG_statusKey", "statusRoot": "SigSeG_statusRoot", "statusValue": "SigSeG_statusValue", "tray": "SigSeG_tray", "trayAnchor": "SigSeG_trayAnchor", "trayAnchorDragging": "SigSeG_trayAnchorDragging", "trayBadge": "SigSeG_trayBadge", "trayBadgeText": "SigSeG_trayBadgeText", "trayBtn": "SigSeG_trayBtn", "trayBtnActive": "SigSeG_trayBtnActive", "trayBtnDragging": "SigSeG_trayBtnDragging", "trayGhost": "SigSeG_trayGhost", "trayGlyph": "SigSeG_trayGlyph", "trayLabel": "SigSeG_trayLabel" };
+
+// src/client/ErrorBoundary.tsx
+var import_jsx_runtime = require("react/jsx-runtime");
+var WidgetErrorBoundary = class extends import_react.Component {
+  constructor() {
+    super(...arguments);
+    __publicField(this, "state", { message: null });
+  }
+  static getDerivedStateFromError(error) {
+    return { message: String(error?.message ?? error) };
+  }
+  componentDidCatch(error, info) {
+    this.props.onError?.(`\u7EC4\u4EF6\u300C${this.props.label}\u300D\u6E32\u67D3\u5931\u8D25\uFF08\u5DF2\u9694\u79BB\uFF0C\u5176\u4F59\u7EC4\u4EF6\u4E0D\u53D7\u5F71\u54CD\uFF09`, error);
+    void info;
+  }
+  render() {
+    if (this.state.message === null) return this.props.children;
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: styles_module_css_default.notice + " " + styles_module_css_default.noticeBad, role: "alert", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+        "\u7EC4\u4EF6\u300C",
+        this.props.label,
+        "\u300D\u6E32\u67D3\u5931\u8D25\uFF1A",
+        this.state.message
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: styles_module_css_default.footer, style: { marginTop: 8 }, children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+        import_dsh_client_ui_primitives.Button,
+        {
+          variant: "ghost",
+          size: "sm",
+          onClick: () => {
+            this.setState({ message: null });
+            this.props.onRetry?.();
+          },
+          children: "\u91CD\u8BD5"
+        }
+      ) })
+    ] });
+  }
+};
 
 // src/client/hooks.ts
 var import_react2 = require("react");
@@ -1011,13 +1055,65 @@ function PulseGlyph() {
   return /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(Glyph, { children: /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("path", { d: "M2 9.5h3.2l1.6-4 2.4 7.4 1.8-4.4 1.2 2.4H16", strokeLinecap: "round", strokeLinejoin: "round" }) });
 }
 
+// src/client/measure.ts
+function px(value) {
+  const n = Number.parseFloat(value);
+  return Number.isFinite(n) ? n : 0;
+}
+function ownerInsets(owner) {
+  if (typeof getComputedStyle !== "function") return 0;
+  const style = getComputedStyle(owner);
+  return Math.ceil(
+    px(style.borderLeftWidth) + px(style.borderRightWidth) + px(style.paddingLeft) + px(style.paddingRight)
+  );
+}
+function measureHeaderWidth(header, collapsedClass) {
+  if (header === null || typeof document === "undefined") return null;
+  const owner = header.parentElement;
+  if (owner === null) return null;
+  let probe = null;
+  try {
+    probe = header.cloneNode(true);
+    probe.removeAttribute("tabindex");
+    if (collapsedClass !== void 0 && collapsedClass !== "") {
+      for (const node of Array.from(probe.querySelectorAll(`[class~="${collapsedClass}"]`))) {
+        const collapsed = node;
+        if (collapsed.style === void 0) continue;
+        collapsed.style.maxWidth = "0";
+        collapsed.style.opacity = "0";
+      }
+    }
+    const style = probe.style;
+    style.position = "fixed";
+    style.left = "-10000px";
+    style.top = "0";
+    style.width = "max-content";
+    style.maxWidth = "none";
+    style.visibility = "hidden";
+    style.pointerEvents = "none";
+    owner.append(probe);
+    const rect = probe.getBoundingClientRect();
+    if (!Number.isFinite(rect.width) || rect.width <= 0) return null;
+    return Math.ceil(rect.width) + ownerInsets(owner);
+  } catch {
+    return null;
+  } finally {
+    probe?.remove();
+  }
+}
+function textOverflowPx(el) {
+  if (el === null) return 0;
+  const node = el;
+  const scroll = node.scrollWidth;
+  const client = node.clientWidth;
+  if (scroll === void 0 || client === void 0) return 0;
+  if (!Number.isFinite(scroll) || !Number.isFinite(client)) return 0;
+  return Math.max(0, Math.ceil(scroll - client));
+}
+
 // src/client/Card.tsx
 var import_jsx_runtime4 = require("react/jsx-runtime");
 var SIZE_PRESET_FACTOR = { compact: 0.75, regular: 1, wide: 1.35 };
-function resolveText(value, fallback) {
-  if (value === null || value === void 0) return fallback;
-  return typeof value === "function" ? value() : value;
-}
 function Card({
   runtime,
   widget,
@@ -1028,6 +1124,8 @@ function Card({
   const [menuOpen, setMenuOpen] = (0, import_react3.useState)(false);
   const renderDepth = (0, import_react3.useRef)(0);
   const warnedRenderSize = (0, import_react3.useRef)(false);
+  const headerRef = (0, import_react3.useRef)(null);
+  const titleRef = (0, import_react3.useRef)(null);
   const drag = useCardDrag(runtime, widget, "move");
   const card = snapshot.layout.cards[widget.id];
   const open = card?.open === true;
@@ -1133,12 +1231,52 @@ function Card({
     },
     [locked, runtime, widget.id]
   );
+  const title = resolveText(widget.title, widget.id);
+  const hasSubtitle = resolveText(widget.content?.title ?? widget.subtitle, "") !== "";
+  const capsuleNow = minimized ? runtime.capsuleWidthOf(widget, card?.w ?? SPEC_DEFAULTS.cardDefaultSize.w) : null;
+  (0, import_react3.useLayoutEffect)(() => {
+    const report = () => {
+      const need = measureHeaderWidth(headerRef.current, styles_module_css_default.cardSubtitle);
+      if (need === null) return;
+      runtime.reportCapsuleNeed(widget.id, need);
+      if (!minimized) return;
+      const layoutWidth = runtime.rectOf(widget.id).w;
+      const fix = capsuleOverflowFix({
+        need,
+        overflow: textOverflowPx(titleRef.current),
+        capsule: runtime.capsuleWidthOf(widget, layoutWidth),
+        layoutWidth
+      });
+      if (fix !== null) runtime.reportCapsuleNeed(widget.id, fix);
+    };
+    report();
+    const fonts = typeof document === "undefined" ? void 0 : document.fonts;
+    if (fonts === void 0) return;
+    let cancelled = false;
+    const reportNextFrame = () => {
+      const raf = globalThis.requestAnimationFrame;
+      if (typeof raf !== "function") {
+        report();
+        return;
+      }
+      raf(() => {
+        if (!cancelled) report();
+      });
+    };
+    void fonts.ready.then(reportNextFrame, () => {
+    });
+    fonts.addEventListener("loadingdone", reportNextFrame);
+    return () => {
+      cancelled = true;
+      fonts.removeEventListener("loadingdone", reportNextFrame);
+    };
+  }, [runtime, widget, title, hasSubtitle, locked, minimized, capsuleNow]);
   if (card === void 0 || !card.open) return null;
   const gestureActive = live !== null && live.id === widget.id;
   const stored = gestureActive ? live.rect : card;
   const rect = minimized ? {
     ...stored,
-    w: Math.min(stored.w, SPEC_DEFAULTS.minimizedWidth),
+    w: runtime.capsuleWidthOf(widget, stored.w),
     h: SPEC_DEFAULTS.titleBarHeight
   } : stored;
   const contentSize = runtime.contentSize(stored);
@@ -1163,8 +1301,12 @@ function Card({
       runtime.close(widget.id);
     }
   };
-  const title = resolveText(widget.title, widget.id);
   const subtitle = resolveText(content?.title ?? widget.subtitle, "");
+  const actions = headerActions({
+    locked,
+    minimizable: widget.card?.minimizable !== false,
+    closable: widget.card?.closable !== false
+  });
   const zIndex = Math.max(1, snapshot.zOrder.indexOf(widget.id) + 1);
   renderDepth.current += 1;
   let body = null;
@@ -1191,6 +1333,7 @@ function Card({
           "div",
           {
             className: styles_module_css_default.cardHeader,
+            ref: headerRef,
             tabIndex: 0,
             "aria-label": locked ? "\u4F4D\u7F6E\u5DF2\u9501\u5B9A\uFF1B\u53CC\u51FB\u6700\u5C0F\u5316\uFF08\u5728 \u22EF \u83DC\u5355\u91CC\u89E3\u9501\uFF09" : "\u62D6\u52A8\u6807\u9898\u680F\u79FB\u52A8\u5361\u7247\uFF1B\u65B9\u5411\u952E\u79FB\u52A8\uFF0CAlt+\u65B9\u5411\u952E\u7F29\u653E\uFF1B\u53CC\u51FB\u6700\u5C0F\u5316",
             onKeyDown: onHeaderKeyDown,
@@ -1199,7 +1342,7 @@ function Card({
             },
             ...drag.handlers,
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: styles_module_css_default.cardTitle, children: title }),
+              /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: styles_module_css_default.cardTitle, ref: titleRef, children: title }),
               subtitle !== "" && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("span", { className: styles_module_css_default.cardSubtitle + (minimized ? " " + styles_module_css_default.cardSubtitleHidden : ""), children: subtitle }),
               /* @__PURE__ */ (0, import_jsx_runtime4.jsxs)(
                 "span",
@@ -1223,7 +1366,7 @@ function Card({
                         children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(LockGlyph, { locked })
                       }
                     ),
-                    !locked && widget.card?.minimizable !== false && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                    actions.minimize && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
                       "button",
                       {
                         type: "button",
@@ -1264,7 +1407,7 @@ function Card({
                         )
                       }
                     ),
-                    !locked && widget.card?.closable !== false && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
+                    actions.close && /* @__PURE__ */ (0, import_jsx_runtime4.jsx)(
                       "button",
                       {
                         type: "button",
@@ -1780,7 +1923,7 @@ function SettingsSection({
         SettingRow,
         {
           title: "\u53C2\u8003\u7EC4\u4EF6",
-          hint: "\u672C\u63D2\u4EF6\u81EA\u5E26\u7684\u56DB\u4E2A\u89C4\u8303\u793A\u4F8B\uFF08\u4E0D\u662F\u4E1A\u52A1\uFF09\uFF1A\u4E24\u5F20\u5361\u7247\u300C\u65F6\u949F / \u7EC4\u4EF6\u8BCA\u65AD\u300D\uFF0C\u4E24\u4E2A\u5C0F\u9762\u677F\u300C\u5FEB\u901F\u8BBE\u7F6E\uFF08\u70B9\u51FB\u5C55\u5F00\uFF09/ \u72B6\u6001\u901F\u89C8\uFF08\u60AC\u505C\u5C55\u5F00\uFF09\u300D\u3002",
+          hint: "\u672C\u63D2\u4EF6\u81EA\u5E26\u7684\u56DB\u4E2A\u89C4\u8303\u793A\u4F8B\uFF08\u4E0D\u662F\u4E1A\u52A1\uFF09\uFF1A\u4E24\u5F20\u5361\u7247\u300C\u65F6\u949F / \u7EC4\u4EF6\u8BCA\u65AD\u300D\uFF0C\u4E24\u4E2A\u5C0F\u9762\u677F\u300C\u5FEB\u901F\u8BBE\u7F6E\uFF08\u70B9\u51FB\u5C55\u5F00\uFF09/ \u72B6\u6001\u901F\u89C8\uFF08\u60AC\u505C\u5C55\u5F00\uFF09\u300D\u3002\u300C\u7EC4\u4EF6\u7BB1\u300D\u662F\u6846\u67B6\u7684\u7EDF\u4E00\u5165\u53E3\uFF0C\u4E0D\u5728\u6B64\u5217\u3001\u59CB\u7EC8\u88C5\u8F7D\u3002",
           children: /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
             import_dsh_client_ui_primitives5.Switch,
             {
@@ -2576,6 +2719,7 @@ function defaultConstraints() {
 function createWidgetRuntime(deps) {
   const registry = /* @__PURE__ */ new Map();
   const anchors = /* @__PURE__ */ new Map();
+  const capsuleNeeds = /* @__PURE__ */ new Map();
   const lastAnchors = /* @__PURE__ */ new Map();
   const badges = {};
   const sizeCalls = /* @__PURE__ */ new Map();
@@ -2785,6 +2929,7 @@ function createWidgetRuntime(deps) {
         transientOrigin = null;
       }
       delete badges[value.id];
+      capsuleNeeds.delete(value.id);
       publish();
       notifyLive();
     };
@@ -2794,7 +2939,8 @@ function createWidgetRuntime(deps) {
       id: widget.id,
       title: typeof widget.title === "function" ? widget.title() : widget.title,
       owner: widget.owner,
-      presentation: widget.presentation
+      presentation: widget.presentation,
+      listedInBox: widget.listedInBox
     }));
   }
   function cancelHoverTimer(id) {
@@ -3074,10 +3220,24 @@ function createWidgetRuntime(deps) {
   function isCollapsed(id) {
     return state.cards[id]?.minimized === true;
   }
+  function reportCapsuleNeed(id, width) {
+    if (!Number.isFinite(width) || width <= 0) return;
+    const next = Math.round(width);
+    if (capsuleNeeds.get(id) === next) return;
+    capsuleNeeds.set(id, next);
+    if (isCollapsed(id)) publish();
+  }
+  function capsuleWidthOf(widget, storedWidth) {
+    return capsuleWidth({ stored: storedWidth, need: capsuleNeeds.get(widget.id) });
+  }
   function collapsedSize(id) {
     const card = state.cards[id];
     const stored = card?.w ?? SPEC_DEFAULTS.cardDefaultSize.w;
-    return { w: Math.min(stored, SPEC_DEFAULTS.minimizedWidth), h: SPEC_DEFAULTS.titleBarHeight };
+    const widget = widgetOf(id);
+    return {
+      w: widget === void 0 ? Math.min(stored, SPEC_DEFAULTS.capsuleMinWidth) : capsuleWidthOf(widget, stored),
+      h: SPEC_DEFAULTS.titleBarHeight
+    };
   }
   function visualRectOf(id) {
     const rect = rectOf(id);
@@ -3361,6 +3521,8 @@ function createWidgetRuntime(deps) {
     contentSize: (rect) => contentBox(rect),
     rectOf,
     visualRectOf,
+    capsuleWidthOf,
+    reportCapsuleNeed,
     constraintsOf: constraintsFor,
     viewport: () => viewport,
     setViewport,
@@ -3446,39 +3608,59 @@ var import_jsx_runtime10 = require("react/jsx-runtime");
 var BOX_WIDGET_ID = "dshp-widget-kit:box";
 function BoxView({ runtime }) {
   const snapshot = useFramework(runtime);
-  const cards = snapshot.widgets.filter((widget) => widget.presentation === "card");
+  const cards = snapshot.widgets.filter((widget) => widget.presentation === "card" && widget.listedInBox);
+  const openCount = cards.filter((widget) => runtime.isOpen(widget.id)).length;
   return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: styles_module_css_default.box, children: [
-    cards.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: styles_module_css_default.boxEmpty, children: "\u8FD8\u6CA1\u6709\u63D2\u4EF6\u6CE8\u518C\u81EA\u7531\u5361\u7247\u3002" }) : /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: styles_module_css_default.boxList, children: cards.map((widget) => {
-      const title = typeof widget.title === "function" ? widget.title() : widget.title;
-      const open = runtime.isOpen(widget.id);
-      return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: styles_module_css_default.boxRow, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: styles_module_css_default.boxMain, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: styles_module_css_default.boxTitle, children: title }),
-          /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: styles_module_css_default.boxMeta, children: [
-            widget.id,
-            widget.trayIcon ? "" : " \xB7 \u4E0D\u5728\u6D3B\u52A8\u680F"
-          ] })
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
-          import_dsh_client_ui_primitives7.Button,
-          {
-            variant: "ghost",
-            size: "sm",
-            onClick: () => {
-              runtime.toggle(widget.id);
-            },
-            children: open ? "\u6536\u8D77" : "\u6253\u5F00"
-          }
-        )
-      ] }, widget.id);
-    }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: styles_module_css_default.boxHint, children: [
-      "\u4E00\u4E2A\u83DC\u5355\u56FE\u6807\u5C31\u80FD\u6302\u591A\u4E2A\u81EA\u7531\u5361\u7247\uFF1A\u5361\u7247\u672C\u8EAB\u8BBE ",
-      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("code", { children: "trayIcon: false" }),
-      "\uFF0C\u8FD9\u91CC\u7528",
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: styles_module_css_default.boxHead, children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: styles_module_css_default.boxHint, children: "\u70B9\u300C\u6253\u5F00\u300D\u5F39\u51FA\u4E3A\u53EF\u62D6\u52A8\u5361\u7247\uFF0C\u4F4D\u7F6E\u4E0E\u5C3A\u5BF8\u4F1A\u8BB0\u4F4F\u3002" }) }),
+    cards.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: styles_module_css_default.boxEmpty, children: [
+      "\u8FD8\u6CA1\u6709\u5361\u7247\u58F0\u660E\u6536\u5F55\u3002\u5361\u7247\u9ED8\u8BA4\u4E0D\u8FDB\u8FD9\u4E2A\u83DC\u5355\uFF1A\u5199 ",
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("code", { children: "listedInBox: true" }),
+      "\uFF08\u5E76\u53EF\u540C\u65F6\u5199",
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("code", { children: "ctx.widgets.toggle(id)" }),
-      " \u5F00\u5173\uFF08\u53EF\u4EE5\u540C\u65F6\u5F00\u597D\u51E0\u5F20\uFF09\u3002"
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("code", { children: "trayIcon: false" }),
+      "\uFF09\u624D\u4F1A\u51FA\u73B0\u5728\u8FD9\u91CC\u3002"
+    ] }) : /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: styles_module_css_default.boxList, children: cards.map((widget) => {
+      const title = resolveText(widget.title, widget.id);
+      const open = runtime.isOpen(widget.id);
+      return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
+        "div",
+        {
+          className: styles_module_css_default.boxRow,
+          "data-box-widget": widget.id,
+          "data-open": open ? "1" : "0",
+          children: [
+            /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: styles_module_css_default.boxDot }),
+            /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: styles_module_css_default.boxLabel, title: `${title} \xB7 ${widget.id}`, children: title }),
+            /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+              import_dsh_client_ui_primitives7.Button,
+              {
+                variant: "ghost",
+                size: "sm",
+                onClick: () => {
+                  runtime.toggle(widget.id);
+                },
+                children: open ? "\u6536\u8D77" : "\u6253\u5F00"
+              }
+            )
+          ]
+        },
+        widget.id
+      );
+    }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: styles_module_css_default.boxFoot, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: styles_module_css_default.boxCount, children: `${String(openCount)} / ${String(cards.length)} \u5DF2\u6253\u5F00` }),
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+        import_dsh_client_ui_primitives7.Button,
+        {
+          variant: "ghost",
+          size: "sm",
+          disabled: openCount === 0,
+          onClick: () => {
+            for (const widget of cards) if (runtime.isOpen(widget.id)) runtime.close(widget.id);
+          },
+          children: "\u5168\u90E8\u6536\u8D77"
+        }
+      )
     ] })
   ] });
 }
@@ -3643,8 +3825,10 @@ function createDiagnosticsWidget(runtime) {
     icon: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(RegistryGlyph, {}),
     order: 110,
     presentation: "card",
-    // 调试用卡片：不占活动栏图标，由「组件箱」菜单打开（trayIcon 只允许卡片这么写）
+    // 调试用卡片：不占活动栏图标，由「组件箱」收录（trayIcon 只允许卡片这么写；
+    // 而「被组件箱收录」必须自己声明 —— listedInBox 默认 false，框架不替别人决定入口）
     trayIcon: false,
+    listedInBox: true,
     tray: {
       badge: () => {
         const count = runtime.list().length;
@@ -3943,6 +4127,11 @@ function apply(ctx) {
   } catch (error) {
     logError("[dshp-widget-kit] \u53D1\u5E03 widgets \u670D\u52A1\u5931\u8D25\uFF0C\u522B\u7684\u63D2\u4EF6\u5C06\u65E0\u6CD5\u6CE8\u518C\u7EC4\u4EF6\uFF1A", error);
   }
+  try {
+    ctx.effect(() => runtime.register(createBoxWidget(runtime)), "dshp-widget-kit: box widget");
+  } catch (error) {
+    logError("[dshp-widget-kit] \u6CE8\u518C\u300C\u7EC4\u4EF6\u7BB1\u300D\u5931\u8D25\uFF1A", error);
+  }
   const referenceDisposers = [];
   const syncReferenceWidgets = (enabled) => {
     while (referenceDisposers.length > 0) {
@@ -3958,11 +4147,6 @@ function apply(ctx) {
       referenceDisposers.push(runtime.register(clockWidget));
     } catch (error) {
       logError("[dshp-widget-kit] \u6CE8\u518C\u53C2\u8003\u7EC4\u4EF6\u300C\u65F6\u949F\u300D\u5931\u8D25\uFF1A", error);
-    }
-    try {
-      referenceDisposers.push(runtime.register(createBoxWidget(runtime)));
-    } catch (error) {
-      logError("[dshp-widget-kit] \u6CE8\u518C\u53C2\u8003\u7EC4\u4EF6\u300C\u7EC4\u4EF6\u7BB1\u300D\u5931\u8D25\uFF1A", error);
     }
     try {
       referenceDisposers.push(runtime.register(createDiagnosticsWidget(runtime)));

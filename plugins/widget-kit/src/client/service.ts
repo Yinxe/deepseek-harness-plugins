@@ -15,6 +15,7 @@ import { FRAMEWORK_VERSION, SPEC_DEFAULTS, SPEC_VERSION, normalizeDescriptor } f
 import {
   applyResize,
   bringToFront,
+  capsuleWidth,
   clampRect,
   contentBox,
   containRect,
@@ -127,11 +128,22 @@ export interface WidgetRuntime {
   /** 框架自己改尺寸（菜单预设 / 恢复默认）：不受内容回环防护限制。 */
   resizeTo(id: string, next: { w?: number | undefined; h?: number | undefined }): void;
   /**
-   * 卡片**看起来**占的那块矩形：最小化时是那枚胶囊的实际尺寸（由 Card 量出来回报），
+   * 卡片**看起来**占的那块矩形：最小化时是那枚胶囊的实际尺寸（由 Card 量出来的标题宽度算出来），
    * 否则就是布局里存的矩形。拖动起点、键盘移动、吸附对象、视口夹紧都用它 ——
    * 但布局里存的 `w/h`（展开尺寸）不动，还原时原样回来。
    */
   visualRectOf(id: string): Rect;
+  /**
+   * 最小化胶囊的宽度（px）：装得下标题与控件，并夹在 `[地板, storedWidth]` 之间 ——
+   * **不是固定压到某个宽度**，标题才不会被挤成省略号（见 `docs/widget-spec.md` §5.1）。
+   * `Card` 渲染胶囊与运行时算几何都走它，两边永远同一个数。
+   */
+  capsuleWidthOf(widget: NormalizedWidget, storedWidth: number): number;
+  /**
+   * `Card` 量到「胶囊需要多宽」之后回报（px，量的是整条标题栏的自然宽度，见 `src/client/measure.ts`）。
+   * 只影响最小化胶囊的宽度；量不到时不必调用 —— 胶囊退化成地板宽度。
+   */
+  reportCapsuleNeed(id: string, width: number): void;
   /** 在视口里居中（菜单「居中」）。 */
   center(id: string): void;
   sizeClassOf(widget: NormalizedWidget, rect: Rect): SizeClass;
@@ -199,6 +211,15 @@ function defaultConstraints(): RectConstraints {
 export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   const registry = new Map<string, NormalizedWidget>();
   const anchors = new Map<string, HTMLElement | null>();
+  /**
+   * 各卡片**量出来的胶囊所需宽度**（px，由 `Card` 量整条标题栏的自然宽度后回报）。
+   *
+   * 这是「最小化胶囊宽度自适应」的唯一输入：胶囊宽度 = clamp(它, 地板, 布局宽度) —— 见
+   * `geometry.capsuleWidth`。**不在这里做任何「内边距 + 标题 + 按钮」的加法**：那种算法只要有一处
+   * 常量与真实排版不一致就会偏窄，而偏窄的表现正是「折叠后标题被省略号截掉」。
+   * 只存内存、不落盘：它是渲染的产物，不是用户的布局。
+   */
+  const capsuleNeeds = new Map<string, number>();
   /** 上一次「真挂上」的锚点元素：用来区分「新挂载」与「同一次 commit 里的 detach + attach」。 */
   const lastAnchors = new Map<string, HTMLElement>();
 
@@ -477,6 +498,11 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
         transientOrigin = null;
       }
       delete badges[value.id];
+      // 量出来的宽度是渲染的派生值：组件不在了就丢掉。**重新注册必须有新的测量落地** ——
+      // `Card` 的 effect 依赖里带着 `widget` 对象，同 id 重注册会拿到新对象、重新量一次；
+      // 早先版本只依赖 `widget.id`，于是「卸载删掉 + 同 id 重注册不动 effect」= 卡片永远停在地板
+      // 宽度上，标题被截成两个字（这就是「最小化后还是被压缩省略」的直接原因）。
+      capsuleNeeds.delete(value.id);
       // **卸载不动本机布局**（这是刻意的）：插件热重载 / 暂时停用 / 开发中构建失败都会走到这里，
       // 早先版本在这条路径上 `pruneId` 把卡片、托盘顺序、隐藏/禁用、层叠顺序、内容面目标全删了 ——
       // 于是每改一次代码布局就被重置一次。记录按 id 保存，重新注册回来时原地恢复；
@@ -492,6 +518,7 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
       title: typeof widget.title === 'function' ? widget.title() : widget.title,
       owner: widget.owner,
       presentation: widget.presentation,
+      listedInBox: widget.listedInBox,
     }));
   }
 
@@ -859,15 +886,48 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
   }
 
   /**
-   * 最小化胶囊的尺寸：宽 = `min(布局里的宽度, SPEC_DEFAULTS.minimizedWidth)`，高 = 标题栏高度。
+   * `Card` 量到「胶囊需要多宽」之后回报（px，量的是整条标题栏的自然宽度）。
    *
-   * 与 `Card` 渲染时用的**同一个算式**（都读 SPEC_DEFAULTS）：渲染与几何因此永远一致，
+   * 只影响**最小化胶囊**的宽度：展开态一个像素都不动，所以没最小化时不惊动订阅者。
+   * 宽度不是「用户数据」，只存内存；组件卸载时连同记录一起删（见 `register` 的 disposer）。
+   */
+  function reportCapsuleNeed(id: string, width: number): void {
+    if (!Number.isFinite(width) || width <= 0) return;
+    const next = Math.round(width);
+    if (capsuleNeeds.get(id) === next) return;
+    capsuleNeeds.set(id, next);
+    // 展开态下宽度不影响任何几何：不必 publish（那会让整层卡片白重渲染一次）
+    if (isCollapsed(id)) publish();
+  }
+
+  /**
+   * 最小化胶囊的宽度（px）：夹在 `[地板, 布局宽度]` 之间、装得下标题与控件的宽度。
+   *
+   * 与 `Card` 渲染时用的是**同一个算式**（都走 `geometry.capsuleWidth` 与同一份测量值），
+   * 所以渲染与几何永远一致，不需要「先渲染、量出来、再回报尺寸」那条回路。
+   * 布局里存的展开 `w/h` 一个字节都不动。
+   */
+  function capsuleWidthOf(widget: NormalizedWidget, storedWidth: number): number {
+    return capsuleWidth({ stored: storedWidth, need: capsuleNeeds.get(widget.id) });
+  }
+
+  /**
+   * 最小化胶囊的尺寸：宽 = `capsuleWidthOf`（装得下标题与控件，夹在布局宽度内），高 = 标题栏高度。
+   *
+   * 与 `Card` 渲染时用的**同一个算式**（两边都调 `capsuleWidthOf`）：渲染与几何因此永远一致，
    * 不需要「先渲染、量出来、再回报」那条回路（那条回路会在第一帧给出不一致的尺寸）。
    */
   function collapsedSize(id: string): Size {
     const card = state.cards[id];
     const stored = card?.w ?? SPEC_DEFAULTS.cardDefaultSize.w;
-    return { w: Math.min(stored, SPEC_DEFAULTS.minimizedWidth), h: SPEC_DEFAULTS.titleBarHeight };
+    const widget = widgetOf(id);
+    return {
+      w:
+        widget === undefined
+          ? Math.min(stored, SPEC_DEFAULTS.capsuleMinWidth)
+          : capsuleWidthOf(widget, stored),
+      h: SPEC_DEFAULTS.titleBarHeight,
+    };
   }
 
   /** 卡片看起来占的矩形（见 `WidgetRuntime.visualRectOf`）。 */
@@ -1208,6 +1268,8 @@ export function createWidgetRuntime(deps: RuntimeDeps): WidgetRuntime {
     contentSize: (rect) => contentBox(rect),
     rectOf,
     visualRectOf,
+    capsuleWidthOf,
+    reportCapsuleNeed,
     constraintsOf: constraintsFor,
     viewport: () => viewport,
     setViewport,

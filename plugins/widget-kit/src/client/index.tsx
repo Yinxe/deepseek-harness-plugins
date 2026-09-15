@@ -130,7 +130,17 @@ export function apply(ctx: ClientContext): void {
     logError('[dshp-widget-kit] 发布 widgets 服务失败，别的插件将无法注册组件：', error);
   }
 
-  // ── 2. 参考组件（可在设置里关掉）──────────────────────────────────────
+  // ── 2. 组件箱：框架能力，**不是**参考组件 ─────────────────────────────
+  // 它是「声明了 listedInBox: true 的卡片」的统一入口，所以必须与「装载参考组件」偏好无关：
+  // 关掉参考组件只是不注册时钟 / 诊断这些示例，而 `trayIcon: false + listedInBox: true` 的卡片
+  // 只有这一个入口 —— 跟着参考组件一起消失的话，那些卡片就彻底够不着了。
+  try {
+    ctx.effect(() => runtime.register(createBoxWidget(runtime)), 'dshp-widget-kit: box widget');
+  } catch (error) {
+    logError('[dshp-widget-kit] 注册「组件箱」失败：', error);
+  }
+
+  // ── 3. 参考组件（可在设置里关掉）──────────────────────────────────────
   const referenceDisposers: Array<() => void> = [];
   const syncReferenceWidgets = (enabled: boolean): void => {
     while (referenceDisposers.length > 0) {
@@ -146,11 +156,6 @@ export function apply(ctx: ClientContext): void {
       referenceDisposers.push(runtime.register(clockWidget));
     } catch (error) {
       logError('[dshp-widget-kit] 注册参考组件「时钟」失败：', error);
-    }
-    try {
-      referenceDisposers.push(runtime.register(createBoxWidget(runtime)));
-    } catch (error) {
-      logError('[dshp-widget-kit] 注册参考组件「组件箱」失败：', error);
     }
     try {
       referenceDisposers.push(runtime.register(createDiagnosticsWidget(runtime)));
@@ -186,7 +191,7 @@ export function apply(ctx: ClientContext): void {
     logError('[dshp-widget-kit] 注册参考组件清理失败：', error);
   }
 
-  // ── 3. 宿主偏好 + 启动后清理历史残留 ──────────────────────────────────
+  // ── 4. 宿主偏好 + 启动后清理历史残留 ──────────────────────────────────
   try {
     ctx.effect(() => {
       let cancelled = false;
@@ -228,7 +233,7 @@ export function apply(ctx: ClientContext): void {
     logError('[dshp-widget-kit] 注册偏好兜底失败：', error);
   }
 
-  // ── 4. 视口 / 徽标调度 ────────────────────────────────────────────────
+  // ── 5. 视口 / 徽标调度 ────────────────────────────────────────────────
   try {
     ctx.effect(() => {
       if (typeof window === 'undefined') return () => {};
@@ -260,7 +265,7 @@ export function apply(ctx: ClientContext): void {
     logError('[dshp-widget-kit] 注册徽标清理失败：', error);
   }
 
-  // ── 5. 三个槽位 ───────────────────────────────────────────────────────
+  // ── 6. 三个槽位 ───────────────────────────────────────────────────────
   try {
     ctx.effect(
       () =>
@@ -320,7 +325,7 @@ export function apply(ctx: ClientContext): void {
     logError('[dshp-widget-kit] 注册设置节失败，设置页看不到小组件配置：', error);
   }
 
-  // ── 6. 卸载前把本机布局落盘 ──────────────────────────────────────────
+  // ── 7. 卸载前把本机布局落盘 ──────────────────────────────────────────
   try {
     ctx.effect(
       () => () => {

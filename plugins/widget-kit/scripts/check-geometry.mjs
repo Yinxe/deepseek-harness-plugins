@@ -14,6 +14,8 @@
 
 import assert from 'node:assert/strict';
 import {
+  CAPSULE_MIN_WIDTH,
+  CAPSULE_SLACK,
   CASCADE_STEP,
   CONTENT_PADDING,
   RESIZE_DIRS,
@@ -22,11 +24,14 @@ import {
   TITLE_BAR_HEIGHT,
   applyResize,
   bringToFront,
+  capsuleOverflowFix,
+  capsuleWidth,
   clampRect,
   clampSize,
   containRect,
   contentBox,
   defaultRect,
+  headerActions,
   isSameRect,
   maxSizeFor,
   sizeClassOf,
@@ -51,6 +56,58 @@ check('constants', () => {
   assert.equal(SNAP_GAP, SPEC_DEFAULTS.snapGap, 'snapGap 漂移');
   assert.equal(SNAP_DISTANCE, SPEC_DEFAULTS.snapDistance, 'snapDistance 漂移');
   assert.equal(CASCADE_STEP, SPEC_DEFAULTS.cascadeStep, 'cascadeStep 漂移');
+  // 胶囊地板宽度：geometry 与 SPEC_DEFAULTS 必须一致
+  // （要装下标题需要多宽是量出来的，不再有第二套常量会漂移）
+  assert.equal(CAPSULE_MIN_WIDTH, SPEC_DEFAULTS.capsuleMinWidth, 'capsuleMinWidth 漂移');
+  assert.ok(CAPSULE_SLACK >= 2 && CAPSULE_SLACK <= 12, `胶囊余量 ${String(CAPSULE_SLACK)}px 离谱`);
+});
+
+// ── 标题栏按钮的可见性（`Card` 的 JSX 只读这一份判定） ──────────────────
+check('headerActions', () => {
+  assert.deepEqual(headerActions({ locked: false, minimizable: true, closable: true }), {
+    lock: true,
+    minimize: true,
+    menu: true,
+    close: true,
+  });
+  // 锁定后只剩「解锁 + ⋯」（最小化 / 关闭进菜单）
+  assert.deepEqual(headerActions({ locked: true, minimizable: true, closable: true }), {
+    lock: true,
+    minimize: false,
+    menu: true,
+    close: false,
+  });
+  // 描述符关掉的按钮不渲染：少一个按钮，量出来的胶囊也就窄一点（宽度是量出来的，不是数的）
+  assert.equal(headerActions({ locked: false, minimizable: false, closable: true }).minimize, false);
+  assert.equal(headerActions({ locked: false, minimizable: true, closable: false }).close, false);
+  assert.equal(headerActions({ locked: false, minimizable: false, closable: false }).close, false);
+});
+
+// ── 胶囊最终宽度：地板 ↔ 布局宽度 ───────────────────────────────────────
+check('capsuleWidth', () => {
+  // 需要很窄：地板宽度说了算（再短也给得出手）
+  assert.equal(capsuleWidth({ stored: 480, need: 120 }), CAPSULE_MIN_WIDTH);
+  // 需要更宽：宽度跟着量到的需要长（+ 余量），不固定压在 160（这正是「标题被挤压」的病根）
+  assert.equal(capsuleWidth({ stored: 480, need: 312 }), 312 + CAPSULE_SLACK);
+  assert.ok(capsuleWidth({ stored: 480, need: 312 }) > CAPSULE_MIN_WIDTH);
+  // 余量只加在「量到」的值上：没量到就老实退回地板值，不凭空变宽
+  assert.equal(capsuleWidth({ stored: 480, need: undefined }), CAPSULE_MIN_WIDTH);
+  // 上限 = 用户自己选的展开宽度：胶囊不比卡片宽
+  assert.equal(capsuleWidth({ stored: 280, need: 500 }), 280);
+  // 还没量到（undefined）：退化成地板宽度，而不是 0 宽
+  assert.equal(capsuleWidth({ stored: 480, need: undefined }), CAPSULE_MIN_WIDTH);
+  assert.equal(capsuleWidth({ stored: 480, need: Number.NaN }), CAPSULE_MIN_WIDTH);
+  // 布局宽度比地板还窄（历史记录）：也不得超过它自己
+  assert.equal(capsuleWidth({ stored: 120, need: 400 }), 120);
+  // 脏输入：非有限 / 非正的 stored 退回地板宽度
+  assert.equal(capsuleWidth({ stored: Number.NaN, need: 400 }), CAPSULE_MIN_WIDTH);
+  assert.equal(capsuleWidth({ stored: 0, need: 400 }), CAPSULE_MIN_WIDTH);
+  // 同一份输入永远同一个数（渲染与几何两边都调它）
+  assert.equal(capsuleWidth({ stored: 480, need: 312 }), capsuleWidth({ stored: 480, need: 312 }));
+  // 单调：标题越宽，胶囊越宽（在夹紧之前）
+  assert.ok(capsuleWidth({ stored: 480, need: 200 }) <= capsuleWidth({ stored: 480, need: 240 }));
+  // 取整：写进 style 的必须是整数
+  assert.equal(capsuleWidth({ stored: 480, need: 312.6 }) % 1, 0);
 });
 
 // ── clampSize ───────────────────────────────────────────────────────────
@@ -280,6 +337,24 @@ check('snapRect: 多张邻卡时各轴取最近的候选', () => {
   const snapped = snapRect(target, [a, b], VP);
   assert.equal(snapped.x, 300 + SNAP_GAP, 'x 贴 a 右缘（也是 b 的左缘）');
   assert.equal(snapped.y, 0, 'y 贴视口上缘');
+});
+
+// ── 兜底补差：标题仍被省略时补一次，且不可能振荡 ────────────────────────
+check('capsuleOverflowFix', () => {
+  // 没溢出 / 溢出非法 → 不补
+  assert.equal(capsuleOverflowFix({ need: 200, overflow: 0, capsule: 206, layoutWidth: 480 }), null);
+  assert.equal(capsuleOverflowFix({ need: 200, overflow: Number.NaN, capsule: 206, layoutWidth: 480 }), null);
+  assert.equal(capsuleOverflowFix({ need: 0, overflow: 5, capsule: 6, layoutWidth: 480 }), null);
+  // 真的溢出了（量到的宽度仍不够）→ 补上溢出量 + 1px
+  assert.equal(capsuleOverflowFix({ need: 200, overflow: 4, capsule: 206, layoutWidth: 480 }), 205);
+  // 已经顶到布局宽度（被上限卡住）→ 不补：否则回报值会无限增长
+  assert.equal(capsuleOverflowFix({ need: 400, overflow: 9, capsule: 360, layoutWidth: 360 }), null);
+  // 单调有界：每次补出来的值都比原来大，且不会超过「布局宽度」这个上限的量级
+  const fixed = capsuleOverflowFix({ need: 200, overflow: 4, capsule: 206, layoutWidth: 480 });
+  assert.ok(fixed > 200);
+  assert.ok(capsuleWidth({ stored: 480, need: fixed }) >= capsuleWidth({ stored: 480, need: 200 }));
+  // 补完一次之后通常就不再需要补：模拟「胶囊跟着变宽 → 溢出归零」
+  assert.equal(capsuleOverflowFix({ need: fixed, overflow: 0, capsule: 480, layoutWidth: 480 }), null);
 });
 
 // ── z 序 ────────────────────────────────────────────────────────────────

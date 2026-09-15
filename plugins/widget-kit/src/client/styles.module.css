@@ -619,49 +619,77 @@
   container-type: inline-size;
 }
 
-/* ── 参考组件：组件箱（菜单里挂多个自由卡片） ─────────────────────────── */
+/* ── 组件箱：自由卡片的统一入口（只列声明过 listedInBox 的卡片） ──────── */
 
 .box {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+}
+
+.boxHead {
+  display: flex;
+  align-items: center;
 }
 
 .boxList {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 
+/* 一行 = 状态点 + 标题 + 开合按钮：扫一眼颜色就知道哪几张开着（与 token-meter 的菜单同构） */
 .boxRow {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
+  padding: 5px 6px;
   border-radius: 8px;
+  min-width: 0;
+}
+
+.boxRow:hover {
   background: var(--dsw-alias-bg-layer-2);
 }
 
-.boxMain {
-  flex: 1;
+/* 状态点：开着 = 业务色实心，收起 = 中性描边 */
+.boxDot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: transparent;
+}
+
+.boxRow[data-open='1'] .boxDot {
+  border-color: var(--dsw-alias-state-business-primary);
+  background: var(--dsw-alias-state-business-primary);
+}
+
+.boxLabel {
+  flex: 1 1 auto;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.boxTitle {
   font-size: 12px;
+  line-height: 18px;
   color: var(--dsw-alias-label-primary);
-}
-
-.boxMeta {
-  font-family: var(--dsw-font-mono);
-  font-size: 11px;
-  color: var(--dsw-alias-label-caption);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.boxFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid var(--dsw-alias-border-l1);
+  padding-top: 8px;
+}
+
+.boxCount {
+  font-size: 11px;
+  color: var(--dsw-alias-label-caption);
 }
 
 .boxHint {
@@ -672,7 +700,18 @@
 
 .boxEmpty {
   font-size: 12px;
+  line-height: 18px;
   color: var(--dsw-alias-label-caption);
+}
+
+/* 空态里要写出字段名（`listedInBox: true`）：等宽 + 淡底，读起来是「字段」而不是正文 */
+.boxEmpty code {
+  font-family: var(--dsw-font-mono);
+  font-size: 11px;
+  padding: 0 3px;
+  border-radius: 4px;
+  background: var(--dsw-alias-bg-layer-2);
+  color: var(--dsw-alias-label-secondary);
 }
 
 /* ── 设置节 ───────────────────────────────────────────────────────────── */

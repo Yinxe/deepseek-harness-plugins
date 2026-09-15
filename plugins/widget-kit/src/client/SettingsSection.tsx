@@ -173,7 +173,7 @@ export function SettingsSection({
         </SettingRow>
         <SettingRow
           title="参考组件"
-          hint="本插件自带的四个规范示例（不是业务）：两张卡片「时钟 / 组件诊断」，两个小面板「快速设置（点击展开）/ 状态速览（悬停展开）」。"
+          hint="本插件自带的四个规范示例（不是业务）：两张卡片「时钟 / 组件诊断」，两个小面板「快速设置（点击展开）/ 状态速览（悬停展开）」。「组件箱」是框架的统一入口，不在此列、始终装载。"
         >
           <Switch
             checked={prefs.referenceWidgets}

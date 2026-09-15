@@ -153,6 +153,13 @@ export interface WidgetDescriptor<D = unknown> {
    * 「一个宿主插件只注册一个迷你菜单图标，菜单里同时挂多个自由卡片」。
    */
   trayIcon?: boolean;
+  /**
+   * 允许被框架的统一入口「组件箱」收录（默认 `false` = 不收录）。只有 `presentation: 'card'`
+   * 能写。**默认不收录是有意的**：入口归卡片的所有者决定 —— 想自建菜单就只写 `trayIcon: false`
+   * 再注册一个 popover（`@dshp/token-meter` 的 `token-meter:menu` 就是这么做的），框架不替别人
+   * 做这个决定。声明了才进箱，`trayIcon: false` + `listedInBox: true` = 「让组件箱替我挂出来」。
+   */
+  listedInBox?: boolean;
   tray?: WidgetTrayOptions;
   content?: WidgetContentOptions<D>;
   card?: WidgetCardOptions;
@@ -166,6 +173,8 @@ export interface WidgetSummary {
   title: string;
   owner: string;
   presentation: 'tray' | 'popover' | 'card';
+  /** 是否声明了「可被组件箱收录」——别的聚合入口也能按同一条声明决定收不收。 */
+  listedInBox: boolean;
 }
 
 /** 客户端服务 `ctx.widgets`（由本插件 `ctx.reflect.provide('widgets', …)` 发布）。 */

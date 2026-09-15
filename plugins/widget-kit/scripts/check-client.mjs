@@ -12,8 +12,8 @@
  *   6. 同 id 重注册 = 覆盖（HMR / 重复 apply 的语义）；
  *   7. **渲染一遍**：托盘与卡片层的组件树能真的跑出元素（用 stub 的 React，不画像），
  *      卡片外层几何等于运行时给的矩形 —— 这一步能在没有浏览器的情况下抓住渲染期崩溃；
- *   8. **刷新后恢复**（首帧会话绑定不算切会话）、**最小化折叠成标题栏**、**位置锁定**、
- *      **启用 / 禁用**与**常驻 popover**；
+ *   8. **刷新后恢复**（首帧会话绑定不算切会话）、**最小化胶囊**（宽度随标题自适应、量不到时用地板宽度、
+ *      宽度随锁定状态与按钮数变化）、**位置锁定**、**启用 / 禁用**与**常驻 popover**；
  *   9. **拖动模型**：自由跟手 + 允许互相覆盖、吸附候选只画预览虚框、松手才吸附；
  *      手势的 window 兜底监听与「左键已松开」的收尾（治「卡 / 断触 / 松了还在拖」）。
  *
@@ -22,6 +22,9 @@
 
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+// 胶囊宽度测量是纯函数（只碰传入的元素、它的克隆与 document），直接 import 源码单测它 ——
+// 它在无头环境里必须老实返回 null：胶囊据此退回地板宽度，而不是拿猜的宽度把标题截掉。
+import { measureHeaderWidth, textOverflowPx } from '../src/client/measure.ts';
 
 /** 版本从 package.json 读（不再手写常量：bump 版本时这里以前会漏改成红色）。 */
 const PKG_VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
@@ -669,7 +672,7 @@ function makeCard(id, title) {
 const cardA = makeCard('demo:persist', '持久卡片');
 const cardB = makeCard('demo:lock', '锁定卡片');
 const disposeA = service.register(cardA);
-const disposeB = service.register(cardB);
+let disposeB = service.register(cardB);
 // 这一段会注册不少组件，把可见图标上限抬上去 —— 否则断言的对象都被挤进溢出菜单了
 void runtime.setPrefs({ maxVisibleIcons: 12 });
 
@@ -736,16 +739,17 @@ const restoredCard = cardNodeOf('demo:lock');
 assert.equal(restoredCard.props.style.height, 240, '还原必须回到原来的高度');
 assert.equal(restoredCard.props['data-minimized'], 'false');
 
-// 10.3b 最小化 = 胶囊：宽度收缩，但**布局里的展开尺寸不动**
+// 10.3b 最小化 = 胶囊：宽度**按标题与控件算**（而不是固定压到某个宽度），布局里的展开尺寸不动
 runtime.minimize('demo:lock');
 const capsule = runtime.rectOf('demo:lock');
 assert.equal(runtime.getSnapshot().layout.cards['demo:lock'].minimized, true, '前置：先最小化');
-const capsuleWidth = Math.min(capsule.w, 160); // SPEC_DEFAULTS.minimizedWidth
+// 无头环境没有 DOM：Card 量不到「胶囊需要多宽」、也就没回报 → 用地板宽度兜底（而不是算出一枚 0 宽胶囊）
+let capsuleWidth = 160; // SPEC_DEFAULTS.capsule.minWidth
 assert.deepEqual(runtime.rectOf('demo:lock'), capsule, '胶囊尺寸不得改动布局里的矩形');
 assert.deepEqual(
   runtime.visualRectOf('demo:lock'),
   { x: capsule.x, y: capsule.y, w: capsuleWidth, h: 36 },
-  '看起来占的是一枚 160×36 的胶囊（最小化中）',
+  '还没量到标题时是一枚 160×36 的地板胶囊',
 );
 // 键盘移动：只改位置，展开尺寸留着
 runtime.nudge('demo:lock', 10, 6);
@@ -771,13 +775,56 @@ assert.equal(capsuleSnap, null, '此时没有手势，也就没有预览');
 const capsuleNode = cardNodeOf('demo:lock');
 assert.equal(capsuleNode.props.style.width, capsuleWidth, '最小化时必须给显式宽度（不能用 auto）');
 assert.equal(capsuleNode.props.style.height, 36, '最小化时高度 = 标题栏高度');
-assert.equal(capsuleNode.props.style.maxWidth, undefined, '不再用 max-width 撑内容：宽度是算出来的长度');
-// 比布局宽度还窄的卡片：胶囊宽度不得超过它自己
+assert.equal(capsuleNode.props.style.maxWidth, undefined, '不用 max-width 撑内容：宽度是算出来的长度');
+
+// 10.3c 量到「胶囊需要多宽」之后：胶囊**照它自适应**（不再固定压在 160px 上把标题挤成省略号）
+// 运行时不做任何「内边距 + 标题 + 按钮」的加法：回报多少就是需要多少，它只加余量 + 夹紧。
+// 余量 6px 见 geometry.CAPSULE_SLACK（整数取整 / 边框 / 字体换装的 1px 级误差）。
+runtime.reportCapsuleNeed('demo:lock', 244);
+assert.equal(
+  runtime.visualRectOf('demo:lock').w,
+  250,
+  '胶囊宽度 = 量到的需要 + 余量（再夹在 [地板, 布局宽度] 之间）',
+);
+assert.ok(runtime.visualRectOf('demo:lock').w > 160, '需要比地板宽时胶囊就得比地板宽 —— 否则标题又被挤掉');
+assert.equal(
+  cardNodeOf('demo:lock').props.style.width,
+  runtime.visualRectOf('demo:lock').w,
+  '渲染与几何必须是同一个数（两边都调 runtime.capsuleWidthOf）',
+);
+// 需要更宽 → 胶囊更宽（自适应，不是固定宽度）
+runtime.reportCapsuleNeed('demo:lock', 312);
+assert.equal(runtime.visualRectOf('demo:lock').w, 318);
+// 需要比地板窄 → 回到地板宽度（再短也给得出手，不是无限缩）
+runtime.reportCapsuleNeed('demo:lock', 20);
+assert.equal(runtime.visualRectOf('demo:lock').w, 160, '需要很窄时用地板宽度（地板值本身不加余量）');
+// 上限是用户自己选的展开宽度：需要再大，胶囊也不比卡片宽（多出来的部分才交给省略号）
+runtime.reportCapsuleNeed('demo:lock', 900);
+assert.equal(runtime.visualRectOf('demo:lock').w, capsule.w, '胶囊不得超过布局里的展开宽度');
+// 锁定后标题栏只剩「解锁 + ⋯」→ Card 会重量一次、回报更小的需要；这里验「报小就变窄」
+runtime.reportCapsuleNeed('demo:lock', 272);
+assert.equal(runtime.visualRectOf('demo:lock').w, 278, '回报的需要小了（控件少了），胶囊就窄');
+runtime.reportCapsuleNeed('demo:lock', 312);
+// 卸载 → 重新注册：量到的需要一并丢掉（不许上一版的宽度决定这一版的胶囊）
+disposeB();
+assert.equal(runtime.visualRectOf('demo:lock').w, 160, '卸载后量到的需要一并丢掉，退回地板宽度');
+disposeB = service.register(cardB);
+assert.equal(
+  runtime.visualRectOf('demo:lock').w,
+  160,
+  '重新注册后仍等 Card 重新量（Card 的 effect 依赖里带 widget 对象，重注册会重新量一次）',
+);
+runtime.reportCapsuleNeed('demo:lock', 312);
+assert.equal(runtime.visualRectOf('demo:lock').w, 318, '重新量到之后恢复自适应');
+// 脏输入：负数 / NaN 不得把胶囊算坏（当作没量到）
+runtime.reportCapsuleNeed('demo:lock', Number.NaN);
+runtime.reportCapsuleNeed('demo:lock', -30);
+assert.equal(runtime.visualRectOf('demo:lock').w, 318, '非法宽度不许覆盖已量到的值');
+// 真的改布局宽度：胶囊仍然夹在 [地板, 布局宽度] 里，且不得改动布局里的展开高度
 runtime.resizeTo('demo:lock', { w: 300, h: 240 });
-assert.equal(cardNodeOf('demo:lock').props.style.width, 160, '布局宽度 < 胶囊宽度时，胶囊就用布局宽度');
-// （卡片宽度的地板是 240px > 胶囊宽度，所以「布局比胶囊还窄」实际到不了）
+assert.equal(cardNodeOf('demo:lock').props.style.width, 300, '布局宽度 < 需要宽度时，胶囊就用布局宽度');
 runtime.resizeTo('demo:lock', { w: capsule.w, h: capsule.h });
-assert.equal(cardNodeOf('demo:lock').props.style.width, capsuleWidth);
+assert.equal(cardNodeOf('demo:lock').props.style.width, 318);
 // 还原：展开尺寸必须原样回来
 runtime.restore('demo:lock');
 assert.deepEqual(runtime.rectOf('demo:lock'), { ...capsule, x: 400, y: 300 }, '还原后仍是展开尺寸');
@@ -1372,51 +1419,99 @@ await runtime.setPrefs({
 assert.equal(
   service.list().some((item) => item.id === 'dshp-widget-kit:registry'),
   true,
-  '诊断卡片仍然注册着（只是不占活动栏图标）',
+  '诊断卡片仍然注册着（它 trayIcon:false，靠组件箱收录）',
 );
 assert.equal(
   service.list().some((item) => item.id === 'dshp-widget-kit:box'),
   true,
   '组件箱必须在册',
 );
-// 打开组件箱（临时面板）：内容里每张自由卡片一个开关按钮
+// 摘要里带这个声明：别的聚合入口也能按同一条规则决定收不收，不必读框架内部
+assert.equal(
+  service.list().find((item) => item.id === 'dshp-widget-kit:registry').listedInBox,
+  true,
+  'list() 摘要必须带 listedInBox（诊断卡片声明了收录）',
+);
+assert.equal(
+  service.list().find((item) => item.id === 'dshp-widget-kit:clock').listedInBox,
+  false,
+  '没声明的卡片在摘要里是 false（时钟有自己的活动栏图标，不进箱）',
+);
+// 两张对照卡：都 trayIcon:false，只有一张声明了「可被收录」
+const disposeListed = service.register({
+  id: 'demo:listed',
+  title: '被收录的自由卡片',
+  icon: 'i',
+  presentation: 'card',
+  trayIcon: false,
+  listedInBox: true,
+  content: { render: () => null },
+});
+const disposeUnlisted = service.register({
+  id: 'demo:unlisted',
+  title: '没声明的自由卡片',
+  icon: 'i',
+  presentation: 'card',
+  trayIcon: false,
+  content: { render: () => null },
+});
 service.close('dshp-widget-kit:clock');
 service.close('dshp-widget-kit:registry');
 service.toggle('dshp-widget-kit:box');
 assert.equal(service.isOpen('dshp-widget-kit:box'), true, '组件箱要能打开');
-const boxNode = collect(render(layerEntry.component({}))).find(
-  (node) => node.props['data-widget'] === 'dshp-widget-kit:box',
-);
 assert.ok(panelNodeOf('dshp-widget-kit:box'), '组件箱必须渲染出面板');
-// 每张自由卡片一行：行里有 id 文案与开关按钮（官方 primitives 在替身里是 `{ type: 'Button' }`）
-const boxRows = collect(boxNode).filter(
-  (node) => typeof node.props.className === 'string' && node.props.className.includes('boxRow'),
-);
-assert.ok(boxRows.length >= 2, `组件箱至少要列出两张卡片（实际 ${String(boxRows.length)} 行）`);
-const boxToggleFor = (id) => {
-  const row = boxRows.find((node) =>
-    collect(node).some(
-      (child) =>
-        typeof child.props.className === 'string' &&
-        child.props.className.includes('boxMeta') &&
-        String(child.props.children).includes(id),
-    ),
+const boxRows = () =>
+  collect(panelNodeOf('dshp-widget-kit:box')).filter(
+    (node) => typeof node.props.className === 'string' && node.props.className.includes('boxRow'),
   );
+assert.deepEqual(
+  boxRows()
+    .map((node) => node.props['data-box-widget'])
+    .toSorted(),
+  ['demo:listed', 'dshp-widget-kit:registry'],
+  '组件箱只列**声明过 listedInBox** 的卡片：没声明的自由卡片不列，有图标的时钟也不列',
+);
+const boxToggleFor = (id) => {
+  const row = boxRows().find((node) => node.props['data-box-widget'] === id);
   assert.ok(row, `组件箱里应有「${id}」这一行`);
   const button = collect(row).find((node) => node.type === 'Button' && node.props.onClick);
   assert.ok(button, `「${id}」那一行要有开关按钮`);
   return button;
 };
-boxToggleFor('dshp-widget-kit:clock').props.onClick();
-assert.equal(service.isOpen('dshp-widget-kit:clock'), true, '从菜单里点一下就该打开那张卡片');
+boxToggleFor('demo:listed').props.onClick();
+assert.equal(service.isOpen('demo:listed'), true, '从菜单里点一下就该打开那张卡片');
 boxToggleFor('dshp-widget-kit:registry').props.onClick();
 assert.equal(
   service.isOpen('dshp-widget-kit:registry'),
   true,
   '第二张卡片要能**同时**打开（trayIcon:false 的卡片只能这样打开）',
 );
-assert.equal(service.isOpen('dshp-widget-kit:clock'), true, '两张卡片互不影响，同时开着');
+assert.equal(service.isOpen('demo:listed'), true, '两张卡片互不影响，同时开着');
+// 状态点：开着的那一行 data-open=1（只看颜色就能扫出哪几张开着）
+assert.equal(
+  boxRows().find((node) => node.props['data-box-widget'] === 'demo:listed').props['data-open'],
+  '1',
+  '开着的行必须带 data-open=1',
+);
+// 页脚：已打开计数 + 全部收起
+const boxFooter = () =>
+  collect(panelNodeOf('dshp-widget-kit:box'))
+    .filter((node) => typeof node.props.className === 'string' && node.props.className.includes('boxCount'))
+    .map((node) => String(node.props.children))
+    .join('');
+assert.equal(boxFooter(), '2 / 2 已打开');
+const closeAllButton = () =>
+  collect(panelNodeOf('dshp-widget-kit:box')).find(
+    (node) => node.type === 'Button' && node.props.children === '全部收起',
+  );
+assert.ok(closeAllButton(), '页脚要有「全部收起」');
+closeAllButton().props.onClick();
+assert.equal(service.isOpen('demo:listed'), false, '「全部收起」要把开着的卡片收掉');
+assert.equal(service.isOpen('dshp-widget-kit:registry'), false);
+assert.equal(boxFooter(), '0 / 2 已打开');
 service.close('dshp-widget-kit:box');
+disposeListed();
+disposeUnlisted();
 
 // 10.13 描述符校验：tray.label / trayIcon 的边界
 const baseTray = { id: 'demo:bad', title: 'T', icon: 'i' };
@@ -1459,6 +1554,40 @@ assert.throws(
 assert.doesNotThrow(
   () => service.register({ ...baseTray, presentation: 'tray', tray: { label: () => 'ok' } })(),
   '函数形式的文字是合法的',
+);
+// listedInBox：只有卡片能声明「可被组件箱收录」
+assert.doesNotThrow(
+  () =>
+    service.register({
+      ...baseTray,
+      presentation: 'card',
+      trayIcon: false,
+      listedInBox: true,
+      content: { render: () => null },
+    })(),
+  '卡片可以声明 listedInBox: true',
+);
+assert.throws(
+  () =>
+    service.register({ ...baseTray, presentation: 'card', listedInBox: 42, content: { render: () => null } }),
+  /必须是 boolean/,
+  'listedInBox 必须是布尔值',
+);
+assert.throws(
+  () =>
+    service.register({
+      ...baseTray,
+      presentation: 'popover',
+      listedInBox: true,
+      content: { render: () => null },
+    }),
+  /只有 presentation: 'card' 能被「组件箱」收录/,
+  'popover 不能被组件箱收录（组件箱列的是卡片）',
+);
+assert.throws(
+  () => service.register({ ...baseTray, presentation: 'tray', listedInBox: true }),
+  /只有 presentation: 'card' 能被「组件箱」收录/,
+  'tray 形态更不能被组件箱收录',
 );
 
 // 10.14 popover 层级：临时（悬停）层压在常驻层之上
@@ -1607,6 +1736,136 @@ disposePinned();
 disposePinnedHover();
 disposeA();
 disposeB();
+
+// 12. 组件箱是**框架能力**，不是参考组件：关掉「装载参考组件」也不得消失 ——
+// 否则「trayIcon:false + listedInBox:true」的卡片（比如第三方插件的自由卡片）会彻底没有入口
+{
+  const sectionEntry = registrations.find((entry) => entry.spec.name === 'settings.section');
+  assert.ok(sectionEntry, '设置节必须注册着（要借它触发参考组件的启停）');
+  const onPrefsApplied = sectionEntry.component({}).props.onPrefsApplied;
+  assert.equal(typeof onPrefsApplied, 'function', '设置节必须能把偏好变化同步给参考组件开关');
+  const disposeAlways = service.register({
+    id: 'demo:always',
+    title: '第三方自由卡片',
+    icon: 'i',
+    presentation: 'card',
+    trayIcon: false,
+    listedInBox: true,
+    content: { render: () => null },
+  });
+  onPrefsApplied({ referenceWidgets: false });
+  assert.equal(
+    service.list().some((item) => item.id === 'dshp-widget-kit:clock'),
+    false,
+    '前置：关掉参考组件后时钟（参考组件）确实被卸载了',
+  );
+  assert.equal(
+    service.list().some((item) => item.id === 'dshp-widget-kit:box'),
+    true,
+    '组件箱必须留在册：它是框架能力，不是参考组件',
+  );
+  assert.equal(
+    service.list().find((item) => item.id === 'demo:always').listedInBox,
+    true,
+    '声明过收录的第三方卡片仍在册',
+  );
+  service.toggle('dshp-widget-kit:box');
+  assert.deepEqual(
+    collect(panelNodeOf('dshp-widget-kit:box'))
+      .filter((node) => node.props['data-box-widget'] !== undefined)
+      .map((node) => node.props['data-box-widget']),
+    ['demo:always'],
+    '关掉参考组件后，组件箱仍然能列出声明过收录的第三方卡片',
+  );
+  service.close('dshp-widget-kit:box');
+  disposeAlways();
+  onPrefsApplied({ referenceWidgets: true });
+}
+
+// 11. 胶囊宽度测量（`measure.ts`）：量的是**整条标题栏**的自然宽度，量不到必须给 null
+// 用一套最小替身（元素 / 克隆 / document / getComputedStyle）把它四条契约钉住：
+// ① 没有 DOM 就返回 null（胶囊退回地板宽度，绝不瞎猜一个偏窄的宽度把标题截掉）；
+// ② 量的是克隆的矩形，向上取整，并加上卡片自己的左右边框；
+// ③ 克隆里先把「最小化会收起的元素」（副标题）按 0 宽处理；④ 克隆一定被摘掉、异常不外泄。
+{
+  /** 最小元素替身：只带 measureHeaderWidth 真正会碰到的成员（注意别用 HTMLElement 相关的全局）。 */
+  const makeNode = (rect) => {
+    const node = {
+      style: {},
+      collapsed: [],
+      removed: 0,
+      parentElement: null,
+      clone: null,
+      append() {},
+      removeAttribute() {},
+      querySelectorAll: () => node.collapsed,
+      getBoundingClientRect: () => rect,
+      remove() {
+        node.removed += 1;
+      },
+      cloneNode: () => node.clone,
+    };
+    return node;
+  };
+  const owner = makeNode({ width: 360 });
+  const header = makeNode({ width: 243.2 });
+  header.parentElement = owner;
+  const subtitle = makeNode({ width: 0 });
+  header.clone = makeNode({ width: 243.2 });
+  header.clone.collapsed = [subtitle];
+
+  assert.equal(measureHeaderWidth(null, 'sub'), null, '没有元素时量不到');
+  assert.equal(
+    measureHeaderWidth(header, 'sub'),
+    null,
+    '没有 document（本无头环境）时必须量不到，不许瞎猜一个宽度',
+  );
+
+  globalThis.document = {};
+  globalThis.getComputedStyle = () => ({
+    borderLeftWidth: '0.5px',
+    borderRightWidth: '0.5px',
+    paddingLeft: '0px',
+    paddingRight: '0px',
+  });
+  assert.equal(
+    measureHeaderWidth(header, 'sub'),
+    245,
+    '量的是标题栏克隆的宽度（243.2 → 244，向上取整）再加卡片自己的左右边框（0.5 + 0.5 → 1）',
+  );
+  assert.equal(subtitle.style.maxWidth, '0', '克隆里的副标题要按 0 宽处理（与最小化状态一致）');
+  assert.equal(header.clone.removed, 1, '探针必须被摘掉，不许留在 DOM 里');
+  // 拿不到类名时不收副标题、也不报错（只是可能多算一点宽度）
+  assert.equal(measureHeaderWidth(header, undefined) !== null, true, '拿不到类名也要能量');
+
+  // 量到 0 宽（元素不可见 / 尺寸没算出来）当作量不到
+  const invisible = makeNode({ width: 0 });
+  invisible.parentElement = owner;
+  invisible.clone = makeNode({ width: 0 });
+  assert.equal(measureHeaderWidth(invisible, 'sub'), null, '0 宽当作量不到');
+  // 抛异常不许把整层卡片带崩
+  const boom = makeNode({ width: 100 });
+  boom.parentElement = owner;
+  boom.cloneNode = () => {
+    throw new Error('元素已经从文档里摘掉了');
+  };
+  assert.equal(measureHeaderWidth(boom, 'sub'), null, '量的时候抛异常不许把整层卡片带崩');
+  // 没有父元素（卡片还没挂上）也当作量不到
+  const orphan = makeNode({ width: 100 });
+  assert.equal(measureHeaderWidth(orphan, 'sub'), null, '没有父元素时量不到');
+  globalThis.document = undefined;
+  assert.equal(measureHeaderWidth(header, 'sub'), null, 'document 被置空后又回到「量不到」');
+  delete globalThis.getComputedStyle;
+
+  // 标题自己的溢出量：兜底补差读的就是它
+  assert.equal(textOverflowPx(null), 0, '没有元素时溢出量 0（当作没溢出）');
+  assert.equal(textOverflowPx({ scrollWidth: 60, clientWidth: 60 }), 0, '刚好放下 = 没溢出');
+  assert.equal(textOverflowPx({ scrollWidth: 64, clientWidth: 60 }), 4, '溢出 4px');
+  assert.equal(textOverflowPx({ scrollWidth: 60, clientWidth: 64 }), 0, '比容器窄不许算成负溢出');
+  assert.equal(textOverflowPx({ scrollWidth: Number.NaN, clientWidth: 60 }), 0, '脏输入当没溢出');
+  assert.equal(textOverflowPx({}), 0, '拿不到尺寸当没溢出');
+}
+
 console.log(
-  'check-client.mjs ok (loader / 服务 / 槽位 / 校验 / 渲染 / popover / 恢复 / 折叠 / 锁定 / 启停 / 吸附 / 手势)',
+  'check-client.mjs ok (loader / 服务 / 槽位 / 校验 / 渲染 / popover / 恢复 / 折叠 / 锁定 / 启停 / 吸附 / 手势 / 胶囊测量)',
 );

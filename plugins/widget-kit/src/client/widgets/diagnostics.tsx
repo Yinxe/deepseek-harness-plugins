@@ -102,8 +102,10 @@ export function createDiagnosticsWidget(runtime: WidgetRuntime): WidgetDescripto
     icon: <RegistryGlyph />,
     order: 110,
     presentation: 'card',
-    // 调试用卡片：不占活动栏图标，由「组件箱」菜单打开（trayIcon 只允许卡片这么写）
+    // 调试用卡片：不占活动栏图标，由「组件箱」收录（trayIcon 只允许卡片这么写；
+    // 而「被组件箱收录」必须自己声明 —— listedInBox 默认 false，框架不替别人决定入口）
     trayIcon: false,
+    listedInBox: true,
     tray: {
       badge: () => {
         const count = runtime.list().length;

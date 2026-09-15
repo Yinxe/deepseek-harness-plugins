@@ -17,7 +17,7 @@ import type { ReactNode } from 'react';
 export const SPEC_VERSION = 1;
 
 /** 框架版本。必须等于 package.json 的 version（check-spec-drift.mjs 比对）。 */
-export const FRAMEWORK_VERSION = '0.10.1';
+export const FRAMEWORK_VERSION = '0.11.0';
 
 /** 命名空间 = 本插件的 settings NS = cordis 行 id = 路由前缀段。 */
 export const NS = 'dshp-widget-kit';
@@ -71,10 +71,14 @@ export const SPEC_DEFAULTS = {
   /** 动效时长（ms）：所有过渡与入场动画用它；`0` = 关闭动效。 */
   motionMs: 300,
   /**
-   * 最小化胶囊的宽度（px）：显式长度（不是 `width: auto`），宽度才能被 transition 平滑插值 ——
-   * 用 `auto` 时浏览器无法在「长度 ↔ auto」之间做动画，最小化会先瞬移再缩高度，观感很跳。
+   * 最小化胶囊的**最小宽度**（px）：再短的标题也给这么宽，免得收成一粒看不清的豆子。
+   *
+   * 胶囊要装下标题与控件**需要多宽是量出来的**（`measure.measureHeaderWidth` 量整条标题栏的自然
+   * 宽度），不在这里按「内边距 + 标题 + 间隙 + 按钮」的常量加法算 —— 那种算法只要有一处常量与真实
+   * 排版不一致（官方按钮换尺寸、锚点外多一层包装、卡片自己有 0.5px 边框）就会偏窄，而偏窄的表现
+   * 正是「折叠后标题被省略号截掉」。这里只留地板值。
    */
-  minimizedWidth: 160,
+  capsuleMinWidth: 160,
   /** 动效可选档位（设置页的「关 / 100 / 200 / 300 / 400 / 500」）。 */
   motionChoices: [0, 100, 200, 300, 400, 500] as const,
   /** 同屏卡片上限；开了第 7 张时自动最小化最旧一张。 */
@@ -241,6 +245,18 @@ export interface WidgetDescriptor<D = unknown> {
    * （`tray` 形态没有图标就没有意义，`popover` 需要图标当锚点）。
    */
   trayIcon?: boolean;
+  /**
+   * 允许被框架的**统一入口**「组件箱」收录（默认 `false` = 不收录）。
+   *
+   * **默认不收录是有意的**：入口归卡片的所有者决定 —— 谁都可以只写 `trayIcon: false` 再自建菜单
+   * （见 `@dshp/token-meter` 的 `token-meter:menu`），框架不替别人做这个决定，更不会把别人的卡片
+   * 当成自己示例菜单的数据源。声明了才进箱：`trayIcon: false` + `listedInBox: true` 表达的正是
+   * 「我没有自己的图标，让组件箱替我挂出来」。
+   *
+   * 只有 `presentation: 'card'` 能写（组件箱列的是卡片）。`ctx.widgets.list()` 的摘要里也带这个标记，
+   * 别的聚合入口可以按同一条声明决定收不收，不需要读框架内部。
+   */
+  listedInBox?: boolean;
   content?: WidgetContentOptions<D>;
   card?: WidgetCardOptions;
   popover?: WidgetPopoverOptions;
@@ -262,6 +278,8 @@ export interface NormalizedWidget {
     label: string | (() => string) | null;
   };
   trayIcon: boolean;
+  /** 是否允许被「组件箱」收录（默认 `false`：入口归卡片所有者决定）。 */
+  listedInBox: boolean;
   content: {
     title: string | (() => string) | null;
     load: ((ctx: WidgetLoadContext) => Promise<unknown>) | null;
@@ -296,6 +314,8 @@ export interface WidgetSummary {
   title: string;
   owner: string;
   presentation: (typeof PRESENTATIONS)[number];
+  /** 是否声明了「可被组件箱收录」——别的聚合入口也能按同一条声明决定收不收。 */
+  listedInBox: boolean;
 }
 
 /** 校验失败：中文、可操作、指出字段与期望。 */
@@ -328,6 +348,17 @@ function readBool(field: string, v: unknown, fallback: boolean): boolean {
   if (v === undefined) return fallback;
   if (typeof v !== 'boolean') throw new WidgetSpecError(field, '必须是布尔值');
   return v;
+}
+
+/**
+ * 解析「可能是字符串、可能是函数」的文本字段（`title` / `subtitle` / `content.title`）。
+ *
+ * `Card` 渲染标题与副标题、运行时算「胶囊要装下多宽的标题」都走它 —— 同一个表达式、
+ * 同一个兜底，两边的判断不会各说各话。
+ */
+export function resolveText(value: string | (() => string) | null | undefined, fallback: string): string {
+  if (value === null || value === undefined) return fallback;
+  return typeof value === 'function' ? value() : value;
 }
 
 /** 宽松语义化版本比较：`0.1.5-rc.1` 这种预发布视为「低于 0.1.5」。 */
@@ -436,6 +467,19 @@ export function normalizeDescriptor(
     throw new WidgetSpecError(
       'trayIcon',
       "只有 presentation: 'card' 能不显示图标（'tray' 没有图标就没有意义，'popover' 需要图标当锚点）",
+    );
+  }
+
+  // ── listedInBox（允许被「组件箱」收录）──
+  const listedInBoxRaw = raw['listedInBox'];
+  if (listedInBoxRaw !== undefined && typeof listedInBoxRaw !== 'boolean') {
+    throw new WidgetSpecError('listedInBox', '必须是 boolean');
+  }
+  const listedInBox = listedInBoxRaw === true;
+  if (listedInBox && frame !== 'card') {
+    throw new WidgetSpecError(
+      'listedInBox',
+      "只有 presentation: 'card' 能被「组件箱」收录（它是自由卡片的统一入口）",
     );
   }
 
@@ -639,6 +683,7 @@ export function normalizeDescriptor(
       label: (labelRaw as string | (() => string) | undefined) ?? null,
     },
     trayIcon,
+    listedInBox,
     content,
     card,
     popover,
@@ -674,6 +719,7 @@ export const SPEC_KEYS = {
     'order',
     'presentation',
     'trayIcon',
+    'listedInBox',
     'tray',
     'content',
     'card',
@@ -695,7 +741,7 @@ export const SPEC_KEYS = {
   content: ['title', 'load', 'refreshMs', 'render'],
   card: ['defaultSize', 'minSize', 'maxSize', 'sizeClassBreakpoints', 'resizable', 'minimizable', 'closable'],
   size: ['w', 'h'],
-  summary: ['id', 'title', 'owner', 'presentation'],
+  summary: ['id', 'title', 'owner', 'presentation', 'listedInBox'],
   box: ['width', 'height'],
   badge: ['text', 'dot', 'tone', 'title'],
   badgeContext: ['sessionId', 'signal', 'frameworkVersion'],

@@ -8,8 +8,9 @@ DeepSeek Harness（DSH）**小组件规范与宿主**：给 Web UI 定一套「�
 框架统一负责加载/错误/陈旧态、轮询节流、错误隔离、z 序、几何夹紧、持久化、键盘与焦点。
 
 > 设计原则：**框架管「窗口」，提供方管「内容」**。本插件**不含任何业务** —— 它只定义契约并提供承载面；
-> 自带的**五个参考组件**是规范示例、可在设置里关掉：两张卡片（时钟 / 组件诊断）+ 三个小面板
-> （组件箱：一菜单多卡片的入口 / 快速设置：点击展开 / 状态速览：悬停展开）。
+> 自带的**四个参考组件**是规范示例、可在设置里关掉：两张卡片（时钟 / 组件诊断）+ 两个小面板
+> （快速设置：点击展开 / 状态速览：悬停展开）。另有**「组件箱」**—— 它不是示例、也不受那个开关影响：
+> 它是框架的**统一入口**，只列**声明过 `listedInBox: true`** 的卡片（默认不收录，见契约 §3）。
 > **内容如何随尺寸变化完全由组件提供方决定**：框架只交事实（`size` / `sizeClass` / `frame` / `minimized` /
 > `locked`）与一个受约束的 `setSize`，不干涉布局、不做内容驱动的自动尺寸。
 > 完整契约见 [`docs/widget-spec.md`](../../docs/widget-spec.md)。
@@ -35,7 +36,7 @@ dsh web
 - **改源码后**：`pnpm --filter @dshp/widget-kit build` 重新打出 `lib/host.js + lib/client.js`，再 `dsh web`。
 - **验证**：打开任一**已有内容**的会话，顶部标题栏右侧出现四个小组件图标（时钟 / 组件诊断 / 快速设置 / 状态速览）；时钟与诊断点开是可拖拽的卡片，快速设置点开是常驻小面板，状态速览**悬停**即可展开；
   点一下弹出卡片，拖动标题栏可移动（自由跟手、允许互相覆盖；靠近边缘/邻卡时出现虚线预览框，
-  松手才吸附）、八向可缩放、`—` 收成一枚胶囊（宽度也缩到最小、两端全圆，展开尺寸不丢）、🔒 锁定位置（红锁 / 绿开锁，锁定后标题栏只剩「解锁 + ⋯」，最小化与关闭进菜单）、`✕` 关闭；
+  松手才吸附）、八向可缩放、`—` 收成一枚胶囊（宽度**量出来的**：量整条标题栏需要多宽，最长不超过卡片宽度、最短 160px，展开尺寸不丢）、🔒 锁定位置（红锁 / 绿开锁，锁定后标题栏只剩「解锁 + ⋯」，最小化与关闭进菜单）、`✕` 关闭；
   **刷新页面后位置、尺寸、锁定、层叠顺序与展开的面板都保持不变**。
   设置 → 小组件 里能看到配置、已注册组件清单与每个组件的**启用开关**（禁用 = 图标/卡片/面板/徽标一并停用，布局保留）。
 
@@ -80,6 +81,19 @@ dsh web
 | **状态速览**（`dshp-widget-kit:status`）   | **悬停展开**的小面板：已注册组件数 / 打开的卡片数 / 已隐藏图标 / 布局存储状态 + 版本 —— 演示 `trigger: 'hover'` 与 `header: false` + `padding: 0`（整块面板归提供方）。                                                                 |
 
 四个都是规范示例（不是业务），可在 设置 → 小组件 里关掉。
+
+## 「组件箱」：统一入口（框架能力，不是示例）
+
+活动栏上的「组件箱」图标点开是一个自由卡片清单：一行一张卡、状态点显示开/合、「n / m 已打开」+「全部收起」。
+
+- **只列声明过 `listedInBox: true` 的卡片**（默认 `false` = 不收录，只有 `presentation: 'card'` 能写）：
+  框架不会把别人的卡片收进自己的入口 —— 想自建菜单就只写 `trayIcon: false` 再注册一个 popover
+  （`@dshp/token-meter` 的 `token-meter:menu` 就是范例），想让框架替你挂就声明收录。
+- 与「装载参考组件」偏好**无关**，始终在册：关掉参考组件只是不注册时钟 / 诊断这些示例，
+  而 `trayIcon: false + listedInBox: true` 的卡片只有这一个入口，跟着消失就彻底够不着了。
+- 声明是**公开契约**：`ctx.widgets.list()` 的摘要里带 `listedInBox`（`WidgetSummary`），
+  别的聚合入口也能按同一条声明决定收不收，不必读框架内部。
+- 用法写 `minFramework: '0.11.0'`：更早的框架不认识这个字段会**静默忽略**，卡片会变成没有入口的孤儿。
 
 ## 写一个小组件（三步）
 
@@ -154,18 +168,18 @@ export function apply(ctx: ClientContext): void {
 
 存 `settings.yaml` 的 `dshp-widget-kit` 分节（改动即时生效，无需重启）：
 
-| 字段               | 类型    | 默认    | 说明                                            |
-| ------------------ | ------- | ------- | ----------------------------------------------- |
-| `trayEnabled`      | boolean | `true`  | 是否在会话顶部显示组件托盘                      |
-| `maxVisibleIcons`  | number  | `4`     | 可见图标上限 1–8，超出的进 `⋯` 菜单             |
-| `badgeIntervalMs`  | number  | `30000` | 徽标默认刷新间隔 5000–600000                    |
-| `hoverPreview`     | boolean | `true`  | 图标悬停是否显示说明                            |
-| `referenceWidgets` | boolean | `true`  | 是否装载自带的四个参考组件                      |
-| `cardOpacity`      | number  | `0.7`   | 卡片 / 小面板背景不透明度 0.2–1（含标题栏）     |
-| `cardBlur`         | number  | `5`     | 毛玻璃模糊半径 0–32 px（0 = 关）                |
-| `cardBorder`       | enum    | `auto`  | 边框：`auto` 跟随框架 / `on` 1px / `off` 无边框 |
-| `cardRadius`       | enum    | `auto`  | 圆角：`auto` 12px / `round` 20px / `square` 0   |
-| `motionMs`         | number  | `300`   | 动效时长 0–500 ms（0 = 关闭过渡）               |
+| 字段               | 类型    | 默认    | 说明                                                       |
+| ------------------ | ------- | ------- | ---------------------------------------------------------- |
+| `trayEnabled`      | boolean | `true`  | 是否在会话顶部显示组件托盘                                 |
+| `maxVisibleIcons`  | number  | `4`     | 可见图标上限 1–8，超出的进 `⋯` 菜单                        |
+| `badgeIntervalMs`  | number  | `30000` | 徽标默认刷新间隔 5000–600000                               |
+| `hoverPreview`     | boolean | `true`  | 图标悬停是否显示说明                                       |
+| `referenceWidgets` | boolean | `true`  | 是否装载自带的四个参考组件（「组件箱」不在此列，始终在册） |
+| `cardOpacity`      | number  | `0.7`   | 卡片 / 小面板背景不透明度 0.2–1（含标题栏）                |
+| `cardBlur`         | number  | `5`     | 毛玻璃模糊半径 0–32 px（0 = 关）                           |
+| `cardBorder`       | enum    | `auto`  | 边框：`auto` 跟随框架 / `on` 1px / `off` 无边框            |
+| `cardRadius`       | enum    | `auto`  | 圆角：`auto` 12px / `round` 20px / `square` 0              |
+| `motionMs`         | number  | `300`   | 动效时长 0–500 ms（0 = 关闭过渡）                          |
 
 **本机布局**（托盘顺序、隐藏与禁用集合、卡片位置/尺寸/最小化/锁定、卡片层叠顺序、当前展开的常驻面板）
 **不在** settings.yaml：它存在浏览器 `localStorage` 的 `dshp-widget-kit:v1`，只属于这台浏览器；
@@ -188,7 +202,7 @@ plugins/widget-kit/
 │   ├── hooks.ts               # 快照订阅 / 数据生命周期 / 指针拖拽（官方 DragHandle 范式）
 │   ├── Tray.tsx / Card.tsx / CardLayer.tsx / Popover.tsx / ResizeHandles.tsx / ErrorBoundary.tsx
 │   ├── SettingsSection.tsx / components.tsx / glyphs.tsx / api.ts / types.ts / styles.module.css
-│   └── widgets/               # 参考组件：clock.tsx / diagnostics.tsx
+│   └── widgets/               # box.tsx（组件箱：框架的统一入口）+ 参考组件 clock/diagnostics/quick-settings/status
 ├── scripts/                   # 六个自检（几何 / 存储 / 契约漂移 / 样式与依赖 / 无头冒烟）
 └── lib/                       # 构建产物（已提交）
 ```

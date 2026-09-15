@@ -29,6 +29,27 @@ export const CASCADE_STEP = 28;
 /** 层叠位置的回绕周期（第 n 张卡用第 n % 该值 档）。 */
 export const CASCADE_WRAP = 6;
 
+/**
+ * 最小化胶囊的最小宽度（px）：再短的标题也给这么宽，免得收成一粒看不清的豆子。
+ *
+ * 胶囊宽度**不再由常量算出来** —— 需要多宽是量出来的（`measure.measureHeaderWidth` 量整条标题栏的
+ * 自然宽度），这里只负责「夹紧」。上一版按「内边距 + 标题 + 间隙 + 按钮」的常量加法算，只要有一处
+ * 与实际排版不一致（官方按钮换了尺寸、锚点外面多一层包装、卡片自己有 0.5px 边框），算出来就偏窄，
+ * 表现正是「折叠后标题被省略号截掉」。
+ */
+export const CAPSULE_MIN_WIDTH = 160;
+
+/**
+ * 量到的宽度之上留的余量（px）。
+ *
+ * 量出来的宽度是**渲染那一刻**的精确值，但胶囊最终是一个**整数**像素宽度，中间还要经过
+ * 「卡片自己的 0.5–1px 边框、flex 的亚像素取整、网络字体换装后字形宽度微变」这些环节 ——
+ * 差 1px 就足以让 `text-overflow: ellipsis` 生效（表现是「标题末端是省略号」）。
+ * 这点余量把这个量级的误差吃掉，视觉上完全看不出（胶囊宽 1% 都不到）。
+ * 它**不是**用来兜「量错对象」的：量错有 {@link capsuleOverflowFix} 兜底。
+ */
+export const CAPSULE_SLACK = 6;
+
 /** 卡片外层矩形（左上角 + 尺寸，px）。 */
 export interface Rect {
   x: number;
@@ -341,4 +362,86 @@ export function bringToFront(order: readonly string[], id: string): readonly str
 /** 矩形是否完全相同（整数比较；避免无谓的 store 写入）。 */
 export function isSameRect(a: Rect, b: Rect): boolean {
   return a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h;
+}
+
+/** 标题栏上那几个按钮的可见性（锁定后只剩「解锁 + ⋯」，最小化与关闭收进 ⋯ 菜单）。 */
+export interface HeaderActions {
+  /** 锁定 / 解锁按钮：始终在。 */
+  lock: true;
+  /** 最小化 / 还原按钮：未锁定且描述符没写 `card.minimizable: false`。 */
+  minimize: boolean;
+  /** ⋯ 菜单：始终在。 */
+  menu: true;
+  /** 关闭按钮：未锁定且描述符没写 `card.closable: false`。 */
+  close: boolean;
+}
+
+/**
+ * 由卡片状态推出「标题栏上有哪几个按钮」：`Card` 的 JSX 只读这一份判定。
+ *
+ * 锁定后只剩「解锁 + ⋯」，最小化与关闭收进 ⋯ 菜单（动作本身仍可用，只是不占标题栏）。
+ */
+export function headerActions(card: {
+  locked: boolean;
+  minimizable: boolean;
+  closable: boolean;
+}): HeaderActions {
+  return {
+    lock: true,
+    minimize: !card.locked && card.minimizable,
+    menu: true,
+    close: !card.locked && card.closable,
+  };
+}
+
+/**
+ * 最小化胶囊的最终宽度（px）：`clamp(所需宽度 + 余量, 地板, 布局宽度)`。
+ *
+ * `need` 是**量出来的整条标题栏自然宽度**（见 `measure.measureHeaderWidth`），不是按常量算的加法：
+ * 官方按钮尺寸 / 内边距 / 间隙怎么变，量到的就是多少，不存在「常量与真实排版不一致 → 标题被截」。
+ * 再留 {@link CAPSULE_SLACK} 的余量，吃掉整数取整 / 边框 / 字体换装带来的 1px 级误差。
+ *
+ * **上限是用户自己选的那个展开宽度** —— 胶囊只是把卡片收起来，不该比卡片还宽；
+ * `need` 为 `undefined`（还没量到：首帧、没有 DOM 的宿主）时退化成地板宽度（**不加余量**：
+ * 没量到就该老实退回地板值，而不是凭空变宽）。
+ *
+ * 返回值必须是**数字**（渲染时写成显式 px）：`width: auto` 与长度之间不可插值，
+ * 用 auto 时最小化会先瞬移一次宽度、再慢慢缩高度（见 docs/widget-spec.md §5.1）。
+ */
+export function capsuleWidth(options: { stored: number; need: number | undefined }): number {
+  const stored = options.stored;
+  const cap = Number.isFinite(stored) && stored > 0 ? Math.round(stored) : CAPSULE_MIN_WIDTH;
+  const need =
+    options.need === undefined || !Number.isFinite(options.need)
+      ? CAPSULE_MIN_WIDTH
+      : Math.max(CAPSULE_MIN_WIDTH, Math.ceil(options.need) + CAPSULE_SLACK);
+  return Math.min(need, cap);
+}
+
+/**
+ * 兜底补差：量出来的宽度**仍然**让标题被省略号截掉时，按标题实际的溢出量再补一次。
+ *
+ * 什么时候会真的差一点：网络字体换装后字形变宽、外观偏好改了卡片边框、浏览器亚像素取整 ——
+ * 这些都不改变我们量到的那份「快照」。与其猜一个更大的余量，不如读**标题自己的溢出量**
+ * （`scrollWidth − clientWidth`）把差额补上，一次就够。
+ *
+ * **不会振荡**：只在「胶囊还没顶到布局宽度」时补（顶到了就说明被上限卡住，再补也没用），
+ * 每次补都让回报值单调变大、而 `Card` 的 effect 依赖里带着胶囊宽度 —— 补完重量一次，
+ * 溢出归零就停。调用方把返回的非 null 值交回 `reportCapsuleNeed` 即可。
+ *
+ * @returns 应该重新回报的宽度；不需要补时 `null`。
+ */
+export function capsuleOverflowFix(options: {
+  need: number;
+  overflow: number;
+  capsule: number;
+  layoutWidth: number;
+}): number | null {
+  const { need, overflow, capsule, layoutWidth } = options;
+  if (!Number.isFinite(overflow) || overflow <= 0) return null;
+  if (!Number.isFinite(need) || need <= 0) return null;
+  if (!Number.isFinite(layoutWidth) || layoutWidth <= 0) return null;
+  // 已经顶到布局宽度：再补也不会变宽（补下去只会让回报值无限增长）→ 不补
+  if (capsule >= Math.round(layoutWidth)) return null;
+  return Math.ceil(need + overflow) + 1;
 }

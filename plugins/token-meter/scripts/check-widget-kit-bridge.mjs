@@ -315,8 +315,25 @@ for (const id of quotaIds) {
   assert.match(id, /^[a-z0-9-]{2,32}:[a-z0-9-]{2,32}$/, `宿主 id 形状不合法：${id}`);
 }
 
+// 框架自己会注册「组件箱」（自由卡片的统一入口，始终在册）；除它之外注册表里不该有别人
+const frameworkRows = service.list().filter((row) => row.owner === 'dshp-widget-kit');
+assert.ok(
+  frameworkRows.some((row) => row.id === 'dshp-widget-kit:box'),
+  '框架自己的「组件箱」应当始终在册（它是声明了 listedInBox 的卡片的统一入口）',
+);
+assert.deepEqual(
+  [...new Set(service.list().map((row) => row.owner))].filter(
+    (owner) => owner !== 'token-meter' && owner !== 'dshp-widget-kit',
+  ),
+  [],
+  '注册表里出现了别家组件（本插件的 id 必须全归自己名下）',
+);
 const byOwner = service.list().filter((row) => row.owner === 'token-meter');
-assert.equal(byOwner.length, registeredIds.length, '所有小组件都必须归到 token-meter 名下');
+assert.equal(
+  byOwner.length,
+  registeredIds.length - frameworkRows.length,
+  '除框架自己的组件外，所有小组件都必须归到 token-meter 名下',
+);
 // 形态：除菜单面板外全是卡片（菜单是活动栏上那个点击展开的小面板）
 const popovers = byOwner.filter((row) => row.presentation === 'popover').map((row) => row.id);
 assert.deepEqual(popovers, ['token-meter:menu'], `popover 只该有菜单面板，实际：${popovers.join(', ')}`);
@@ -327,7 +344,7 @@ assert.equal(
 );
 
 // 描述符本身：自由卡片全是「不占活动栏 + 有内容 + 有尺寸」，且标题可求值（供应商会改名）
-assert.equal(descriptors.length, registeredIds.length, '描述符数量必须与注册表一致');
+assert.equal(descriptors.length, byOwner.length, '描述符数量必须与 token-meter 在册数一致');
 const cards = descriptors.filter((descriptor) => descriptor.presentation === 'card');
 assert.equal(cards.length, expected.length + quotaIds.length, '卡片描述符数量不对');
 for (const descriptor of cards) {
@@ -493,7 +510,7 @@ assert.ok(
 assert.equal(bare.record.injections[0]?.[0], 'widgets', '没有框架时也在等 widgets（只是永远等不到）');
 
 console.log(
-  `宿主桥集成冒烟通过：${String(registeredIds.length)} 个描述符进框架注册表（1 个活动栏菜单 + ${String(
+  `宿主桥集成冒烟通过：${String(byOwner.length)} 个描述符进框架注册表（1 个活动栏菜单 + ${String(
     quotaIds.length,
   )} 个供应商卡片），菜单面板 ${String(rowsBefore.length)} 行可开合，退化路径正常`,
 );
