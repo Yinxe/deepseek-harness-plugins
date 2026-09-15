@@ -32,6 +32,8 @@
 - `src/client/badges.ts` —— 徽标调度：全局 1s tick、可见性门控、5s 超时、指数退避、连续失败转告警色。
 - `src/client/hooks.ts` —— React 粘合：快照订阅（`useSyncExternalStore`）、数据生命周期、指针拖拽（官方 `DragHandle` 范式）。
 - `src/client/{Tray,Card,CardLayer,Popover,ResizeHandles,ErrorBoundary}.tsx` —— 承载面 UI。
+  `CardLayer` 在手势进行中（live 几何存在）额外铺一层 `.gestureShield`（全视口、`user-select: none`、
+  指针跟随手势）—— 治「缩放时扫过页面文字选中一片高亮」，顺带挡住指针进入 iframe / 画布被吞事件。
 - `src/client/SettingsSection.tsx` / `api.ts` / `components.tsx` —— 设置节（偏好）。
 - `src/client/widgets/{clock,diagnostics,quick-settings,status}.tsx` —— **四个参考实现**（规范示例，不是业务；可在设置里关掉）：
   `clock` / `diagnostics` 是卡片（演示尺寸呈现、注册表诊断与**在组件里启停别的组件**），
@@ -57,6 +59,8 @@
 5. **移动落点只有一个入口**：`service.resolveMove`（→ `geometry.dockRect`）负责「夹进视口 + 吸附 + 避让」，
    拖动（`useCardDrag` 每帧）与键盘微调都走它 —— 不要在别处再写一份夹紧/避让逻辑。
    键盘与「居中」传 `magnet: false`（关磁力、保留防重叠），否则贴着邻卡时每步都会被吸回去。
+   手势期间还要保证**选不中文字**：整卡 `user-select: none`（`cardDragging`）+ 全视口手势盾；
+   拖动/缩放的 `pointerdown` 一律 `preventDefault()`（锁定分支也要，否则按住标题栏会选中整页）。
    吸附参数（`snapGap` / `snapDistance` / `snapAlign`）只在 `SPEC_DEFAULTS` 与 `geometry.ts` 各一份，
    由 `check-geometry.mjs` 断言相等。
 6. **悬停语义只有一份实现**：延迟展开、宽限收起、`popoverOrigin`（被点开的不受移开指针影响）都在

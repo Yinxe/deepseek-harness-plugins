@@ -159,7 +159,9 @@ export function Card({
 
   if (card === undefined || !card.open) return null;
 
-  const stored = live !== null && live.id === widget.id ? live.rect : card;
+  /** 这张卡上是否有手势在进行（拖动或八向缩放都算 —— 两种都走 beginLive）。 */
+  const gestureActive = live !== null && live.id === widget.id;
+  const stored = gestureActive ? live.rect : card;
   // 最小化时**渲染**成一条标题栏：几何仍按原矩形留着，还原后回到原位原尺寸。
   // 注意交出去的事实（size / sizeClass）仍旧按 stored 算 —— 内容还在树上，
   // 不能因为折叠就让它看到一个负数高度。
@@ -204,7 +206,8 @@ export function Card({
     <div
       className={
         styles.card +
-        (drag.dragging ? ' ' + styles.cardDragging : '') +
+        // 手势期间（拖动或缩放）整卡不可选中文字：缩放的指针常常扫过卡片内容
+        (gestureActive ? ' ' + styles.cardDragging : '') +
         (minimized ? ' ' + styles.cardMinimized : '') +
         (locked ? ' ' + styles.cardLocked : '')
       }

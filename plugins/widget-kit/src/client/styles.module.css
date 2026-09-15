@@ -149,6 +149,36 @@
   user-select: none;
 }
 
+/* 拖拽 / 缩放进行中的全视口手势盾：挡住页面文字的选中与 iframe/画布的指针吞掉，
+   层内 z-index 0（卡片是 z-index ≥ 1，仍然在盾上面） */
+.gestureShield {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.gestureShield[data-cursor='moving'] {
+  cursor: grabbing;
+}
+
+.gestureShield[data-cursor='ns'] {
+  cursor: ns-resize;
+}
+
+.gestureShield[data-cursor='ew'] {
+  cursor: ew-resize;
+}
+
+.gestureShield[data-cursor='nesw'] {
+  cursor: nesw-resize;
+}
+
+.gestureShield[data-cursor='nwse'] {
+  cursor: nwse-resize;
+}
+
 .cardMinimized {
   box-shadow: var(--dsw-shadow-lv1);
 }
@@ -276,6 +306,8 @@
   position: absolute;
   z-index: 2;
   touch-action: none;
+  /* 把手是纯指针控件：不允许选中（缩放时指针会扫过卡片内容与页面文字） */
+  user-select: none;
 }
 
 .resizeHandle[data-dir='n'] {

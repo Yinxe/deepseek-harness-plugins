@@ -99,7 +99,7 @@ globalThis.fetch = async (url, init) => {
     async json() {
       return {
         ok: true,
-        version: '0.3.0',
+        version: '0.3.1',
         specVersion: 1,
         config: {
           trayEnabled: true,
@@ -212,7 +212,7 @@ const expectedServiceKeys = [...EXPECTED_SERVICE_KEYS];
 expectedServiceKeys.sort();
 assert.deepEqual(actualServiceKeys, expectedServiceKeys, 'widgets 服务的成员必须与 SPEC_KEYS.service 一致');
 assert.equal(service.specVersion, 1);
-assert.equal(service.frameworkVersion, '0.3.0');
+assert.equal(service.frameworkVersion, '0.3.1');
 
 // ── 2. 槽位注册 ──────────────────────────────────────────────────────────
 assert.deepEqual(injections, ['conversation.session.header.utilities', 'shell.overlay', 'settings.section']);
@@ -996,6 +996,42 @@ headerNode.props.onPointerDown({
 assert.equal(prevented, true, '锁定后的 pointerdown 必须 preventDefault（否则拖动会选中文字）');
 assert.equal(runtime.getLive(), null, '锁定后不得进入拖拽');
 runtime.setLocked('demo:dock-a', false);
+
+// 10.9c 手势盾：拖动 / 缩放期间盖一层全视口盾（不可选中 + 指针形状跟随手势）
+const shieldOf = () => {
+  const node = collect(render(layerEntry.component({}))).find(
+    (candidate) =>
+      typeof candidate.props.className === 'string' && candidate.props.className.includes('gestureShield'),
+  );
+  return node ?? null;
+};
+const cardClassName = (id) => cardNodeOf(id).props.className;
+
+assert.equal(shieldOf(), null, '没有手势时不得有手势盾');
+assert.equal(cardClassName('demo:dock-a').includes('cardDragging'), false);
+
+// 拖动
+runtime.beginLive('demo:dock-a', 'move');
+runtime.setLive('demo:dock-a', { x: 20, y: 20, w: 360, h: 240 });
+const moveShield = shieldOf();
+assert.ok(moveShield, '拖动期间必须有手势盾（挡住页面文字的选中）');
+assert.equal(moveShield.props['data-cursor'], 'moving', '拖动时指针应是抓取态');
+assert.equal(cardClassName('demo:dock-a').includes('cardDragging'), true, '拖动期间整卡不可选中');
+runtime.cancelLive();
+assert.equal(shieldOf(), null, '手势结束后手势盾必须撤掉');
+assert.equal(cardClassName('demo:dock-a').includes('cardDragging'), false);
+
+// 缩放（用户反馈的这一条：缩放的指针扫过内容/页面文字也容易选中）
+runtime.beginLive('demo:dock-a', 'se');
+runtime.setLive('demo:dock-a', { x: 0, y: 0, w: 420, h: 300 });
+const resizeShield = shieldOf();
+assert.ok(resizeShield, '缩放期间同样必须有手势盾');
+assert.equal(resizeShield.props['data-cursor'], 'nwse', '东南缩放时指针应是 nwse-resize');
+assert.equal(cardClassName('demo:dock-a').includes('cardDragging'), true, '缩放期间整卡不可选中');
+assert.equal(runtime.rectOf('demo:dock-a').w, 360, '手势未提交前不得改动画布几何');
+runtime.commitLive('demo:dock-a');
+assert.equal(shieldOf(), null);
+assert.equal(runtime.rectOf('demo:dock-a').w, 420, '提交后几何才落盘');
 
 // 10.10 锁定按钮的状态（红色锁 / 绿色开锁靠 data-locked 选择器着色）
 const lockBtnOf = (id) => {
