@@ -217,15 +217,29 @@
   box-sizing: border-box;
   border: 1px dashed var(--dsw-alias-state-business-primary);
   border-radius: 12px;
-  background: var(--dsw-alias-interactive-bg-hover);
-  opacity: 0.5;
+  /* 主题色填充 + 主题色柔光：读到的是一块「要落下的位置」，不是一根虚线框。
+     先写 token 兜底、再写 color-mix 版本（不支持 color-mix 的浏览器自动回退到上面那行） */
+  background: var(--dsw-alias-state-business-tertiary);
+  background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 18%, transparent);
+  box-shadow: 0 0 0 4px var(--dsw-alias-state-business-tertiary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent);
   pointer-events: none;
   transition:
     left 120ms cubic-bezier(0.2, 0, 0, 1),
     top 120ms cubic-bezier(0.2, 0, 0, 1),
     width 120ms cubic-bezier(0.2, 0, 0, 1),
-    height 120ms cubic-bezier(0.2, 0, 0, 1),
-    opacity 120ms ease;
+    height 120ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* 顶部一条更实的主题色带 = 「这张卡会带着标题栏落到这里」，一眼看出不是普通占位框 */
+.snapGhost::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 36px;
+  border-radius: 11px 11px 0 0;
+  background: var(--dsw-alias-state-business-tertiary);
+  background: color-mix(in srgb, var(--dsw-alias-state-business-primary) 30%, transparent);
 }
 
 .cardMinimized {

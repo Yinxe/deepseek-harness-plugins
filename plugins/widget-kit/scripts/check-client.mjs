@@ -137,7 +137,7 @@ globalThis.fetch = async (url, init) => {
     async json() {
       return {
         ok: true,
-        version: '0.4.2',
+        version: '0.4.3',
         specVersion: 1,
         config: {
           trayEnabled: true,
@@ -250,7 +250,7 @@ const expectedServiceKeys = [...EXPECTED_SERVICE_KEYS];
 expectedServiceKeys.sort();
 assert.deepEqual(actualServiceKeys, expectedServiceKeys, 'widgets 服务的成员必须与 SPEC_KEYS.service 一致');
 assert.equal(service.specVersion, 1);
-assert.equal(service.frameworkVersion, '0.4.2');
+assert.equal(service.frameworkVersion, '0.4.3');
 
 // ── 2. 槽位注册 ──────────────────────────────────────────────────────────
 assert.deepEqual(injections, ['conversation.session.header.utilities', 'shell.overlay', 'settings.section']);
@@ -1165,6 +1165,12 @@ assert.ok(ghost, '有吸附候选时必须渲染预览虚框');
 assert.equal(ghost.props['data-ghost-for'], 'demo:dock-c');
 assert.equal(ghost.props.style.left, anchorA.x + anchorA.w + 8, '虚框落在吸附后的位置（贴右缘 + 8px）');
 assert.equal(ghost.props.style.top, anchorA.y, '虚框也带上对齐结果（上对齐）');
+// z-index：压在其它卡片之上、压在被拖的那张卡之下（吸附目标与别人重叠时也要看得见）
+assert.ok(Number.isFinite(ghost.props.style.zIndex), '虚框必须给明确的层内 z-index');
+assert.ok(
+  ghost.props.style.zIndex >= 1 && ghost.props.style.zIndex <= runtime.getSnapshot().zOrder.length,
+  `虚框的 z-index（${String(ghost.props.style.zIndex)}）必须落在卡片层内`,
+);
 assert.equal(runtime.rectOf('demo:dock-c').x, cBeforeLive.x, '虚框出现时卡片本体还没动（松手才吸附）');
 assert.equal(runtime.getLive().rect.x, anchorA.x + anchorA.w + 3, '本体仍然自由跟手');
 

@@ -34,8 +34,9 @@
 - `src/client/{Tray,Card,CardLayer,Popover,ResizeHandles,ErrorBoundary}.tsx` —— 承载面 UI。
   `CardLayer` 里有两个**只订阅稳定值的叶子组件**：`.gestureShield`（手势期间的全视口盾：
   `user-select: none` + 指针跟随手势，治「缩放扫过文字选中一片高亮」）与 `.snapGhost`
-  （吸附预览虚框：只显示「松手会落到哪」，卡片本体自由跟手）。两者都靠「快照是字符串 / 对象引用」
-  做到帧间零重渲染 —— 别把 live 订阅搬回卡片层本身。
+  （吸附预览：只显示「松手会落到哪」，卡片本体自由跟手；**主题色填充 + 主题色柔光**，不是一根虚线，
+  颜色一律走 `--dsw-alias-state-business-*`，透明部分用 `color-mix` 并保留 token 兜底）。
+  两者都靠「快照是字符串 / 对象引用」做到帧间零重渲染 —— 别把 live 订阅搬回卡片层本身。
 - `src/client/SettingsSection.tsx` / `api.ts` / `components.tsx` —— 设置节（偏好）。
 - `src/client/widgets/{clock,diagnostics,quick-settings,status}.tsx` —— **四个参考实现**（规范示例，不是业务；可在设置里关掉）：
   `clock` / `diagnostics` 是卡片（演示尺寸呈现、注册表诊断与**在组件里启停别的组件**），

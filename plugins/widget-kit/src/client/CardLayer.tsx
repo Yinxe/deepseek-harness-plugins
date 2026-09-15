@@ -29,14 +29,28 @@ function GestureShieldHost({ runtime }: { runtime: WidgetRuntime }): ReactNode {
   return <div className={styles.gestureShield} data-cursor={cursor} aria-hidden="true" />;
 }
 
-/** 吸附预览虚框：候选坐标没变时引用不变，这里也就不重渲染（变化那一次交给 CSS 过渡滑过去）。 */
+/**
+ * 吸附预览虚框（主题色填充 + 主题色柔光，一眼看出「松手会落到这里」）。
+ *
+ * 候选坐标没变时引用不变，这里也就不重渲染（变化那一次交给 CSS 过渡滑过去）。
+ * z-index 取被拖卡片在 z 序里的位置：压在其它卡片之上、又压在被拖的那张卡之下 ——
+ * 吸附目标与别的卡片重叠时，虚框仍然看得见，而不会盖住你正在拖的那张。
+ */
 function SnapGhostHost({ runtime }: { runtime: WidgetRuntime }): ReactNode {
   const snap = useLiveSnap(runtime);
+  const snapshot = useFramework(runtime);
   if (snap === null) return null;
+  const zIndex = Math.max(1, snapshot.zOrder.indexOf(snap.id));
   return (
     <div
       className={styles.snapGhost}
-      style={{ left: snap.rect.x, top: snap.rect.y, width: snap.rect.w, height: snap.rect.h }}
+      style={{
+        left: snap.rect.x,
+        top: snap.rect.y,
+        width: snap.rect.w,
+        height: snap.rect.h,
+        zIndex,
+      }}
       data-ghost-for={snap.id}
       aria-hidden="true"
     />
