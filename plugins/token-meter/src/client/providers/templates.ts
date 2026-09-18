@@ -89,19 +89,22 @@ export interface ProviderTemplates {
  *
  * 统一在这里，避免每家自己写 `variant === 'wide' ? 16 : 18` 而把 18px 的环塞进 16px 的槽。
  *
- * 三档都是 **16**：
- *  - 宽栏与 42px 行高、14px 字号相称；
- *  - 切换行要与浮层里 16px 的图标槽对齐；
- *  - 窄栏 36×36 的圆里还要并排放一枚 **14px 供应商图标**（14 + 16 + 3px 间距 = 33 ≤ 36），
- *    所以也不能像早先那样放到 18。
+ *  - 宽栏 **16**：与 42px 行高、14px 字号相称（左边还有一枚 16px 图标，两枚同尺寸才不打架）；
+ *  - 切换行 **16**：与浮层里 16px 的图标槽对齐；
+ *  - 窄栏 **28**：收起后侧边栏只剩一枚 36×36 的圆，「图标 + 小环并排」（早先是 14+16+3=33）
+ *    会读成两个互不相干的小记号——环只有 16px 时弧长太短，也看不出比例。改成**环当表盘**：
+ *    28 外径 + 2.2 描边，供应商图标 15px 居中在环心，一个物体同时给「谁」和「用了多少」。
+ *    28 塞进 36 圆还剩 4px 呼吸，再大就开始和 hover 底色打架。
  *
  * @param variant - 三档位置。
  * @returns 环的外径。
  */
 export function ringSizeOf(variant: ButtonVariant): number {
-  void variant;
-  return 16;
+  return variant === 'rail' ? 28 : 16;
 }
+
+/** 窄栏表盘里那枚供应商图标的宽度（px）；DeepSeek 的鲸鱼按官方比例算出高 ≈ 11。 */
+export const RAIL_ICON = 15;
 
 /** 占用比例 → 严重度档位（阈值与 `QUOTA_LEVEL` 同源：70 / 90）。 */
 export function toneOfPct(pct: number): QuotaTone {

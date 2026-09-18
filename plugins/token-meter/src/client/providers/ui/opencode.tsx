@@ -150,12 +150,6 @@ export function opencodeButton(ctx: ButtonRenderCtx, K: ProviderUIKit): ReactNod
     <K.ButtonLayout
       variant={ctx.variant}
       leading={ring}
-      rail={
-        <span className={styles.btnRailCombo}>
-          <K.ProviderIcon name={ctx.icon} size={14} />
-          <K.Ring spec={spec} size={16} />
-        </span>
-      }
       glyph={<K.Ring spec={spec} size={16} />}
       name={name}
       value={value}

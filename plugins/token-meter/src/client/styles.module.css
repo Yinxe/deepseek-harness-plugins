@@ -3880,10 +3880,23 @@ div:has(> div[data-slot='sidebar.footer.action']) {
   gap: 3px;
   min-width: 0;
 }
-.btnRailCombo {
+/* 窄栏表盘：环当外圈（leading，28px），供应商图标绝对居中在环心。
+   叠一层 HTML 而不是 foreignObject：图标自己的 viewBox 比例（鲸鱼 23.16:17.04）由
+   ProviderIcon 按宽度算高，塞进 SVG 里就得手工摆，不如这样交给 flex 居中。 */
+.btnDial {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  justify-content: center;
+  flex: none;
+}
+.btnDialCore {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dsw-alias-label-primary);
 }
 .btnLeadOnly {
   display: inline-flex;

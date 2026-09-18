@@ -37,6 +37,7 @@ import type { PrefsApi } from '../quota-prefs.js';
 import { QuotaRing } from '../QuotaRing.js';
 import styles from '../styles.module.css';
 import type { ErrorInfo, QuotaBilling, QuotaWindow, VendorSnapshot } from '../types.js';
+import { RAIL_ICON } from './templates.js';
 import type { QuotaRingSpec, QuotaTone, ButtonVariant } from './templates.js';
 import { toneOfPct, windowPct } from './templates.js';
 
@@ -634,7 +635,8 @@ export function Chips(deps: KitDeps, props: ChipsProps): ReactNode {
  * 按钮骨架（三档位置共用的排版规则）。
  *
  * - `wide`：`[图标] 主图形 名字  …… 数值`（名字长走省略号，数值右对齐）；
- * - `rail`：只有主图形（56px 轨道里放不下文字，说明走 tooltip）；
+ * - `rail`：**表盘** —— `leading`（环 28）当外圈，供应商图标 15px 居中在环心；56px 轨道里放不下
+ *   文字，说明走 tooltip。要画别的东西（余额数字 / 迷你条）就传 `rail` 整块覆盖；
  * - `row`：只有主图形（`glyph` 优先；与浮层里其它行左对齐、同尺寸）。
  *
  * @param props - 见 {@link ButtonLayoutProps}。
@@ -642,17 +644,21 @@ export function Chips(deps: KitDeps, props: ChipsProps): ReactNode {
  */
 export function ButtonLayout(props: ButtonLayoutProps): ReactNode {
   if (props.variant === 'rail') {
-    // 窄栏：没给 `rail` 时默认「供应商图标 14 + 主图形（环 16）+ 3px 间距 = 33px」并排，塞得进 36×36 圆
+    // 窄栏 = **表盘**：`leading` 那枚环（`ringSizeOf('rail')` 给 28）当外圈，供应商图标居中在环心。
+    // 没图标（未知供应商）就只剩环。供应商要画别的东西（数字、迷你条）就显式传 `rail` 覆盖这里。
+    if (props.rail !== undefined) return <span className={styles.btnRail}>{props.rail}</span>;
+    const icon =
+      props.icon !== undefined && props.icon !== '' ? (
+        <span className={styles.btnDialCore}>
+          <ProviderIcon name={props.icon} size={RAIL_ICON} />
+        </span>
+      ) : null;
     return (
       <span className={styles.btnRail}>
-        {props.rail ?? (
-          <>
-            {props.icon !== undefined && props.icon !== '' ? (
-              <ProviderIcon name={props.icon} size={14} />
-            ) : null}
-            {props.leading}
-          </>
-        )}
+        <span className={styles.btnDial}>
+          {props.leading}
+          {icon}
+        </span>
       </span>
     );
   }
