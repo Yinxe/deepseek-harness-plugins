@@ -210,8 +210,8 @@ dsh web   # 重启生效
 │   │   ├── scripts/            #   六个自检（几何 / 存储 / 契约漂移 / 样式与依赖 / 无头冒烟）
 │   │   └── lib/                #   单文件构建产物（已提交）
 │   └── web-style/              # @dshp/web-style（8 套主题画廊 + 背景效果 + 壁纸取色 + 全局圆角）
-│       ├── src/host/           #   Host TS：types/http/config + themes/（token 单源，21 个主题模块）
-│       ├── src/client/         #   Client TS：GallerySection/apply-theme/md3/official/radius/themes/api/state
+│       ├── src/host/           #   Host TS：types/http/config + themes/（token 单源，8 个主题模块）
+│       ├── src/client/         #   Client TS：GallerySection/apply-theme/background{,-dots,-aurora,-flow}/md3/official/radius/themes/api/state
 │       ├── scripts/            #   check-themes.mjs（目录 ↔ 画廊 meta ↔ 产物一致性）
 │       └── lib/                #   单文件构建产物（已提交）
 ├── AGENT.md                    # 开发规范·规则版（红线 + 指路）
