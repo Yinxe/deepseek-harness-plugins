@@ -6932,6 +6932,7 @@ function createQuotaSection() {
           variant,
           leading: empty,
           glyph: empty,
+          ...vendor ? { icon: iconOf(vendor.type, iconMetaOf(vendor.type)) } : {},
           ...variant === "wide" && vendor ? { name: vendor.name } : {}
         }
       );

@@ -157,7 +157,7 @@ export interface ProviderUIKit {
 export interface ButtonLayoutProps {
   /** 哪一档（`wide` 显示文字，`rail`/`row` 只显示主图形）。 */
   variant: ButtonVariant;
-  /** 主图形：环 / 图标 / 迷你条 / 任意节点（窄栏与切换行只显示它）。 */
+  /** 主图形：环 / 图标 / 迷你条 / 任意节点（窄栏当表盘外圈，切换行只显示它）。 */
   leading: ReactNode;
   /** 供应商名（仅宽栏显示）。 */
   name?: string | undefined;
@@ -165,19 +165,18 @@ export interface ButtonLayoutProps {
   value?: string | undefined;
   /** 数值的色调（`bad` 变红等）；与环的档位同源。 */
   tone?: QuotaTone | undefined;
-  /** 供应商图标名（仅宽栏显示，放在主图形之前）。 */
+  /** 供应商图标名（宽栏放在主图形之前；窄栏居中在表盘环心，见 `RAIL_ICON`）。 */
   icon?: string | undefined;
   /**
-   * 窄栏（56px 轨道）专用内容；缺省 = 「供应商图标 + `leading`」并排。
+   * 窄栏（56px 轨道）专用内容；缺省 = **表盘**（`leading` 那枚环当外圈 + 供应商图标居中在环心）。
    *
-   * 之所以要它：窄栏里有些画法需要另排（例如 `balance` 指标要换成紧凑金额、
-   * 主图形尺寸更小），而宽栏那套在 36px 的圆里塞不下。
+   * 之所以要它：窄栏里有些画法需要另排（例如迷你条、余额数字），而表盘那一套放不下。
    */
   rail?: ReactNode | undefined;
   /**
    * 切换行（浮层里的供应商列表，16px 槽）专用内容；缺省用 `leading`。
    *
-   * 与 `rail` 分开是因为两者约束不同：窄栏有 36px 可以放「图标 + 环」，
+   * 与 `rail` 分开是因为两者约束不同：窄栏有 36px 可以画表盘，
    * 而切换行只有 16px —— 余额那种长内容必须在这里换成紧凑图形（环 / 图标）。
    */
   glyph?: ReactNode | undefined;
