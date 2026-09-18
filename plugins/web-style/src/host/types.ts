@@ -27,6 +27,8 @@ export interface PhotoPalette {
 export interface StyleConfig {
   /** 选中的主题 id；空串 = 完全跟随官方亮/暗偏好 */
   themeId: string;
+  /** 选中的背景效果 id；空串 = 跟随主题默认（见 client 侧 THEME_DEFAULT_EFFECT） */
+  backgroundId: string;
   photoPalette: PhotoPalette | null;
   radius: RadiusConfig;
   /** 已退役特性（旧数据透传保留，UI 不再读写） */
@@ -37,6 +39,7 @@ export interface StyleConfig {
 /** 部分覆盖（cordis.patch.yml 的 config / 路由 body 用） */
 export interface StyleConfigPatch {
   themeId?: string;
+  backgroundId?: string;
   photoPalette?: PhotoPalette | null;
   radius?: Partial<RadiusConfig>;
   wallpaper?: Record<string, unknown>;

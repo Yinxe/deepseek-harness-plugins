@@ -2,7 +2,7 @@
  * GallerySection（设置 → 外观定制）
  *
  * 结构（与原版逐段对应）：
- *   topbar（圆角档 + 回到官方 + 提示/错误）
+ *   topbar（背景效果档 + 圆角档 + 回到官方 + 提示/错误）
  *   wallSection（壁纸取色 · Material You：上传 → seed → 5 组 ref 调色板 × 亮/暗角色）
  *   list（当前态 now 条 + 搜索/过滤工具栏 + 主题 grid）
  *
@@ -17,9 +17,10 @@
  */
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { applyThemeChoice, findStaticTheme } from './apply-theme.js';
+import { applyBackgroundChoice, applyThemeChoice, findStaticTheme } from './apply-theme.js';
 import type { Bridge } from './api.js';
 import { copyText } from './clipboard.js';
+import { BACKGROUND_OPTIONS, refreshBackground } from './background.js';
 import {
   buildM3ExportCss,
   buildM3Scheme,
@@ -115,11 +116,12 @@ function mosaicOf(t: ThemeMeta | null): [string, string, string] {
   return [sw[0] || '#222222', sw[1] || '#444444', accentOf(t)];
 }
 
-/** 设置 → 外观定制：主题画廊 + 壁纸取色 + 全局圆角。 */
+/** 设置 → 外观定制：背景效果 + 主题画廊 + 壁纸取色 + 全局圆角。 */
 export function GallerySection({ ctx, theme, bridge }: GalleryProps): ReactNode {
   const [, setRevision] = useState(-1);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [radiusCfg, setRadiusCfg] = useState(state.desiredRadius);
+  const [backgroundCfg, setBackgroundCfg] = useState(state.desiredBackground);
   const [query, setQuery] = useState('');
   const [schemeFilter, setSchemeFilter] = useState('all');
   const [photoBusy, setPhotoBusy] = useState(false);
@@ -131,6 +133,9 @@ export function GallerySection({ ctx, theme, bridge }: GalleryProps): ReactNode 
         setRevision(s && typeof s.revision === 'number' ? s.revision : 0);
         // 亮暗切换后渐变需按新 scheme 重渲染（photo 主题双分支）
         if (typeof state.renderBodyGradient === 'function') state.renderBodyGradient();
+        // 画布效果的配色是 mount 时烘进 JS 的，官方亮/暗一切就陈旧：重挂一次按新 token 重烘。
+        // dom 类（aurora）读的是 CSS 变量，自己会跟，refreshBackground 对它是空操作。
+        refreshBackground();
       }),
     [],
   );
@@ -394,10 +399,55 @@ export function GallerySection({ ctx, theme, bridge }: GalleryProps): ReactNode 
     );
   });
 
-  // 顶部简单配置区：圆角 + 回到官方（取色已独立成区，当前主题下沉到列表头 now 条）
+  // 背景效果：与主题正交的一列单选。空串 = 跟随主题默认（harness-office 带点阵，其余无）。
+  const pickBackground = function (v: string): void {
+    state.desiredBackground = v;
+    setBackgroundCfg(v);
+    applyBackgroundChoice(v);
+    bridge
+      .saveConfig({ backgroundId: v })
+      .then(function (reply) {
+        if (!reply || reply.ok !== true) return;
+        const echo = typeof reply.backgroundId === 'string' ? reply.backgroundId : '';
+        if (echo === v) return;
+        // Host 消毒过（多半是这个 id 不认识）：跟着回显走，别让用户以为生效了
+        state.desiredBackground = echo;
+        setBackgroundCfg(echo);
+        applyBackgroundChoice(echo);
+      })
+      .catch(function () {
+        /* 保存失败静默：下次刷新回读 */
+      });
+  };
+  const bgNow = typeof backgroundCfg === 'string' ? backgroundCfg : '';
+  const backgroundButtons = [
+    { id: '', label: '跟随主题', hint: '不指定：harness-office 用点阵字标，其余主题无背景' },
+    ...BACKGROUND_OPTIONS,
+  ].map(function (opt) {
+    const active = bgNow === opt.id;
+    return (
+      <button
+        key={opt.id || 'default'}
+        type="button"
+        className={cx(styles.radiusBtn, active ? styles.active : undefined)}
+        aria-pressed={active}
+        title={opt.hint}
+        onClick={function () {
+          pickBackground(opt.id);
+        }}
+      >
+        {opt.label}
+      </button>
+    );
+  });
+
+  // 顶部简单配置区：背景 + 圆角 + 回到官方（取色已独立成区，当前主题下沉到列表头 now 条）
   const topbar = (
     <div className={styles.topbar}>
       <div className={styles.ctl}>
+        <span className={styles.ctlLabel}>背景</span>
+        <div className={styles.radiusBtns}>{backgroundButtons}</div>
+        <span className={styles.ctlSep} />
         <span className={styles.ctlLabel}>圆角</span>
         <div className={styles.radiusBtns}>{radiusButtons}</div>
         <span className={styles.ctlSep} />

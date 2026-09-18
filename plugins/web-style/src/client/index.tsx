@@ -61,7 +61,7 @@ export function apply(ctx: ClientContext): void {
   // 启动恢复：读 settings 持久化的 themeId 重建覆盖层（壁纸 MD3 从 seed 重建），同时恢复圆角
   restoreFromHost(theme, bridge);
 
-  // 插件停止时清覆盖层（ctx.effect 自动收回）
+  // 插件停止时收回 DOM 侧痕迹：token 覆盖层 + 动效舞台 + 自注入样式（ctx.effect 自动收回）
   ctx.effect(() => () => disposeOverride(), 'dshp-web-style: override teardown');
 
   // 外观定制页 = 主题画廊（全局圆角等仍在画廊尾部）

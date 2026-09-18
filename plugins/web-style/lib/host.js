@@ -550,18 +550,18 @@ Schema.extend("const", (data, { value }, options) => {
   if (deepEqual(data, value)) return [value];
   throw new ValidationError(`expected ${value} but got ${data}`, options);
 });
-function checkWithinRange(data, meta8, description, options, skipMin = false) {
-  const { max = Infinity, min = -Infinity } = meta8;
+function checkWithinRange(data, meta9, description, options, skipMin = false) {
+  const { max = Infinity, min = -Infinity } = meta9;
   if (data > max) throw new ValidationError(`expected ${description} <= ${max} but got ${data}`, options);
   if (data < min && !skipMin) throw new ValidationError(`expected ${description} >= ${min} but got ${data}`, options);
 }
-Schema.extend("string", (data, { meta: meta8 }, options) => {
+Schema.extend("string", (data, { meta: meta9 }, options) => {
   if (typeof data !== "string") throw new ValidationError(`expected string but got ${data}`, options);
-  if (meta8.pattern) {
-    const regexp = new RegExp(meta8.pattern.source, meta8.pattern.flags);
+  if (meta9.pattern) {
+    const regexp = new RegExp(meta9.pattern.source, meta9.pattern.flags);
     if (!regexp.test(data)) throw new ValidationError(`expect string to match regexp ${regexp}`, options);
   }
-  checkWithinRange(data.length, meta8, "string length", options);
+  checkWithinRange(data.length, meta9, "string length", options);
   return [data];
 });
 function decimalShift(data, digits) {
@@ -581,18 +581,18 @@ function isMultipleOf(data, min, step) {
   const digits = step.toString().slice(index + 1).length;
   return Math.abs(decimalShift(data, digits) - decimalShift(min, digits)) % decimalShift(step, digits) === 0;
 }
-Schema.extend("number", (data, { meta: meta8 }, options) => {
+Schema.extend("number", (data, { meta: meta9 }, options) => {
   if (typeof data !== "number") throw new ValidationError(`expected number but got ${data}`, options);
-  checkWithinRange(data, meta8, "number", options);
-  const { step } = meta8;
-  if (step && !isMultipleOf(data, meta8.min ?? 0, step)) throw new ValidationError(`expected number multiple of ${step} but got ${data}`, options);
+  checkWithinRange(data, meta9, "number", options);
+  const { step } = meta9;
+  if (step && !isMultipleOf(data, meta9.min ?? 0, step)) throw new ValidationError(`expected number multiple of ${step} but got ${data}`, options);
   return [data];
 });
 Schema.extend("boolean", (data, _, options) => {
   if (typeof data === "boolean") return [data];
   throw new ValidationError(`expected boolean but got ${data}`, options);
 });
-Schema.extend("bitset", (data, { bits, meta: meta8 }, options) => {
+Schema.extend("bitset", (data, { bits, meta: meta9 }, options) => {
   let value = 0, keys = [];
   if (typeof data === "number") {
     value = data;
@@ -604,7 +604,7 @@ Schema.extend("bitset", (data, { bits, meta: meta8 }, options) => {
       if (key in bits) value |= bits[key];
     }
   } else throw new ValidationError(`expected number or array but got ${data}`, options);
-  if (value === meta8.default) return [value];
+  if (value === meta9.default) return [value];
   return [value, keys];
 });
 Schema.extend("function", (data, _, options) => {
@@ -639,9 +639,9 @@ function property(data, key, schema, options) {
     return schema.meta.default;
   }
 }
-Schema.extend("array", (data, { inner, meta: meta8 }, options) => {
+Schema.extend("array", (data, { inner, meta: meta9 }, options) => {
   if (!Array.isArray(data)) throw new ValidationError(`expected array but got ${data}`, options);
-  checkWithinRange(data.length, meta8, "array length", options, !isNullable(inner.meta.default));
+  checkWithinRange(data.length, meta9, "array length", options, !isNullable(inner.meta.default));
   return [data.map((_, index) => property(data, index, inner, options))];
 });
 Schema.extend("dict", (data, { inner, sKey }, options, strict) => {
@@ -801,6 +801,8 @@ __export(claude_exports, {
 var MONO = '"Berkeley Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace';
 var SANS = '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif';
 var CLAUDE_SANS = '"Anthropic Sans", "Arial", system-ui, -apple-system, sans-serif';
+var HARNESS_SANS = '"DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", "PingFang SC", sans-serif';
+var HARNESS_MONO = '"Fragment Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", monospace';
 var TEXT_STYLE_KEYS = [
   "base-16",
   "base-strong-16",
@@ -836,8 +838,8 @@ var MD_STYLE_KEYS = [
   "table-head"
 ];
 function fillFontTokens(tokens, font, mono) {
-  const monoStack = MONO;
-  const ui = font;
+  const monoStack = typeof mono === "string" ? mono : MONO;
+  const ui = mono === true ? MONO : font;
   for (const s of TEXT_STYLE_KEYS) tokens[`--dsw-font-${s}-font-family`] = ui;
   for (const m of MD_STYLE_KEYS) {
     const isCode = m === "code" || m === "code-block" || m === "code-block-small";
@@ -1631,14 +1633,126 @@ var meta7 = {
   }
 };
 
+// src/host/themes/harness-office.ts
+var harness_office_exports = {};
+__export(harness_office_exports, {
+  dark: () => dark3,
+  meta: () => meta8
+});
+var dark3 = fillFontTokens(
+  {
+    "--dsw-alias-bg-base": "#0a0a0a",
+    "--dsw-alias-bg-layer-1": "#12141a",
+    "--dsw-alias-bg-layer-2": "#191d26",
+    "--dsw-alias-bg-layer-3": "#232836",
+    "--dsw-alias-bg-overlay": "#101319",
+    "--dsw-alias-bg-multi-select": "#12141a",
+    "--dsw-alias-bg-module-platform": "rgba(10, 10, 10, 0.72)",
+    "--dsw-alias-bg-skeleton": "rgba(255, 255, 255, 0.05)",
+    "--dsw-alias-border-l1": "rgba(255, 255, 255, 0.07)",
+    "--dsw-alias-border-l2": "rgba(255, 255, 255, 0.12)",
+    "--dsw-alias-border-l2-darkmode-thin": "rgba(255, 255, 255, 0.08)",
+    "--dsw-alias-border-l3": "rgba(255, 255, 255, 0.2)",
+    "--dsw-alias-border-l4": "rgba(255, 255, 255, 0.26)",
+    "--dsw-alias-border-inverted": "#ffffff",
+    "--dsw-alias-border-inverted2": "rgba(255, 255, 255, 0.6)",
+    "--dsw-alias-separator-primary": "rgba(255, 255, 255, 0.08)",
+    "--dsw-alias-fill-l2": "#191d26",
+    "--dsw-alias-fill-tsp-secondary": "rgba(255, 255, 255, 0.06)",
+    /* 官网蓝：只做品牌信号，主 CTA 交给白底黑字（官网深色档就是这么排的） */
+    "--dsw-alias-brand-primary": "#6799fe",
+    "--dsw-alias-brand-primary-invert": "#0a0a0a",
+    "--dsw-alias-brand-text": "#6799fe",
+    "--dsw-alias-link": "#6799fe",
+    "--dsw-alias-button-primary-fill": "#ffffff",
+    "--dsw-alias-button-primary-hover": "#e6ebfa",
+    "--dsw-alias-button-primary-dimmed": "#c3cde8",
+    "--dsw-alias-button-contrast-fill": "#ffffff",
+    "--dsw-alias-button-elevated-fill": "#12141a",
+    "--dsw-alias-button-floating-fill": "#12141a",
+    "--dsw-alias-button-floating-hover": "#191d26",
+    "--dsw-alias-button-ghost-active-border": "#6799fe",
+    "--dsw-alias-button-ghost-active-fill": "#151a24",
+    "--dsw-alias-button-ghost-active-hover": "#191d26",
+    "--dsw-alias-button-info-fill": "#6799fe",
+    "--dsw-alias-button-info-hover": "#85b0ff",
+    "--dsw-alias-button-tool-bar-fill": "#12141a",
+    "--dsw-alias-button-tool-bar-fill-invisible": "transparent",
+    "--dsw-alias-button-tool-bar-hover": "#191d26",
+    "--dsw-alias-interactive-bg-hover": "rgba(255, 255, 255, 0.05)",
+    "--dsw-alias-interactive-bg-active": "#191d26",
+    "--dsw-alias-interactive-bg-hover-accent": "rgba(103, 153, 254, 0.16)",
+    "--dsw-alias-interactive-bg-hover-danger": "rgba(248, 113, 113, 0.15)",
+    "--dsw-alias-interactive-bg-hover-solid": "#191d26",
+    "--dsw-alias-label-primary": "#ffffff",
+    "--dsw-alias-label-secondary": "rgba(255, 255, 255, 0.8)",
+    "--dsw-alias-label-tertiary": "rgba(255, 255, 255, 0.5)",
+    "--dsw-alias-label-quaternary": "rgba(255, 255, 255, 0.3)",
+    "--dsw-alias-label-caption": "rgba(255, 255, 255, 0.5)",
+    "--dsw-alias-label-dimmed": "rgba(255, 255, 255, 0.3)",
+    "--dsw-alias-label-error": "#f87171",
+    "--dsw-alias-label-primary-foreground": "#ffffff",
+    "--dsw-alias-label-primary-inverted": "#0a0a0a",
+    "--dsw-alias-label-primary-bluish": "#ffffff",
+    "--dsw-alias-state-business-primary": "#6799fe",
+    "--dsw-alias-state-business-tertiary": "rgba(103, 153, 254, 0.15)",
+    "--dsw-alias-state-error-primary": "#f87171",
+    "--dsw-alias-state-error-secondary": "rgba(248, 113, 113, 0.15)",
+    "--dsw-alias-state-success-primary": "#46d0a0",
+    "--dsw-alias-state-success-secondary": "rgba(70, 208, 160, 0.15)",
+    "--dsw-alias-state-warn-primary": "#e8b33f",
+    "--dsw-alias-state-warn-secondary": "rgba(232, 179, 63, 0.15)",
+    "--dsw-alias-state-warn-label": "#e8b33f",
+    "--dsw-alias-markdown-citation": "#6799fe",
+    "--dsw-alias-markdown-code-block": "#0f1218",
+    "--dsw-alias-markdown-code-block-banner": "#191d26",
+    "--dsw-alias-markdown-inline-code": "rgba(103, 153, 254, 0.10)",
+    "--dsw-alias-markdown-code-segment-selected": "rgba(103, 153, 254, 0.18)",
+    "--dsw-alias-markdown-code-segment-unselected": "transparent",
+    "--dsw-alias-markdown-placeholder": "rgba(255, 255, 255, 0.3)",
+    "--dsw-alias-scrollbar-bg-l1": "rgba(255, 255, 255, 0.2)",
+    "--dsw-alias-scrollbar-bg-l2": "rgba(255, 255, 255, 0.08)",
+    "--dsw-alias-scrollbar-hover-l1": "rgba(255, 255, 255, 0.32)",
+    "--dsw-alias-scrollbar-hover-l2": "rgba(255, 255, 255, 0.2)",
+    "--dsw-alias-toast-bg": "#12141a",
+    "--dsw-alias-tooltip-bg": "#232836",
+    "--dsw-hovercard-bg": "#191d26",
+    /* 侧栏压到 55% 不透明度：动效层的极光从侧栏底下透出来（官网 hero 的读法） */
+    "--dsw-specific-sidebar-fill": "rgba(10, 10, 10, 0.55)",
+    "--dsw-specific-sidebar-nav-item-active": "rgba(103, 153, 254, 0.22)",
+    "--dsw-specific-sidebar-nav-item-active-accent": "#6799fe",
+    "--dsw-specific-sidebar-nav-item-hover": "rgba(255, 255, 255, 0.05)",
+    "--dsw-specific-bubble": "#12141a",
+    "--dsw-specific-bubble-highlight": "#191d26",
+    "--dsw-specific-input-major": "rgba(18, 20, 26, 0.86)",
+    "--dsw-specific-login-input": "#12141a",
+    "--dsw-specific-menu": "#191d26",
+    "--dsw-specific-selector": "#191d26",
+    "--dsw-specific-tip": "#232836",
+    "--dsw-font-family": HARNESS_SANS,
+    "--dsw-font-mono": HARNESS_MONO,
+    ...FLAT_SHADOWS
+  },
+  HARNESS_SANS,
+  HARNESS_MONO
+);
+var meta8 = {
+  dark: {
+    id: "harness-office",
+    label: "Harness \u5B98\u7F51",
+    desc: "\u66DC\u9ED1 #0a0a0a + \u5B98\u7F51\u84DD #6799fe \xB7 \u53EF\u4EA4\u4E92\u70B9\u9635",
+    swatch: ["#0a0a0a", "#1a3870", "#6799fe", "#ffffff"]
+  }
+};
+
 // src/host/themes/index.ts
 function expand(module) {
   const entries = [];
   for (const scheme of ["dark", "light"]) {
     const tokens = scheme === "dark" ? module.dark : module.light;
-    const meta8 = scheme === "dark" ? module.meta?.dark : module.meta?.light;
-    if (!tokens || !meta8) continue;
-    entries.push({ colorScheme: scheme, tokens, ...meta8 });
+    const meta9 = scheme === "dark" ? module.meta?.dark : module.meta?.light;
+    if (!tokens || !meta9) continue;
+    entries.push({ colorScheme: scheme, tokens, ...meta9 });
   }
   return entries;
 }
@@ -1649,7 +1763,8 @@ var THEME_CATALOG = [
   ...expand(luxury_exports),
   ...expand(xiaohongshu_exports),
   ...expand(supabase_exports),
-  ...expand(sakura_exports)
+  ...expand(sakura_exports),
+  ...expand(harness_office_exports)
 ];
 var THEME_IDS = THEME_CATALOG.map((t) => t.id);
 
@@ -1698,8 +1813,11 @@ function readBody(req, limit = 1024 * 1024) {
 var NS = settingsNamespace("dshp-web-style");
 var PHOTO_THEME_ID = "photo:custom";
 var KNOWN_THEME_IDS = /* @__PURE__ */ new Set([...THEME_IDS, PHOTO_THEME_ID]);
+var BACKGROUND_IDS = ["harness-dots", "aurora", "flow"];
+var KNOWN_BACKGROUND_IDS = new Set(BACKGROUND_IDS);
 var DEFAULT_CONFIG = {
   themeId: "",
+  backgroundId: "",
   photoPalette: null,
   radius: { global: -1 },
   // 背景壁纸（wallpaper.*）与毛玻璃（glass.*）是已退役的旧特性：
@@ -1711,6 +1829,7 @@ var DEFAULT_CONFIG = {
 };
 var ConfigSchema = Schema.object({
   themeId: Schema.string().default(""),
+  backgroundId: Schema.string().default(""),
   photoPalette: Schema.union([
     Schema.object({
       accent: Schema.string().pattern(/^#[0-9a-fA-F]{6}$/),
@@ -1733,6 +1852,11 @@ function sanitizeThemeId(value) {
   if (typeof value !== "string") return "";
   const v = value.trim();
   return KNOWN_THEME_IDS.has(v) ? v : "";
+}
+function sanitizeBackgroundId(value) {
+  if (typeof value !== "string") return "";
+  const v = value.trim();
+  return KNOWN_BACKGROUND_IDS.has(v) ? v : "";
 }
 function sanitizePhotoPalette(value) {
   if (value === null) return null;
@@ -1764,6 +1888,10 @@ function sanitizePatchConfig(raw) {
     out.themeId = sanitizeThemeId(raw["themeId"]);
     touched = true;
   }
+  if (typeof raw["backgroundId"] === "string") {
+    out.backgroundId = sanitizeBackgroundId(raw["backgroundId"]);
+    touched = true;
+  }
   if (Object.hasOwn(raw, "photoPalette")) {
     const pal = sanitizePhotoPalette(raw["photoPalette"]);
     if (pal !== null || raw["photoPalette"] === null) {
@@ -1792,6 +1920,7 @@ function apply(ctx, rawConfig) {
   const patch = sanitizePatchConfig(rawConfig);
   if (patch) {
     if (patch.themeId !== void 0) entry.themeId = patch.themeId;
+    if (patch.backgroundId !== void 0) entry.backgroundId = patch.backgroundId;
     if (patch.photoPalette !== void 0) entry.photoPalette = patch.photoPalette;
     if (patch.radius?.global !== void 0) entry.radius = { ...entry.radius, global: patch.radius.global };
   }
@@ -1812,6 +1941,7 @@ function apply(ctx, rawConfig) {
         const rec = v;
         return {
           themeId: typeof rec["themeId"] === "string" ? sanitizeThemeId(rec["themeId"]) : "",
+          backgroundId: typeof rec["backgroundId"] === "string" ? sanitizeBackgroundId(rec["backgroundId"]) : "",
           photoPalette: sanitizePhotoPalette(rec["photoPalette"]),
           radius: rec["radius"] && typeof rec["radius"] === "object" ? rec["radius"] : entry.radius,
           wallpaper: sanitizeOpaque(rec["wallpaper"]),
@@ -1826,6 +1956,7 @@ function apply(ctx, rawConfig) {
     const cfg = readConfig();
     return {
       themeId: cfg.themeId,
+      backgroundId: cfg.backgroundId,
       photoPalette: cfg.photoPalette,
       radius: cfg.radius,
       wallpaper: cfg.wallpaper,
@@ -1842,7 +1973,23 @@ function apply(ctx, rawConfig) {
     if (!settings) throw new Error("settings \u670D\u52A1\u4E0D\u53EF\u7528\uFF0C\u65E0\u6CD5\u6301\u4E45\u5316\u5B9A\u5236 UI \u914D\u7F6E");
     await settings.update(NS, patchObj);
   }
-  ctx.effect(
+  function effectRoute(routeName, register) {
+    ctx.effect(
+      () => {
+        try {
+          return register();
+        } catch (e) {
+          console.error(
+            "[dshp-web-style] \u8DEF\u7531\u6CE8\u518C\u5931\u8D25\uFF08" + routeName + "\uFF09\uFF0C\u8FD9\u9879\u8BBE\u7F6E\u672C\u6B21\u542F\u52A8\u4E0D\u751F\u6548\uFF1A" + String(e?.message ?? e)
+          );
+          return void 0;
+        }
+      },
+      "dshp-web-style: " + routeName + " route"
+    );
+  }
+  effectRoute(
+    "state",
     () => ctx.webServer.register({
       kind: "exact",
       path: "/ext/dshp-web-style/state",
@@ -1851,10 +1998,10 @@ function apply(ctx, rawConfig) {
         if (req.method !== "GET") return json(res, 405, { ok: false, error: "method not allowed" });
         return json(res, 200, { ok: true, ...snapshot() });
       }
-    }),
-    "dshp-web-style: state route"
+    })
   );
-  ctx.effect(
+  effectRoute(
+    "themes",
     () => ctx.webServer.register({
       kind: "exact",
       path: "/ext/dshp-web-style/themes",
@@ -1863,10 +2010,10 @@ function apply(ctx, rawConfig) {
         if (req.method !== "GET") return json(res, 405, { ok: false, error: "method not allowed" });
         return json(res, 200, { ok: true, count: THEME_CATALOG.length, themes: THEME_CATALOG });
       }
-    }),
-    "dshp-web-style: themes route"
+    })
   );
-  ctx.effect(
+  effectRoute(
+    "theme",
     () => ctx.webServer.register({
       kind: "exact",
       path: "/ext/dshp-web-style/theme",
@@ -1896,10 +2043,10 @@ function apply(ctx, rawConfig) {
           return json(res, 200, { ok: false, error: String(e?.message ?? e) });
         }
       }
-    }),
-    "dshp-web-style: theme route"
+    })
   );
-  ctx.effect(
+  effectRoute(
+    "config",
     () => ctx.webServer.register({
       kind: "exact",
       path: "/ext/dshp-web-style/config",
@@ -1920,6 +2067,9 @@ function apply(ctx, rawConfig) {
         const out = {};
         const rd = sanitizeRadius(a["radius"]);
         if (rd) out.radius = rd;
+        if (typeof a["backgroundId"] === "string") {
+          out.backgroundId = sanitizeBackgroundId(a["backgroundId"]);
+        }
         if (Object.hasOwn(a, "photoPalette")) {
           const pal = sanitizePhotoPalette(a["photoPalette"]);
           if (pal === null && a["photoPalette"] !== null) {
@@ -1934,9 +2084,8 @@ function apply(ctx, rawConfig) {
           return json(res, 200, { ok: false, error: String(e?.message ?? e) });
         }
       }
-    }),
-    "dshp-web-style: config route"
+    })
   );
 }
 
-export { ConfigSchema, NS, THEME_CATALOG, THEME_IDS, apply, inject, name };
+export { BACKGROUND_IDS, ConfigSchema, NS, THEME_CATALOG, THEME_IDS, apply, inject, name };

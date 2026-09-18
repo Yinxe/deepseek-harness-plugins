@@ -62,6 +62,13 @@ export const THEMES: ThemeMeta[] = [
     desc: '樱白 #fff9fa + 樱粉 #e75480',
     swatch: ['#fff9fa', '#fbeef2', '#e75480', '#432635'],
   },
+  {
+    id: 'harness-office',
+    colorScheme: 'dark',
+    label: 'Harness 官网',
+    desc: '曜黑 #0a0a0a + 官网蓝 #6799fe · 可交互点阵',
+    swatch: ['#0a0a0a', '#1a3870', '#6799fe', '#ffffff'],
+  },
 ];
 
 /** 内置主题的画廊显示名（light/dark 也能在画廊里被切回）。 */

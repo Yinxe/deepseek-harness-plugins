@@ -37,3 +37,8 @@ export function applyRadius(radius: RadiusConfig | null | undefined): void {
     document.head.appendChild(style);
   }
 }
+
+/** 撤销圆角样式（插件停止时收回——样式节点是本插件自己 append 的，不能留在 document 上）。 */
+export function disposeRadius(): void {
+  document.getElementById(CSS_ID)?.remove();
+}
