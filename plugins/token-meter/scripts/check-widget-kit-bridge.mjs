@@ -326,8 +326,8 @@ for (const id of expected) {
 }
 const meterIds = registeredIds.filter((id) => id.startsWith('token-meter:'));
 assert.deepEqual(
-  [...meterIds].sort(),
-  [...expected].sort(),
+  meterIds.toSorted(),
+  expected.toSorted(),
   `额度已不再是可弹出卡片（改成侧边栏按钮），本插件名下不该多出别的 id：${meterIds.join(', ')}`,
 );
 
@@ -634,7 +634,6 @@ assert.equal(
   '勾了余额，图表（环）也必须一直在（用户口径：图表一直显示）',
 );
 // 点一下控件真的会写进 localStorage（组件级通信、无 Host 往返）
-const radio = collect(goatDetail, (node) => node.type === 'button' && node.props?.role === 'radio')[0];
 const radios = collect(goatDetail, (node) => node.type === 'button' && node.props?.role === 'radio');
 const fiveHour = radios.find((node) => node.props?.children === '5h');
 assert.ok(fiveHour !== undefined, '5h 那一项应当是可点按钮');

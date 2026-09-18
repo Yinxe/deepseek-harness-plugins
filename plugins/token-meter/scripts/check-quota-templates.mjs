@@ -22,8 +22,6 @@ import {
   defaultRingSpec,
   failureRingSpec,
   toneOfPct,
-  windowOfMetric,
-  windowPct,
   worstWindowPct,
 } from '../src/client/providers/templates.ts';
 
