@@ -363,6 +363,7 @@ export function BalanceBlock(deps: KitDeps, props: BalanceBlockProps): ReactNode
   if (!Object.keys(b).length) return null;
   const amt = deps.num(b['balance'], 0);
   const cur = String(b['currency'] || 'CNY');
+  const sym = deps.curSymbol(cur);
   const granted = b['granted'] !== undefined && b['granted'] !== null ? deps.num(b['granted'], 0) : null;
   const topped = b['toppedUp'] !== undefined && b['toppedUp'] !== null ? deps.num(b['toppedUp'], 0) : null;
   const avail = b['isAvailable'];
@@ -390,7 +391,7 @@ export function BalanceBlock(deps: KitDeps, props: BalanceBlockProps): ReactNode
       <div>
         {/* 币种只出现一次：curSymbol 对已知币种给符号（$ / ¥），未知币种给「代码 + 空格」，
             以前这里又拼了一遍 cur，于是显示成 `$USD 46.07` */}
-        <span className={styles.paygCur}>{deps.curSymbol(cur) || cur}</span>
+        <span className={styles.paygCur}>{sym || cur}</span>
         <span className={styles.paygAmt + (amt < 0 ? ' ' + styles.neg : '')}>{deps.fmt(amt)}</span>
       </div>
       <span className={styles.avail + ' ' + styles[availCls]} title={availTip}>
@@ -399,9 +400,9 @@ export function BalanceBlock(deps: KitDeps, props: BalanceBlockProps): ReactNode
     </div>,
   );
   const parts: string[] = [];
-  if (granted !== null && granted > 0) parts.push('赠送 ' + deps.fmt(granted));
-  if (topped !== null && topped > 0) parts.push('充值 ' + deps.fmt(topped));
-  if (warnLine !== null) parts.push('预警线 ' + deps.fmt(warnLine));
+  if (granted !== null && granted > 0) parts.push('赠送 ' + sym + deps.fmt(granted));
+  if (topped !== null && topped > 0) parts.push('充值 ' + sym + deps.fmt(topped));
+  if (warnLine !== null) parts.push('预警线 ' + sym + deps.fmt(warnLine));
   if (parts.length)
     kids.push(
       <div key="parts" className={styles.paygSub}>
@@ -430,7 +431,7 @@ export function BalanceBlock(deps: KitDeps, props: BalanceBlockProps): ReactNode
   else if (low)
     kids.push(
       <div key="warn" className={styles.warnLine}>
-        {'余额低于预警线 ' + deps.fmt(warnLine) + '，建议及时充值。'}
+        {'余额低于预警线 ' + sym + deps.fmt(warnLine) + '，建议及时充值。'}
       </div>,
     );
   // 旧实现的 'tm-payg' 在样式表里从来没有对应规则（只有 .tm-payg-* 系列），CSS Module 迁移后

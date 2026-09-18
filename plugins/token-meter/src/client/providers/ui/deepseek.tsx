@@ -72,6 +72,7 @@ export function deepseekDetail(ctx: RenderCtx, K: ProviderUIKit): ReactNode {
 
   /* ── 余额告警（与可用性判据同源：余额 ≤ 0 或上游明确报不足）──────── */
   const amt = K.num(b['balance'], 0);
+  const dSym = K.curSymbol(String(b['currency'] || ''));
   const warnLine =
     b['lowWarn'] !== undefined && b['lowWarn'] !== null && b['lowWarn'] !== ''
       ? K.num(b['lowWarn'], 0)
@@ -80,7 +81,11 @@ export function deepseekDetail(ctx: RenderCtx, K: ProviderUIKit): ReactNode {
     kids.push(<K.NoteLine key="empty" text="余额不足，API 调用可能被拒绝，请及时充值。" tone="bad" />);
   } else if (warnLine !== null && amt <= warnLine) {
     kids.push(
-      <K.NoteLine key="low" text={'余额低于预警线 ' + K.fmt(warnLine) + '，建议及时充值。'} tone="warn" />,
+      <K.NoteLine
+        key="low"
+        text={'余额低于预警线 ' + dSym + K.fmt(warnLine) + '，建议及时充值。'}
+        tone="warn"
+      />,
     );
   }
 

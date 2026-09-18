@@ -1306,10 +1306,10 @@
   margin-top: 0;
 }
 .paygCur {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--dsw-alias-label-secondary);
-  margin-right: 6px;
+  margin-right: 2px;
 }
 .paygAmt {
   font-size: 22px;
@@ -1324,7 +1324,6 @@
 .paygTop {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
 }
 .paygSub {
@@ -4034,11 +4033,40 @@ div:has(> div[data-slot='sidebar.footer.action']) {
   color: var(--dsw-alias-label-secondary);
 }
 .prefBox {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 30px;
+  height: 18px;
+  margin: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--dsw-alias-border-l2);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.16s ease;
+}
+.prefBox::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
   width: 14px;
   height: 14px;
-  margin: 0;
-  accent-color: var(--dsw-alias-brand-primary);
-  cursor: pointer;
+  border-radius: 50%;
+  background: var(--dsw-alias-bg-layer-1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+  transition: transform 0.16s ease;
+}
+.prefBox:checked {
+  background: var(--dsw-alias-brand-primary);
+}
+.prefBox:checked::before {
+  transform: translateX(12px);
+}
+.prefBox:focus-visible {
+  outline: 2px solid var(--dsw-alias-label-primary);
+  outline-offset: 2px;
 }
 .prefSeg {
   display: inline-flex;

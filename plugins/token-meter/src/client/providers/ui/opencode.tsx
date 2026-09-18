@@ -66,6 +66,7 @@ export function opencodeDetail(ctx: RenderCtx, K: ProviderUIKit): ReactNode {
   const showBalance = ctx.prefs.get(BALANCE_PREF, '0') === '1';
   kids.push(
     <div key="prefs" className={styles.prefBlock}>
+      <K.SectionTitle text="侧栏按钮显示" />
       <K.PrefSwitch
         key="bal"
         label="数值位显示余额"
@@ -75,7 +76,7 @@ export function opencodeDetail(ctx: RenderCtx, K: ProviderUIKit): ReactNode {
       />
       <K.PrefChoice
         key="win"
-        label="按钮画哪个窗口"
+        label="环画哪个窗口"
         value={selectedWindow(ctx)}
         options={WINDOW_OPTIONS}
         onChange={(next) => ctx.prefs.set(WINDOW_PREF, next)}
