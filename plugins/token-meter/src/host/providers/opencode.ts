@@ -425,6 +425,7 @@ export function parseOpencodePages(
 
 const opencode: ProviderAdapter = {
   type: 'opencode',
+  icon: 'opencode',
   label: 'OC',
   title: 'opencode（Go+Zen 合并）',
   secretField: 'cookie',

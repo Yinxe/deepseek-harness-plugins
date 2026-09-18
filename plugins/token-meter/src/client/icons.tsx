@@ -2,7 +2,8 @@
  * 插件自绘导航图标（纯 SVG，零依赖）
  *
  * 用途：
- *  - 中心区「Token 总览」视图的左侧菜单项图标（CenterView.tsx），以 `{ size, className }` 渲染。
+ *  - 中心区「Token 总览」视图的左侧菜单项图标（CenterView.tsx），以 `{ size, className }` 渲染；
+ *  - `QuotaIcon` 还被额度浮层的标题行复用（额度已不是中心区的一个分区）。
  *
  * 数据语义图标（指标卡 / 图表标题上的那些）在 glyphs.tsx；两者共用同一套 `svgAttrs` 默认值，
  * 观感一致：viewBox 固定 0 0 24 24、颜色走 currentColor（跟随所在行的文字色/主题）、

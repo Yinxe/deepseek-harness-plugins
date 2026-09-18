@@ -356,6 +356,7 @@ export function buildCommandCodeView(
 
 const commandcode: ProviderAdapter = {
   type: 'commandcode',
+  icon: 'commandcode',
   label: 'CC',
   title: 'commandcode（Command Code）',
   secretField: 'apiKey',

@@ -3,7 +3,6 @@
  *
  * 展示方式对齐原生「轨迹」插件：在会话中心区注册**一个** tab（与「对话 / 轨迹」并列），
  * tab 内部再用左侧菜单切换三块内容：
- *   - 额度查询：全部供应商额度富卡片（quota.QuotaView）
  *   - 用量统计：完整统计图表（StatsView）
  *   - 在线统计：在线时长估算（online.OnlineView）
  *
@@ -25,8 +24,6 @@ import styles from './styles.module.css';
 import { DISPLAY_NAME } from '../name.js';
 
 export interface CenterViewSections {
-  /** 额度查询内容 */
-  QuotaView: any;
   /** 用量统计内容 */
   StatsView: any;
   /** 在线统计内容 */
@@ -40,7 +37,6 @@ export interface CenterViewSections {
 }
 
 export interface CenterViewIcons {
-  QuotaIcon: any;
   UsageIcon: any;
   OnlineIcon: any;
   SettingsIcon: any;
@@ -48,7 +44,7 @@ export interface CenterViewIcons {
 }
 
 /** 侧边菜单项 id（同时也是 localStorage 里存的值） */
-type SectionId = 'quota' | 'stats' | 'online' | 'settings';
+type SectionId = 'stats' | 'online' | 'settings';
 
 interface NavItem {
   id: SectionId;
@@ -96,12 +92,6 @@ export function createCenterView(
 ): (props: any) => ReactNode {
   const ITEMS: NavItem[] = [
     {
-      id: 'quota',
-      label: '额度查询',
-      hint: '全部供应商额度一览 · 增删改供应商在左侧「设置」里',
-      Icon: icons.QuotaIcon,
-    },
-    {
       id: 'stats',
       label: '用量统计',
       hint: '会话日志聚合的用量趋势、热力图与模型分布',
@@ -147,8 +137,6 @@ export function createCenterView(
       }
     };
     const active: NavItem = ITEMS.filter((i) => i.id === cur)[0] ?? first;
-    /** 供各分区内部「去设置」的入口调用（例如额度查询的空状态） */
-    const openSettings = (): void => pick('settings');
 
     const box = sections as Record<string, any>;
     /** 渲染分区；未装配的字段渲染一条就地提示，而不是让 React 抛 #130 崩掉整个 tab */
@@ -218,9 +206,7 @@ export function createCenterView(
           </header>
           {/* 只挂载当前分区的面板：各面板自己会去打接口，全挂载会白拉几份数据。 */}
           <div className={styles.cbody} data-tm-scroll="1">
-            {cur === 'quota' ? (
-              section('QuotaView', { onOpenSettings: openSettings })
-            ) : cur === 'stats' ? (
+            {cur === 'stats' ? (
               section('StatsView')
             ) : cur === 'online' ? (
               section('OnlineView')

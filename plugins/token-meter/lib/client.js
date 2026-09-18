@@ -37,13 +37,13 @@ __export(client_exports, {
 module.exports = __toCommonJS(client_exports);
 
 // <define:__DSHP_TOKEN_METER_PKG__>
-var define_DSHP_TOKEN_METER_PKG_default = { name: "@dshp/token-meter", version: "0.8.0", repo: "github.com/Yinxe/deepseek-harness-plugins/tree/main/plugins/token-meter" };
+var define_DSHP_TOKEN_METER_PKG_default = { name: "@dshp/token-meter", version: "0.13.0", repo: "github.com/Yinxe/deepseek-harness-plugins/tree/main/plugins/token-meter" };
 
 // src/client/CenterView.tsx
 var import_react = require("react");
 
 // dsh-css-module:dsh-css:src/client/styles.module.css.mjs
-var css = '.i1tZMq_page{color:var(--dsw-alias-label-primary);flex-direction:column;max-width:820px;font-size:13px;line-height:1.6;display:flex;container:i1tZMq_tm/inline-size}.i1tZMq_title{color:var(--dsw-alias-label-primary);margin:0 0 4px;font-size:15px;font-weight:600}.i1tZMq_desc{color:var(--dsw-alias-label-secondary);margin:0 0 14px}.i1tZMq_intro{color:var(--dsw-alias-label-tertiary);margin:0 0 4px;font-size:14px;line-height:22px}.i1tZMq_section{flex-direction:column;width:100%;display:flex}.i1tZMq_sectionHead{color:var(--dsw-alias-label-secondary);padding:14px 0 2px;font-size:12px;font-weight:500;line-height:18px}.i1tZMq_row{border-bottom:.5px solid var(--dsw-alias-border-l2);align-items:center;gap:8px;padding:16px 0;display:flex}.i1tZMq_rowWrap{border-bottom:.5px solid var(--dsw-alias-border-l2);flex-direction:column;align-items:flex-start;gap:8px;padding:16px 0;display:flex}.i1tZMq_section .i1tZMq_row:last-child,.i1tZMq_section .i1tZMq_rowWrap:last-child,.i1tZMq_section .i1tZMq_bar:last-child{border-bottom:none}.i1tZMq_rowText{flex-direction:column;flex:1;gap:4px;min-width:0;padding-right:48px;display:flex}.i1tZMq_rowLabel{color:var(--dsw-alias-label-primary);flex:none;font-size:14px;font-weight:400;line-height:22px}.i1tZMq_rowDesc{color:var(--dsw-alias-label-tertiary);font-size:12px;font-weight:400;line-height:18px}.i1tZMq_rowValue{color:var(--dsw-alias-label-primary);text-align:right;justify-content:flex-end;align-items:center;min-width:0;font-size:13px;line-height:20px;display:flex}.i1tZMq_field{border-bottom:.5px solid var(--dsw-alias-border-l2);flex-direction:column;gap:6px;padding:14px 0;display:flex}.i1tZMq_section>.i1tZMq_field:last-of-type{border-bottom:none}.i1tZMq_fieldHead{flex-wrap:wrap;align-items:center;gap:6px;display:flex}.i1tZMq_fieldLabel{color:var(--dsw-alias-label-primary);font-size:14px;font-weight:500;line-height:22px}.i1tZMq_fieldReq{color:var(--dsw-alias-state-warn-label);background:color-mix(in srgb, var(--dsw-alias-state-warn-primary) 14%, transparent);border-radius:4px;flex:none;padding:0 6px;font-size:10px;line-height:15px}.i1tZMq_fieldOpt{color:var(--dsw-alias-label-tertiary);flex:none;font-size:11px;line-height:16px}.i1tZMq_fieldControl{flex-wrap:wrap;align-items:center;gap:8px;min-width:0;display:flex}.i1tZMq_fieldControl>.i1tZMq_inputWrap{flex:260px;width:auto;min-width:0}.i1tZMq_fieldControl>.i1tZMq_selector{max-width:100%}.i1tZMq_fieldDesc{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}.i1tZMq_fieldNote{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);border-radius:8px;margin:10px 0 0;padding:8px 10px;font-size:12px;line-height:18px}.i1tZMq_fieldNote b{color:var(--dsw-alias-label-primary);margin-right:4px;font-weight:600}.i1tZMq_inputReadonly{background:var(--dsw-alias-bg-layer-2);cursor:not-allowed;border-style:dashed}.i1tZMq_inputReadonly .i1tZMq_ninput{color:var(--dsw-alias-label-secondary)}.i1tZMq_rowControl{flex:1;justify-content:flex-end;min-width:0;display:flex}.i1tZMq_card{background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l1);border-radius:12px;margin:0 0 8px;padding:14px 16px}.i1tZMq_btn{border:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-primary);cursor:pointer;white-space:nowrap;background:0 0;border-radius:8px;flex:none;justify-content:center;align-items:center;gap:6px;padding:6px 12px;font-family:inherit;font-size:13px;display:inline-flex}.i1tZMq_btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);border-color:color-mix(in srgb, var(--dsw-alias-state-business-primary) 55%, var(--dsw-alias-border-l2))}.i1tZMq_btn:disabled{opacity:.4;cursor:default}.i1tZMq_btnPrimary{background:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary);color:#fff}.i1tZMq_btnDanger{color:var(--dsw-alias-state-error-primary);border-color:var(--dsw-alias-state-error-primary)}.i1tZMq_notice{border-radius:8px;margin:0 0 12px;padding:8px 12px;font-size:12.5px}.i1tZMq_noticeErr{background:color-mix(in srgb, var(--dsw-alias-state-error-primary) 12%, transparent);color:var(--dsw-alias-state-error-primary)}.i1tZMq_noticeEmpty{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary)}.i1tZMq_noticeWarn{color:var(--dsw-alias-state-warn-label)}.i1tZMq_noticeOk{color:var(--dsw-alias-state-success-primary)}.i1tZMq_hint{color:var(--dsw-alias-label-secondary);font-size:12px}.i1tZMq_menu{flex-direction:column;gap:8px;min-width:0;display:flex}.i1tZMq_menuHead{gap:6px;display:flex}.i1tZMq_menuHint{color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px}.i1tZMq_menuList{flex-direction:column;gap:2px;max-height:46vh;display:flex;overflow:auto}.i1tZMq_menuRow{border-radius:8px;align-items:center;gap:8px;min-width:0;padding:5px 6px;display:flex}.i1tZMq_menuRow:hover{background:var(--dsw-alias-bg-layer-2)}.i1tZMq_menuDot{border:1px solid var(--dsw-alias-border-l2);background:0 0;border-radius:50%;flex:none;width:6px;height:6px}.i1tZMq_menuRow[data-open="1"] .i1tZMq_menuDot{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-primary)}.i1tZMq_menuLabel{min-width:0;color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;flex:auto;font-size:12px;line-height:18px;overflow:hidden}.i1tZMq_menuBtn{border:1px solid var(--dsw-alias-border-l1);cursor:pointer;color:var(--dsw-alias-label-secondary);background:0 0;border-radius:6px;flex:none;padding:2px 8px;font-family:inherit;font-size:11px;line-height:16px}.i1tZMq_menuBtn:hover:not(:disabled){border-color:var(--dsw-alias-state-business-primary);color:var(--dsw-alias-label-primary)}.i1tZMq_menuBtn:disabled{opacity:.5;cursor:default}.i1tZMq_menuEmpty{color:var(--dsw-alias-label-tertiary);padding:4px 2px;font-size:12px}.i1tZMq_menuFoot{border-top:1px solid var(--dsw-alias-border-l1);justify-content:space-between;align-items:center;gap:8px;padding-top:8px;display:flex}.i1tZMq_menuCount{color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums;font-size:11px}.i1tZMq_cardHint{color:var(--dsw-alias-label-tertiary);margin:0;font-size:12px;line-height:18px}.i1tZMq_mono{font-family:var(--ds-font-family-code)}.i1tZMq_toolbar{flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 8px;display:flex}.i1tZMq_selector{background:var(--dsw-alias-bg-module-platform);height:36px;font:inherit;color:var(--dsw-alias-label-primary);cursor:pointer;border:none;border-radius:18px;align-items:center;gap:12px;max-width:100%;padding:0 14px;font-size:14px;line-height:22px;display:inline-flex}.i1tZMq_selector:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}.i1tZMq_selector:disabled{cursor:default;opacity:.4}.i1tZMq_selectorLabel{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.i1tZMq_chevron{flex:none}.i1tZMq_tabs{border:1px solid var(--dsw-alias-border-l1);border-radius:12px;gap:2px;margin:8px 0 4px;padding:2px;display:inline-flex}.i1tZMq_tab{color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:8px;padding:4px 14px;font-family:inherit;font-size:13px;line-height:20px}.i1tZMq_tab:hover{color:var(--dsw-alias-label-primary)}.i1tZMq_tabOn{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.i1tZMq_grid{grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px;display:grid}.i1tZMq_statGrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0;display:grid}.i1tZMq_stat{background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l1);border-radius:12px;flex-direction:column;gap:2px;padding:10px 12px;transition:border-color .15s;display:flex;position:relative;overflow:hidden}.i1tZMq_stat:hover{border-color:var(--dsw-alias-state-business-primary)}.i1tZMq_statLabel{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}.i1tZMq_statValue{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;font-size:17px;font-weight:600;line-height:24px}.i1tZMq_stat[data-tint="1"] .i1tZMq_statValue{background:linear-gradient(100deg, var(--dsw-alias-state-business-primary), color-mix(in srgb, var(--dsw-alias-state-business-primary) 52%, #34d399));color:#0000;-webkit-background-clip:text;background-clip:text}.i1tZMq_statSub{color:var(--dsw-alias-label-secondary);text-overflow:ellipsis;white-space:nowrap;font-size:11px;line-height:16px;overflow:hidden}.i1tZMq_pop{z-index:50;pointer-events:none;background:var(--dsw-specific-menu);border:1px solid var(--dsw-alias-border-l2);box-shadow:var(--dsw-shadow-lv3);max-width:300px;color:var(--dsw-alias-label-primary);border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.5;position:fixed}.i1tZMq_popTitle{margin-bottom:6px;font-size:12.5px;font-weight:600}.i1tZMq_popRow{white-space:nowrap;align-items:center;gap:6px;margin:2px 0;display:flex}.i1tZMq_popRow .i1tZMq_dot{border-radius:2.5px;flex:none;width:8px;height:8px}.i1tZMq_popK{color:var(--dsw-alias-label-secondary)}.i1tZMq_popV{font-variant-numeric:tabular-nums;margin-left:auto;padding-left:12px}.i1tZMq_popBar{background:var(--dsw-alias-interactive-bg-hover);border-radius:2px;flex:1;min-width:50px;height:4px;display:block;overflow:hidden}.i1tZMq_popFill{border-radius:2px;height:100%;display:block}.i1tZMq_tip,.i1tZMq_tipfixed{background:var(--dsw-specific-menu);border:1px solid var(--dsw-alias-border-l2);box-shadow:var(--dsw-shadow-lv3);pointer-events:none;color:var(--dsw-alias-label-primary);z-index:60;border-radius:8px;max-width:280px;padding:7px 10px;font-size:11.5px;line-height:1.5;position:fixed}.i1tZMq_tipfloat{z-index:500}.i1tZMq_tipAbove{z-index:350}.i1tZMq_tiprow{white-space:nowrap;align-items:center;gap:6px;display:flex}.i1tZMq_tipK{color:var(--dsw-alias-label-secondary)}.i1tZMq_tipV{font-variant-numeric:tabular-nums;font-weight:500}.i1tZMq_dot{background:var(--dsw-alias-state-success-primary);border-radius:3px;flex:none;width:10px;height:10px;display:inline-block}.i1tZMq_dot.i1tZMq_warn{background:var(--dsw-alias-state-warn-primary)}.i1tZMq_dot.i1tZMq_bad{background:var(--dsw-alias-state-error-primary)}.i1tZMq_dot.i1tZMq_off{box-sizing:border-box;border:1.5px solid var(--dsw-alias-state-error-primary);background:0 0}.i1tZMq_muted{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}.i1tZMq_chartTitle{color:var(--dsw-alias-label-secondary);flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 8px;margin:0 0 8px;font-size:12.5px;font-weight:600;display:flex}.i1tZMq_chartTitle>span:first-child{text-overflow:ellipsis;white-space:nowrap;flex:auto;min-width:0;overflow:hidden}.i1tZMq_chartWrap{margin:8px 0;overflow-x:auto}.i1tZMq_seg{border:1px solid var(--dsw-alias-border-l1);border-radius:8px;flex-wrap:wrap;gap:2px;padding:2px;display:inline-flex}.i1tZMq_segBtn{color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:6px;padding:2px 8px;font-family:inherit;font-size:12px;line-height:18px}.i1tZMq_segBtn:hover{color:var(--dsw-alias-label-primary)}.i1tZMq_segOn{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary);box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-state-business-primary) 40%, transparent)}.i1tZMq_legend{flex-wrap:wrap;align-items:center;gap:4px;margin-top:8px;display:flex}.i1tZMq_cacheRow{color:var(--dsw-alias-label-secondary);flex-wrap:wrap;align-items:center;gap:5px;margin-top:6px;font-size:11px;line-height:16px;display:flex}.i1tZMq_cacheSep{color:var(--dsw-alias-label-tertiary)}.i1tZMq_peak{border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);cursor:default;border-radius:12px;flex-direction:column;gap:6px;margin:0 0 8px;padding:10px 12px;display:flex;position:relative}.i1tZMq_peak:focus{outline:none}.i1tZMq_peak:focus-visible{box-shadow:0 0 0 2px color-mix(in srgb, var(--dsw-alias-state-business-primary) 55%, transparent)}.i1tZMq_peakHead{flex-wrap:wrap;align-items:center;gap:4px 6px;min-width:0;display:flex}.i1tZMq_peakDot{border-radius:50%;flex:none;width:8px;height:8px}.i1tZMq_peakDot.i1tZMq_peak{background:var(--dsw-alias-state-warn-primary);box-shadow:0 0 6px var(--dsw-alias-state-warn-primary)}.i1tZMq_peakDot.i1tZMq_valley{background:var(--dsw-alias-state-success-primary)}.i1tZMq_peakTitle{color:var(--dsw-alias-label-primary);white-space:nowrap;flex:none;font-size:12px;font-weight:600}.i1tZMq_peakChip{white-space:nowrap;border-radius:999px;flex:none;padding:0 7px;font-size:10.5px;font-weight:600;line-height:16px}.i1tZMq_peakChip.i1tZMq_peak{color:var(--dsw-alias-state-warn-label);background:color-mix(in srgb, var(--dsw-alias-state-warn-primary) 16%, transparent)}.i1tZMq_peakChip.i1tZMq_valley{color:var(--dsw-alias-state-success-primary);background:color-mix(in srgb, var(--dsw-alias-state-success-primary) 14%, transparent)}.i1tZMq_peakTime{text-align:right;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none;margin-left:auto;font-size:11px;line-height:16px}.i1tZMq_tipfixed.i1tZMq_peakPop{border-color:color-mix(in srgb, var(--dsw-alias-state-business-primary) 30%, var(--dsw-alias-border-l2));width:252px;max-width:calc(100vw - 16px);padding:9px 11px;font-size:11px;animation:.18s cubic-bezier(.22,.8,.3,1) i1tZMq_tm-peakPopIn;box-shadow:0 14px 34px -10px #0000006b}.i1tZMq_peakPopHead{align-items:center;gap:6px;margin-bottom:6px;font-size:11.5px;font-weight:600;display:flex}.i1tZMq_peakPopDot{border-radius:50%;flex:none;width:7px;height:7px}.i1tZMq_peakPopDot.i1tZMq_peak{background:var(--dsw-alias-state-warn-primary);box-shadow:0 0 5px var(--dsw-alias-state-warn-primary)}.i1tZMq_peakPopDot.i1tZMq_valley{background:var(--dsw-alias-state-success-primary)}.i1tZMq_peakPopClock{font-family:var(--ds-font-family-code);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);margin-left:auto;font-weight:600;animation:.45s i1tZMq_tm-peakTick}.i1tZMq_peakPop .i1tZMq_tipV{font-weight:500}.i1tZMq_peakPopFoot{border-top:1px dashed var(--dsw-alias-border-l1);color:var(--dsw-alias-label-tertiary);margin-top:6px;padding-top:6px;font-size:10px;line-height:14px}@keyframes i1tZMq_tm-peakPopIn{0%{opacity:0;transform:translateY(-6px)scale(.97)}}@keyframes i1tZMq_tm-peakTick{0%{opacity:.25;transform:translateY(-4px)}}.i1tZMq_peakBand{gap:1.5px;height:10px;display:flex}.i1tZMq_peakCell{background:var(--dsw-alias-interactive-bg-hover);border-radius:2px;flex:1 1 0;min-width:0}.i1tZMq_peakCell.i1tZMq_on{background:var(--dsw-alias-state-warn-primary);opacity:.85}.i1tZMq_peakCell.i1tZMq_now{outline:1.5px solid var(--dsw-alias-label-primary);outline-offset:-1px}.i1tZMq_peakHint{color:var(--dsw-alias-label-tertiary);font-size:10.5px;line-height:15px}.i1tZMq_peakHint b{color:var(--dsw-alias-label-secondary);font-weight:600}.i1tZMq_modelchip{border:1px solid var(--dsw-alias-border-l1);cursor:pointer;color:var(--dsw-alias-label-secondary);background:0 0;border-radius:999px;align-items:center;gap:5px;max-width:180px;padding:2px 9px;font-family:inherit;font-size:11.5px;line-height:18px;display:inline-flex;position:relative}.i1tZMq_modelchip:hover{border-color:var(--dsw-alias-state-business-primary)}.i1tZMq_modelchip[data-off="1"]{opacity:.38}.i1tZMq_modelchip .i1tZMq_dot{width:8px;height:8px}.i1tZMq_mcName{text-overflow:ellipsis;white-space:nowrap;max-width:130px;overflow:hidden}.i1tZMq_heatwrap{position:relative}.i1tZMq_heatrow{flex:auto;min-width:0;display:flex}.i1tZMq_hcell{aspect-ratio:1;cursor:default;border-radius:2.5px;flex:1 1 0;min-width:0}.i1tZMq_hcell[data-lv="0"]{background:var(--dsw-alias-interactive-bg-hover);opacity:.45}.i1tZMq_cell{border-radius:2.5px;flex:none;width:9px;height:9px;margin:0 2px;display:inline-block}.i1tZMq_models{flex-direction:column;flex:1;min-width:300px;display:flex}.i1tZMq_model{border-bottom:1px solid var(--dsw-alias-border-l1);cursor:default;border-radius:6px;align-items:flex-start;gap:10px;padding:8px 4px;display:flex}.i1tZMq_model:hover{background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 4%, transparent)}.i1tZMq_model:last-child{border-bottom:none}.i1tZMq_model .i1tZMq_dot{margin-top:5px}.i1tZMq_bartrack{background:var(--dsw-alias-interactive-bg-hover);border-radius:3px;flex:1;min-width:60px;height:6px;overflow:hidden}.i1tZMq_barfill{border-radius:3px;height:100%;transition:width .3s;display:block}.i1tZMq_modelname{color:var(--dsw-alias-label-primary);white-space:nowrap;text-overflow:ellipsis;flex:1;min-width:0;font-size:13px;overflow:hidden}.i1tZMq_modelval{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;flex:none;font-size:12px}.i1tZMq_flexrow{flex-wrap:wrap;justify-content:center;align-items:center;gap:20px;display:flex}.i1tZMq_empty{color:var(--dsw-alias-label-secondary);text-align:center;padding:28px 0;font-size:13px}.i1tZMq_svgwrap{position:relative}.i1tZMq_spark{width:100%;height:34px;margin-top:6px;display:block}.i1tZMq_compose{background:var(--dsw-alias-interactive-bg-hover);border-radius:4px;height:8px;margin-top:6px;display:flex;overflow:hidden}.i1tZMq_compose span{height:100%;display:block}.i1tZMq_composeLegend{color:var(--dsw-alias-label-caption);flex-wrap:wrap;gap:8px;margin-top:5px;font-size:10px;line-height:14px;display:flex}.i1tZMq_composeLegend i{vertical-align:-1px;border-radius:2px;width:7px;height:7px;margin-right:3px;display:inline-block}.i1tZMq_statgrow{align-items:center;gap:4px;margin-top:6px;font-size:11px;line-height:14px;display:flex}.i1tZMq_arrow{vertical-align:middle;border-left:4px solid #0000;border-right:4px solid #0000;width:0;height:0;display:inline-block}.i1tZMq_arrowUp{border-bottom:5px solid var(--dsw-alias-state-success-primary)}.i1tZMq_arrowDown{border-top:5px solid var(--dsw-alias-state-error-primary)}.i1tZMq_streakbar{background:var(--dsw-alias-interactive-bg-hover);border-radius:4px;height:8px;margin-top:7px;overflow:hidden}.i1tZMq_streakfill{border-radius:4px;height:100%;display:block}.i1tZMq_dayscroll{gap:1.5px;height:12px;margin-top:7px;display:flex}.i1tZMq_dayscroll span{border-radius:1.5px;flex:1 1 0;min-width:0;display:block}.i1tZMq_axislbl{fill:var(--dsw-alias-label-caption);font-size:10.5px}.i1tZMq_gridln{stroke:var(--dsw-alias-border-l1);stroke-width:1px}.i1tZMq_bar{border-bottom:.5px solid var(--dsw-alias-border-l2);flex-wrap:wrap;align-items:center;gap:8px;padding:12px 0;display:flex}.i1tZMq_side{background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l1);border-radius:12px;margin:2px 0;padding:8px 10px;position:relative;overflow:visible}.i1tZMq_side.i1tZMq_loading{animation:1.2s infinite i1tZMq_tm-pulse}.i1tZMq_side.i1tZMq_error{border-color:var(--dsw-alias-state-error-primary)}.i1tZMq_in{animation:.35s i1tZMq_tm-in}.i1tZMq_vendor{cursor:pointer;text-align:left;background:0 0;border:none;align-items:center;gap:6px;width:100%;padding:0;display:flex}.i1tZMq_vname{min-width:0;color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;flex:1;font-size:12px;font-weight:600;overflow:hidden}.i1tZMq_vname2{color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:500;overflow:hidden}.i1tZMq_vtype{color:var(--dsw-alias-brand-primary);flex:none;font-size:10px}.i1tZMq_vcaret{color:var(--dsw-alias-label-secondary);flex:none;font-size:10px}.i1tZMq_backdrop{z-index:55;cursor:default;background:0 0;border:none;margin:0;padding:0;position:fixed;inset:0}.i1tZMq_popmenu{z-index:400;background:color-mix(in srgb, var(--dsw-alias-bg-layer-1) 78%, transparent);backdrop-filter:blur(12px)saturate(1.4);border:1px solid var(--dsw-alias-border-l2);border-radius:12px;flex-direction:column;gap:2px;min-width:180px;max-width:260px;max-height:240px;margin:0;padding:6px;display:flex;position:fixed;overflow:auto;box-shadow:0 12px 32px #00000040}.i1tZMq_mitem{cursor:pointer;width:100%;color:var(--dsw-alias-label-secondary);text-align:left;background:0 0;border:1px solid #0000;border-radius:6px;align-items:center;gap:6px;padding:4px 6px;font-size:12px;display:flex}.i1tZMq_mitem:hover{border-color:var(--dsw-alias-border-l1);color:var(--dsw-alias-label-primary)}.i1tZMq_mitem.i1tZMq_active{color:var(--dsw-alias-label-primary);border-color:var(--dsw-alias-brand-primary)}.i1tZMq_mitem .i1tZMq_grow{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;overflow:hidden}.i1tZMq_qrow{align-items:center;gap:6px;margin-top:6px;display:flex}.i1tZMq_qlabel{width:52px;min-width:52px;color:var(--dsw-alias-label-secondary);white-space:nowrap;text-overflow:ellipsis;flex:none;font-size:11px;line-height:16px;overflow:hidden}.i1tZMq_qbar{background:var(--dsw-alias-bg-layer-2);border-radius:999px;flex:1;min-width:0;height:6px;overflow:hidden}.i1tZMq_qfill{background:var(--dsw-alias-brand-primary);border-radius:999px;height:100%;transition:width .8s;display:block}.i1tZMq_qfill.i1tZMq_warn{background:var(--dsw-alias-state-warn-primary)}.i1tZMq_qfill.i1tZMq_bad{background:var(--dsw-alias-state-error-primary)}.i1tZMq_qfill.i1tZMq_over{background:var(--dsw-alias-state-error-primary);animation:1.6s ease-in-out infinite i1tZMq_tm-qpulse}.i1tZMq_qpct{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;flex:none;font-size:11px}.i1tZMq_qpct.i1tZMq_warn{color:var(--dsw-alias-state-warn-label)}.i1tZMq_qpct.i1tZMq_bad,.i1tZMq_qpct.i1tZMq_over{color:var(--dsw-alias-state-error-primary);font-weight:600}.i1tZMq_qsumWarn{color:var(--dsw-alias-state-warn-label)}.i1tZMq_qsumBad,.i1tZMq_qsumOver{color:var(--dsw-alias-state-error-primary)}@keyframes i1tZMq_tm-qpulse{0%,to{opacity:1}50%{opacity:.55}}.i1tZMq_qleft{min-width:0;color:var(--dsw-alias-label-secondary);white-space:nowrap;text-overflow:ellipsis;flex:0 auto;font-size:10px;overflow:hidden}.i1tZMq_qstatus{white-space:nowrap;color:var(--dsw-alias-state-error-primary);background:color-mix(in srgb, var(--dsw-alias-state-error-primary) 14%, transparent);border-radius:999px;flex:none;padding:0 6px;font-size:9.5px;line-height:15px}.i1tZMq_qbal{justify-content:space-between;align-items:baseline;margin-top:6px;display:flex}.i1tZMq_qbal b{color:var(--dsw-alias-label-primary);font-size:15px}.i1tZMq_qbal span{color:var(--dsw-alias-label-secondary);font-size:10px}.i1tZMq_body{background:0 0;border:none;border-radius:0;margin-top:8px;padding:0}.i1tZMq_body .i1tZMq_qrow:first-child{margin-top:0}.i1tZMq_paygCur{color:var(--dsw-alias-label-secondary);margin-right:6px;font-size:12px;font-weight:600}.i1tZMq_paygAmt{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;font-size:22px;font-weight:700;line-height:1.2}.i1tZMq_paygAmt.i1tZMq_neg{color:var(--dsw-alias-state-error-primary)}.i1tZMq_paygTop{justify-content:space-between;align-items:center;gap:8px;display:flex}.i1tZMq_paygSub{color:var(--dsw-alias-label-secondary);margin-top:2px;font-size:11px}.i1tZMq_avail{border:1px solid;border-radius:999px;flex:none;padding:1px 9px;font-size:11px;line-height:1.6}.i1tZMq_avail.i1tZMq_ok{color:var(--dsw-alias-state-success-primary);border-color:var(--dsw-alias-state-success-primary)}.i1tZMq_avail.i1tZMq_bad{color:var(--dsw-alias-state-error-primary);border-color:var(--dsw-alias-state-error-primary)}.i1tZMq_avail.i1tZMq_unknown{color:var(--dsw-alias-label-secondary);border-color:var(--dsw-alias-border-l1)}.i1tZMq_infos{flex-direction:column;gap:4px;margin-top:8px;display:flex}.i1tZMq_inforow{color:var(--dsw-alias-label-secondary);justify-content:space-between;font-size:11px;display:flex}.i1tZMq_inforow b{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums}.i1tZMq_warn{color:var(--dsw-alias-state-warn-primary);margin:8px 0 0;font-size:11px;line-height:1.6}.i1tZMq_warn.i1tZMq_bad{color:var(--dsw-alias-state-error-primary)}.i1tZMq_mini.i1tZMq_warn{color:var(--dsw-alias-state-warn-primary)}.i1tZMq_xstats{flex-direction:column;gap:4px;margin-top:8px;display:flex}.i1tZMq_xrow{color:var(--dsw-alias-label-secondary);justify-content:space-between;font-size:11px;display:flex}.i1tZMq_xrow b{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums}.i1tZMq_xgrid{margin-top:8px}.i1tZMq_xgridBody{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 12px;display:grid}.i1tZMq_xcell{min-width:0;color:var(--dsw-alias-label-secondary);justify-content:space-between;align-items:baseline;gap:8px;font-size:11px;display:flex}.i1tZMq_xcellLabel{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.i1tZMq_xcellValue{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}@container i1tZMq_tm (width<=300px){.i1tZMq_xgridBody{grid-template-columns:minmax(0,1fr)}}.i1tZMq_paygCompact .i1tZMq_paygAmt{font-size:20px}.i1tZMq_paygCompact .i1tZMq_paygSub{margin-top:0}.i1tZMq_paygCompact .i1tZMq_warn{margin-top:4px}.i1tZMq_xchart{margin-top:8px}.i1tZMq_xtitle{color:var(--dsw-alias-label-secondary);margin-bottom:2px;font-size:10px}.i1tZMq_xsplit{background:var(--dsw-alias-bg-layer-2);border-radius:999px;height:8px;margin-top:6px;display:flex;overflow:hidden}.i1tZMq_xsplit span{height:100%;display:block}.i1tZMq_xdot{border-radius:2px;width:7px;height:7px;margin-right:5px;display:inline-block}.i1tZMq_sections,.i1tZMq_ui{flex-direction:column;display:flex}.i1tZMq_xprog{margin-top:8px}.i1tZMq_vchips{flex-wrap:wrap;gap:4px;margin-top:6px;display:flex}.i1tZMq_vchip{border:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-layer-2);white-space:nowrap;border-radius:999px;align-items:center;padding:0 8px;font-size:10.5px;line-height:16px;display:inline-flex}.i1tZMq_vchipOk{color:var(--dsw-alias-state-success-primary);border-color:var(--dsw-alias-state-success-primary)}.i1tZMq_vchipWarn{color:var(--dsw-alias-state-warn-primary);border-color:var(--dsw-alias-state-warn-primary)}.i1tZMq_vchipBad{color:var(--dsw-alias-state-error-primary);border-color:var(--dsw-alias-state-error-primary)}.i1tZMq_vchipInfo{color:var(--dsw-alias-state-business-primary);border-color:var(--dsw-alias-state-business-primary)}.i1tZMq_errbox{background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l1);border-left:3px solid var(--dsw-alias-state-warn-primary);border-radius:8px;margin-top:8px;padding:8px 10px}.i1tZMq_errboxBad{border-color:color-mix(in srgb, var(--dsw-alias-state-error-primary) 45%, var(--dsw-alias-border-l1));border-left-color:var(--dsw-alias-state-error-primary)}.i1tZMq_errboxWarn{border-left-color:var(--dsw-alias-state-warn-primary)}.i1tZMq_errboxInfo{border-left-color:var(--dsw-alias-state-business-primary)}.i1tZMq_errhead{cursor:pointer;text-align:left;width:100%;font:inherit;background:0 0;border:none;align-items:flex-start;gap:8px;padding:0;display:flex}.i1tZMq_erricon{background:color-mix(in srgb, var(--dsw-alias-state-warn-primary) 18%, transparent);border-radius:50%;flex:none;justify-content:center;align-items:center;width:22px;height:22px;font-size:12px;line-height:1;display:inline-flex}.i1tZMq_erriconBad{background:color-mix(in srgb, var(--dsw-alias-state-error-primary) 18%, transparent)}.i1tZMq_erriconInfo{background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 18%, transparent)}.i1tZMq_errtitlewrap{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.i1tZMq_errtitle{color:var(--dsw-alias-state-warn-label);font-size:12.5px;font-weight:600}.i1tZMq_errboxBad .i1tZMq_errtitle{color:var(--dsw-alias-state-error-primary)}.i1tZMq_errboxInfo .i1tZMq_errtitle{color:var(--dsw-alias-label-primary)}.i1tZMq_errhint{color:var(--dsw-alias-label-secondary);font-size:11px;line-height:1.6}.i1tZMq_erraction{flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 0 30px;display:flex}.i1tZMq_erractionText{min-width:0;color:var(--dsw-alias-label-secondary);flex:1;font-size:11px}.i1tZMq_errabtns{flex:none;gap:4px;display:inline-flex}.i1tZMq_errdetail{border-top:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-secondary);margin-top:8px;padding-top:8px;font-size:11px;line-height:1.7}.i1tZMq_errsub{color:var(--dsw-alias-label-secondary);margin:0 0 2px;font-size:10.5px;font-weight:600}.i1tZMq_errsteps{margin:0 0 8px;padding-left:18px}.i1tZMq_errsteps li{margin:2px 0}.i1tZMq_errraw{background:var(--dsw-alias-bg-layer-1);font-family:var(--ds-font-family-code);color:var(--dsw-alias-label-secondary);word-break:break-all;white-space:pre-wrap;border-radius:6px;max-height:160px;margin:0;padding:6px 8px;font-size:10.5px;line-height:1.6;overflow:auto}.i1tZMq_errdactions{flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;display:flex}.i1tZMq_errmeta{color:var(--dsw-alias-label-tertiary);margin-left:auto;font-size:10.5px}.i1tZMq_errboxCompact{padding:6px 8px}.i1tZMq_errboxCompact .i1tZMq_erraction{margin-left:0}.i1tZMq_qmeta{justify-content:space-between;align-items:center;margin-top:6px;display:flex}.i1tZMq_qmeta span{color:var(--dsw-alias-label-secondary);font-size:10px}.i1tZMq_mini{cursor:pointer;color:var(--dsw-alias-label-secondary);background:0 0;border:1px solid #0000;border-radius:6px;padding:2px 6px;font-size:11px}.i1tZMq_mini:hover{border-color:var(--dsw-alias-border-l1);color:var(--dsw-alias-label-primary)}.i1tZMq_err{color:var(--dsw-alias-state-error-primary);margin-top:6px;font-size:11px;line-height:1.6}.i1tZMq_codeblock{margin-top:2px}.i1tZMq_codeblock pre{max-height:340px;overflow:auto}.i1tZMq_run{color:var(--dsw-alias-label-secondary);font-size:12px;line-height:1.7}.i1tZMq_run b{color:var(--dsw-alias-label-primary)}.i1tZMq_inputWrap{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-1);border-radius:8px;align-items:center;gap:6px;width:100%;height:32px;padding:0 8px;display:inline-flex}.i1tZMq_inputWrap:focus-within{border-color:var(--dsw-alias-brand-primary)}.i1tZMq_input{min-width:0;color:var(--dsw-alias-label-primary);background:0 0;border:none;outline:none;flex:1;font-family:inherit;font-size:14px;line-height:22px}.i1tZMq_input::placeholder{color:var(--dsw-alias-label-dimmed)}.i1tZMq_input:disabled{opacity:.5}.i1tZMq_ninput{min-width:0;color:var(--dsw-alias-label-primary);background:0 0;border:none;outline:none;flex:1;font-family:inherit;font-size:14px;line-height:22px}.i1tZMq_ninput::placeholder{color:var(--dsw-alias-label-dimmed)}.i1tZMq_ninput:disabled{opacity:.5}.i1tZMq_textarea{box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-1);font:inherit;color:var(--dsw-alias-label-primary);resize:vertical;border-radius:8px;outline:none;width:100%;min-height:64px;padding:8px 12px;font-size:13px;line-height:20px}.i1tZMq_textarea:focus-visible{border-color:var(--dsw-alias-brand-primary)}.i1tZMq_badge{white-space:nowrap;border-radius:999px;flex:none;align-items:center;height:20px;padding:0 8px;font-size:11px;font-weight:500;line-height:20px;display:inline-flex}.i1tZMq_badgeOk{background:var(--dsw-alias-state-success-tertiary);color:var(--dsw-alias-state-success-primary)}.i1tZMq_badgeWarn{background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-state-warn-label)}.i1tZMq_badgeMuted{background:var(--dsw-alias-button-ghost-active-fill);color:var(--dsw-alias-label-caption)}.i1tZMq_badgeInfo{background:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-state-business-primary)}.i1tZMq_loading{align-items:center;gap:8px;display:flex}.i1tZMq_loadingText{color:var(--dsw-alias-label-tertiary);font-size:13px;line-height:20px}.i1tZMq_spinner{box-sizing:border-box;border:1.5px solid var(--dsw-alias-border-l2);border-top-color:var(--dsw-alias-state-business-primary);border-radius:50%;flex:none;width:12px;height:12px;animation:.7s linear infinite i1tZMq_tm-spin;display:inline-block}.i1tZMq_formGrid{flex-direction:column;gap:8px;width:100%;display:flex}.i1tZMq_fieldLabel{color:var(--dsw-alias-label-secondary);margin-bottom:2px;font-size:12px}.i1tZMq_footerNote{color:var(--dsw-alias-label-tertiary);margin:0;font-size:11.5px;line-height:17px}.i1tZMq_vendorRow{align-items:center;gap:2px;display:flex}.i1tZMq_vendorRow .i1tZMq_vendor{flex:1;width:auto;min-width:0}.i1tZMq_today{border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);cursor:default;box-sizing:border-box;border-radius:12px;flex:none;width:100%;margin:8px 0;padding:10px 12px;overflow:hidden}.i1tZMq_today:hover{border-color:var(--dsw-alias-state-business-primary)}.i1tZMq_todaylabel{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}.i1tZMq_todayval{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;font-size:18px;font-weight:600;line-height:24px}.i1tZMq_todayhead{justify-content:space-between;align-items:baseline;gap:8px;display:flex}.i1tZMq_todayhead .i1tZMq_todayval{flex:none;margin-left:auto;font-size:15px}.i1tZMq_todaymodels{flex-direction:column;align-items:stretch;gap:2px;margin-top:5px;display:flex}.i1tZMq_todaymchip{color:var(--dsw-alias-label-secondary);align-items:center;gap:4px;max-width:100%;font-size:10px;line-height:14px;display:inline-flex}.i1tZMq_todaymchip .i1tZMq_dot{width:7px;height:7px}.i1tZMq_todaymchip span:last-child{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}div:has(>div[data-slot="sidebar.footer.action"]){flex-direction:column;align-items:stretch}.i1tZMq_todayRail{box-sizing:border-box;background:var(--dsw-alias-bg-layer-1);cursor:pointer;border-radius:12px;flex-direction:column;justify-content:center;align-items:center;width:auto;min-width:0;max-width:100%;margin:2px 0 0;padding:3px 4px;display:flex}.i1tZMq_todayRail:hover{border-color:var(--dsw-alias-state-business-primary)}.i1tZMq_todayRail .i1tZMq_todaymodels,.i1tZMq_todayRail .i1tZMq_spark,.i1tZMq_todayRail .i1tZMq_statgrow,.i1tZMq_todayRail .i1tZMq_todayhead{display:none}.i1tZMq_todayRail .i1tZMq_todayval{text-align:center;white-space:nowrap;font-size:9px;font-weight:600;line-height:12px}.i1tZMq_todayRail .i1tZMq_todaylabel{text-align:center;white-space:nowrap;letter-spacing:.06em;font-size:8px;line-height:11px}.i1tZMq_grip{cursor:grab;color:var(--dsw-alias-label-tertiary);-webkit-user-select:none;user-select:none;touch-action:none;border-radius:6px;flex:none;padding:4px 2px;font-size:12px;line-height:1}.i1tZMq_grip:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2)}.i1tZMq_grip:active{cursor:grabbing}.i1tZMq_minibtn{cursor:pointer;color:var(--dsw-alias-label-secondary);background:0 0;border:1px solid #0000;border-radius:6px;flex:none;margin-left:6px;padding:2px 6px;font-family:inherit;font-size:11px;line-height:16px}.i1tZMq_minibtn:hover{border-color:var(--dsw-alias-border-l1);color:var(--dsw-alias-label-primary)}.i1tZMq_wkFrame{height:100%;min-height:0;overflow:auto}.i1tZMq_wkFrame .i1tZMq_card,.i1tZMq_wkFrame .i1tZMq_today{box-shadow:none;background:0 0;border:0;border-radius:0;margin:0;padding:0}.i1tZMq_float{z-index:300;background:color-mix(in srgb, var(--dsw-alias-bg-layer-1) 72%, transparent);backdrop-filter:blur(16px)saturate(1.4);border:1px solid var(--dsw-alias-border-l2);box-sizing:border-box;border-radius:12px;width:300px;max-width:calc(100vw - 16px);padding:10px 12px;position:fixed;overflow:hidden;box-shadow:0 16px 40px #0000004d}@supports not (backdrop-filter:blur(1px)){.i1tZMq_float,.i1tZMq_popmenu{background:var(--dsw-alias-bg-layer-1)}}.i1tZMq_floathead{cursor:move;-webkit-user-select:none;user-select:none;touch-action:none}.i1tZMq_floatHd{cursor:move;-webkit-user-select:none;user-select:none;touch-action:none;background:0 0;border-bottom:none;align-items:center;gap:6px;padding:8px 10px;display:flex}.i1tZMq_floatBd{padding:2px 12px 10px}.i1tZMq_floatBd .i1tZMq_qmeta{margin-top:8px}.i1tZMq_widgetTitle{min-width:0;color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;flex:1;font-size:12px;font-weight:600;overflow:hidden}.i1tZMq_widgetBd{max-height:calc(72vh - 48px);padding:2px 12px 10px;overflow:auto}.i1tZMq_widgetFloat{z-index:300;overscroll-behavior:contain;width:360px;max-width:calc(100vw - 16px);max-height:60vh;position:fixed;overflow-y:auto;container:i1tZMq_tm/inline-size}.i1tZMq_widgetFloat>.i1tZMq_card,.i1tZMq_widgetFloat>.i1tZMq_today{box-sizing:border-box;margin:0}.i1tZMq_segRow{flex-wrap:wrap;justify-content:center;gap:6px;margin-bottom:8px;display:flex}@container i1tZMq_tm (width<=420px){.i1tZMq_segRow .i1tZMq_seg{justify-content:center;width:100%}.i1tZMq_segRow .i1tZMq_segBtn{text-align:center;flex:auto}}.i1tZMq_widgetBtn{border:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-secondary);border-radius:6px;align-items:center;gap:2px;padding:1px 4px 1px 8px;font-size:12px;display:inline-flex}.i1tZMq_widgetBtnLabel{white-space:nowrap;line-height:20px}.i1tZMq_chartName{text-overflow:ellipsis;white-space:nowrap;flex:auto;min-width:0;overflow:hidden}.i1tZMq_modelhead{flex-wrap:wrap;justify-content:space-between;gap:8px;min-width:0;display:flex}.i1tZMq_modeldetail{overflow-wrap:anywhere;margin-top:2px;font-size:11px;line-height:16px}.i1tZMq_donutBox{flex:none;max-width:100%}.i1tZMq_swrow{border-bottom:.5px solid var(--dsw-alias-border-l2);align-items:center;gap:8px;padding:16px 0;display:flex}.i1tZMq_swrowText{flex-direction:column;flex:1;gap:4px;min-width:0;padding-right:48px;display:flex}.i1tZMq_swlabel{color:var(--dsw-alias-label-primary);font-size:14px;font-weight:400;line-height:22px}.i1tZMq_swhint{color:var(--dsw-alias-label-tertiary);font-size:12px;font-weight:400;line-height:18px}.i1tZMq_switch{box-sizing:border-box;background:var(--dsw-alias-border-l3);cursor:pointer;border:0;border-radius:999px;flex:none;width:36px;height:20px;padding:2px;position:relative}.i1tZMq_switch[aria-checked=true]{background:var(--dsw-alias-brand-primary)}.i1tZMq_switch:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}.i1tZMq_switchOn{background:var(--dsw-alias-brand-primary)}.i1tZMq_switch:disabled{cursor:default;opacity:.5}.i1tZMq_knob,.i1tZMq_thumb{background:var(--dsw-alias-label-primary-foreground);border-radius:50%;width:16px;height:16px;transition:transform .12s;display:block}.i1tZMq_switch[aria-checked=true] .i1tZMq_knob,.i1tZMq_switchOn .i1tZMq_thumb,.i1tZMq_switchOn .i1tZMq_knob{transform:translate(16px)}.i1tZMq_dualbars{justify-content:center;gap:2px;width:100%;margin-top:4px;display:flex}.i1tZMq_card{transition:border-color .2s,top .2s;animation:.42s backwards i1tZMq_tm-fadeup;position:relative}.i1tZMq_card:hover{border-color:color-mix(in srgb, var(--dsw-alias-state-business-primary) 45%, var(--dsw-alias-border-l1));top:-1px}.i1tZMq_stat{animation:.42s backwards i1tZMq_tm-fadeup}.i1tZMq_stat:hover{top:-1.5px;box-shadow:0 3px 12px -4px #0000002e}.i1tZMq_segOn{box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-state-business-primary) 40%, transparent)}.i1tZMq_modelchip{transition:border-color .15s,top .15s,opacity .2s}.i1tZMq_modelchip:hover{top:-1px}.i1tZMq_model{transition:background .15s}.i1tZMq_modelval{transition:color .15s}.i1tZMq_today{transition:border-color .18s}.i1tZMq_pop,.i1tZMq_tip,.i1tZMq_tipfixed{animation:.13s ease-out i1tZMq_tm-pop}.i1tZMq_gridln,.i1tZMq_axislbl{animation:.5s backwards i1tZMq_tm-fade}.i1tZMq_barfill,.i1tZMq_streakfill,.i1tZMq_popFill,.i1tZMq_compose span,.i1tZMq_qfill{transform-origin:0;animation:.55s cubic-bezier(.22,.8,.36,1) backwards i1tZMq_tm-groww}.i1tZMq_barfill{transition:none}.i1tZMq_compose span{animation-delay:.1s}.i1tZMq_streakfill{animation-delay:.12s}.i1tZMq_popFill{animation-delay:60ms}.i1tZMq_dayscroll span{animation:.4s backwards i1tZMq_tm-fade}.i1tZMq_draw{stroke-dasharray:20000;animation:1.05s cubic-bezier(.4,0,.2,1) backwards i1tZMq_tm-draw}.i1tZMq_fadein{animation:.45s backwards i1tZMq_tm-fade}.i1tZMq_rise{transform-box:fill-box;transform-origin:bottom;animation:.5s cubic-bezier(.22,.8,.36,1) backwards i1tZMq_tm-risev}.i1tZMq_hcell[data-lv]:not([data-lv="0"]){animation:.5s cubic-bezier(.2,.8,.3,1.2) backwards i1tZMq_tm-heatin}.i1tZMq_donutseg{animation:.85s cubic-bezier(.3,.6,.3,1) backwards i1tZMq_tm-donutseg}.i1tZMq_donutC{text-align:center;width:110px;color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;pointer-events:none;font-size:16px;font-weight:600;line-height:20px;position:absolute;top:46%;left:50%;transform:translate(-50%,-50%)}.i1tZMq_donutCap{text-align:center;width:110px;color:var(--dsw-alias-label-caption);pointer-events:none;font-size:11px;position:absolute;top:calc(46% + 18px);left:50%;transform:translate(-50%)}.i1tZMq_spin{animation:1s linear infinite i1tZMq_tm-rot;display:inline-block}@keyframes i1tZMq_tm-in{0%{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}@keyframes i1tZMq_tm-fadeup{0%{opacity:0;transform:translateY(6px)}}@keyframes i1tZMq_tm-fade{0%{opacity:0}}@keyframes i1tZMq_tm-draw{0%{stroke-dashoffset:20000px}to{stroke-dashoffset:0}}@keyframes i1tZMq_tm-groww{0%{transform:scaleX(0)}}@keyframes i1tZMq_tm-risev{0%{transform:scaleY(0)}}@keyframes i1tZMq_tm-heatin{0%{opacity:0;transform:scale(.4)}}@keyframes i1tZMq_tm-donutseg{0%{stroke-dashoffset:0}}@keyframes i1tZMq_tm-rot{to{transform:rotate(360deg)}}@keyframes i1tZMq_tm-pop{0%{opacity:0;transform:scale(.96)}}@keyframes i1tZMq_tm-pulse{0%,to{opacity:1}50%{opacity:.5}}@keyframes i1tZMq_tm-spin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.i1tZMq_page *,.i1tZMq_today *,.i1tZMq_pop,.i1tZMq_tip,.i1tZMq_tipfixed{transition:none!important;animation:none!important}.i1tZMq_spinner{animation:none}.i1tZMq_thumb,.i1tZMq_knob{transition:none}}@container i1tZMq_tm (width<=480px){.i1tZMq_card{padding:10px 12px}.i1tZMq_intro{font-size:13px}.i1tZMq_vname2{max-width:150px!important}.i1tZMq_models{width:100%;min-width:0}.i1tZMq_flexrow{flex-direction:column;align-items:center;gap:10px}.i1tZMq_donutBox{width:148px!important;height:148px!important}.i1tZMq_legend{gap:3px}.i1tZMq_modelchip{max-width:140px}.i1tZMq_qrow{gap:4px}.i1tZMq_qlabel{width:48px;min-width:48px}.i1tZMq_qpct{font-size:10px}.i1tZMq_qleft{font-size:9px}.i1tZMq_qstatus{padding:0 5px;font-size:9px}.i1tZMq_minibtn{padding:2px 4px}.i1tZMq_btn{padding:5px 9px;font-size:12px}.i1tZMq_selector{padding:0 12px;font-size:13px}.i1tZMq_rowText,.i1tZMq_swrowText{padding-right:12px}}@container i1tZMq_tm (width<=340px){.i1tZMq_vname2{max-width:110px!important}.i1tZMq_grid,.i1tZMq_statGrid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr))}.i1tZMq_paygAmt{font-size:18px}.i1tZMq_hint,.i1tZMq_cardHint{font-size:11px}.i1tZMq_popRow{white-space:normal}.i1tZMq_donutBox{width:128px!important;height:128px!important}.i1tZMq_modelval{font-size:11px}.i1tZMq_modelname{font-size:12px}}.i1tZMq_shareBtn{border:1px solid var(--dsw-alias-border-l2);height:26px;color:var(--dsw-alias-label-secondary);font:inherit;cursor:pointer;background:0 0;border-radius:8px;flex:none;align-items:center;gap:5px;margin-left:6px;padding:0 10px;font-size:12px;display:inline-flex}.i1tZMq_shareBtn:hover{color:var(--dsw-alias-label-primary);border-color:color-mix(in srgb, var(--dsw-alias-state-business-primary) 55%, var(--dsw-alias-border-l2))}.i1tZMq_shareBtn>svg{flex:none;display:block}.i1tZMq_shareVeil{z-index:600;box-sizing:border-box;background:color-mix(in srgb, var(--dsw-alias-bg-base) 88%, transparent);backdrop-filter:blur(14px)saturate(1.3);flex-direction:column;align-items:center;gap:12px;padding:18px;display:flex;position:fixed;inset:0;overflow:auto}.i1tZMq_shareBar{flex-wrap:wrap;flex:none;align-items:center;gap:10px;width:min(96vw,152.889vh);display:flex}.i1tZMq_shareBarTitle{color:var(--dsw-alias-label-primary);font-size:13px;font-weight:600}.i1tZMq_shareBarHint{color:var(--dsw-alias-label-tertiary);text-overflow:ellipsis;white-space:nowrap;flex:auto;min-width:0;font-size:12px;overflow:hidden}.i1tZMq_shareToggle{color:var(--dsw-alias-label-secondary);white-space:nowrap;cursor:pointer;align-items:center;gap:5px;font-size:12px;display:inline-flex}.i1tZMq_shareToggle input{accent-color:var(--dsw-alias-state-business-primary)}.i1tZMq_shareStage{overscroll-behavior:contain;width:min(96vw,1680px);min-height:320px;max-height:calc(100vh - 150px);box-shadow:var(--dsw-shadow-lv3);background:var(--dsw-alias-bg-base);border-radius:16px;flex:auto;position:relative;overflow:auto}.i1tZMq_shareLoading{color:var(--dsw-alias-label-tertiary);justify-content:center;align-items:center;gap:8px;font-size:13px;display:flex;position:absolute;inset:0}.i1tZMq_shareZoom{width:100%}.i1tZMq_shareBoard.i1tZMq_shareBoard{box-sizing:border-box;background:var(--dsw-alias-bg-base);width:100%;height:auto;color:var(--dsw-alias-label-primary);flex-direction:column;align-items:stretch;gap:12px;min-height:0;padding:20px 24px 14px;font-size:13px;line-height:1.6;display:flex;overflow:hidden}.i1tZMq_shareHead{border-bottom:.5px solid var(--dsw-alias-border-l2);flex-direction:column;flex:none;gap:8px;padding:0 2px 9px;display:flex}.i1tZMq_shareTop{justify-content:space-between;align-items:flex-start;gap:20px;display:flex}.i1tZMq_shareTitleBox{flex-direction:column;gap:2px;min-width:0;display:flex}.i1tZMq_shareBrandRow{align-items:center;gap:8px;min-width:0;display:flex}.i1tZMq_shareLogo{color:var(--dsw-alias-state-business-primary);flex:none;display:block}.i1tZMq_shareAuthorBox{text-align:right;flex-direction:column;flex:none;align-items:flex-end;gap:1px;display:flex}.i1tZMq_shareAuthor{color:var(--dsw-alias-label-primary);font-size:15.5px;font-weight:600;line-height:21px}.i1tZMq_shareMail{color:var(--dsw-alias-label-caption);font-size:12.5px;line-height:17px}.i1tZMq_shareMeta{border-top:.5px solid var(--dsw-alias-border-l1);flex-wrap:wrap;align-items:baseline;gap:8px;padding-top:7px;display:flex}.i1tZMq_sharePlug{color:var(--dsw-alias-state-business-primary);white-space:nowrap;font-size:14px;font-weight:600;line-height:19px}.i1tZMq_sharePlug em{opacity:.8;margin-left:4px;font-size:12px;font-style:normal;font-weight:400}.i1tZMq_shareMetaSep{color:var(--dsw-alias-label-dimmed);font-size:12.5px}.i1tZMq_shareRepo{color:var(--dsw-alias-label-secondary);white-space:nowrap;font-size:12.5px;line-height:18px}.i1tZMq_shareMetaR{color:var(--dsw-alias-label-caption);margin-left:auto;font-size:12px;line-height:18px}.i1tZMq_shareBrand{color:var(--dsw-alias-label-primary);font-size:21px;font-weight:700;line-height:28px}.i1tZMq_shareSub{color:var(--dsw-alias-label-caption);font-size:12.5px;line-height:18px}.i1tZMq_shareGrid{grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:12px;display:grid}.i1tZMq_shareCell{flex-direction:column;min-width:0;display:flex}.i1tZMq_shareCell>*{flex:auto;min-width:0;margin:0!important}.i1tZMq_sr6{grid-column:1/-1}.i1tZMq_shareBoard .i1tZMq_seg,.i1tZMq_shareBoard .i1tZMq_widgetBtn,.i1tZMq_shareBoard .i1tZMq_toolbar>button{display:none!important}.i1tZMq_shareBoard .i1tZMq_dash{display:block}.i1tZMq_shareBoard .i1tZMq_card{box-shadow:none}.i1tZMq_statIco,.i1tZMq_cico{color:var(--dsw-alias-label-tertiary);flex:none;display:block}.i1tZMq_stat[data-tint="1"] .i1tZMq_statIco{color:color-mix(in srgb, var(--dsw-alias-state-business-primary) 70%, var(--dsw-alias-label-tertiary))}.i1tZMq_statBg{z-index:0;pointer-events:none;user-select:none;color:var(--dsw-alias-state-business-primary);opacity:.075;position:absolute;bottom:-12px;right:-10px}.i1tZMq_stat[data-tint="1"] .i1tZMq_statBg{opacity:.12}.i1tZMq_statLabel,.i1tZMq_statValue,.i1tZMq_statSub,.i1tZMq_stat .i1tZMq_spark,.i1tZMq_stat .i1tZMq_compose,.i1tZMq_stat .i1tZMq_streakbar,.i1tZMq_stat .i1tZMq_dayscroll{z-index:1;position:relative}.i1tZMq_chartName{flex:auto;align-items:center;gap:6px;min-width:0;display:flex}.i1tZMq_titledIco{align-items:center;gap:6px;min-width:0;display:inline-flex}.i1tZMq_cnameTxt,.i1tZMq_titledIco>span:last-child{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.i1tZMq_card.i1tZMq_moodPeak,.i1tZMq_side.i1tZMq_moodPeak{border-left:3px solid var(--dsw-alias-state-warn-primary);background:linear-gradient(180deg, color-mix(in srgb, var(--dsw-alias-state-warn-primary) 10%, transparent), transparent 64%), var(--dsw-alias-bg-layer-1)}.i1tZMq_card.i1tZMq_moodValley,.i1tZMq_side.i1tZMq_moodValley{border-left:3px solid var(--dsw-alias-state-success-primary);background:linear-gradient(180deg, color-mix(in srgb, var(--dsw-alias-state-success-primary) 8%, transparent), transparent 64%), var(--dsw-alias-bg-layer-1)}.i1tZMq_card.i1tZMq_off,.i1tZMq_side.i1tZMq_off{border-left:3px solid var(--dsw-alias-state-error-primary);background:linear-gradient(180deg, color-mix(in srgb, var(--dsw-alias-state-error-primary) 8%, transparent), transparent 64%), var(--dsw-alias-bg-layer-1)}.i1tZMq_card.i1tZMq_moodPeak{animation:.42s backwards i1tZMq_tm-fadeup,2.4s ease-in-out .5s infinite i1tZMq_tm-peak-breathe}@keyframes i1tZMq_tm-peak-breathe{0%,to{box-shadow:0 0 #0000}50%{box-shadow:0 0 0 3px color-mix(in srgb, var(--dsw-alias-state-warn-primary) 16%, transparent)}}.i1tZMq_badgeBad{background:color-mix(in srgb, var(--dsw-alias-state-error-primary) 16%, transparent);color:var(--dsw-alias-state-error-primary)}.i1tZMq_offtxt{color:var(--dsw-alias-state-error-primary)}.i1tZMq_peak.i1tZMq_peak{border-color:color-mix(in srgb, var(--dsw-alias-state-warn-primary) 46%, var(--dsw-alias-border-l1));background:linear-gradient(180deg, color-mix(in srgb, var(--dsw-alias-state-warn-primary) 9%, transparent), transparent 70%), var(--dsw-alias-bg-layer-2);animation:2.6s ease-in-out infinite i1tZMq_tm-peak-breathe}.i1tZMq_peak.i1tZMq_valley{border-color:color-mix(in srgb, var(--dsw-alias-state-success-primary) 32%, var(--dsw-alias-border-l1));background:linear-gradient(180deg, color-mix(in srgb, var(--dsw-alias-state-success-primary) 8%, transparent), transparent 70%), var(--dsw-alias-bg-layer-2)}.i1tZMq_peak.i1tZMq_peak .i1tZMq_peakTitle{color:var(--dsw-alias-state-warn-label)}.i1tZMq_peak.i1tZMq_valley .i1tZMq_peakTitle{color:var(--dsw-alias-state-success-primary)}.i1tZMq_peakCell.i1tZMq_von{background:color-mix(in srgb, var(--dsw-alias-state-success-primary) 24%, var(--dsw-alias-interactive-bg-hover))}@media (prefers-reduced-motion:reduce){.i1tZMq_card.i1tZMq_moodPeak,.i1tZMq_peak.i1tZMq_peak{animation:none}}.i1tZMq_segField{border-top:.5px solid var(--dsw-alias-border-l2);flex-wrap:wrap;align-items:center;gap:8px;padding:3px 0;display:flex}.i1tZMq_segField:first-child{border-top:none}.i1tZMq_segFieldKey{color:var(--dsw-alias-label-secondary);flex:none;min-width:58px;font-size:12px}.i1tZMq_segFieldCtl{flex:none;display:inline-flex}.i1tZMq_segFieldHint{color:var(--dsw-alias-label-caption);flex:190px;min-width:130px;font-size:11px;line-height:15px}.i1tZMq_segField:has(.i1tZMq_gapHint){align-items:flex-start}.i1tZMq_segField:has(.i1tZMq_gapHint) .i1tZMq_segFieldHint{flex:100%}.i1tZMq_gapHint{color:var(--dsw-alias-label-secondary);flex-direction:column;gap:5px;min-width:0;font-size:11.5px;line-height:17px;display:flex}.i1tZMq_gapRules{color:var(--dsw-alias-label-tertiary);flex-direction:column;gap:3px;margin:0;padding-left:17px;display:flex}.i1tZMq_gapRules b{color:var(--dsw-alias-label-secondary);font-weight:600}.i1tZMq_gapRules em{color:var(--dsw-alias-state-warn-primary);font-style:normal;font-weight:600}.i1tZMq_gapCmpTitle{color:var(--dsw-alias-label-caption);margin-top:3px}.i1tZMq_gapCmp{flex-wrap:wrap;gap:8px;display:flex}.i1tZMq_gapCmpItem{box-sizing:border-box;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);cursor:pointer;flex-direction:column;gap:1px;min-width:88px;padding:5px 9px;transition:border-color .15s;display:flex}.i1tZMq_gapCmpItem:hover{border-color:var(--dsw-alias-border-l3)}.i1tZMq_gapCmpItem b{color:var(--dsw-alias-label-secondary);font-size:11px;font-weight:600}.i1tZMq_gapCmpItem i{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;font-size:13px;font-style:normal;font-weight:600}.i1tZMq_gapCmpItem em{color:var(--dsw-alias-label-caption);font-size:10.5px;font-style:normal}.i1tZMq_gapCmpOn{border-color:color-mix(in srgb, var(--dsw-alias-state-business-primary) 55%, var(--dsw-alias-border-l2));background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 10%, var(--dsw-alias-bg-layer-2))}.i1tZMq_gapCmpOn b,.i1tZMq_gapCmpOn i{color:var(--dsw-alias-state-business-primary)}.i1tZMq_gapCmpRec b:after{content:" \xB7 \u63A8\u8350";color:var(--dsw-alias-state-success-primary)}.i1tZMq_gapRec{color:var(--dsw-alias-label-tertiary)}.i1tZMq_gapRec b{color:var(--dsw-alias-state-success-primary);font-weight:600}.i1tZMq_acc{border:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-caption);border-radius:4px;flex:none;padding:0 4px;font-size:10px;font-weight:400;line-height:15px}.i1tZMq_acc.i1tZMq_exact{color:var(--dsw-alias-state-success-primary);border-color:color-mix(in srgb, var(--dsw-alias-state-success-primary) 45%, transparent);background:color-mix(in srgb, var(--dsw-alias-state-success-primary) 10%, transparent)}.i1tZMq_acc.i1tZMq_estimate{color:var(--dsw-alias-state-warn-primary);border-color:color-mix(in srgb, var(--dsw-alias-state-warn-primary) 45%, transparent);background:color-mix(in srgb, var(--dsw-alias-state-warn-primary) 10%, transparent)}.i1tZMq_acc.i1tZMq_bound{color:var(--dsw-alias-label-tertiary);background:var(--dsw-alias-interactive-bg-hover)}.i1tZMq_rankHead{color:var(--dsw-alias-label-caption);border-bottom:.5px solid var(--dsw-alias-border-l2);grid-template-columns:20px minmax(84px,1fr) minmax(64px,1.7fr) 60px 54px;align-items:center;gap:8px;padding:0 0 5px;font-size:11px;line-height:15px;display:grid}.i1tZMq_rankRow{border-bottom:.5px solid var(--dsw-alias-border-l2);cursor:default;border-radius:6px;grid-template-columns:20px minmax(84px,1fr) minmax(64px,1.7fr) 60px 54px;align-items:center;gap:8px;margin:0 -4px;padding:6px 4px;transition:background .12s;display:grid}.i1tZMq_rankRow:last-of-type{border-bottom:none}.i1tZMq_rankRow:hover{background:var(--dsw-alias-interactive-bg-hover)}.i1tZMq_rankNo{text-align:right;color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums;font-size:11px;line-height:16px}.i1tZMq_rankRow.i1tZMq_top3 .i1tZMq_rankNo{color:var(--dsw-alias-state-business-primary);font-weight:700}.i1tZMq_rankRow.i1tZMq_top3 .i1tZMq_rankDate{font-weight:600}.i1tZMq_rankDate{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;font-size:12.5px;line-height:17px}.i1tZMq_rankBarTrack{background:var(--dsw-alias-interactive-bg-hover);height:11px;box-shadow:inset 0 0 0 1px var(--dsw-alias-border-l2);border-radius:6px;display:flex;overflow:hidden}.i1tZMq_rankFillTurn{background:var(--dsw-alias-state-business-primary);opacity:.85;height:100%;display:block}.i1tZMq_rankFillIdle{background:var(--dsw-alias-state-business-primary);opacity:.26;height:100%;display:block}.i1tZMq_rankVal{text-align:right;font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);font-size:12.5px;font-weight:600}.i1tZMq_rankTok{text-align:right;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;font-size:11px}@container i1tZMq_tm (width<=420px){.i1tZMq_rankHead,.i1tZMq_rankRow{grid-template-columns:18px minmax(70px,1fr) minmax(48px,1.4fr) 54px}.i1tZMq_rankTok,.i1tZMq_rankHead>span:last-child{display:none}}.i1tZMq_tipTitle{color:var(--dsw-alias-label-primary);margin-bottom:3px;font-weight:600}.i1tZMq_tipText{white-space:normal;max-width:236px;color:var(--dsw-alias-label-secondary);margin-top:3px;line-height:1.5}.i1tZMq_tipfixed .i1tZMq_tiprow+.i1tZMq_tiprow{margin-top:1px}[data-conversation-scroll]:has([data-slot=conversation\\.view] .i1tZMq_cview)>[data-slot=conversation\\.session]>*{flex:1 1 0;min-height:0;overflow:clip}.i1tZMq_cview{box-sizing:border-box;background:var(--dsw-alias-bg-base);align-items:stretch;width:100%;height:100%;min-height:0;display:flex;overflow:clip;container:i1tZMq_tmc/inline-size}:has(.i1tZMq_cview)>[data-width-handle]{display:none}.i1tZMq_cnav{border-right:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:none;width:190px;min-width:190px;padding:16px 10px 12px;display:flex;overflow:visible}.i1tZMq_cnavInner{flex-direction:column;gap:2px;max-height:100vh;display:flex;position:sticky;top:0;overflow-y:auto}.i1tZMq_cnavHead{color:var(--dsw-alias-label-secondary);letter-spacing:.02em;padding:2px 8px 10px;font-size:12px;font-weight:600;line-height:18px}.i1tZMq_cnavList{flex-direction:column;gap:2px;display:flex}.i1tZMq_cnavItem{width:100%;color:var(--dsw-alias-label-secondary);cursor:pointer;text-align:left;background:0 0;border:none;border-radius:6px;align-items:center;gap:8px;padding:8px 10px;font-family:inherit;font-size:13px;line-height:20px;display:flex}.i1tZMq_cnavItem:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.i1tZMq_cnavItem:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}.i1tZMq_cnavItem>svg{flex:none;display:block}.i1tZMq_cnavOn,.i1tZMq_cnavOn:hover{color:var(--dsw-alias-label-primary);background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent);font-weight:500}.i1tZMq_cnavOn>svg{color:var(--dsw-alias-state-business-primary)}.i1tZMq_cnavLabel{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.i1tZMq_cnavItemSep{margin-top:8px;position:relative}.i1tZMq_cnavItemSep:before{content:"";background:var(--dsw-alias-border-l2);height:1px;position:absolute;top:-5px;left:8px;right:8px}.i1tZMq_cview .i1tZMq_cset .i1tZMq_page{max-width:min(920px,100%)}.i1tZMq_cmain{flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.i1tZMq_chead{z-index:3;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-base);flex-wrap:wrap;flex:none;align-items:baseline;gap:10px;padding:14px 24px 11px;display:flex;position:sticky;top:0}.i1tZMq_cheadTitle{color:var(--dsw-alias-label-primary);flex:none;font-size:15px;font-weight:600;line-height:22px}.i1tZMq_cheadHint{color:var(--dsw-alias-label-tertiary);text-overflow:ellipsis;white-space:nowrap;flex:auto;min-width:0;font-size:12px;line-height:18px;overflow:hidden}.i1tZMq_cbody{scrollbar-gutter:stable;box-sizing:border-box;flex:1;min-width:0;min-height:0;padding:18px 24px 56px;overflow:clip auto}.i1tZMq_sectMiss{box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);max-width:560px;color:var(--dsw-alias-label-secondary);margin:0 auto;padding:14px 16px;font-size:13px;line-height:20px}.i1tZMq_cview .i1tZMq_page{width:100%;max-width:min(1760px,100%);margin:0 auto}.i1tZMq_page .i1tZMq_page{width:100%;max-width:none;margin:0}.i1tZMq_dash{grid-template-columns:repeat(12,minmax(0,1fr));align-items:start;gap:14px;width:100%;display:grid}.i1tZMq_dash>*{min-width:0}.i1tZMq_c12{grid-column:span 12}.i1tZMq_c8{grid-column:span 8}.i1tZMq_c7{grid-column:span 7}.i1tZMq_c6{grid-column:span 6}.i1tZMq_c5{grid-column:span 5}.i1tZMq_c4{grid-column:span 4}.i1tZMq_dash .i1tZMq_card,.i1tZMq_dash .i1tZMq_statGrid{margin:0}.i1tZMq_donutWide .i1tZMq_flexrow{flex-direction:row;align-items:flex-start;gap:24px}.i1tZMq_donutWide .i1tZMq_donutBox{flex:none;margin:0}.i1tZMq_donutWide .i1tZMq_models{flex:1;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));align-content:start;gap:0 28px;min-width:0;display:grid}.i1tZMq_donutWide .i1tZMq_models .i1tZMq_model:last-child{border-bottom:1px solid var(--dsw-alias-border-l1)}@container i1tZMq_tmc (width<=900px){.i1tZMq_donutWide .i1tZMq_flexrow{flex-direction:column;align-items:stretch}.i1tZMq_donutWide .i1tZMq_donutBox{margin:0 auto}.i1tZMq_donutWide .i1tZMq_models{grid-template-columns:minmax(0,1fr)}}@container i1tZMq_tmc (width<=1180px){.i1tZMq_c8,.i1tZMq_c7,.i1tZMq_c6,.i1tZMq_c5,.i1tZMq_c4{grid-column:span 12}}.i1tZMq_cview .i1tZMq_card{padding:16px 18px}.i1tZMq_cview .i1tZMq_toolbar{margin-bottom:12px}.i1tZMq_cview .i1tZMq_page>.i1tZMq_toolbar:last-child{margin-bottom:0}.i1tZMq_cview .i1tZMq_statGrid{grid-template-columns:repeat(auto-fill,minmax(198px,1fr));grid-auto-rows:1fr;gap:12px}.i1tZMq_cview .i1tZMq_statGrid>.i1tZMq_stat{gap:3px;min-height:92px;padding:12px 14px}.i1tZMq_cview .i1tZMq_statGrid .i1tZMq_statValue{font-size:19px;line-height:26px}.i1tZMq_cview .i1tZMq_chartTitle{margin-bottom:10px;font-size:13px}.i1tZMq_cview .i1tZMq_empty{padding:44px 0}.i1tZMq_cview .i1tZMq_segField{padding:5px 0}.i1tZMq_cview .i1tZMq_intro{margin-bottom:10px}.i1tZMq_cview .i1tZMq_grid,.i1tZMq_cview .i1tZMq_statGrid{grid-auto-rows:1fr;gap:12px;margin:0}.i1tZMq_cview .i1tZMq_grid{grid-template-columns:repeat(auto-fill,minmax(214px,1fr))}.i1tZMq_cview .i1tZMq_statGrid{grid-template-columns:repeat(auto-fill,minmax(198px,1fr))}.i1tZMq_cview .i1tZMq_grid>.i1tZMq_stat,.i1tZMq_cview .i1tZMq_statGrid>.i1tZMq_stat{border-radius:12px;justify-content:flex-start;gap:4px;min-height:106px;padding:14px 16px}.i1tZMq_cview .i1tZMq_grid>.i1tZMq_stat>:last-child,.i1tZMq_cview .i1tZMq_statGrid>.i1tZMq_stat>:last-child{margin-top:auto}.i1tZMq_cview .i1tZMq_grid .i1tZMq_statLabel,.i1tZMq_cview .i1tZMq_statGrid .i1tZMq_statLabel{letter-spacing:.02em;color:var(--dsw-alias-label-caption);flex-wrap:wrap;font-size:11.5px;line-height:16px}.i1tZMq_cview .i1tZMq_grid .i1tZMq_statValue,.i1tZMq_cview .i1tZMq_statGrid .i1tZMq_statValue{font-size:22px;font-weight:600;line-height:30px}.i1tZMq_cview .i1tZMq_grid .i1tZMq_statSub,.i1tZMq_cview .i1tZMq_statGrid .i1tZMq_statSub{color:var(--dsw-alias-label-tertiary);white-space:normal;text-overflow:clip;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:11.5px;line-height:16px;display:-webkit-box;overflow:hidden}.i1tZMq_cview .i1tZMq_grid .i1tZMq_spark,.i1tZMq_cview .i1tZMq_statGrid .i1tZMq_spark{margin-top:4px}@container i1tZMq_tmc (width<=1000px){.i1tZMq_cview .i1tZMq_grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}.i1tZMq_cview .i1tZMq_grid .i1tZMq_statValue,.i1tZMq_cview .i1tZMq_statGrid .i1tZMq_statValue{font-size:20px;line-height:28px}}.i1tZMq_cview .i1tZMq_statGrid.i1tZMq_onlineGrid{grid-template-columns:repeat(4,minmax(0,1fr))}.i1tZMq_cview .i1tZMq_onlineGrid>.i1tZMq_statWide{grid-column:span 2}@container i1tZMq_tmc (width<=1320px){.i1tZMq_cview .i1tZMq_statGrid.i1tZMq_onlineGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}@container i1tZMq_tmc (width<=820px){.i1tZMq_cview .i1tZMq_statGrid.i1tZMq_onlineGrid{grid-template-columns:minmax(0,1fr)}.i1tZMq_cview .i1tZMq_onlineGrid>.i1tZMq_statWide{grid-column:auto}}.i1tZMq_accLegend{flex-wrap:wrap;flex:none;align-items:center;gap:4px 12px;display:inline-flex}.i1tZMq_accLegendItem{color:var(--dsw-alias-label-tertiary);align-items:center;gap:5px;font-size:11px;line-height:16px;display:inline-flex}.i1tZMq_cview .i1tZMq_accLegend .i1tZMq_acc{font-size:10px}.i1tZMq_vgrid{grid-template-columns:repeat(4,minmax(0,1fr));align-items:start;gap:12px;width:100%;display:grid}.i1tZMq_vgrid>*{min-width:0}.i1tZMq_vgrid .i1tZMq_card{margin:0;container:i1tZMq_tmvc/inline-size}@container i1tZMq_tmvc (width<=400px){.i1tZMq_xgridBody{grid-template-columns:minmax(0,1fr)}}@container i1tZMq_tmc (width<=1560px){.i1tZMq_vgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}@container i1tZMq_tmc (width<=1240px){.i1tZMq_vgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}@container i1tZMq_tmc (width<=890px){.i1tZMq_vgrid{grid-template-columns:minmax(0,1fr)}}@container i1tZMq_tmc (width>=1240px) and (width<=1560px){.i1tZMq_vgrid:has(>.i1tZMq_card:nth-child(4):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}}@container i1tZMq_tmc (width>=1560px){.i1tZMq_vgrid:has(>.i1tZMq_card:nth-child(5):last-child),.i1tZMq_vgrid:has(>.i1tZMq_card:nth-child(9):last-child){grid-template-columns:repeat(3,minmax(0,1fr))}}@container i1tZMq_tmc (width<=620px){.i1tZMq_cnav{align-items:center;width:46px;min-width:46px;padding:12px 6px}.i1tZMq_cnavInner{width:100%}.i1tZMq_cnavHead{display:none}.i1tZMq_cnavItem{justify-content:center;gap:0;padding:8px 0}.i1tZMq_cnavLabel{display:none}.i1tZMq_chead{padding:12px 14px 10px}.i1tZMq_cheadHint{display:none}.i1tZMq_cbody{padding:14px 14px 40px}}';
+var css = '.i1tZMq_page{color:var(--dsw-alias-label-primary);flex-direction:column;max-width:820px;font-size:13px;line-height:1.6;display:flex;container:i1tZMq_tm/inline-size}.i1tZMq_title{color:var(--dsw-alias-label-primary);margin:0 0 4px;font-size:15px;font-weight:600}.i1tZMq_desc{color:var(--dsw-alias-label-secondary);margin:0 0 14px}.i1tZMq_intro{color:var(--dsw-alias-label-tertiary);margin:0 0 4px;font-size:14px;line-height:22px}.i1tZMq_section{flex-direction:column;width:100%;display:flex}.i1tZMq_sectionHead{color:var(--dsw-alias-label-secondary);padding:14px 0 2px;font-size:12px;font-weight:500;line-height:18px}.i1tZMq_row{border-bottom:.5px solid var(--dsw-alias-border-l2);align-items:center;gap:8px;padding:16px 0;display:flex}.i1tZMq_rowWrap{border-bottom:.5px solid var(--dsw-alias-border-l2);flex-direction:column;align-items:flex-start;gap:8px;padding:16px 0;display:flex}.i1tZMq_section .i1tZMq_row:last-child,.i1tZMq_section .i1tZMq_rowWrap:last-child,.i1tZMq_section .i1tZMq_bar:last-child{border-bottom:none}.i1tZMq_rowText{flex-direction:column;flex:1;gap:4px;min-width:0;padding-right:48px;display:flex}.i1tZMq_rowLabel{color:var(--dsw-alias-label-primary);flex:none;font-size:14px;font-weight:400;line-height:22px}.i1tZMq_rowDesc{color:var(--dsw-alias-label-tertiary);font-size:12px;font-weight:400;line-height:18px}.i1tZMq_rowValue{color:var(--dsw-alias-label-primary);text-align:right;justify-content:flex-end;align-items:center;min-width:0;font-size:13px;line-height:20px;display:flex}.i1tZMq_field{border-bottom:.5px solid var(--dsw-alias-border-l2);flex-direction:column;gap:6px;padding:14px 0;display:flex}.i1tZMq_section>.i1tZMq_field:last-of-type{border-bottom:none}.i1tZMq_fieldHead{flex-wrap:wrap;align-items:center;gap:6px;display:flex}.i1tZMq_fieldLabel{color:var(--dsw-alias-label-primary);font-size:14px;font-weight:500;line-height:22px}.i1tZMq_fieldReq{color:var(--dsw-alias-state-warn-label);background:color-mix(in srgb, var(--dsw-alias-state-warn-primary) 14%, transparent);border-radius:4px;flex:none;padding:0 6px;font-size:10px;line-height:15px}.i1tZMq_fieldOpt{color:var(--dsw-alias-label-tertiary);flex:none;font-size:11px;line-height:16px}.i1tZMq_fieldControl{flex-wrap:wrap;align-items:center;gap:8px;min-width:0;display:flex}.i1tZMq_fieldControl>.i1tZMq_inputWrap{flex:260px;width:auto;min-width:0}.i1tZMq_fieldControl>.i1tZMq_selector{max-width:100%}.i1tZMq_fieldDesc{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}.i1tZMq_fieldNote{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);border-radius:8px;margin:10px 0 0;padding:8px 10px;font-size:12px;line-height:18px}.i1tZMq_fieldNote b{color:var(--dsw-alias-label-primary);margin-right:4px;font-weight:600}.i1tZMq_inputReadonly{background:var(--dsw-alias-bg-layer-2);cursor:not-allowed;border-style:dashed}.i1tZMq_inputReadonly .i1tZMq_ninput{color:var(--dsw-alias-label-secondary)}.i1tZMq_rowControl{flex:1;justify-content:flex-end;min-width:0;display:flex}.i1tZMq_card{background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l1);border-radius:12px;margin:0 0 8px;padding:14px 16px}.i1tZMq_btn{border:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-primary);cursor:pointer;white-space:nowrap;background:0 0;border-radius:8px;flex:none;justify-content:center;align-items:center;gap:6px;padding:6px 12px;font-family:inherit;font-size:13px;display:inline-flex}.i1tZMq_btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover);border-color:color-mix(in srgb, var(--dsw-alias-state-business-primary) 55%, var(--dsw-alias-border-l2))}.i1tZMq_btn:disabled{opacity:.4;cursor:default}.i1tZMq_btnPrimary{background:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary);color:#fff}.i1tZMq_btnDanger{color:var(--dsw-alias-state-error-primary);border-color:var(--dsw-alias-state-error-primary)}.i1tZMq_notice{border-radius:8px;margin:0 0 12px;padding:8px 12px;font-size:12.5px}.i1tZMq_noticeErr{background:color-mix(in srgb, var(--dsw-alias-state-error-primary) 12%, transparent);color:var(--dsw-alias-state-error-primary)}.i1tZMq_noticeEmpty{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary)}.i1tZMq_noticeWarn{color:var(--dsw-alias-state-warn-label)}.i1tZMq_noticeOk{color:var(--dsw-alias-state-success-primary)}.i1tZMq_hint{color:var(--dsw-alias-label-secondary);font-size:12px}.i1tZMq_menu{flex-direction:column;gap:8px;min-width:0;display:flex}.i1tZMq_menuHead{gap:6px;display:flex}.i1tZMq_menuHint{color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:16px}.i1tZMq_menuList{flex-direction:column;gap:2px;max-height:46vh;display:flex;overflow:auto}.i1tZMq_menuRow{border-radius:8px;align-items:center;gap:8px;min-width:0;padding:5px 6px;display:flex}.i1tZMq_menuRow:hover{background:var(--dsw-alias-bg-layer-2)}.i1tZMq_menuDot{border:1px solid var(--dsw-alias-border-l2);background:0 0;border-radius:50%;flex:none;width:6px;height:6px}.i1tZMq_menuRow[data-open="1"] .i1tZMq_menuDot{border-color:var(--dsw-alias-state-business-primary);background:var(--dsw-alias-state-business-primary)}.i1tZMq_menuLabel{min-width:0;color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;flex:auto;font-size:12px;line-height:18px;overflow:hidden}.i1tZMq_menuBtn{border:1px solid var(--dsw-alias-border-l1);cursor:pointer;color:var(--dsw-alias-label-secondary);background:0 0;border-radius:6px;flex:none;padding:2px 8px;font-family:inherit;font-size:11px;line-height:16px}.i1tZMq_menuBtn:hover:not(:disabled){border-color:var(--dsw-alias-state-business-primary);color:var(--dsw-alias-label-primary)}.i1tZMq_menuBtn:disabled{opacity:.5;cursor:default}.i1tZMq_menuEmpty{color:var(--dsw-alias-label-tertiary);padding:4px 2px;font-size:12px}.i1tZMq_menuFoot{border-top:1px solid var(--dsw-alias-border-l1);justify-content:space-between;align-items:center;gap:8px;padding-top:8px;display:flex}.i1tZMq_menuCount{color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums;font-size:11px}.i1tZMq_cardHint{color:var(--dsw-alias-label-tertiary);margin:0;font-size:12px;line-height:18px}.i1tZMq_mono{font-family:var(--ds-font-family-code)}.i1tZMq_toolbar{flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 8px;display:flex}.i1tZMq_selector{background:var(--dsw-alias-bg-module-platform);height:36px;font:inherit;color:var(--dsw-alias-label-primary);cursor:pointer;border:none;border-radius:18px;align-items:center;gap:12px;max-width:100%;padding:0 14px;font-size:14px;line-height:22px;display:inline-flex}.i1tZMq_selector:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}.i1tZMq_selector:disabled{cursor:default;opacity:.4}.i1tZMq_selectorLabel{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.i1tZMq_chevron{flex:none}.i1tZMq_tabs{border:1px solid var(--dsw-alias-border-l1);border-radius:12px;gap:2px;margin:8px 0 4px;padding:2px;display:inline-flex}.i1tZMq_tab{color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:8px;padding:4px 14px;font-family:inherit;font-size:13px;line-height:20px}.i1tZMq_tab:hover{color:var(--dsw-alias-label-primary)}.i1tZMq_tabOn{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.i1tZMq_grid{grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px;display:grid}.i1tZMq_statGrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0;display:grid}.i1tZMq_stat{background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l1);border-radius:12px;flex-direction:column;gap:2px;padding:10px 12px;transition:border-color .15s;display:flex;position:relative;overflow:hidden}.i1tZMq_stat:hover{border-color:var(--dsw-alias-state-business-primary)}.i1tZMq_statLabel{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}.i1tZMq_statValue{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;font-size:17px;font-weight:600;line-height:24px}.i1tZMq_stat[data-tint="1"] .i1tZMq_statValue{background:linear-gradient(100deg, var(--dsw-alias-state-business-primary), color-mix(in srgb, var(--dsw-alias-state-business-primary) 52%, var(--dsw-alias-state-success-primary)));color:#0000;-webkit-background-clip:text;background-clip:text}.i1tZMq_statSub{color:var(--dsw-alias-label-secondary);text-overflow:ellipsis;white-space:nowrap;font-size:11px;line-height:16px;overflow:hidden}.i1tZMq_pop{z-index:50;pointer-events:none;background:var(--dsw-specific-menu);border:1px solid var(--dsw-alias-border-l2);box-shadow:var(--dsw-shadow-lv3);max-width:300px;color:var(--dsw-alias-label-primary);border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.5;position:fixed}.i1tZMq_popTitle{margin-bottom:6px;font-size:12.5px;font-weight:600}.i1tZMq_popRow{white-space:nowrap;align-items:center;gap:6px;margin:2px 0;display:flex}.i1tZMq_popRow .i1tZMq_dot{border-radius:2.5px;flex:none;width:8px;height:8px}.i1tZMq_popK{color:var(--dsw-alias-label-secondary)}.i1tZMq_popV{font-variant-numeric:tabular-nums;margin-left:auto;padding-left:12px}.i1tZMq_popBar{background:var(--dsw-alias-interactive-bg-hover);border-radius:2px;flex:1;min-width:50px;height:4px;display:block;overflow:hidden}.i1tZMq_popFill{border-radius:2px;height:100%;display:block}.i1tZMq_tip,.i1tZMq_tipfixed{background:var(--dsw-specific-menu);border:1px solid var(--dsw-alias-border-l2);box-shadow:var(--dsw-shadow-lv3);pointer-events:none;color:var(--dsw-alias-label-primary);z-index:60;border-radius:8px;max-width:280px;padding:7px 10px;font-size:11.5px;line-height:1.5;position:fixed}.i1tZMq_tipfloat{z-index:500}.i1tZMq_tipAbove{z-index:350}.i1tZMq_tiprow{white-space:nowrap;align-items:center;gap:6px;display:flex}.i1tZMq_tipK{color:var(--dsw-alias-label-secondary)}.i1tZMq_tipV{font-variant-numeric:tabular-nums;font-weight:500}.i1tZMq_dot{background:var(--dsw-alias-state-success-primary);border-radius:3px;flex:none;width:10px;height:10px;display:inline-block}.i1tZMq_dot.i1tZMq_warn{background:var(--dsw-alias-state-warn-primary)}.i1tZMq_dot.i1tZMq_bad{background:var(--dsw-alias-state-error-primary)}.i1tZMq_dot.i1tZMq_off{box-sizing:border-box;border:1.5px solid var(--dsw-alias-state-error-primary);background:0 0}.i1tZMq_muted{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}.i1tZMq_chartTitle{color:var(--dsw-alias-label-secondary);flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 8px;margin:0 0 8px;font-size:12.5px;font-weight:600;display:flex}.i1tZMq_chartTitle>span:first-child{text-overflow:ellipsis;white-space:nowrap;flex:auto;min-width:0;overflow:hidden}.i1tZMq_chartWrap{margin:8px 0;overflow-x:auto}.i1tZMq_seg{border:1px solid var(--dsw-alias-border-l1);border-radius:8px;flex-wrap:wrap;gap:2px;padding:2px;display:inline-flex}.i1tZMq_segBtn{color:var(--dsw-alias-label-tertiary);cursor:pointer;background:0 0;border:none;border-radius:6px;padding:2px 8px;font-family:inherit;font-size:12px;line-height:18px}.i1tZMq_segBtn:hover{color:var(--dsw-alias-label-primary)}.i1tZMq_segOn{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary);box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-state-business-primary) 40%, transparent)}.i1tZMq_legend{flex-wrap:wrap;align-items:center;gap:4px;margin-top:8px;display:flex}.i1tZMq_cacheRow{color:var(--dsw-alias-label-secondary);flex-wrap:wrap;align-items:center;gap:5px;margin-top:6px;font-size:11px;line-height:16px;display:flex}.i1tZMq_cacheSep{color:var(--dsw-alias-label-tertiary)}.i1tZMq_peak{border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);cursor:default;border-radius:12px;flex-direction:column;gap:6px;margin:0 0 8px;padding:10px 12px;display:flex;position:relative}.i1tZMq_peak:focus{outline:none}.i1tZMq_peak:focus-visible{box-shadow:0 0 0 2px color-mix(in srgb, var(--dsw-alias-state-business-primary) 55%, transparent)}.i1tZMq_peakHead{flex-wrap:wrap;align-items:center;gap:4px 6px;min-width:0;display:flex}.i1tZMq_peakDot{border-radius:50%;flex:none;width:8px;height:8px}.i1tZMq_peakDot.i1tZMq_peak{background:var(--dsw-alias-state-warn-primary);box-shadow:0 0 6px var(--dsw-alias-state-warn-primary)}.i1tZMq_peakDot.i1tZMq_valley{background:var(--dsw-alias-state-success-primary)}.i1tZMq_peakTitle{color:var(--dsw-alias-label-primary);white-space:nowrap;flex:none;font-size:12px;font-weight:600}.i1tZMq_peakChip{white-space:nowrap;border-radius:999px;flex:none;padding:0 7px;font-size:10.5px;font-weight:600;line-height:16px}.i1tZMq_peakChip.i1tZMq_peak{color:var(--dsw-alias-state-warn-label);background:color-mix(in srgb, var(--dsw-alias-state-warn-primary) 16%, transparent)}.i1tZMq_peakChip.i1tZMq_valley{color:var(--dsw-alias-state-success-primary);background:color-mix(in srgb, var(--dsw-alias-state-success-primary) 14%, transparent)}.i1tZMq_peakTime{text-align:right;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none;margin-left:auto;font-size:11px;line-height:16px}.i1tZMq_tipfixed.i1tZMq_peakPop{border-color:color-mix(in srgb, var(--dsw-alias-state-business-primary) 30%, var(--dsw-alias-border-l2));width:252px;max-width:calc(100vw - 16px);padding:9px 11px;font-size:11px;animation:.18s cubic-bezier(.22,.8,.3,1) i1tZMq_tm-peakPopIn;box-shadow:0 14px 34px -10px #0000006b}.i1tZMq_peakPopHead{align-items:center;gap:6px;margin-bottom:6px;font-size:11.5px;font-weight:600;display:flex}.i1tZMq_peakPopDot{border-radius:50%;flex:none;width:7px;height:7px}.i1tZMq_peakPopDot.i1tZMq_peak{background:var(--dsw-alias-state-warn-primary);box-shadow:0 0 5px var(--dsw-alias-state-warn-primary)}.i1tZMq_peakPopDot.i1tZMq_valley{background:var(--dsw-alias-state-success-primary)}.i1tZMq_peakPopClock{font-family:var(--ds-font-family-code);font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);margin-left:auto;font-weight:600;animation:.45s i1tZMq_tm-peakTick}.i1tZMq_peakPop .i1tZMq_tipV{font-weight:500}.i1tZMq_peakPopFoot{border-top:1px dashed var(--dsw-alias-border-l1);color:var(--dsw-alias-label-tertiary);margin-top:6px;padding-top:6px;font-size:10px;line-height:14px}@keyframes i1tZMq_tm-peakPopIn{0%{opacity:0;transform:translateY(-6px)scale(.97)}}@keyframes i1tZMq_tm-peakTick{0%{opacity:.25;transform:translateY(-4px)}}.i1tZMq_peakBand{gap:1.5px;height:10px;display:flex}.i1tZMq_peakCell{background:var(--dsw-alias-interactive-bg-hover);border-radius:2px;flex:1 1 0;min-width:0}.i1tZMq_peakCell.i1tZMq_on{background:var(--dsw-alias-state-warn-primary);opacity:.85}.i1tZMq_peakCell.i1tZMq_now{outline:1.5px solid var(--dsw-alias-label-primary);outline-offset:-1px}.i1tZMq_peakHint{color:var(--dsw-alias-label-tertiary);font-size:10.5px;line-height:15px}.i1tZMq_peakHint b{color:var(--dsw-alias-label-secondary);font-weight:600}.i1tZMq_modelchip{border:1px solid var(--dsw-alias-border-l1);cursor:pointer;color:var(--dsw-alias-label-secondary);background:0 0;border-radius:999px;align-items:center;gap:5px;max-width:180px;padding:2px 9px;font-family:inherit;font-size:11.5px;line-height:18px;display:inline-flex;position:relative}.i1tZMq_modelchip:hover{border-color:var(--dsw-alias-state-business-primary)}.i1tZMq_modelchip[data-off="1"]{opacity:.38}.i1tZMq_modelchip .i1tZMq_dot{width:8px;height:8px}.i1tZMq_mcName{text-overflow:ellipsis;white-space:nowrap;max-width:130px;overflow:hidden}.i1tZMq_heatwrap{position:relative}.i1tZMq_heatrow{flex:auto;min-width:0;display:flex}.i1tZMq_hcell{aspect-ratio:1;cursor:default;border-radius:2.5px;flex:1 1 0;min-width:0}.i1tZMq_hcell[data-lv="0"]{background:var(--dsw-alias-interactive-bg-hover);opacity:.45}.i1tZMq_cell{border-radius:2.5px;flex:none;width:9px;height:9px;margin:0 2px;display:inline-block}.i1tZMq_models{flex-direction:column;flex:1;min-width:300px;display:flex}.i1tZMq_model{border-bottom:1px solid var(--dsw-alias-border-l1);cursor:default;border-radius:6px;align-items:flex-start;gap:10px;padding:8px 4px;display:flex}.i1tZMq_model:hover{background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 4%, transparent)}.i1tZMq_model:last-child{border-bottom:none}.i1tZMq_model .i1tZMq_dot{margin-top:5px}.i1tZMq_bartrack{background:var(--dsw-alias-interactive-bg-hover);border-radius:3px;flex:1;min-width:60px;height:6px;overflow:hidden}.i1tZMq_barfill{border-radius:3px;height:100%;transition:width .3s;display:block}.i1tZMq_modelname{color:var(--dsw-alias-label-primary);white-space:nowrap;text-overflow:ellipsis;flex:1;min-width:0;font-size:13px;overflow:hidden}.i1tZMq_modelval{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;flex:none;font-size:12px}.i1tZMq_flexrow{flex-wrap:wrap;justify-content:center;align-items:center;gap:20px;display:flex}.i1tZMq_empty{color:var(--dsw-alias-label-secondary);text-align:center;padding:28px 0;font-size:13px}.i1tZMq_svgwrap{position:relative}.i1tZMq_spark{width:100%;height:34px;margin-top:6px;display:block}.i1tZMq_compose{background:var(--dsw-alias-interactive-bg-hover);border-radius:4px;height:8px;margin-top:6px;display:flex;overflow:hidden}.i1tZMq_compose span{height:100%;display:block}.i1tZMq_composeLegend{color:var(--dsw-alias-label-caption);flex-wrap:wrap;gap:8px;margin-top:5px;font-size:10px;line-height:14px;display:flex}.i1tZMq_composeLegend i{vertical-align:-1px;border-radius:2px;width:7px;height:7px;margin-right:3px;display:inline-block}.i1tZMq_statgrow{align-items:center;gap:4px;margin-top:6px;font-size:11px;line-height:14px;display:flex}.i1tZMq_arrow{vertical-align:middle;border-left:4px solid #0000;border-right:4px solid #0000;width:0;height:0;display:inline-block}.i1tZMq_arrowUp{border-bottom:5px solid var(--dsw-alias-state-success-primary)}.i1tZMq_arrowDown{border-top:5px solid var(--dsw-alias-state-error-primary)}.i1tZMq_streakbar{background:var(--dsw-alias-interactive-bg-hover);border-radius:4px;height:8px;margin-top:7px;overflow:hidden}.i1tZMq_streakfill{border-radius:4px;height:100%;display:block}.i1tZMq_dayscroll{gap:1.5px;height:12px;margin-top:7px;display:flex}.i1tZMq_dayscroll span{border-radius:1.5px;flex:1 1 0;min-width:0;display:block}.i1tZMq_axislbl{fill:var(--dsw-alias-label-caption);font-size:10.5px}.i1tZMq_gridln{stroke:var(--dsw-alias-border-l1);stroke-width:1px}.i1tZMq_bar{border-bottom:.5px solid var(--dsw-alias-border-l2);flex-wrap:wrap;align-items:center;gap:8px;padding:12px 0;display:flex}.i1tZMq_side{background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l1);border-radius:12px;margin:2px 0;padding:8px 10px;position:relative;overflow:visible}.i1tZMq_side.i1tZMq_loading{animation:1.2s infinite i1tZMq_tm-pulse}.i1tZMq_side.i1tZMq_error{border-color:var(--dsw-alias-state-error-primary)}.i1tZMq_in{animation:.35s i1tZMq_tm-in}.i1tZMq_vendor{cursor:pointer;text-align:left;background:0 0;border:none;align-items:center;gap:6px;width:100%;padding:0;display:flex}.i1tZMq_vname{min-width:0;color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;flex:1;font-size:12px;font-weight:600;overflow:hidden}.i1tZMq_vname2{color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:500;overflow:hidden}.i1tZMq_vtype{color:var(--dsw-alias-brand-primary);flex:none;font-size:10px}.i1tZMq_vcaret{color:var(--dsw-alias-label-secondary);flex:none;font-size:10px}.i1tZMq_backdrop{z-index:55;cursor:default;background:0 0;border:none;margin:0;padding:0;position:fixed;inset:0}.i1tZMq_popmenu{z-index:400;background:color-mix(in srgb, var(--dsw-alias-bg-layer-1) 78%, transparent);backdrop-filter:blur(12px)saturate(1.4);border:1px solid var(--dsw-alias-border-l2);border-radius:12px;flex-direction:column;gap:2px;min-width:180px;max-width:260px;max-height:240px;margin:0;padding:6px;display:flex;position:fixed;overflow:auto;box-shadow:0 12px 32px #00000040}.i1tZMq_mitem{cursor:pointer;width:100%;color:var(--dsw-alias-label-secondary);text-align:left;background:0 0;border:1px solid #0000;border-radius:6px;align-items:center;gap:6px;padding:4px 6px;font-size:12px;display:flex}.i1tZMq_mitem:hover{border-color:var(--dsw-alias-border-l1);color:var(--dsw-alias-label-primary)}.i1tZMq_mitem.i1tZMq_active{color:var(--dsw-alias-label-primary);border-color:var(--dsw-alias-brand-primary)}.i1tZMq_mitem .i1tZMq_grow{text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;overflow:hidden}.i1tZMq_qrow{align-items:center;gap:6px;margin-top:6px;display:flex}.i1tZMq_qlabel{width:52px;min-width:52px;color:var(--dsw-alias-label-secondary);white-space:nowrap;text-overflow:ellipsis;flex:none;font-size:11px;line-height:16px;overflow:hidden}.i1tZMq_qbar{background:var(--dsw-alias-bg-layer-2);border-radius:999px;flex:1;min-width:0;height:6px;overflow:hidden}.i1tZMq_qfill{background:var(--dsw-alias-brand-primary);border-radius:999px;height:100%;transition:width .8s;display:block}.i1tZMq_qfill.i1tZMq_warn{background:var(--dsw-alias-state-warn-primary)}.i1tZMq_qfill.i1tZMq_bad{background:var(--dsw-alias-state-error-primary)}.i1tZMq_qfill.i1tZMq_over{background:var(--dsw-alias-state-error-primary);animation:1.6s ease-in-out infinite i1tZMq_tm-qpulse}.i1tZMq_qpct{text-align:right;width:34px;color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;flex:none;font-size:11px}.i1tZMq_qpct.i1tZMq_warn{color:var(--dsw-alias-state-warn-label)}.i1tZMq_qpct.i1tZMq_bad,.i1tZMq_qpct.i1tZMq_over{color:var(--dsw-alias-state-error-primary);font-weight:600}.i1tZMq_qsumWarn{color:var(--dsw-alias-state-warn-label)}.i1tZMq_qsumBad,.i1tZMq_qsumOver{color:var(--dsw-alias-state-error-primary)}@keyframes i1tZMq_tm-qpulse{0%,to{opacity:1}50%{opacity:.55}}.i1tZMq_qleft{text-align:right;width:62px;color:var(--dsw-alias-label-secondary);white-space:nowrap;text-overflow:ellipsis;flex:none;font-size:10px;overflow:hidden}.i1tZMq_qstatus{white-space:nowrap;color:var(--dsw-alias-state-error-primary);background:color-mix(in srgb, var(--dsw-alias-state-error-primary) 14%, transparent);border-radius:999px;flex:none;padding:0 6px;font-size:9.5px;line-height:15px}.i1tZMq_qbal{justify-content:space-between;align-items:baseline;margin-top:6px;display:flex}.i1tZMq_qbal b{color:var(--dsw-alias-label-primary);font-size:15px}.i1tZMq_qbal span{color:var(--dsw-alias-label-secondary);font-size:10px}.i1tZMq_body{background:0 0;border:none;border-radius:0;margin-top:8px;padding:0}.i1tZMq_body .i1tZMq_qrow:first-child{margin-top:0}.i1tZMq_paygCur{color:var(--dsw-alias-label-secondary);margin-right:6px;font-size:12px;font-weight:600}.i1tZMq_paygAmt{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;font-size:22px;font-weight:700;line-height:1.2}.i1tZMq_paygAmt.i1tZMq_neg{color:var(--dsw-alias-state-error-primary)}.i1tZMq_paygTop{justify-content:space-between;align-items:center;gap:8px;display:flex}.i1tZMq_paygSub{color:var(--dsw-alias-label-secondary);margin-top:2px;font-size:11px}.i1tZMq_avail{border:1px solid;border-radius:999px;flex:none;padding:1px 9px;font-size:11px;line-height:1.6}.i1tZMq_avail.i1tZMq_ok{color:var(--dsw-alias-state-success-primary);border-color:var(--dsw-alias-state-success-primary)}.i1tZMq_avail.i1tZMq_bad{color:var(--dsw-alias-state-error-primary);border-color:var(--dsw-alias-state-error-primary)}.i1tZMq_avail.i1tZMq_unknown{color:var(--dsw-alias-label-secondary);border-color:var(--dsw-alias-border-l1)}.i1tZMq_infos{flex-direction:column;gap:4px;margin-top:8px;display:flex}.i1tZMq_inforow{color:var(--dsw-alias-label-secondary);justify-content:space-between;font-size:11px;display:flex}.i1tZMq_inforow b{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums}.i1tZMq_warnLine{color:var(--dsw-alias-state-warn-primary);margin:8px 0 0;font-size:11px;line-height:1.6}.i1tZMq_warnLine.i1tZMq_bad{color:var(--dsw-alias-state-error-primary)}.i1tZMq_mini.i1tZMq_warn{color:var(--dsw-alias-state-warn-primary)}.i1tZMq_xstats{flex-direction:column;gap:4px;margin-top:8px;display:flex}.i1tZMq_xrow{color:var(--dsw-alias-label-secondary);justify-content:space-between;font-size:11px;display:flex}.i1tZMq_xrow b{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums}.i1tZMq_xgrid{margin-top:8px}.i1tZMq_xgridBody{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 12px;display:grid}.i1tZMq_xcell{min-width:0;color:var(--dsw-alias-label-secondary);justify-content:space-between;align-items:baseline;gap:8px;font-size:11px;display:flex}.i1tZMq_xcellLabel{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.i1tZMq_xcellValue{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}@container i1tZMq_tm (width<=300px){.i1tZMq_xgridBody{grid-template-columns:minmax(0,1fr)}}.i1tZMq_paygCompact .i1tZMq_paygAmt{font-size:20px}.i1tZMq_paygCompact .i1tZMq_paygSub{margin-top:0}.i1tZMq_paygCompact .i1tZMq_warnLine{margin-top:4px}.i1tZMq_xchart{margin-top:8px}.i1tZMq_xtitle{color:var(--dsw-alias-label-secondary);margin-bottom:2px;font-size:10px}.i1tZMq_xsplit{background:var(--dsw-alias-bg-layer-2);border-radius:999px;height:8px;margin-top:6px;display:flex;overflow:hidden}.i1tZMq_xsplit span{height:100%;display:block}.i1tZMq_segBrand{background:var(--dsw-alias-brand-primary)}.i1tZMq_segOk{background:var(--dsw-alias-state-success-primary)}.i1tZMq_segWarn{background:var(--dsw-alias-state-warn-primary)}.i1tZMq_segBad{background:var(--dsw-alias-state-error-primary)}.i1tZMq_segInfo{background:var(--dsw-alias-state-business-primary)}.i1tZMq_segMuted{background:var(--dsw-alias-label-tertiary)}.i1tZMq_segPal0{background:var(--dsw-alias-brand-primary)}.i1tZMq_segPal1{background:var(--dsw-alias-state-success-primary)}.i1tZMq_segPal2{background:var(--dsw-alias-state-warn-primary)}.i1tZMq_segPal3{background:var(--dsw-alias-state-business-primary)}.i1tZMq_segPal4{background:color-mix(in srgb, var(--dsw-alias-state-success-primary) 55%, var(--dsw-alias-bg-layer-1))}.i1tZMq_segPal5{background:color-mix(in srgb, var(--dsw-alias-state-warn-primary) 55%, var(--dsw-alias-bg-layer-1))}.i1tZMq_segPal6{background:color-mix(in srgb, var(--dsw-alias-brand-primary) 55%, var(--dsw-alias-bg-layer-1))}.i1tZMq_segPal7{background:var(--dsw-alias-label-tertiary)}.i1tZMq_xdot{border-radius:2px;width:7px;height:7px;margin-right:5px;display:inline-block}.i1tZMq_sections,.i1tZMq_ui{flex-direction:column;display:flex}.i1tZMq_xprog{margin-top:8px}.i1tZMq_vchips{flex-wrap:wrap;gap:4px;margin-top:6px;display:flex}.i1tZMq_vchip{border:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-layer-2);white-space:nowrap;border-radius:999px;align-items:center;padding:0 8px;font-size:10.5px;line-height:16px;display:inline-flex}.i1tZMq_vchipOk{color:var(--dsw-alias-state-success-primary);border-color:var(--dsw-alias-state-success-primary)}.i1tZMq_vchipWarn{color:var(--dsw-alias-state-warn-primary);border-color:var(--dsw-alias-state-warn-primary)}.i1tZMq_vchipBad{color:var(--dsw-alias-state-error-primary);border-color:var(--dsw-alias-state-error-primary)}.i1tZMq_vchipInfo{color:var(--dsw-alias-state-business-primary);border-color:var(--dsw-alias-state-business-primary)}.i1tZMq_errbox{background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l1);border-left:3px solid var(--dsw-alias-state-warn-primary);border-radius:8px;margin-top:8px;padding:8px 10px}.i1tZMq_errboxBad{border-color:color-mix(in srgb, var(--dsw-alias-state-error-primary) 45%, var(--dsw-alias-border-l1));border-left-color:var(--dsw-alias-state-error-primary)}.i1tZMq_errboxWarn{border-left-color:var(--dsw-alias-state-warn-primary)}.i1tZMq_errboxInfo{border-left-color:var(--dsw-alias-state-business-primary)}.i1tZMq_errhead{cursor:pointer;text-align:left;width:100%;font:inherit;background:0 0;border:none;align-items:flex-start;gap:8px;padding:0;display:flex}.i1tZMq_erricon{background:color-mix(in srgb, var(--dsw-alias-state-warn-primary) 18%, transparent);border-radius:50%;flex:none;justify-content:center;align-items:center;width:22px;height:22px;font-size:12px;line-height:1;display:inline-flex}.i1tZMq_erriconBad{background:color-mix(in srgb, var(--dsw-alias-state-error-primary) 18%, transparent)}.i1tZMq_erriconInfo{background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 18%, transparent)}.i1tZMq_errtitlewrap{flex-direction:column;flex:1;gap:2px;min-width:0;display:flex}.i1tZMq_errtitle{color:var(--dsw-alias-state-warn-label);font-size:12.5px;font-weight:600}.i1tZMq_errboxBad .i1tZMq_errtitle{color:var(--dsw-alias-state-error-primary)}.i1tZMq_errboxInfo .i1tZMq_errtitle{color:var(--dsw-alias-label-primary)}.i1tZMq_errhint{color:var(--dsw-alias-label-secondary);font-size:11px;line-height:1.6}.i1tZMq_erraction{flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 0 30px;display:flex}.i1tZMq_erractionText{min-width:0;color:var(--dsw-alias-label-secondary);flex:1;font-size:11px}.i1tZMq_errabtns{flex:none;gap:4px;display:inline-flex}.i1tZMq_errdetail{border-top:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-secondary);margin-top:8px;padding-top:8px;font-size:11px;line-height:1.7}.i1tZMq_errsub{color:var(--dsw-alias-label-secondary);margin:0 0 2px;font-size:10.5px;font-weight:600}.i1tZMq_errsteps{margin:0 0 8px;padding-left:18px}.i1tZMq_errsteps li{margin:2px 0}.i1tZMq_errraw{background:var(--dsw-alias-bg-layer-1);font-family:var(--ds-font-family-code);color:var(--dsw-alias-label-secondary);word-break:break-all;white-space:pre-wrap;border-radius:6px;max-height:160px;margin:0;padding:6px 8px;font-size:10.5px;line-height:1.6;overflow:auto}.i1tZMq_errdactions{flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;display:flex}.i1tZMq_errmeta{color:var(--dsw-alias-label-tertiary);margin-left:auto;font-size:10.5px}.i1tZMq_errboxCompact{padding:6px 8px}.i1tZMq_errboxCompact .i1tZMq_erraction{margin-left:0}.i1tZMq_qmeta{justify-content:space-between;align-items:center;margin-top:6px;display:flex}.i1tZMq_qmeta span{color:var(--dsw-alias-label-secondary);font-size:10px}.i1tZMq_mini{cursor:pointer;color:var(--dsw-alias-label-secondary);background:0 0;border:1px solid #0000;border-radius:6px;padding:2px 6px;font-size:11px}.i1tZMq_mini:hover{border-color:var(--dsw-alias-border-l1);color:var(--dsw-alias-label-primary)}.i1tZMq_err{color:var(--dsw-alias-state-error-primary);margin-top:6px;font-size:11px;line-height:1.6}.i1tZMq_codeblock{margin-top:2px}.i1tZMq_codeblock pre{max-height:340px;overflow:auto}.i1tZMq_run{color:var(--dsw-alias-label-secondary);font-size:12px;line-height:1.7}.i1tZMq_run b{color:var(--dsw-alias-label-primary)}.i1tZMq_inputWrap{border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-1);border-radius:8px;align-items:center;gap:6px;width:100%;height:32px;padding:0 8px;display:inline-flex}.i1tZMq_inputWrap:focus-within{border-color:var(--dsw-alias-brand-primary)}.i1tZMq_input{min-width:0;color:var(--dsw-alias-label-primary);background:0 0;border:none;outline:none;flex:1;font-family:inherit;font-size:14px;line-height:22px}.i1tZMq_input::placeholder{color:var(--dsw-alias-label-dimmed)}.i1tZMq_input:disabled{opacity:.5}.i1tZMq_ninput{min-width:0;color:var(--dsw-alias-label-primary);background:0 0;border:none;outline:none;flex:1;font-family:inherit;font-size:14px;line-height:22px}.i1tZMq_ninput::placeholder{color:var(--dsw-alias-label-dimmed)}.i1tZMq_ninput:disabled{opacity:.5}.i1tZMq_textarea{box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l4);background:var(--dsw-alias-bg-layer-1);font:inherit;color:var(--dsw-alias-label-primary);resize:vertical;border-radius:8px;outline:none;width:100%;min-height:64px;padding:8px 12px;font-size:13px;line-height:20px}.i1tZMq_textarea:focus-visible{border-color:var(--dsw-alias-brand-primary)}.i1tZMq_badge{white-space:nowrap;border-radius:999px;flex:none;align-items:center;height:20px;padding:0 8px;font-size:11px;font-weight:500;line-height:20px;display:inline-flex}.i1tZMq_badgeOk{background:var(--dsw-alias-state-success-tertiary);color:var(--dsw-alias-state-success-primary)}.i1tZMq_badgeWarn{background:var(--dsw-alias-state-warn-tertiary);color:var(--dsw-alias-state-warn-label)}.i1tZMq_badgeMuted{background:var(--dsw-alias-button-ghost-active-fill);color:var(--dsw-alias-label-caption)}.i1tZMq_badgeInfo{background:var(--dsw-alias-state-business-tertiary);color:var(--dsw-alias-state-business-primary)}.i1tZMq_loading{align-items:center;gap:8px;display:flex}.i1tZMq_loadingText{color:var(--dsw-alias-label-tertiary);font-size:13px;line-height:20px}.i1tZMq_spinner{box-sizing:border-box;border:1.5px solid var(--dsw-alias-border-l2);border-top-color:var(--dsw-alias-state-business-primary);border-radius:50%;flex:none;width:12px;height:12px;animation:.7s linear infinite i1tZMq_tm-spin;display:inline-block}.i1tZMq_formGrid{flex-direction:column;gap:8px;width:100%;display:flex}.i1tZMq_fieldLabel{color:var(--dsw-alias-label-secondary);margin-bottom:2px;font-size:12px}.i1tZMq_footerNote{color:var(--dsw-alias-label-tertiary);margin:0;font-size:11.5px;line-height:17px}.i1tZMq_vendorRow{align-items:center;gap:2px;display:flex}.i1tZMq_vendorRow .i1tZMq_vendor{flex:1;width:auto;min-width:0}.i1tZMq_today{border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1);cursor:default;box-sizing:border-box;border-radius:12px;flex:none;width:100%;margin:8px 0;padding:10px 12px;overflow:hidden}.i1tZMq_today:hover{border-color:var(--dsw-alias-state-business-primary)}.i1tZMq_todaylabel{color:var(--dsw-alias-label-caption);font-size:11px;line-height:16px}.i1tZMq_todayval{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;font-size:18px;font-weight:600;line-height:24px}.i1tZMq_todayhead{justify-content:space-between;align-items:baseline;gap:8px;display:flex}.i1tZMq_todayhead .i1tZMq_todayval{flex:none;margin-left:auto;font-size:15px}.i1tZMq_todaymodels{flex-direction:column;align-items:stretch;gap:2px;margin-top:5px;display:flex}.i1tZMq_todaymchip{color:var(--dsw-alias-label-secondary);align-items:center;gap:4px;max-width:100%;font-size:10px;line-height:14px;display:inline-flex}.i1tZMq_todaymchip .i1tZMq_dot{width:7px;height:7px}.i1tZMq_todaymchip span:last-child{text-overflow:ellipsis;white-space:nowrap;overflow:hidden}div:has(>div[data-slot="sidebar.footer.action"]){flex-direction:column;align-items:stretch}.i1tZMq_todayRail{box-sizing:border-box;background:var(--dsw-alias-bg-layer-1);cursor:pointer;border-radius:12px;flex-direction:column;justify-content:center;align-items:center;width:auto;min-width:0;max-width:100%;margin:2px 0 0;padding:3px 4px;display:flex}.i1tZMq_todayRail:hover{border-color:var(--dsw-alias-state-business-primary)}.i1tZMq_todayRail .i1tZMq_todaymodels,.i1tZMq_todayRail .i1tZMq_spark,.i1tZMq_todayRail .i1tZMq_statgrow,.i1tZMq_todayRail .i1tZMq_todayhead{display:none}.i1tZMq_todayRail .i1tZMq_todayval{text-align:center;white-space:nowrap;font-size:9px;font-weight:600;line-height:12px}.i1tZMq_todayRail .i1tZMq_todaylabel{text-align:center;white-space:nowrap;letter-spacing:.06em;font-size:8px;line-height:11px}.i1tZMq_grip{cursor:grab;color:var(--dsw-alias-label-tertiary);-webkit-user-select:none;user-select:none;touch-action:none;border-radius:6px;flex:none;padding:4px 2px;font-size:12px;line-height:1}.i1tZMq_grip:hover{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2)}.i1tZMq_grip:active{cursor:grabbing}.i1tZMq_minibtn{cursor:pointer;color:var(--dsw-alias-label-secondary);background:0 0;border:1px solid #0000;border-radius:6px;flex:none;margin-left:6px;padding:2px 6px;font-family:inherit;font-size:11px;line-height:16px}.i1tZMq_minibtn:hover{border-color:var(--dsw-alias-border-l1);color:var(--dsw-alias-label-primary)}.i1tZMq_wkFrame{height:100%;min-height:0;overflow:auto}.i1tZMq_wkFrame .i1tZMq_card,.i1tZMq_wkFrame .i1tZMq_today{box-shadow:none;background:0 0;border:0;border-radius:0;margin:0;padding:0}.i1tZMq_float{z-index:300;background:color-mix(in srgb, var(--dsw-alias-bg-layer-1) 72%, transparent);backdrop-filter:blur(16px)saturate(1.4);border:1px solid var(--dsw-alias-border-l2);box-sizing:border-box;border-radius:12px;width:300px;max-width:calc(100vw - 16px);padding:10px 12px;position:fixed;overflow:hidden;box-shadow:0 16px 40px #0000004d}@supports not (backdrop-filter:blur(1px)){.i1tZMq_float,.i1tZMq_popmenu{background:var(--dsw-alias-bg-layer-1)}}.i1tZMq_floathead{cursor:move;-webkit-user-select:none;user-select:none;touch-action:none}.i1tZMq_floatHd{cursor:move;-webkit-user-select:none;user-select:none;touch-action:none;background:0 0;border-bottom:none;align-items:center;gap:6px;padding:8px 10px;display:flex}.i1tZMq_floatBd{padding:2px 12px 10px}.i1tZMq_floatBd .i1tZMq_qmeta{margin-top:8px}.i1tZMq_widgetTitle{min-width:0;color:var(--dsw-alias-label-primary);text-overflow:ellipsis;white-space:nowrap;flex:1;font-size:12px;font-weight:600;overflow:hidden}.i1tZMq_widgetBd{max-height:calc(72vh - 48px);padding:2px 12px 10px;overflow:auto}.i1tZMq_widgetFloat{z-index:300;overscroll-behavior:contain;width:360px;max-width:calc(100vw - 16px);max-height:60vh;position:fixed;overflow-y:auto;container:i1tZMq_tm/inline-size}.i1tZMq_widgetFloat>.i1tZMq_card,.i1tZMq_widgetFloat>.i1tZMq_today{box-sizing:border-box;margin:0}.i1tZMq_segRow{flex-wrap:wrap;justify-content:center;gap:6px;margin-bottom:8px;display:flex}@container i1tZMq_tm (width<=420px){.i1tZMq_segRow .i1tZMq_seg{justify-content:center;width:100%}.i1tZMq_segRow .i1tZMq_segBtn{text-align:center;flex:auto}}.i1tZMq_widgetBtn{border:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-secondary);border-radius:6px;align-items:center;gap:2px;padding:1px 4px 1px 8px;font-size:12px;display:inline-flex}.i1tZMq_widgetBtnLabel{white-space:nowrap;line-height:20px}.i1tZMq_chartName{text-overflow:ellipsis;white-space:nowrap;flex:auto;min-width:0;overflow:hidden}.i1tZMq_modelhead{flex-wrap:wrap;justify-content:space-between;gap:8px;min-width:0;display:flex}.i1tZMq_modeldetail{overflow-wrap:anywhere;margin-top:2px;font-size:11px;line-height:16px}.i1tZMq_donutBox{flex:none;max-width:100%}.i1tZMq_swrow{border-bottom:.5px solid var(--dsw-alias-border-l2);align-items:center;gap:8px;padding:16px 0;display:flex}.i1tZMq_swrowText{flex-direction:column;flex:1;gap:4px;min-width:0;padding-right:48px;display:flex}.i1tZMq_swlabel{color:var(--dsw-alias-label-primary);font-size:14px;font-weight:400;line-height:22px}.i1tZMq_swhint{color:var(--dsw-alias-label-tertiary);font-size:12px;font-weight:400;line-height:18px}.i1tZMq_switch{box-sizing:border-box;background:var(--dsw-alias-border-l3);cursor:pointer;border:0;border-radius:999px;flex:none;width:36px;height:20px;padding:2px;position:relative}.i1tZMq_switch[aria-checked=true]{background:var(--dsw-alias-brand-primary)}.i1tZMq_switch:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px}.i1tZMq_switchOn{background:var(--dsw-alias-brand-primary)}.i1tZMq_switch:disabled{cursor:default;opacity:.5}.i1tZMq_knob,.i1tZMq_thumb{background:var(--dsw-alias-label-primary-foreground);border-radius:50%;width:16px;height:16px;transition:transform .12s;display:block}.i1tZMq_switch[aria-checked=true] .i1tZMq_knob,.i1tZMq_switchOn .i1tZMq_thumb,.i1tZMq_switchOn .i1tZMq_knob{transform:translate(16px)}.i1tZMq_dualbars{justify-content:center;gap:2px;width:100%;margin-top:4px;display:flex}.i1tZMq_card{transition:border-color .2s,top .2s;animation:.42s backwards i1tZMq_tm-fadeup;position:relative}.i1tZMq_card:hover{border-color:color-mix(in srgb, var(--dsw-alias-state-business-primary) 45%, var(--dsw-alias-border-l1));top:-1px}.i1tZMq_stat{animation:.42s backwards i1tZMq_tm-fadeup}.i1tZMq_stat:hover{top:-1.5px;box-shadow:0 3px 12px -4px #0000002e}.i1tZMq_segOn{box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--dsw-alias-state-business-primary) 40%, transparent)}.i1tZMq_modelchip{transition:border-color .15s,top .15s,opacity .2s}.i1tZMq_modelchip:hover{top:-1px}.i1tZMq_model{transition:background .15s}.i1tZMq_modelval{transition:color .15s}.i1tZMq_today{transition:border-color .18s}.i1tZMq_pop,.i1tZMq_tip,.i1tZMq_tipfixed{animation:.13s ease-out i1tZMq_tm-pop}.i1tZMq_gridln,.i1tZMq_axislbl{animation:.5s backwards i1tZMq_tm-fade}.i1tZMq_barfill,.i1tZMq_streakfill,.i1tZMq_popFill,.i1tZMq_compose span,.i1tZMq_qfill{transform-origin:0;animation:.55s cubic-bezier(.22,.8,.36,1) backwards i1tZMq_tm-groww}.i1tZMq_barfill{transition:none}.i1tZMq_compose span{animation-delay:.1s}.i1tZMq_streakfill{animation-delay:.12s}.i1tZMq_popFill{animation-delay:60ms}.i1tZMq_dayscroll span{animation:.4s backwards i1tZMq_tm-fade}.i1tZMq_draw{stroke-dasharray:20000;animation:1.05s cubic-bezier(.4,0,.2,1) backwards i1tZMq_tm-draw}.i1tZMq_fadein{animation:.45s backwards i1tZMq_tm-fade}.i1tZMq_rise{transform-box:fill-box;transform-origin:bottom;animation:.5s cubic-bezier(.22,.8,.36,1) backwards i1tZMq_tm-risev}.i1tZMq_hcell[data-lv]:not([data-lv="0"]){animation:.5s cubic-bezier(.2,.8,.3,1.2) backwards i1tZMq_tm-heatin}.i1tZMq_donutseg{animation:.85s cubic-bezier(.3,.6,.3,1) backwards i1tZMq_tm-donutseg}.i1tZMq_donutC{text-align:center;width:110px;color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;pointer-events:none;font-size:16px;font-weight:600;line-height:20px;position:absolute;top:46%;left:50%;transform:translate(-50%,-50%)}.i1tZMq_donutCap{text-align:center;width:110px;color:var(--dsw-alias-label-caption);pointer-events:none;font-size:11px;position:absolute;top:calc(46% + 18px);left:50%;transform:translate(-50%)}.i1tZMq_spin{animation:1s linear infinite i1tZMq_tm-rot;display:inline-block}@keyframes i1tZMq_tm-in{0%{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}@keyframes i1tZMq_tm-fadeup{0%{opacity:0;transform:translateY(6px)}}@keyframes i1tZMq_tm-fade{0%{opacity:0}}@keyframes i1tZMq_tm-draw{0%{stroke-dashoffset:20000px}to{stroke-dashoffset:0}}@keyframes i1tZMq_tm-groww{0%{transform:scaleX(0)}}@keyframes i1tZMq_tm-risev{0%{transform:scaleY(0)}}@keyframes i1tZMq_tm-heatin{0%{opacity:0;transform:scale(.4)}}@keyframes i1tZMq_tm-donutseg{0%{stroke-dashoffset:0}}@keyframes i1tZMq_tm-rot{to{transform:rotate(360deg)}}@keyframes i1tZMq_tm-pop{0%{opacity:0;transform:scale(.96)}}@keyframes i1tZMq_tm-pulse{0%,to{opacity:1}50%{opacity:.5}}@keyframes i1tZMq_tm-spin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.i1tZMq_page *,.i1tZMq_today *,.i1tZMq_pop,.i1tZMq_tip,.i1tZMq_tipfixed{transition:none!important;animation:none!important}.i1tZMq_spinner{animation:none}.i1tZMq_thumb,.i1tZMq_knob{transition:none}}@container i1tZMq_tm (width<=480px){.i1tZMq_card{padding:10px 12px}.i1tZMq_intro{font-size:13px}.i1tZMq_vname2{max-width:150px!important}.i1tZMq_models{width:100%;min-width:0}.i1tZMq_flexrow{flex-direction:column;align-items:center;gap:10px}.i1tZMq_donutBox{width:148px!important;height:148px!important}.i1tZMq_legend{gap:3px}.i1tZMq_modelchip{max-width:140px}.i1tZMq_qrow{gap:4px}.i1tZMq_qlabel{width:48px;min-width:48px}.i1tZMq_qpct{font-size:10px}.i1tZMq_qleft{font-size:9px}.i1tZMq_qstatus{padding:0 5px;font-size:9px}.i1tZMq_minibtn{padding:2px 4px}.i1tZMq_btn{padding:5px 9px;font-size:12px}.i1tZMq_selector{padding:0 12px;font-size:13px}.i1tZMq_rowText,.i1tZMq_swrowText{padding-right:12px}}@container i1tZMq_tm (width<=340px){.i1tZMq_vname2{max-width:110px!important}.i1tZMq_grid,.i1tZMq_statGrid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr))}.i1tZMq_paygAmt{font-size:18px}.i1tZMq_hint,.i1tZMq_cardHint{font-size:11px}.i1tZMq_popRow{white-space:normal}.i1tZMq_donutBox{width:128px!important;height:128px!important}.i1tZMq_modelval{font-size:11px}.i1tZMq_modelname{font-size:12px}}.i1tZMq_shareBtn{border:1px solid var(--dsw-alias-border-l2);height:26px;color:var(--dsw-alias-label-secondary);font:inherit;cursor:pointer;background:0 0;border-radius:8px;flex:none;align-items:center;gap:5px;margin-left:6px;padding:0 10px;font-size:12px;display:inline-flex}.i1tZMq_shareBtn:hover{color:var(--dsw-alias-label-primary);border-color:color-mix(in srgb, var(--dsw-alias-state-business-primary) 55%, var(--dsw-alias-border-l2))}.i1tZMq_shareBtn>svg{flex:none;display:block}.i1tZMq_shareVeil{z-index:600;box-sizing:border-box;background:color-mix(in srgb, var(--dsw-alias-bg-base) 88%, transparent);backdrop-filter:blur(14px)saturate(1.3);flex-direction:column;align-items:center;gap:12px;padding:18px;display:flex;position:fixed;inset:0;overflow:auto}.i1tZMq_shareBar{flex-wrap:wrap;flex:none;align-items:center;gap:10px;width:min(96vw,152.889vh);display:flex}.i1tZMq_shareBarTitle{color:var(--dsw-alias-label-primary);font-size:13px;font-weight:600}.i1tZMq_shareBarHint{color:var(--dsw-alias-label-tertiary);text-overflow:ellipsis;white-space:nowrap;flex:auto;min-width:0;font-size:12px;overflow:hidden}.i1tZMq_shareToggle{color:var(--dsw-alias-label-secondary);white-space:nowrap;cursor:pointer;align-items:center;gap:5px;font-size:12px;display:inline-flex}.i1tZMq_shareToggle input{accent-color:var(--dsw-alias-state-business-primary)}.i1tZMq_shareStage{overscroll-behavior:contain;width:min(96vw,1680px);min-height:320px;max-height:calc(100vh - 150px);box-shadow:var(--dsw-shadow-lv3);background:var(--dsw-alias-bg-base);border-radius:16px;flex:auto;position:relative;overflow:auto}.i1tZMq_shareLoading{color:var(--dsw-alias-label-tertiary);justify-content:center;align-items:center;gap:8px;font-size:13px;display:flex;position:absolute;inset:0}.i1tZMq_shareZoom{width:100%}.i1tZMq_shareBoard.i1tZMq_shareBoard{box-sizing:border-box;background:var(--dsw-alias-bg-base);width:100%;height:auto;color:var(--dsw-alias-label-primary);flex-direction:column;align-items:stretch;gap:12px;min-height:0;padding:20px 24px 14px;font-size:13px;line-height:1.6;display:flex;overflow:hidden}.i1tZMq_shareHead{border-bottom:.5px solid var(--dsw-alias-border-l2);flex-direction:column;flex:none;gap:8px;padding:0 2px 9px;display:flex}.i1tZMq_shareTop{justify-content:space-between;align-items:flex-start;gap:20px;display:flex}.i1tZMq_shareTitleBox{flex-direction:column;gap:2px;min-width:0;display:flex}.i1tZMq_shareBrandRow{align-items:center;gap:8px;min-width:0;display:flex}.i1tZMq_shareLogo{color:var(--dsw-alias-state-business-primary);flex:none;display:block}.i1tZMq_shareAuthorBox{text-align:right;flex-direction:column;flex:none;align-items:flex-end;gap:1px;display:flex}.i1tZMq_shareAuthor{color:var(--dsw-alias-label-primary);font-size:15.5px;font-weight:600;line-height:21px}.i1tZMq_shareMail{color:var(--dsw-alias-label-caption);font-size:12.5px;line-height:17px}.i1tZMq_shareMeta{border-top:.5px solid var(--dsw-alias-border-l1);flex-wrap:wrap;align-items:baseline;gap:8px;padding-top:7px;display:flex}.i1tZMq_sharePlug{color:var(--dsw-alias-state-business-primary);white-space:nowrap;font-size:14px;font-weight:600;line-height:19px}.i1tZMq_sharePlug em{opacity:.8;margin-left:4px;font-size:12px;font-style:normal;font-weight:400}.i1tZMq_shareMetaSep{color:var(--dsw-alias-label-dimmed);font-size:12.5px}.i1tZMq_shareRepo{color:var(--dsw-alias-label-secondary);white-space:nowrap;font-size:12.5px;line-height:18px}.i1tZMq_shareMetaR{color:var(--dsw-alias-label-caption);margin-left:auto;font-size:12px;line-height:18px}.i1tZMq_shareBrand{color:var(--dsw-alias-label-primary);font-size:21px;font-weight:700;line-height:28px}.i1tZMq_shareSub{color:var(--dsw-alias-label-caption);font-size:12.5px;line-height:18px}.i1tZMq_shareGrid{grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:12px;display:grid}.i1tZMq_shareCell{flex-direction:column;min-width:0;display:flex}.i1tZMq_shareCell>*{flex:auto;min-width:0;margin:0!important}.i1tZMq_sr6{grid-column:1/-1}.i1tZMq_shareBoard .i1tZMq_seg,.i1tZMq_shareBoard .i1tZMq_widgetBtn,.i1tZMq_shareBoard .i1tZMq_toolbar>button{display:none!important}.i1tZMq_shareBoard .i1tZMq_dash{display:block}.i1tZMq_shareBoard .i1tZMq_card{box-shadow:none}.i1tZMq_statIco,.i1tZMq_cico{color:var(--dsw-alias-label-tertiary);flex:none;display:block}.i1tZMq_stat[data-tint="1"] .i1tZMq_statIco{color:color-mix(in srgb, var(--dsw-alias-state-business-primary) 70%, var(--dsw-alias-label-tertiary))}.i1tZMq_statBg{z-index:0;pointer-events:none;user-select:none;color:var(--dsw-alias-state-business-primary);opacity:.075;position:absolute;bottom:-12px;right:-10px}.i1tZMq_stat[data-tint="1"] .i1tZMq_statBg{opacity:.12}.i1tZMq_statLabel,.i1tZMq_statValue,.i1tZMq_statSub,.i1tZMq_stat .i1tZMq_spark,.i1tZMq_stat .i1tZMq_compose,.i1tZMq_stat .i1tZMq_streakbar,.i1tZMq_stat .i1tZMq_dayscroll{z-index:1;position:relative}.i1tZMq_chartName{flex:auto;align-items:center;gap:6px;min-width:0;display:flex}.i1tZMq_titledIco{align-items:center;gap:6px;min-width:0;display:inline-flex}.i1tZMq_cnameTxt,.i1tZMq_titledIco>span:last-child{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.i1tZMq_card.i1tZMq_moodPeak,.i1tZMq_side.i1tZMq_moodPeak{border-left:3px solid var(--dsw-alias-state-warn-primary);background:linear-gradient(180deg, color-mix(in srgb, var(--dsw-alias-state-warn-primary) 10%, transparent), transparent 64%), var(--dsw-alias-bg-layer-1)}.i1tZMq_card.i1tZMq_moodValley,.i1tZMq_side.i1tZMq_moodValley{border-left:3px solid var(--dsw-alias-state-success-primary);background:linear-gradient(180deg, color-mix(in srgb, var(--dsw-alias-state-success-primary) 8%, transparent), transparent 64%), var(--dsw-alias-bg-layer-1)}.i1tZMq_card.i1tZMq_off,.i1tZMq_side.i1tZMq_off{border-left:3px solid var(--dsw-alias-state-error-primary);background:linear-gradient(180deg, color-mix(in srgb, var(--dsw-alias-state-error-primary) 8%, transparent), transparent 64%), var(--dsw-alias-bg-layer-1)}.i1tZMq_card.i1tZMq_moodPeak{animation:.42s backwards i1tZMq_tm-fadeup,2.4s ease-in-out .5s infinite i1tZMq_tm-peak-breathe}@keyframes i1tZMq_tm-peak-breathe{0%,to{box-shadow:0 0 #0000}50%{box-shadow:0 0 0 3px color-mix(in srgb, var(--dsw-alias-state-warn-primary) 16%, transparent)}}.i1tZMq_badgeBad{background:color-mix(in srgb, var(--dsw-alias-state-error-primary) 16%, transparent);color:var(--dsw-alias-state-error-primary)}.i1tZMq_offtxt{color:var(--dsw-alias-state-error-primary)}.i1tZMq_peak.i1tZMq_peak{border-color:color-mix(in srgb, var(--dsw-alias-state-warn-primary) 46%, var(--dsw-alias-border-l1));background:linear-gradient(180deg, color-mix(in srgb, var(--dsw-alias-state-warn-primary) 9%, transparent), transparent 70%), var(--dsw-alias-bg-layer-2);animation:2.6s ease-in-out infinite i1tZMq_tm-peak-breathe}.i1tZMq_peak.i1tZMq_valley{border-color:color-mix(in srgb, var(--dsw-alias-state-success-primary) 32%, var(--dsw-alias-border-l1));background:linear-gradient(180deg, color-mix(in srgb, var(--dsw-alias-state-success-primary) 8%, transparent), transparent 70%), var(--dsw-alias-bg-layer-2)}.i1tZMq_peak.i1tZMq_peak .i1tZMq_peakTitle{color:var(--dsw-alias-state-warn-label)}.i1tZMq_peak.i1tZMq_valley .i1tZMq_peakTitle{color:var(--dsw-alias-state-success-primary)}.i1tZMq_peakCell.i1tZMq_von{background:color-mix(in srgb, var(--dsw-alias-state-success-primary) 24%, var(--dsw-alias-interactive-bg-hover))}@media (prefers-reduced-motion:reduce){.i1tZMq_card.i1tZMq_moodPeak,.i1tZMq_peak.i1tZMq_peak{animation:none}}.i1tZMq_segField{border-top:.5px solid var(--dsw-alias-border-l2);flex-wrap:wrap;align-items:center;gap:8px;padding:3px 0;display:flex}.i1tZMq_segField:first-child{border-top:none}.i1tZMq_segFieldKey{color:var(--dsw-alias-label-secondary);flex:none;min-width:58px;font-size:12px}.i1tZMq_segFieldCtl{flex:none;display:inline-flex}.i1tZMq_segFieldHint{color:var(--dsw-alias-label-caption);flex:190px;min-width:130px;font-size:11px;line-height:15px}.i1tZMq_segField:has(.i1tZMq_gapHint){align-items:flex-start}.i1tZMq_segField:has(.i1tZMq_gapHint) .i1tZMq_segFieldHint{flex:100%}.i1tZMq_gapHint{color:var(--dsw-alias-label-secondary);flex-direction:column;gap:5px;min-width:0;font-size:11.5px;line-height:17px;display:flex}.i1tZMq_gapRules{color:var(--dsw-alias-label-tertiary);flex-direction:column;gap:3px;margin:0;padding-left:17px;display:flex}.i1tZMq_gapRules b{color:var(--dsw-alias-label-secondary);font-weight:600}.i1tZMq_gapRules em{color:var(--dsw-alias-state-warn-primary);font-style:normal;font-weight:600}.i1tZMq_gapCmpTitle{color:var(--dsw-alias-label-caption);margin-top:3px}.i1tZMq_gapCmp{flex-wrap:wrap;gap:8px;display:flex}.i1tZMq_gapCmpItem{box-sizing:border-box;border:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-2);cursor:pointer;flex-direction:column;gap:1px;min-width:88px;padding:5px 9px;transition:border-color .15s;display:flex}.i1tZMq_gapCmpItem:hover{border-color:var(--dsw-alias-border-l3)}.i1tZMq_gapCmpItem b{color:var(--dsw-alias-label-secondary);font-size:11px;font-weight:600}.i1tZMq_gapCmpItem i{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;font-size:13px;font-style:normal;font-weight:600}.i1tZMq_gapCmpItem em{color:var(--dsw-alias-label-caption);font-size:10.5px;font-style:normal}.i1tZMq_gapCmpOn{border-color:color-mix(in srgb, var(--dsw-alias-state-business-primary) 55%, var(--dsw-alias-border-l2));background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 10%, var(--dsw-alias-bg-layer-2))}.i1tZMq_gapCmpOn b,.i1tZMq_gapCmpOn i{color:var(--dsw-alias-state-business-primary)}.i1tZMq_gapCmpRec b:after{content:" \xB7 \u63A8\u8350";color:var(--dsw-alias-state-success-primary)}.i1tZMq_gapRec{color:var(--dsw-alias-label-tertiary)}.i1tZMq_gapRec b{color:var(--dsw-alias-state-success-primary);font-weight:600}.i1tZMq_acc{border:1px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-caption);border-radius:4px;flex:none;padding:0 4px;font-size:10px;font-weight:400;line-height:15px}.i1tZMq_acc.i1tZMq_exact{color:var(--dsw-alias-state-success-primary);border-color:color-mix(in srgb, var(--dsw-alias-state-success-primary) 45%, transparent);background:color-mix(in srgb, var(--dsw-alias-state-success-primary) 10%, transparent)}.i1tZMq_acc.i1tZMq_estimate{color:var(--dsw-alias-state-warn-primary);border-color:color-mix(in srgb, var(--dsw-alias-state-warn-primary) 45%, transparent);background:color-mix(in srgb, var(--dsw-alias-state-warn-primary) 10%, transparent)}.i1tZMq_acc.i1tZMq_bound{color:var(--dsw-alias-label-tertiary);background:var(--dsw-alias-interactive-bg-hover)}.i1tZMq_rankHead{color:var(--dsw-alias-label-caption);border-bottom:.5px solid var(--dsw-alias-border-l2);grid-template-columns:20px minmax(84px,1fr) minmax(64px,1.7fr) 60px 54px;align-items:center;gap:8px;padding:0 0 5px;font-size:11px;line-height:15px;display:grid}.i1tZMq_rankRow{border-bottom:.5px solid var(--dsw-alias-border-l2);cursor:default;border-radius:6px;grid-template-columns:20px minmax(84px,1fr) minmax(64px,1.7fr) 60px 54px;align-items:center;gap:8px;margin:0 -4px;padding:6px 4px;transition:background .12s;display:grid}.i1tZMq_rankRow:last-of-type{border-bottom:none}.i1tZMq_rankRow:hover{background:var(--dsw-alias-interactive-bg-hover)}.i1tZMq_rankNo{text-align:right;color:var(--dsw-alias-label-tertiary);font-variant-numeric:tabular-nums;font-size:11px;line-height:16px}.i1tZMq_rankRow.i1tZMq_top3 .i1tZMq_rankNo{color:var(--dsw-alias-state-business-primary);font-weight:700}.i1tZMq_rankRow.i1tZMq_top3 .i1tZMq_rankDate{font-weight:600}.i1tZMq_rankDate{color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;font-size:12.5px;line-height:17px}.i1tZMq_rankBarTrack{background:var(--dsw-alias-interactive-bg-hover);height:11px;box-shadow:inset 0 0 0 1px var(--dsw-alias-border-l2);border-radius:6px;display:flex;overflow:hidden}.i1tZMq_rankFillTurn{background:var(--dsw-alias-state-business-primary);opacity:.85;height:100%;display:block}.i1tZMq_rankFillIdle{background:var(--dsw-alias-state-business-primary);opacity:.26;height:100%;display:block}.i1tZMq_rankVal{text-align:right;font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary);font-size:12.5px;font-weight:600}.i1tZMq_rankTok{text-align:right;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;font-size:11px}@container i1tZMq_tm (width<=420px){.i1tZMq_rankHead,.i1tZMq_rankRow{grid-template-columns:18px minmax(70px,1fr) minmax(48px,1.4fr) 54px}.i1tZMq_rankTok,.i1tZMq_rankHead>span:last-child{display:none}}.i1tZMq_tipTitle{color:var(--dsw-alias-label-primary);margin-bottom:3px;font-weight:600}.i1tZMq_tipText{white-space:normal;max-width:236px;color:var(--dsw-alias-label-secondary);margin-top:3px;line-height:1.5}.i1tZMq_tipfixed .i1tZMq_tiprow+.i1tZMq_tiprow{margin-top:1px}[data-conversation-scroll]:has([data-slot=conversation\\.view] .i1tZMq_cview)>[data-slot=conversation\\.session]>*{flex:1 1 0;min-height:0;overflow:clip}.i1tZMq_cview{box-sizing:border-box;background:var(--dsw-alias-bg-base);align-items:stretch;width:100%;height:100%;min-height:0;display:flex;overflow:clip;container:i1tZMq_tmc/inline-size}:has(.i1tZMq_cview)>[data-width-handle]{display:none}.i1tZMq_cnav{border-right:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);flex-direction:column;flex:none;width:190px;min-width:190px;padding:16px 10px 12px;display:flex;overflow:visible}.i1tZMq_cnavInner{flex-direction:column;gap:2px;max-height:100vh;display:flex;position:sticky;top:0;overflow-y:auto}.i1tZMq_cnavHead{color:var(--dsw-alias-label-secondary);letter-spacing:.02em;padding:2px 8px 10px;font-size:12px;font-weight:600;line-height:18px}.i1tZMq_cnavList{flex-direction:column;gap:2px;display:flex}.i1tZMq_cnavItem{width:100%;color:var(--dsw-alias-label-secondary);cursor:pointer;text-align:left;background:0 0;border:none;border-radius:6px;align-items:center;gap:8px;padding:8px 10px;font-family:inherit;font-size:13px;line-height:20px;display:flex}.i1tZMq_cnavItem:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.i1tZMq_cnavItem:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}.i1tZMq_cnavItem>svg{flex:none;display:block}.i1tZMq_cnavOn,.i1tZMq_cnavOn:hover{color:var(--dsw-alias-label-primary);background:color-mix(in srgb, var(--dsw-alias-state-business-primary) 12%, transparent);font-weight:500}.i1tZMq_cnavOn>svg{color:var(--dsw-alias-state-business-primary)}.i1tZMq_cnavLabel{text-overflow:ellipsis;white-space:nowrap;min-width:0;overflow:hidden}.i1tZMq_cnavItemSep{margin-top:8px;position:relative}.i1tZMq_cnavItemSep:before{content:"";background:var(--dsw-alias-border-l2);height:1px;position:absolute;top:-5px;left:8px;right:8px}.i1tZMq_cview .i1tZMq_cset .i1tZMq_page{max-width:min(920px,100%)}.i1tZMq_cmain{flex-direction:column;flex:1;min-width:0;min-height:0;display:flex}.i1tZMq_chead{z-index:3;border-bottom:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-base);flex-wrap:wrap;flex:none;align-items:baseline;gap:10px;padding:14px 24px 11px;display:flex;position:sticky;top:0}.i1tZMq_cheadTitle{color:var(--dsw-alias-label-primary);flex:none;font-size:15px;font-weight:600;line-height:22px}.i1tZMq_cheadHint{color:var(--dsw-alias-label-tertiary);text-overflow:ellipsis;white-space:nowrap;flex:auto;min-width:0;font-size:12px;line-height:18px;overflow:hidden}.i1tZMq_cbody{scrollbar-gutter:stable;box-sizing:border-box;flex:1;min-width:0;min-height:0;padding:18px 24px 56px;overflow:clip auto}.i1tZMq_sectMiss{box-sizing:border-box;border:.5px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);max-width:560px;color:var(--dsw-alias-label-secondary);margin:0 auto;padding:14px 16px;font-size:13px;line-height:20px}.i1tZMq_cview .i1tZMq_page{width:100%;max-width:min(1760px,100%);margin:0 auto}.i1tZMq_page .i1tZMq_page{width:100%;max-width:none;margin:0}.i1tZMq_dash{grid-template-columns:repeat(12,minmax(0,1fr));align-items:start;gap:14px;width:100%;display:grid}.i1tZMq_dash>*{min-width:0}.i1tZMq_c12{grid-column:span 12}.i1tZMq_c8{grid-column:span 8}.i1tZMq_c7{grid-column:span 7}.i1tZMq_c6{grid-column:span 6}.i1tZMq_c5{grid-column:span 5}.i1tZMq_c4{grid-column:span 4}.i1tZMq_dash .i1tZMq_card,.i1tZMq_dash .i1tZMq_statGrid{margin:0}.i1tZMq_donutWide .i1tZMq_flexrow{flex-direction:row;align-items:flex-start;gap:24px}.i1tZMq_donutWide .i1tZMq_donutBox{flex:none;margin:0}.i1tZMq_donutWide .i1tZMq_models{flex:1;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));align-content:start;gap:0 28px;min-width:0;display:grid}.i1tZMq_donutWide .i1tZMq_models .i1tZMq_model:last-child{border-bottom:1px solid var(--dsw-alias-border-l1)}@container i1tZMq_tmc (width<=900px){.i1tZMq_donutWide .i1tZMq_flexrow{flex-direction:column;align-items:stretch}.i1tZMq_donutWide .i1tZMq_donutBox{margin:0 auto}.i1tZMq_donutWide .i1tZMq_models{grid-template-columns:minmax(0,1fr)}}@container i1tZMq_tmc (width<=1180px){.i1tZMq_c8,.i1tZMq_c7,.i1tZMq_c6,.i1tZMq_c5,.i1tZMq_c4{grid-column:span 12}}.i1tZMq_cview .i1tZMq_card{padding:16px 18px}.i1tZMq_cview .i1tZMq_toolbar{margin-bottom:12px}.i1tZMq_cview .i1tZMq_page>.i1tZMq_toolbar:last-child{margin-bottom:0}.i1tZMq_cview .i1tZMq_statGrid{grid-template-columns:repeat(auto-fill,minmax(198px,1fr));grid-auto-rows:1fr;gap:12px}.i1tZMq_cview .i1tZMq_statGrid>.i1tZMq_stat{gap:3px;min-height:92px;padding:12px 14px}.i1tZMq_cview .i1tZMq_statGrid .i1tZMq_statValue{font-size:19px;line-height:26px}.i1tZMq_cview .i1tZMq_chartTitle{margin-bottom:10px;font-size:13px}.i1tZMq_cview .i1tZMq_empty{padding:44px 0}.i1tZMq_cview .i1tZMq_segField{padding:5px 0}.i1tZMq_cview .i1tZMq_intro{margin-bottom:10px}.i1tZMq_cview .i1tZMq_grid,.i1tZMq_cview .i1tZMq_statGrid{grid-auto-rows:1fr;gap:12px;margin:0}.i1tZMq_cview .i1tZMq_grid{grid-template-columns:repeat(auto-fill,minmax(214px,1fr))}.i1tZMq_cview .i1tZMq_statGrid{grid-template-columns:repeat(auto-fill,minmax(198px,1fr))}.i1tZMq_cview .i1tZMq_grid>.i1tZMq_stat,.i1tZMq_cview .i1tZMq_statGrid>.i1tZMq_stat{border-radius:12px;justify-content:flex-start;gap:4px;min-height:106px;padding:14px 16px}.i1tZMq_cview .i1tZMq_grid>.i1tZMq_stat>:last-child,.i1tZMq_cview .i1tZMq_statGrid>.i1tZMq_stat>:last-child{margin-top:auto}.i1tZMq_cview .i1tZMq_grid .i1tZMq_statLabel,.i1tZMq_cview .i1tZMq_statGrid .i1tZMq_statLabel{letter-spacing:.02em;color:var(--dsw-alias-label-caption);flex-wrap:wrap;font-size:11.5px;line-height:16px}.i1tZMq_cview .i1tZMq_grid .i1tZMq_statValue,.i1tZMq_cview .i1tZMq_statGrid .i1tZMq_statValue{font-size:22px;font-weight:600;line-height:30px}.i1tZMq_cview .i1tZMq_grid .i1tZMq_statSub,.i1tZMq_cview .i1tZMq_statGrid .i1tZMq_statSub{color:var(--dsw-alias-label-tertiary);white-space:normal;text-overflow:clip;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:11.5px;line-height:16px;display:-webkit-box;overflow:hidden}.i1tZMq_cview .i1tZMq_grid .i1tZMq_spark,.i1tZMq_cview .i1tZMq_statGrid .i1tZMq_spark{margin-top:4px}@container i1tZMq_tmc (width<=1000px){.i1tZMq_cview .i1tZMq_grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}.i1tZMq_cview .i1tZMq_grid .i1tZMq_statValue,.i1tZMq_cview .i1tZMq_statGrid .i1tZMq_statValue{font-size:20px;line-height:28px}}.i1tZMq_cview .i1tZMq_statGrid.i1tZMq_onlineGrid{grid-template-columns:repeat(4,minmax(0,1fr))}.i1tZMq_cview .i1tZMq_onlineGrid>.i1tZMq_statWide{grid-column:span 2}@container i1tZMq_tmc (width<=1320px){.i1tZMq_cview .i1tZMq_statGrid.i1tZMq_onlineGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}@container i1tZMq_tmc (width<=820px){.i1tZMq_cview .i1tZMq_statGrid.i1tZMq_onlineGrid{grid-template-columns:minmax(0,1fr)}.i1tZMq_cview .i1tZMq_onlineGrid>.i1tZMq_statWide{grid-column:auto}}.i1tZMq_accLegend{flex-wrap:wrap;flex:none;align-items:center;gap:4px 12px;display:inline-flex}.i1tZMq_accLegendItem{color:var(--dsw-alias-label-tertiary);align-items:center;gap:5px;font-size:11px;line-height:16px;display:inline-flex}.i1tZMq_cview .i1tZMq_accLegend .i1tZMq_acc{font-size:10px}.i1tZMq_vgrid{grid-template-columns:repeat(4,minmax(0,1fr));align-items:start;gap:12px;width:100%;display:grid}.i1tZMq_vgrid>*{min-width:0}.i1tZMq_vgrid .i1tZMq_card{margin:0;container:i1tZMq_tmvc/inline-size}@container i1tZMq_tmvc (width<=400px){.i1tZMq_xgridBody{grid-template-columns:minmax(0,1fr)}}@container i1tZMq_tmc (width<=1560px){.i1tZMq_vgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}@container i1tZMq_tmc (width<=1240px){.i1tZMq_vgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}@container i1tZMq_tmc (width<=890px){.i1tZMq_vgrid{grid-template-columns:minmax(0,1fr)}}@container i1tZMq_tmc (width>=1240px) and (width<=1560px){.i1tZMq_vgrid:has(>.i1tZMq_card:nth-child(4):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}}@container i1tZMq_tmc (width>=1560px){.i1tZMq_vgrid:has(>.i1tZMq_card:nth-child(5):last-child),.i1tZMq_vgrid:has(>.i1tZMq_card:nth-child(9):last-child){grid-template-columns:repeat(3,minmax(0,1fr))}}@container i1tZMq_tmc (width<=620px){.i1tZMq_cnav{align-items:center;width:46px;min-width:46px;padding:12px 6px}.i1tZMq_cnavInner{width:100%}.i1tZMq_cnavHead{display:none}.i1tZMq_cnavItem{justify-content:center;gap:0;padding:8px 0}.i1tZMq_cnavLabel{display:none}.i1tZMq_chead{padding:12px 14px 10px}.i1tZMq_cheadHint{display:none}.i1tZMq_cbody{padding:14px 14px 40px}}.i1tZMq_trayRoot{flex:auto;min-width:0;display:flex}.i1tZMq_trayRail{flex:none;justify-content:center}.i1tZMq_trayBtn{box-sizing:border-box;width:100%;height:42px;color:var(--dsw-alias-label-primary);cursor:pointer;background:0 0;border:0;border-radius:12px;align-items:center;gap:8px;margin:4px 0;padding:0 10px 0 8px;font-family:inherit;font-size:14px;line-height:22px;display:inline-flex;overflow:hidden}.i1tZMq_trayBtn:hover{background:var(--dsw-alias-interactive-bg-hover)}.i1tZMq_trayBtn:focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:-2px}.i1tZMq_trayRail .i1tZMq_trayBtn{border-radius:50%;justify-content:center;gap:0;width:36px;height:36px;margin:8px 0 10px;padding:0}.i1tZMq_btnRail{justify-content:center;align-items:center;gap:3px;min-width:0;display:inline-flex}.i1tZMq_btnRailCombo{align-items:center;gap:3px;display:inline-flex}.i1tZMq_btnLeadOnly{flex:none;align-items:center;display:inline-flex}.i1tZMq_btnRow{flex:none;justify-content:center;align-items:center;width:16px;height:16px;display:inline-flex;overflow:hidden}.i1tZMq_btnLead{flex:none;align-items:center;display:inline-flex}.i1tZMq_btnIcon{color:var(--dsw-alias-label-secondary);flex:none;align-items:center;display:inline-flex}.i1tZMq_btnName{white-space:nowrap;text-overflow:ellipsis;min-width:0;overflow:hidden}.i1tZMq_btnValue{color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;flex:none;margin-left:auto;padding-left:6px;font-size:12px}.i1tZMq_btnValue[data-tone=ok]{color:var(--dsw-alias-state-success-primary)}.i1tZMq_btnValue[data-tone=warn]{color:var(--dsw-alias-state-warn-primary)}.i1tZMq_btnValue[data-tone=bad]{color:var(--dsw-alias-state-error-primary)}.i1tZMq_btnBalance{min-width:0;color:var(--dsw-alias-label-primary);align-items:center;gap:4px;display:inline-flex}.i1tZMq_btnBalanceText{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}.i1tZMq_btnRail .i1tZMq_btnBalanceText{font-size:10px;font-weight:500}.i1tZMq_btnBars{align-items:center;gap:8px;min-width:0;display:inline-flex}.i1tZMq_btnBar{flex-direction:column;gap:2px;min-width:30px;display:inline-flex}.i1tZMq_btnBarLabel{color:var(--dsw-alias-label-tertiary);font-size:9px;line-height:10px}.i1tZMq_btnBar[data-active="1"] .i1tZMq_btnBarLabel{color:var(--dsw-alias-label-primary)}.i1tZMq_btnBarTrack{background:var(--dsw-alias-border-l2);border-radius:999px;width:100%;display:block;overflow:hidden}.i1tZMq_btnBarFill{background:var(--dsw-alias-brand-primary);border-radius:999px;height:100%;display:block}.i1tZMq_btnBar[data-tone=warn] .i1tZMq_btnBarFill{background:var(--dsw-alias-state-warn-primary)}.i1tZMq_btnBar[data-tone=bad] .i1tZMq_btnBarFill{background:var(--dsw-alias-state-error-primary)}.i1tZMq_ring{flex:none;display:block}.i1tZMq_ringTrack{stroke:var(--dsw-alias-border-l2)}.i1tZMq_ringArc{stroke:var(--dsw-alias-brand-primary);transition:stroke-dasharray .35s}.i1tZMq_ring[data-tone=warn] .i1tZMq_ringArc{stroke:var(--dsw-alias-state-warn-primary)}.i1tZMq_ring[data-tone=bad] .i1tZMq_ringArc{stroke:var(--dsw-alias-state-error-primary)}.i1tZMq_ring[data-tone=idle] .i1tZMq_ringArc{stroke:var(--dsw-alias-label-dimmed)}.i1tZMq_prefBlock{border-top:.5px solid var(--dsw-alias-border-l1);margin-top:10px;padding-top:8px}.i1tZMq_prefRow{align-items:center;gap:8px;margin-top:8px;display:flex}.i1tZMq_prefLabel{color:var(--dsw-alias-label-secondary);font-size:11px}.i1tZMq_prefBox{width:14px;height:14px;accent-color:var(--dsw-alias-brand-primary);cursor:pointer;margin:0}.i1tZMq_prefSeg{background:var(--dsw-alias-bg-layer-2);border-radius:8px;gap:2px;padding:2px;display:inline-flex}.i1tZMq_prefOpt{color:var(--dsw-alias-label-secondary);cursor:pointer;background:0 0;border:0;border-radius:6px;padding:2px 10px;font-family:inherit;font-size:11px;line-height:18px}.i1tZMq_prefOpt:hover{color:var(--dsw-alias-label-primary)}.i1tZMq_prefOpt[data-on="1"]{background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-brand-primary);font-weight:600}.i1tZMq_trayPanel{z-index:60;background:var(--dsw-specific-menu);border:.5px solid var(--dsw-alias-border-l1);width:344px;max-width:calc(100vw - 24px);max-height:min(70vh,560px);box-shadow:var(--dsw-shadow-lv3);color:var(--dsw-alias-label-primary);border-radius:12px;flex-direction:column;font-size:13px;line-height:1.6;display:flex;position:fixed;overflow:hidden;container:i1tZMq_tmTray/inline-size}.i1tZMq_trayPanelHead{border-bottom:.5px solid var(--dsw-alias-border-l1);align-items:center;gap:8px;padding:10px 12px;display:flex}.i1tZMq_trayPanelGlyph{color:var(--dsw-alias-label-secondary);flex:none;display:inline-flex}.i1tZMq_trayPanelTitle{font-size:13px;font-weight:600}.i1tZMq_traySpacer{flex:auto}.i1tZMq_traySpin{border:2px solid var(--dsw-alias-border-l2);border-top-color:var(--dsw-alias-brand-primary);border-radius:50%;width:12px;height:12px;animation:.8s linear infinite i1tZMq_traySpin}@keyframes i1tZMq_traySpin{to{transform:rotate(360deg)}}.i1tZMq_trayIconBtn{width:24px;height:24px;color:var(--dsw-alias-label-secondary);cursor:pointer;background:0 0;border:0;border-radius:8px;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex}.i1tZMq_trayIconBtn:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}.i1tZMq_trayIconBtn:disabled{opacity:.45;cursor:default}.i1tZMq_trayBody{flex-direction:column;gap:10px;padding:10px 12px 12px;display:flex;overflow-y:auto}.i1tZMq_trayError{color:var(--dsw-alias-state-error-primary);margin:0;font-size:12px}.i1tZMq_trayCard{flex-direction:column;display:flex}.i1tZMq_trayCardHead{align-items:center;gap:8px;display:flex}.i1tZMq_trayCardName{white-space:nowrap;text-overflow:ellipsis;min-width:0;font-weight:600;overflow:hidden}.i1tZMq_trayCardGlyph{flex:none;align-items:center;display:inline-flex}.i1tZMq_trayRowGlyph{flex:none;justify-content:center;align-items:center;width:16px;height:16px;display:inline-flex;overflow:hidden}.i1tZMq_trayCardType{white-space:nowrap;text-overflow:ellipsis;min-width:0;color:var(--dsw-alias-label-tertiary);flex:0 auto;font-size:11px;overflow:hidden}.i1tZMq_trayCardBody{flex-direction:column;display:flex}.i1tZMq_trayList{border-top:.5px solid var(--dsw-alias-border-l1);flex-direction:column;gap:2px;margin-top:2px;padding-top:8px;display:flex}.i1tZMq_trayListHead{color:var(--dsw-alias-label-tertiary);padding:0 2px 2px;font-size:11px}.i1tZMq_trayRow{width:100%;color:inherit;font:inherit;text-align:left;cursor:pointer;background:0 0;border:0;border-radius:8px;align-items:center;gap:8px;padding:7px 8px;display:flex}.i1tZMq_trayRow:hover{background:var(--dsw-alias-interactive-bg-hover)}.i1tZMq_trayRow[data-active="1"]{background:var(--dsw-alias-bg-layer-2)}.i1tZMq_trayRow[data-off="1"]{opacity:.6}.i1tZMq_trayRowName{white-space:nowrap;text-overflow:ellipsis;min-width:0;overflow:hidden}.i1tZMq_trayRowType{white-space:nowrap;text-overflow:ellipsis;min-width:0;color:var(--dsw-alias-label-tertiary);flex:0 auto;font-size:11px;overflow:hidden}.i1tZMq_trayRowStatus{color:var(--dsw-alias-label-tertiary);flex:none;margin-left:auto;font-size:11px}.i1tZMq_trayRowStatus[data-tone=ok]{color:var(--dsw-alias-state-success-primary)}.i1tZMq_trayRowStatus[data-tone=warn]{color:var(--dsw-alias-state-warn-primary)}.i1tZMq_trayRowStatus[data-tone=bad]{color:var(--dsw-alias-state-error-primary)}.i1tZMq_trayRowCheck{color:var(--dsw-alias-brand-primary);flex:none;font-size:11px}.i1tZMq_trayFoot{border-top:.5px solid var(--dsw-alias-border-l1);color:var(--dsw-alias-label-tertiary);flex-direction:column;gap:2px;padding:8px 12px;font-size:11px;display:flex}.i1tZMq_trayFootRow{text-overflow:ellipsis;white-space:nowrap;align-items:center;gap:6px;min-width:0;display:inline-flex;overflow:hidden}.i1tZMq_trayFootDot{opacity:.6}.i1tZMq_trayFootError{color:var(--dsw-alias-state-error-primary);text-overflow:ellipsis;white-space:nowrap;overflow:hidden}.i1tZMq_trayEmpty{color:var(--dsw-alias-label-tertiary);padding:10px 2px;font-size:12px}';
 var tagId = "@dshp/token-meter/src/client/styles.module.css";
 if (typeof document !== "undefined" && document.querySelector(`style[data-plugin-css="${tagId}"]`) === null) {
   const tag = document.createElement("style");
@@ -52,7 +52,7 @@ if (typeof document !== "undefined" && document.querySelector(`style[data-plugin
   tag.textContent = css;
   document.head.appendChild(tag);
 }
-var styles_module_css_default = { "acc": "i1tZMq_acc", "accLegend": "i1tZMq_accLegend", "accLegendItem": "i1tZMq_accLegendItem", "active": "i1tZMq_active", "arrow": "i1tZMq_arrow", "arrowDown": "i1tZMq_arrowDown", "arrowUp": "i1tZMq_arrowUp", "avail": "i1tZMq_avail", "axislbl": "i1tZMq_axislbl", "backdrop": "i1tZMq_backdrop", "bad": "i1tZMq_bad", "badge": "i1tZMq_badge", "badgeBad": "i1tZMq_badgeBad", "badgeInfo": "i1tZMq_badgeInfo", "badgeMuted": "i1tZMq_badgeMuted", "badgeOk": "i1tZMq_badgeOk", "badgeWarn": "i1tZMq_badgeWarn", "bar": "i1tZMq_bar", "barfill": "i1tZMq_barfill", "bartrack": "i1tZMq_bartrack", "body": "i1tZMq_body", "bound": "i1tZMq_bound", "btn": "i1tZMq_btn", "btnDanger": "i1tZMq_btnDanger", "btnPrimary": "i1tZMq_btnPrimary", "c12": "i1tZMq_c12", "c4": "i1tZMq_c4", "c5": "i1tZMq_c5", "c6": "i1tZMq_c6", "c7": "i1tZMq_c7", "c8": "i1tZMq_c8", "cacheRow": "i1tZMq_cacheRow", "cacheSep": "i1tZMq_cacheSep", "card": "i1tZMq_card", "cardHint": "i1tZMq_cardHint", "cbody": "i1tZMq_cbody", "cell": "i1tZMq_cell", "chartName": "i1tZMq_chartName", "chartTitle": "i1tZMq_chartTitle", "chartWrap": "i1tZMq_chartWrap", "chead": "i1tZMq_chead", "cheadHint": "i1tZMq_cheadHint", "cheadTitle": "i1tZMq_cheadTitle", "chevron": "i1tZMq_chevron", "cico": "i1tZMq_cico", "cmain": "i1tZMq_cmain", "cnameTxt": "i1tZMq_cnameTxt", "cnav": "i1tZMq_cnav", "cnavHead": "i1tZMq_cnavHead", "cnavInner": "i1tZMq_cnavInner", "cnavItem": "i1tZMq_cnavItem", "cnavItemSep": "i1tZMq_cnavItemSep", "cnavLabel": "i1tZMq_cnavLabel", "cnavList": "i1tZMq_cnavList", "cnavOn": "i1tZMq_cnavOn", "codeblock": "i1tZMq_codeblock", "compose": "i1tZMq_compose", "composeLegend": "i1tZMq_composeLegend", "cset": "i1tZMq_cset", "cview": "i1tZMq_cview", "dash": "i1tZMq_dash", "dayscroll": "i1tZMq_dayscroll", "desc": "i1tZMq_desc", "donutBox": "i1tZMq_donutBox", "donutC": "i1tZMq_donutC", "donutCap": "i1tZMq_donutCap", "donutWide": "i1tZMq_donutWide", "donutseg": "i1tZMq_donutseg", "dot": "i1tZMq_dot", "draw": "i1tZMq_draw", "dualbars": "i1tZMq_dualbars", "empty": "i1tZMq_empty", "err": "i1tZMq_err", "errabtns": "i1tZMq_errabtns", "erraction": "i1tZMq_erraction", "erractionText": "i1tZMq_erractionText", "errbox": "i1tZMq_errbox", "errboxBad": "i1tZMq_errboxBad", "errboxCompact": "i1tZMq_errboxCompact", "errboxInfo": "i1tZMq_errboxInfo", "errboxWarn": "i1tZMq_errboxWarn", "errdactions": "i1tZMq_errdactions", "errdetail": "i1tZMq_errdetail", "errhead": "i1tZMq_errhead", "errhint": "i1tZMq_errhint", "erricon": "i1tZMq_erricon", "erriconBad": "i1tZMq_erriconBad", "erriconInfo": "i1tZMq_erriconInfo", "errmeta": "i1tZMq_errmeta", "error": "i1tZMq_error", "errraw": "i1tZMq_errraw", "errsteps": "i1tZMq_errsteps", "errsub": "i1tZMq_errsub", "errtitle": "i1tZMq_errtitle", "errtitlewrap": "i1tZMq_errtitlewrap", "estimate": "i1tZMq_estimate", "exact": "i1tZMq_exact", "fadein": "i1tZMq_fadein", "field": "i1tZMq_field", "fieldControl": "i1tZMq_fieldControl", "fieldDesc": "i1tZMq_fieldDesc", "fieldHead": "i1tZMq_fieldHead", "fieldLabel": "i1tZMq_fieldLabel", "fieldNote": "i1tZMq_fieldNote", "fieldOpt": "i1tZMq_fieldOpt", "fieldReq": "i1tZMq_fieldReq", "flexrow": "i1tZMq_flexrow", "float": "i1tZMq_float", "floatBd": "i1tZMq_floatBd", "floatHd": "i1tZMq_floatHd", "floathead": "i1tZMq_floathead", "footerNote": "i1tZMq_footerNote", "formGrid": "i1tZMq_formGrid", "gapCmp": "i1tZMq_gapCmp", "gapCmpItem": "i1tZMq_gapCmpItem", "gapCmpOn": "i1tZMq_gapCmpOn", "gapCmpRec": "i1tZMq_gapCmpRec", "gapCmpTitle": "i1tZMq_gapCmpTitle", "gapHint": "i1tZMq_gapHint", "gapRec": "i1tZMq_gapRec", "gapRules": "i1tZMq_gapRules", "grid": "i1tZMq_grid", "gridln": "i1tZMq_gridln", "grip": "i1tZMq_grip", "grow": "i1tZMq_grow", "hcell": "i1tZMq_hcell", "heatrow": "i1tZMq_heatrow", "heatwrap": "i1tZMq_heatwrap", "hint": "i1tZMq_hint", "in": "i1tZMq_in", "inforow": "i1tZMq_inforow", "infos": "i1tZMq_infos", "input": "i1tZMq_input", "inputReadonly": "i1tZMq_inputReadonly", "inputWrap": "i1tZMq_inputWrap", "intro": "i1tZMq_intro", "knob": "i1tZMq_knob", "legend": "i1tZMq_legend", "loading": "i1tZMq_loading", "loadingText": "i1tZMq_loadingText", "mcName": "i1tZMq_mcName", "menu": "i1tZMq_menu", "menuBtn": "i1tZMq_menuBtn", "menuCount": "i1tZMq_menuCount", "menuDot": "i1tZMq_menuDot", "menuEmpty": "i1tZMq_menuEmpty", "menuFoot": "i1tZMq_menuFoot", "menuHead": "i1tZMq_menuHead", "menuHint": "i1tZMq_menuHint", "menuLabel": "i1tZMq_menuLabel", "menuList": "i1tZMq_menuList", "menuRow": "i1tZMq_menuRow", "mini": "i1tZMq_mini", "minibtn": "i1tZMq_minibtn", "mitem": "i1tZMq_mitem", "model": "i1tZMq_model", "modelchip": "i1tZMq_modelchip", "modeldetail": "i1tZMq_modeldetail", "modelhead": "i1tZMq_modelhead", "modelname": "i1tZMq_modelname", "models": "i1tZMq_models", "modelval": "i1tZMq_modelval", "mono": "i1tZMq_mono", "moodPeak": "i1tZMq_moodPeak", "moodValley": "i1tZMq_moodValley", "muted": "i1tZMq_muted", "neg": "i1tZMq_neg", "ninput": "i1tZMq_ninput", "notice": "i1tZMq_notice", "noticeEmpty": "i1tZMq_noticeEmpty", "noticeErr": "i1tZMq_noticeErr", "noticeOk": "i1tZMq_noticeOk", "noticeWarn": "i1tZMq_noticeWarn", "now": "i1tZMq_now", "off": "i1tZMq_off", "offtxt": "i1tZMq_offtxt", "ok": "i1tZMq_ok", "on": "i1tZMq_on", "onlineGrid": "i1tZMq_onlineGrid", "over": "i1tZMq_over", "page": "i1tZMq_page", "paygAmt": "i1tZMq_paygAmt", "paygCompact": "i1tZMq_paygCompact", "paygCur": "i1tZMq_paygCur", "paygSub": "i1tZMq_paygSub", "paygTop": "i1tZMq_paygTop", "peak": "i1tZMq_peak", "peakBand": "i1tZMq_peakBand", "peakCell": "i1tZMq_peakCell", "peakChip": "i1tZMq_peakChip", "peakDot": "i1tZMq_peakDot", "peakHead": "i1tZMq_peakHead", "peakHint": "i1tZMq_peakHint", "peakPop": "i1tZMq_peakPop", "peakPopClock": "i1tZMq_peakPopClock", "peakPopDot": "i1tZMq_peakPopDot", "peakPopFoot": "i1tZMq_peakPopFoot", "peakPopHead": "i1tZMq_peakPopHead", "peakTime": "i1tZMq_peakTime", "peakTitle": "i1tZMq_peakTitle", "pop": "i1tZMq_pop", "popBar": "i1tZMq_popBar", "popFill": "i1tZMq_popFill", "popK": "i1tZMq_popK", "popRow": "i1tZMq_popRow", "popTitle": "i1tZMq_popTitle", "popV": "i1tZMq_popV", "popmenu": "i1tZMq_popmenu", "qbal": "i1tZMq_qbal", "qbar": "i1tZMq_qbar", "qfill": "i1tZMq_qfill", "qlabel": "i1tZMq_qlabel", "qleft": "i1tZMq_qleft", "qmeta": "i1tZMq_qmeta", "qpct": "i1tZMq_qpct", "qrow": "i1tZMq_qrow", "qstatus": "i1tZMq_qstatus", "qsumBad": "i1tZMq_qsumBad", "qsumOver": "i1tZMq_qsumOver", "qsumWarn": "i1tZMq_qsumWarn", "rankBarTrack": "i1tZMq_rankBarTrack", "rankDate": "i1tZMq_rankDate", "rankFillIdle": "i1tZMq_rankFillIdle", "rankFillTurn": "i1tZMq_rankFillTurn", "rankHead": "i1tZMq_rankHead", "rankNo": "i1tZMq_rankNo", "rankRow": "i1tZMq_rankRow", "rankTok": "i1tZMq_rankTok", "rankVal": "i1tZMq_rankVal", "rise": "i1tZMq_rise", "row": "i1tZMq_row", "rowControl": "i1tZMq_rowControl", "rowDesc": "i1tZMq_rowDesc", "rowLabel": "i1tZMq_rowLabel", "rowText": "i1tZMq_rowText", "rowValue": "i1tZMq_rowValue", "rowWrap": "i1tZMq_rowWrap", "run": "i1tZMq_run", "sectMiss": "i1tZMq_sectMiss", "section": "i1tZMq_section", "sectionHead": "i1tZMq_sectionHead", "sections": "i1tZMq_sections", "seg": "i1tZMq_seg", "segBtn": "i1tZMq_segBtn", "segField": "i1tZMq_segField", "segFieldCtl": "i1tZMq_segFieldCtl", "segFieldHint": "i1tZMq_segFieldHint", "segFieldKey": "i1tZMq_segFieldKey", "segOn": "i1tZMq_segOn", "segRow": "i1tZMq_segRow", "selector": "i1tZMq_selector", "selectorLabel": "i1tZMq_selectorLabel", "shareAuthor": "i1tZMq_shareAuthor", "shareAuthorBox": "i1tZMq_shareAuthorBox", "shareBar": "i1tZMq_shareBar", "shareBarHint": "i1tZMq_shareBarHint", "shareBarTitle": "i1tZMq_shareBarTitle", "shareBoard": "i1tZMq_shareBoard", "shareBrand": "i1tZMq_shareBrand", "shareBrandRow": "i1tZMq_shareBrandRow", "shareBtn": "i1tZMq_shareBtn", "shareCell": "i1tZMq_shareCell", "shareGrid": "i1tZMq_shareGrid", "shareHead": "i1tZMq_shareHead", "shareLoading": "i1tZMq_shareLoading", "shareLogo": "i1tZMq_shareLogo", "shareMail": "i1tZMq_shareMail", "shareMeta": "i1tZMq_shareMeta", "shareMetaR": "i1tZMq_shareMetaR", "shareMetaSep": "i1tZMq_shareMetaSep", "sharePlug": "i1tZMq_sharePlug", "shareRepo": "i1tZMq_shareRepo", "shareStage": "i1tZMq_shareStage", "shareSub": "i1tZMq_shareSub", "shareTitleBox": "i1tZMq_shareTitleBox", "shareToggle": "i1tZMq_shareToggle", "shareTop": "i1tZMq_shareTop", "shareVeil": "i1tZMq_shareVeil", "shareZoom": "i1tZMq_shareZoom", "side": "i1tZMq_side", "spark": "i1tZMq_spark", "spin": "i1tZMq_spin", "spinner": "i1tZMq_spinner", "sr6": "i1tZMq_sr6", "stat": "i1tZMq_stat", "statBg": "i1tZMq_statBg", "statGrid": "i1tZMq_statGrid", "statIco": "i1tZMq_statIco", "statLabel": "i1tZMq_statLabel", "statSub": "i1tZMq_statSub", "statValue": "i1tZMq_statValue", "statWide": "i1tZMq_statWide", "statgrow": "i1tZMq_statgrow", "streakbar": "i1tZMq_streakbar", "streakfill": "i1tZMq_streakfill", "svgwrap": "i1tZMq_svgwrap", "swhint": "i1tZMq_swhint", "switch": "i1tZMq_switch", "switchOn": "i1tZMq_switchOn", "swlabel": "i1tZMq_swlabel", "swrow": "i1tZMq_swrow", "swrowText": "i1tZMq_swrowText", "tab": "i1tZMq_tab", "tabOn": "i1tZMq_tabOn", "tabs": "i1tZMq_tabs", "textarea": "i1tZMq_textarea", "thumb": "i1tZMq_thumb", "tip": "i1tZMq_tip", "tipAbove": "i1tZMq_tipAbove", "tipK": "i1tZMq_tipK", "tipText": "i1tZMq_tipText", "tipTitle": "i1tZMq_tipTitle", "tipV": "i1tZMq_tipV", "tipfixed": "i1tZMq_tipfixed", "tipfloat": "i1tZMq_tipfloat", "tiprow": "i1tZMq_tiprow", "title": "i1tZMq_title", "titledIco": "i1tZMq_titledIco", "tm": "i1tZMq_tm", "tm-donutseg": "i1tZMq_tm-donutseg", "tm-draw": "i1tZMq_tm-draw", "tm-fade": "i1tZMq_tm-fade", "tm-fadeup": "i1tZMq_tm-fadeup", "tm-groww": "i1tZMq_tm-groww", "tm-heatin": "i1tZMq_tm-heatin", "tm-in": "i1tZMq_tm-in", "tm-peak-breathe": "i1tZMq_tm-peak-breathe", "tm-peakPopIn": "i1tZMq_tm-peakPopIn", "tm-peakTick": "i1tZMq_tm-peakTick", "tm-pop": "i1tZMq_tm-pop", "tm-pulse": "i1tZMq_tm-pulse", "tm-qpulse": "i1tZMq_tm-qpulse", "tm-risev": "i1tZMq_tm-risev", "tm-rot": "i1tZMq_tm-rot", "tm-spin": "i1tZMq_tm-spin", "tmc": "i1tZMq_tmc", "tmvc": "i1tZMq_tmvc", "today": "i1tZMq_today", "todayRail": "i1tZMq_todayRail", "todayhead": "i1tZMq_todayhead", "todaylabel": "i1tZMq_todaylabel", "todaymchip": "i1tZMq_todaymchip", "todaymodels": "i1tZMq_todaymodels", "todayval": "i1tZMq_todayval", "toolbar": "i1tZMq_toolbar", "top3": "i1tZMq_top3", "ui": "i1tZMq_ui", "unknown": "i1tZMq_unknown", "valley": "i1tZMq_valley", "vcaret": "i1tZMq_vcaret", "vchip": "i1tZMq_vchip", "vchipBad": "i1tZMq_vchipBad", "vchipInfo": "i1tZMq_vchipInfo", "vchipOk": "i1tZMq_vchipOk", "vchipWarn": "i1tZMq_vchipWarn", "vchips": "i1tZMq_vchips", "vendor": "i1tZMq_vendor", "vendorRow": "i1tZMq_vendorRow", "vgrid": "i1tZMq_vgrid", "vname": "i1tZMq_vname", "vname2": "i1tZMq_vname2", "von": "i1tZMq_von", "vtype": "i1tZMq_vtype", "warn": "i1tZMq_warn", "widgetBd": "i1tZMq_widgetBd", "widgetBtn": "i1tZMq_widgetBtn", "widgetBtnLabel": "i1tZMq_widgetBtnLabel", "widgetFloat": "i1tZMq_widgetFloat", "widgetTitle": "i1tZMq_widgetTitle", "wkFrame": "i1tZMq_wkFrame", "xcell": "i1tZMq_xcell", "xcellLabel": "i1tZMq_xcellLabel", "xcellValue": "i1tZMq_xcellValue", "xchart": "i1tZMq_xchart", "xdot": "i1tZMq_xdot", "xgrid": "i1tZMq_xgrid", "xgridBody": "i1tZMq_xgridBody", "xprog": "i1tZMq_xprog", "xrow": "i1tZMq_xrow", "xsplit": "i1tZMq_xsplit", "xstats": "i1tZMq_xstats", "xtitle": "i1tZMq_xtitle" };
+var styles_module_css_default = { "acc": "i1tZMq_acc", "accLegend": "i1tZMq_accLegend", "accLegendItem": "i1tZMq_accLegendItem", "active": "i1tZMq_active", "arrow": "i1tZMq_arrow", "arrowDown": "i1tZMq_arrowDown", "arrowUp": "i1tZMq_arrowUp", "avail": "i1tZMq_avail", "axislbl": "i1tZMq_axislbl", "backdrop": "i1tZMq_backdrop", "bad": "i1tZMq_bad", "badge": "i1tZMq_badge", "badgeBad": "i1tZMq_badgeBad", "badgeInfo": "i1tZMq_badgeInfo", "badgeMuted": "i1tZMq_badgeMuted", "badgeOk": "i1tZMq_badgeOk", "badgeWarn": "i1tZMq_badgeWarn", "bar": "i1tZMq_bar", "barfill": "i1tZMq_barfill", "bartrack": "i1tZMq_bartrack", "body": "i1tZMq_body", "bound": "i1tZMq_bound", "btn": "i1tZMq_btn", "btnBalance": "i1tZMq_btnBalance", "btnBalanceText": "i1tZMq_btnBalanceText", "btnBar": "i1tZMq_btnBar", "btnBarFill": "i1tZMq_btnBarFill", "btnBarLabel": "i1tZMq_btnBarLabel", "btnBarTrack": "i1tZMq_btnBarTrack", "btnBars": "i1tZMq_btnBars", "btnDanger": "i1tZMq_btnDanger", "btnIcon": "i1tZMq_btnIcon", "btnLead": "i1tZMq_btnLead", "btnLeadOnly": "i1tZMq_btnLeadOnly", "btnName": "i1tZMq_btnName", "btnPrimary": "i1tZMq_btnPrimary", "btnRail": "i1tZMq_btnRail", "btnRailCombo": "i1tZMq_btnRailCombo", "btnRow": "i1tZMq_btnRow", "btnValue": "i1tZMq_btnValue", "c12": "i1tZMq_c12", "c4": "i1tZMq_c4", "c5": "i1tZMq_c5", "c6": "i1tZMq_c6", "c7": "i1tZMq_c7", "c8": "i1tZMq_c8", "cacheRow": "i1tZMq_cacheRow", "cacheSep": "i1tZMq_cacheSep", "card": "i1tZMq_card", "cardHint": "i1tZMq_cardHint", "cbody": "i1tZMq_cbody", "cell": "i1tZMq_cell", "chartName": "i1tZMq_chartName", "chartTitle": "i1tZMq_chartTitle", "chartWrap": "i1tZMq_chartWrap", "chead": "i1tZMq_chead", "cheadHint": "i1tZMq_cheadHint", "cheadTitle": "i1tZMq_cheadTitle", "chevron": "i1tZMq_chevron", "cico": "i1tZMq_cico", "cmain": "i1tZMq_cmain", "cnameTxt": "i1tZMq_cnameTxt", "cnav": "i1tZMq_cnav", "cnavHead": "i1tZMq_cnavHead", "cnavInner": "i1tZMq_cnavInner", "cnavItem": "i1tZMq_cnavItem", "cnavItemSep": "i1tZMq_cnavItemSep", "cnavLabel": "i1tZMq_cnavLabel", "cnavList": "i1tZMq_cnavList", "cnavOn": "i1tZMq_cnavOn", "codeblock": "i1tZMq_codeblock", "compose": "i1tZMq_compose", "composeLegend": "i1tZMq_composeLegend", "cset": "i1tZMq_cset", "cview": "i1tZMq_cview", "dash": "i1tZMq_dash", "dayscroll": "i1tZMq_dayscroll", "desc": "i1tZMq_desc", "donutBox": "i1tZMq_donutBox", "donutC": "i1tZMq_donutC", "donutCap": "i1tZMq_donutCap", "donutWide": "i1tZMq_donutWide", "donutseg": "i1tZMq_donutseg", "dot": "i1tZMq_dot", "draw": "i1tZMq_draw", "dualbars": "i1tZMq_dualbars", "empty": "i1tZMq_empty", "err": "i1tZMq_err", "errabtns": "i1tZMq_errabtns", "erraction": "i1tZMq_erraction", "erractionText": "i1tZMq_erractionText", "errbox": "i1tZMq_errbox", "errboxBad": "i1tZMq_errboxBad", "errboxCompact": "i1tZMq_errboxCompact", "errboxInfo": "i1tZMq_errboxInfo", "errboxWarn": "i1tZMq_errboxWarn", "errdactions": "i1tZMq_errdactions", "errdetail": "i1tZMq_errdetail", "errhead": "i1tZMq_errhead", "errhint": "i1tZMq_errhint", "erricon": "i1tZMq_erricon", "erriconBad": "i1tZMq_erriconBad", "erriconInfo": "i1tZMq_erriconInfo", "errmeta": "i1tZMq_errmeta", "error": "i1tZMq_error", "errraw": "i1tZMq_errraw", "errsteps": "i1tZMq_errsteps", "errsub": "i1tZMq_errsub", "errtitle": "i1tZMq_errtitle", "errtitlewrap": "i1tZMq_errtitlewrap", "estimate": "i1tZMq_estimate", "exact": "i1tZMq_exact", "fadein": "i1tZMq_fadein", "field": "i1tZMq_field", "fieldControl": "i1tZMq_fieldControl", "fieldDesc": "i1tZMq_fieldDesc", "fieldHead": "i1tZMq_fieldHead", "fieldLabel": "i1tZMq_fieldLabel", "fieldNote": "i1tZMq_fieldNote", "fieldOpt": "i1tZMq_fieldOpt", "fieldReq": "i1tZMq_fieldReq", "flexrow": "i1tZMq_flexrow", "float": "i1tZMq_float", "floatBd": "i1tZMq_floatBd", "floatHd": "i1tZMq_floatHd", "floathead": "i1tZMq_floathead", "footerNote": "i1tZMq_footerNote", "formGrid": "i1tZMq_formGrid", "gapCmp": "i1tZMq_gapCmp", "gapCmpItem": "i1tZMq_gapCmpItem", "gapCmpOn": "i1tZMq_gapCmpOn", "gapCmpRec": "i1tZMq_gapCmpRec", "gapCmpTitle": "i1tZMq_gapCmpTitle", "gapHint": "i1tZMq_gapHint", "gapRec": "i1tZMq_gapRec", "gapRules": "i1tZMq_gapRules", "grid": "i1tZMq_grid", "gridln": "i1tZMq_gridln", "grip": "i1tZMq_grip", "grow": "i1tZMq_grow", "hcell": "i1tZMq_hcell", "heatrow": "i1tZMq_heatrow", "heatwrap": "i1tZMq_heatwrap", "hint": "i1tZMq_hint", "in": "i1tZMq_in", "inforow": "i1tZMq_inforow", "infos": "i1tZMq_infos", "input": "i1tZMq_input", "inputReadonly": "i1tZMq_inputReadonly", "inputWrap": "i1tZMq_inputWrap", "intro": "i1tZMq_intro", "knob": "i1tZMq_knob", "legend": "i1tZMq_legend", "loading": "i1tZMq_loading", "loadingText": "i1tZMq_loadingText", "mcName": "i1tZMq_mcName", "menu": "i1tZMq_menu", "menuBtn": "i1tZMq_menuBtn", "menuCount": "i1tZMq_menuCount", "menuDot": "i1tZMq_menuDot", "menuEmpty": "i1tZMq_menuEmpty", "menuFoot": "i1tZMq_menuFoot", "menuHead": "i1tZMq_menuHead", "menuHint": "i1tZMq_menuHint", "menuLabel": "i1tZMq_menuLabel", "menuList": "i1tZMq_menuList", "menuRow": "i1tZMq_menuRow", "mini": "i1tZMq_mini", "minibtn": "i1tZMq_minibtn", "mitem": "i1tZMq_mitem", "model": "i1tZMq_model", "modelchip": "i1tZMq_modelchip", "modeldetail": "i1tZMq_modeldetail", "modelhead": "i1tZMq_modelhead", "modelname": "i1tZMq_modelname", "models": "i1tZMq_models", "modelval": "i1tZMq_modelval", "mono": "i1tZMq_mono", "moodPeak": "i1tZMq_moodPeak", "moodValley": "i1tZMq_moodValley", "muted": "i1tZMq_muted", "neg": "i1tZMq_neg", "ninput": "i1tZMq_ninput", "notice": "i1tZMq_notice", "noticeEmpty": "i1tZMq_noticeEmpty", "noticeErr": "i1tZMq_noticeErr", "noticeOk": "i1tZMq_noticeOk", "noticeWarn": "i1tZMq_noticeWarn", "now": "i1tZMq_now", "off": "i1tZMq_off", "offtxt": "i1tZMq_offtxt", "ok": "i1tZMq_ok", "on": "i1tZMq_on", "onlineGrid": "i1tZMq_onlineGrid", "over": "i1tZMq_over", "page": "i1tZMq_page", "paygAmt": "i1tZMq_paygAmt", "paygCompact": "i1tZMq_paygCompact", "paygCur": "i1tZMq_paygCur", "paygSub": "i1tZMq_paygSub", "paygTop": "i1tZMq_paygTop", "peak": "i1tZMq_peak", "peakBand": "i1tZMq_peakBand", "peakCell": "i1tZMq_peakCell", "peakChip": "i1tZMq_peakChip", "peakDot": "i1tZMq_peakDot", "peakHead": "i1tZMq_peakHead", "peakHint": "i1tZMq_peakHint", "peakPop": "i1tZMq_peakPop", "peakPopClock": "i1tZMq_peakPopClock", "peakPopDot": "i1tZMq_peakPopDot", "peakPopFoot": "i1tZMq_peakPopFoot", "peakPopHead": "i1tZMq_peakPopHead", "peakTime": "i1tZMq_peakTime", "peakTitle": "i1tZMq_peakTitle", "pop": "i1tZMq_pop", "popBar": "i1tZMq_popBar", "popFill": "i1tZMq_popFill", "popK": "i1tZMq_popK", "popRow": "i1tZMq_popRow", "popTitle": "i1tZMq_popTitle", "popV": "i1tZMq_popV", "popmenu": "i1tZMq_popmenu", "prefBlock": "i1tZMq_prefBlock", "prefBox": "i1tZMq_prefBox", "prefLabel": "i1tZMq_prefLabel", "prefOpt": "i1tZMq_prefOpt", "prefRow": "i1tZMq_prefRow", "prefSeg": "i1tZMq_prefSeg", "qbal": "i1tZMq_qbal", "qbar": "i1tZMq_qbar", "qfill": "i1tZMq_qfill", "qlabel": "i1tZMq_qlabel", "qleft": "i1tZMq_qleft", "qmeta": "i1tZMq_qmeta", "qpct": "i1tZMq_qpct", "qrow": "i1tZMq_qrow", "qstatus": "i1tZMq_qstatus", "qsumBad": "i1tZMq_qsumBad", "qsumOver": "i1tZMq_qsumOver", "qsumWarn": "i1tZMq_qsumWarn", "rankBarTrack": "i1tZMq_rankBarTrack", "rankDate": "i1tZMq_rankDate", "rankFillIdle": "i1tZMq_rankFillIdle", "rankFillTurn": "i1tZMq_rankFillTurn", "rankHead": "i1tZMq_rankHead", "rankNo": "i1tZMq_rankNo", "rankRow": "i1tZMq_rankRow", "rankTok": "i1tZMq_rankTok", "rankVal": "i1tZMq_rankVal", "ring": "i1tZMq_ring", "ringArc": "i1tZMq_ringArc", "ringTrack": "i1tZMq_ringTrack", "rise": "i1tZMq_rise", "row": "i1tZMq_row", "rowControl": "i1tZMq_rowControl", "rowDesc": "i1tZMq_rowDesc", "rowLabel": "i1tZMq_rowLabel", "rowText": "i1tZMq_rowText", "rowValue": "i1tZMq_rowValue", "rowWrap": "i1tZMq_rowWrap", "run": "i1tZMq_run", "sectMiss": "i1tZMq_sectMiss", "section": "i1tZMq_section", "sectionHead": "i1tZMq_sectionHead", "sections": "i1tZMq_sections", "seg": "i1tZMq_seg", "segBad": "i1tZMq_segBad", "segBrand": "i1tZMq_segBrand", "segBtn": "i1tZMq_segBtn", "segField": "i1tZMq_segField", "segFieldCtl": "i1tZMq_segFieldCtl", "segFieldHint": "i1tZMq_segFieldHint", "segFieldKey": "i1tZMq_segFieldKey", "segInfo": "i1tZMq_segInfo", "segMuted": "i1tZMq_segMuted", "segOk": "i1tZMq_segOk", "segOn": "i1tZMq_segOn", "segPal0": "i1tZMq_segPal0", "segPal1": "i1tZMq_segPal1", "segPal2": "i1tZMq_segPal2", "segPal3": "i1tZMq_segPal3", "segPal4": "i1tZMq_segPal4", "segPal5": "i1tZMq_segPal5", "segPal6": "i1tZMq_segPal6", "segPal7": "i1tZMq_segPal7", "segRow": "i1tZMq_segRow", "segWarn": "i1tZMq_segWarn", "selector": "i1tZMq_selector", "selectorLabel": "i1tZMq_selectorLabel", "shareAuthor": "i1tZMq_shareAuthor", "shareAuthorBox": "i1tZMq_shareAuthorBox", "shareBar": "i1tZMq_shareBar", "shareBarHint": "i1tZMq_shareBarHint", "shareBarTitle": "i1tZMq_shareBarTitle", "shareBoard": "i1tZMq_shareBoard", "shareBrand": "i1tZMq_shareBrand", "shareBrandRow": "i1tZMq_shareBrandRow", "shareBtn": "i1tZMq_shareBtn", "shareCell": "i1tZMq_shareCell", "shareGrid": "i1tZMq_shareGrid", "shareHead": "i1tZMq_shareHead", "shareLoading": "i1tZMq_shareLoading", "shareLogo": "i1tZMq_shareLogo", "shareMail": "i1tZMq_shareMail", "shareMeta": "i1tZMq_shareMeta", "shareMetaR": "i1tZMq_shareMetaR", "shareMetaSep": "i1tZMq_shareMetaSep", "sharePlug": "i1tZMq_sharePlug", "shareRepo": "i1tZMq_shareRepo", "shareStage": "i1tZMq_shareStage", "shareSub": "i1tZMq_shareSub", "shareTitleBox": "i1tZMq_shareTitleBox", "shareToggle": "i1tZMq_shareToggle", "shareTop": "i1tZMq_shareTop", "shareVeil": "i1tZMq_shareVeil", "shareZoom": "i1tZMq_shareZoom", "side": "i1tZMq_side", "spark": "i1tZMq_spark", "spin": "i1tZMq_spin", "spinner": "i1tZMq_spinner", "sr6": "i1tZMq_sr6", "stat": "i1tZMq_stat", "statBg": "i1tZMq_statBg", "statGrid": "i1tZMq_statGrid", "statIco": "i1tZMq_statIco", "statLabel": "i1tZMq_statLabel", "statSub": "i1tZMq_statSub", "statValue": "i1tZMq_statValue", "statWide": "i1tZMq_statWide", "statgrow": "i1tZMq_statgrow", "streakbar": "i1tZMq_streakbar", "streakfill": "i1tZMq_streakfill", "svgwrap": "i1tZMq_svgwrap", "swhint": "i1tZMq_swhint", "switch": "i1tZMq_switch", "switchOn": "i1tZMq_switchOn", "swlabel": "i1tZMq_swlabel", "swrow": "i1tZMq_swrow", "swrowText": "i1tZMq_swrowText", "tab": "i1tZMq_tab", "tabOn": "i1tZMq_tabOn", "tabs": "i1tZMq_tabs", "textarea": "i1tZMq_textarea", "thumb": "i1tZMq_thumb", "tip": "i1tZMq_tip", "tipAbove": "i1tZMq_tipAbove", "tipK": "i1tZMq_tipK", "tipText": "i1tZMq_tipText", "tipTitle": "i1tZMq_tipTitle", "tipV": "i1tZMq_tipV", "tipfixed": "i1tZMq_tipfixed", "tipfloat": "i1tZMq_tipfloat", "tiprow": "i1tZMq_tiprow", "title": "i1tZMq_title", "titledIco": "i1tZMq_titledIco", "tm": "i1tZMq_tm", "tm-donutseg": "i1tZMq_tm-donutseg", "tm-draw": "i1tZMq_tm-draw", "tm-fade": "i1tZMq_tm-fade", "tm-fadeup": "i1tZMq_tm-fadeup", "tm-groww": "i1tZMq_tm-groww", "tm-heatin": "i1tZMq_tm-heatin", "tm-in": "i1tZMq_tm-in", "tm-peak-breathe": "i1tZMq_tm-peak-breathe", "tm-peakPopIn": "i1tZMq_tm-peakPopIn", "tm-peakTick": "i1tZMq_tm-peakTick", "tm-pop": "i1tZMq_tm-pop", "tm-pulse": "i1tZMq_tm-pulse", "tm-qpulse": "i1tZMq_tm-qpulse", "tm-risev": "i1tZMq_tm-risev", "tm-rot": "i1tZMq_tm-rot", "tm-spin": "i1tZMq_tm-spin", "tmTray": "i1tZMq_tmTray", "tmc": "i1tZMq_tmc", "tmvc": "i1tZMq_tmvc", "today": "i1tZMq_today", "todayRail": "i1tZMq_todayRail", "todayhead": "i1tZMq_todayhead", "todaylabel": "i1tZMq_todaylabel", "todaymchip": "i1tZMq_todaymchip", "todaymodels": "i1tZMq_todaymodels", "todayval": "i1tZMq_todayval", "toolbar": "i1tZMq_toolbar", "top3": "i1tZMq_top3", "trayBody": "i1tZMq_trayBody", "trayBtn": "i1tZMq_trayBtn", "trayCard": "i1tZMq_trayCard", "trayCardBody": "i1tZMq_trayCardBody", "trayCardGlyph": "i1tZMq_trayCardGlyph", "trayCardHead": "i1tZMq_trayCardHead", "trayCardName": "i1tZMq_trayCardName", "trayCardType": "i1tZMq_trayCardType", "trayEmpty": "i1tZMq_trayEmpty", "trayError": "i1tZMq_trayError", "trayFoot": "i1tZMq_trayFoot", "trayFootDot": "i1tZMq_trayFootDot", "trayFootError": "i1tZMq_trayFootError", "trayFootRow": "i1tZMq_trayFootRow", "trayIconBtn": "i1tZMq_trayIconBtn", "trayList": "i1tZMq_trayList", "trayListHead": "i1tZMq_trayListHead", "trayPanel": "i1tZMq_trayPanel", "trayPanelGlyph": "i1tZMq_trayPanelGlyph", "trayPanelHead": "i1tZMq_trayPanelHead", "trayPanelTitle": "i1tZMq_trayPanelTitle", "trayRail": "i1tZMq_trayRail", "trayRoot": "i1tZMq_trayRoot", "trayRow": "i1tZMq_trayRow", "trayRowCheck": "i1tZMq_trayRowCheck", "trayRowGlyph": "i1tZMq_trayRowGlyph", "trayRowName": "i1tZMq_trayRowName", "trayRowStatus": "i1tZMq_trayRowStatus", "trayRowType": "i1tZMq_trayRowType", "traySpacer": "i1tZMq_traySpacer", "traySpin": "i1tZMq_traySpin", "ui": "i1tZMq_ui", "unknown": "i1tZMq_unknown", "valley": "i1tZMq_valley", "vcaret": "i1tZMq_vcaret", "vchip": "i1tZMq_vchip", "vchipBad": "i1tZMq_vchipBad", "vchipInfo": "i1tZMq_vchipInfo", "vchipOk": "i1tZMq_vchipOk", "vchipWarn": "i1tZMq_vchipWarn", "vchips": "i1tZMq_vchips", "vendor": "i1tZMq_vendor", "vendorRow": "i1tZMq_vendorRow", "vgrid": "i1tZMq_vgrid", "vname": "i1tZMq_vname", "vname2": "i1tZMq_vname2", "von": "i1tZMq_von", "vtype": "i1tZMq_vtype", "warn": "i1tZMq_warn", "warnLine": "i1tZMq_warnLine", "widgetBd": "i1tZMq_widgetBd", "widgetBtn": "i1tZMq_widgetBtn", "widgetBtnLabel": "i1tZMq_widgetBtnLabel", "widgetFloat": "i1tZMq_widgetFloat", "widgetTitle": "i1tZMq_widgetTitle", "wkFrame": "i1tZMq_wkFrame", "xcell": "i1tZMq_xcell", "xcellLabel": "i1tZMq_xcellLabel", "xcellValue": "i1tZMq_xcellValue", "xchart": "i1tZMq_xchart", "xdot": "i1tZMq_xdot", "xgrid": "i1tZMq_xgrid", "xgridBody": "i1tZMq_xgridBody", "xprog": "i1tZMq_xprog", "xrow": "i1tZMq_xrow", "xsplit": "i1tZMq_xsplit", "xstats": "i1tZMq_xstats", "xtitle": "i1tZMq_xtitle" };
 
 // src/name.ts
 var DISPLAY_NAME = "Token \u603B\u89C8";
@@ -74,12 +74,6 @@ function warnMissing(name) {
 }
 function createCenterView(sections, icons) {
   const ITEMS = [
-    {
-      id: "quota",
-      label: "\u989D\u5EA6\u67E5\u8BE2",
-      hint: "\u5168\u90E8\u4F9B\u5E94\u5546\u989D\u5EA6\u4E00\u89C8 \xB7 \u589E\u5220\u6539\u4F9B\u5E94\u5546\u5728\u5DE6\u4FA7\u300C\u8BBE\u7F6E\u300D\u91CC",
-      Icon: icons.QuotaIcon
-    },
     {
       id: "stats",
       label: "\u7528\u91CF\u7EDF\u8BA1",
@@ -121,7 +115,6 @@ function createCenterView(sections, icons) {
       }
     };
     const active = ITEMS.filter((i) => i.id === cur)[0] ?? first;
-    const openSettings = () => pick("settings");
     const box = sections;
     const section = (name, props) => {
       const Comp = box[name];
@@ -178,7 +171,7 @@ function createCenterView(sections, icons) {
             }
           ) : null
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: styles_module_css_default.cbody, "data-tm-scroll": "1", children: cur === "quota" ? section("QuotaView", { onOpenSettings: openSettings }) : cur === "stats" ? section("StatsView") : cur === "online" ? section("OnlineView") : (
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: styles_module_css_default.cbody, "data-tm-scroll": "1", children: cur === "stats" ? section("StatsView") : cur === "online" ? section("OnlineView") : (
           // 设置页是行式表单布局，宽屏下收窄居中更好读（数据卡片才吃满宽度）
           /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: styles_module_css_default.cset, children: section("SettingsView") })
         ) })
@@ -4381,88 +4374,17 @@ function ShareIcon(props) {
   ] });
 }
 
-// src/client/MenuPanel.tsx
-var import_jsx_runtime9 = require("react/jsx-runtime");
-function MenuRow(props) {
-  return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: styles_module_css_default.menuRow, "data-open": props.open ? "1" : "0", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.menuDot }),
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.menuLabel, title: props.id, children: props.title }),
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
-      "button",
-      {
-        type: "button",
-        className: styles_module_css_default.menuBtn,
-        title: props.open ? "\u6536\u8D77\u300C" + props.title + "\u300D\uFF08\u5E03\u5C40\u91CC\u4FDD\u7559\u4F4D\u7F6E\u4E0E\u5C3A\u5BF8\uFF09" : "\u6253\u5F00\u300C" + props.title + "\u300D\u4E3A\u72EC\u7ACB\u5361\u7247",
-        onClick: () => {
-          if (props.open) props.widgets.closeWidget(props.id);
-          else props.widgets.openWidget(props.id);
-        },
-        children: props.open ? "\u6536\u8D77" : "\u6253\u5F00"
-      }
-    )
-  ] });
-}
-function TokenMeterMenu(props) {
-  const open = props.widgets.useWidgets();
-  const rows = props.widgets.listFloats();
-  const openIds = new Set(open.map((entry) => entry.id));
-  const openCount = rows.filter((row) => openIds.has(row.id)).length;
-  return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: styles_module_css_default.menu, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: styles_module_css_default.menuHead, children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.menuHint, children: "\u5C0F\u7EC4\u4EF6\uFF1A\u70B9\u300C\u6253\u5F00\u300D\u5F39\u51FA\u4E3A\u53EF\u62D6\u52A8\u5361\u7247\uFF0C\u4F4D\u7F6E\u4E0E\u5C3A\u5BF8\u4F1A\u8BB0\u4F4F\u3002" }) }),
-    rows.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: styles_module_css_default.menuEmpty, children: "\u8FD8\u6CA1\u6709\u53EF\u5F39\u51FA\u7684\u5C0F\u7EC4\u4EF6\uFF08\u4F9B\u5E94\u5546\u5217\u8868\u4E3A\u7A7A\uFF1F\uFF09" }) : /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: styles_module_css_default.menuList, children: rows.map((row) => /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
-      MenuRow,
-      {
-        id: row.id,
-        title: row.title,
-        open: openIds.has(row.id),
-        widgets: props.widgets
-      },
-      row.id
-    )) }),
-    /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: styles_module_css_default.menuFoot, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.menuCount, children: openCount + " / " + rows.length + " \u5DF2\u6253\u5F00" }),
-      /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
-        "button",
-        {
-          type: "button",
-          className: styles_module_css_default.menuBtn,
-          disabled: openCount === 0,
-          title: "\u6536\u8D77\u5168\u90E8\u5C0F\u7EC4\u4EF6\uFF08\u4F4D\u7F6E\u4E0E\u5C3A\u5BF8\u4FDD\u7559\uFF0C\u4E0B\u6B21\u6253\u5F00\u539F\u4F4D\u6062\u590D\uFF09",
-          onClick: () => {
-            for (const row of rows) if (openIds.has(row.id)) props.widgets.closeWidget(row.id);
-          },
-          children: "\u5168\u90E8\u6536\u8D77"
-        }
-      )
-    ] })
-  ] });
-}
-function createMenuWidget(widgets2) {
-  return {
-    id: "token-meter:menu",
-    title: DISPLAY_NAME,
-    subtitle: "\u5C0F\u7EC4\u4EF6",
-    icon: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(UsageIcon, { size: 16 }),
-    presentation: "popover",
-    popover: { trigger: "click", width: 320, maxHeight: 520 },
-    content: {
-      render: () => /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(TokenMeterMenu, { widgets: widgets2 })
-    }
-  };
-}
-
 // src/client/TokenMeterSection.tsx
-var import_react10 = require("react");
-var import_dsh_client_ui_primitives5 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_react11 = require("react");
+var import_dsh_client_ui_primitives6 = require("@deepseek-ai/dsh-client-ui-primitives");
 
 // src/client/QuotaSection.tsx
-var import_react8 = require("react");
-var ReactDOM3 = __toESM(require("react-dom"), 1);
-var import_dsh_client_ui_primitives4 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_react9 = require("react");
+var import_dsh_client_ui_primitives5 = require("@deepseek-ai/dsh-client-ui-primitives");
 
 // src/client/ErrorBox.tsx
 var import_react7 = require("react");
-var import_jsx_runtime10 = require("react/jsx-runtime");
+var import_jsx_runtime9 = require("react/jsx-runtime");
 var ICONS = {
   auth: "\u{1F511}",
   session: "\u23F3",
@@ -4568,7 +4490,7 @@ function createErrorBox(deps) {
     const steps = Array.isArray(info.steps) ? info.steps.slice(0, 6) : [];
     const detailText = info.detail + (props.meta ? "\n" + props.meta : "") + (info.status ? "\nHTTP " + info.status : "") + (info.docs ? "\n\u6587\u6863\uFF1A" + info.docs : "");
     const icon = ICONS[info.kind] || ICONS.unknown;
-    const head = /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
+    const head = /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
       "button",
       {
         type: "button",
@@ -4577,20 +4499,20 @@ function createErrorBox(deps) {
         "aria-expanded": open,
         onClick: () => deps.toggle(),
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: cx3(styles_module_css_default.erricon, ERRICON_TONE[tone]), children: icon }, "i"),
-          /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: styles_module_css_default.errtitlewrap, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: styles_module_css_default.errtitle, children: info.title }, "a"),
-            /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: styles_module_css_default.errhint, children: info.hint }, "b")
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: cx3(styles_module_css_default.erricon, ERRICON_TONE[tone]), children: icon }, "i"),
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: styles_module_css_default.errtitlewrap, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.errtitle, children: info.title }, "a"),
+            /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.errhint, children: info.hint }, "b")
           ] }, "t"),
-          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: styles_module_css_default.vcaret, children: open ? "\u25B4" : "\u25BE" }, "c")
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.vcaret, children: open ? "\u25B4" : "\u25BE" }, "c")
         ]
       },
       "h"
     );
-    const actionRow = /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: styles_module_css_default.erraction, children: [
-      info.action ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: styles_module_css_default.erractionText, children: "\u2192 " + info.action }, "p") : null,
-      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("span", { className: styles_module_css_default.errabtns, children: [
-        props.onRetry && info.retriable ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+    const actionRow = /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: styles_module_css_default.erraction, children: [
+      info.action ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.erractionText, children: "\u2192 " + info.action }, "p") : null,
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("span", { className: styles_module_css_default.errabtns, children: [
+        props.onRetry && info.retriable ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
           "button",
           {
             type: "button",
@@ -4600,7 +4522,7 @@ function createErrorBox(deps) {
             children: "\u21BB \u91CD\u8BD5"
           },
           "retry"
-        ) : props.onRetry && !info.retriable ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+        ) : props.onRetry && !info.retriable ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
           "button",
           {
             type: "button",
@@ -4611,7 +4533,7 @@ function createErrorBox(deps) {
           },
           "recheck"
         ) : null,
-        deps.openSettings ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+        deps.openSettings ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
           "button",
           {
             type: "button",
@@ -4624,17 +4546,17 @@ function createErrorBox(deps) {
         ) : null
       ] }, "btns")
     ] }, "a");
-    const body = open ? /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: styles_module_css_default.errdetail, children: [
-      steps.length ? /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: styles_module_css_default.errsub, children: "\u6392\u67E5\u6B65\u9AA4" }),
-        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("ol", { className: styles_module_css_default.errsteps, children: steps.map((s, i) => /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("li", { children: s }, "s" + i)) })
+    const body = open ? /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: styles_module_css_default.errdetail, children: [
+      steps.length ? /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: styles_module_css_default.errsub, children: "\u6392\u67E5\u6B65\u9AA4" }),
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("ol", { className: styles_module_css_default.errsteps, children: steps.map((s, i) => /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("li", { children: s }, "s" + i)) })
       ] }, "steps") : null,
-      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("div", { className: styles_module_css_default.errsub, children: "\u539F\u59CB\u4FE1\u606F" }),
-        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("pre", { className: styles_module_css_default.errraw, children: detailText })
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("div", { className: styles_module_css_default.errsub, children: "\u539F\u59CB\u4FE1\u606F" }),
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("pre", { className: styles_module_css_default.errraw, children: detailText })
       ] }, "raw"),
-      /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: styles_module_css_default.errdactions, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: styles_module_css_default.errdactions, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
           "button",
           {
             type: "button",
@@ -4646,11 +4568,11 @@ function createErrorBox(deps) {
             children: copied || "\u590D\u5236\u8BE6\u60C5"
           }
         ),
-        info.docs ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("a", { className: styles_module_css_default.mini, href: info.docs, target: "_blank", rel: "noreferrer noopener", children: "\u5B98\u65B9\u6587\u6863" }) : null,
-        props.meta ? /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("span", { className: styles_module_css_default.errmeta, children: props.meta }) : null
+        info.docs ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("a", { className: styles_module_css_default.mini, href: info.docs, target: "_blank", rel: "noreferrer noopener", children: "\u5B98\u65B9\u6587\u6863" }) : null,
+        props.meta ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("span", { className: styles_module_css_default.errmeta, children: props.meta }) : null
       ] }, "acts")
     ] }, "d") : null;
-    return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)("div", { className: cx3(styles_module_css_default.errbox, ERRBOX_TONE[tone], props.compact ? styles_module_css_default.errboxCompact : void 0), children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)("div", { className: cx3(styles_module_css_default.errbox, ERRBOX_TONE[tone], props.compact ? styles_module_css_default.errboxCompact : void 0), children: [
       head,
       actionRow,
       body
@@ -4658,11 +4580,284 @@ function createErrorBox(deps) {
   };
 }
 
-// src/client/providers/kit.tsx
+// src/client/provider-icons.tsx
+var import_jsx_runtime10 = require("react/jsx-runtime");
+var GRID = 16;
+var STROKE = 1.4;
+function shell(size, className, name, children) {
+  return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+    "svg",
+    {
+      width: size,
+      height: size,
+      viewBox: `0 0 ${String(GRID)} ${String(GRID)}`,
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: STROKE,
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      className,
+      style: { display: "block" },
+      "aria-hidden": "true",
+      focusable: "false",
+      "data-provider-icon": name,
+      children
+    }
+  );
+}
+var BRANDS = {
+  deepseek: {
+    viewBox: "0 0 23.16 17.04",
+    ratio: 17.04 / 23.16,
+    d: "M22.9168 1.43018C22.6713 1.31018 22.5658 1.53918 22.4223 1.65519C22.3733 1.69269 22.3318 1.74169 22.2903 1.78669C21.9317 2.1697 21.5127 2.42121 20.9657 2.39121C20.1657 2.34621 19.4827 2.59771 18.8787 3.20973C18.7502 2.45521 18.3236 2.0047 17.6746 1.71569C17.3351 1.56568 16.9916 1.41518 16.7536 1.08867C16.5876 0.856163 16.5421 0.597155 16.4591 0.341647C16.4061 0.187643 16.3536 0.0301382 16.1761 0.00363739C15.9836 -0.0263635 15.9081 0.135141 15.8326 0.270145C15.5306 0.822162 15.4136 1.43018 15.4251 2.0462C15.4516 3.43174 16.0366 4.53527 17.1991 5.3203C17.3311 5.4103 17.3651 5.5003 17.3236 5.63181C17.2441 5.90231 17.1501 6.16482 17.0671 6.43533C17.0141 6.60784 16.9351 6.64584 16.7501 6.57033C16.1121 6.30383 15.5611 5.90931 15.074 5.4328C14.2475 4.63328 13.5 3.75075 12.568 3.05973C12.349 2.89822 12.13 2.74822 11.9034 2.60522C10.9524 1.68169 12.028 0.923165 12.277 0.833162C12.5375 0.739159 12.3675 0.41615 11.5259 0.42015C10.6844 0.42365 9.91439 0.705658 8.93286 1.08117C8.78935 1.13767 8.63835 1.17867 8.48384 1.21267C7.59332 1.04367 6.66829 1.00617 5.70226 1.11517C3.88321 1.31768 2.43016 2.1777 1.36213 3.64575C0.0790928 5.4103 -0.222916 7.41536 0.146595 9.50642C0.535106 11.7105 1.66014 13.535 3.38869 14.9616C5.18125 16.4406 7.24581 17.1657 9.60138 17.0266C11.0319 16.9441 12.6245 16.7526 14.421 15.2321C14.874 15.4576 15.3496 15.5476 16.1381 15.6151C16.7456 15.6716 17.3306 15.5851 17.7836 15.4911C18.4931 15.3411 18.4441 14.6841 18.1876 14.5636C16.1081 13.595 16.5646 13.9891 16.1496 13.67C17.2061 12.42 18.8202 10.1979 19.3182 7.17235C19.3672 6.83834 19.4297 6.36783 19.4222 6.09732C19.4182 5.93231 19.4562 5.86831 19.6447 5.84931C20.1657 5.78931 20.6712 5.64681 21.1357 5.3913C22.4833 4.65528 23.0268 3.44624 23.1548 1.9972C23.1738 1.77569 23.1508 1.54668 22.9168 1.43018ZM11.1749 14.4736C9.15936 12.889 8.18184 12.3675 7.77832 12.39C7.40081 12.4125 7.46881 12.8445 7.55182 13.126C7.63882 13.404 7.75182 13.5955 7.91033 13.8396C8.01983 14.0011 8.09533 14.2411 7.80083 14.4216C7.15181 14.8231 6.02327 14.2866 5.97027 14.2601C4.65673 13.4865 3.5587 12.4655 2.78467 11.069C2.03715 9.72493 1.60314 8.28289 1.53164 6.74384C1.51264 6.37233 1.62214 6.24082 1.99215 6.17332C2.47916 6.08332 2.98118 6.06432 3.46769 6.13582C5.52476 6.43633 7.27581 7.35586 8.74385 8.8129C9.58188 9.64243 10.2159 10.634 10.8689 11.6025C11.5634 12.631 12.3105 13.611 13.262 14.4146C13.598 14.6961 13.866 14.9101 14.1225 15.0681C13.349 15.1546 12.058 15.1731 11.1749 14.4746L11.1749 14.4736ZM12.141 8.25988C12.141 8.09488 12.273 7.96338 12.439 7.96338C12.4765 7.96338 12.5105 7.97088 12.541 7.98188C12.5825 7.99688 12.6205 8.01938 12.6505 8.05338C12.7035 8.10588 12.7335 8.18088 12.7335 8.25988C12.7335 8.42489 12.6015 8.55639 12.4355 8.55639C12.2695 8.55639 12.141 8.42489 12.141 8.25988ZM15.1415 9.79893C14.949 9.87793 14.7565 9.94544 14.5715 9.95294C14.2845 9.96794 13.9715 9.85143 13.8015 9.70893C13.5375 9.48742 13.3485 9.36342 13.2695 8.97691C13.2355 8.8119 13.2545 8.55639 13.2845 8.40989C13.3525 8.09438 13.277 7.89187 13.0545 7.70787C12.8735 7.55786 12.643 7.51636 12.39 7.51636C12.2955 7.51636 12.209 7.47486 12.1445 7.44136C12.039 7.38886 11.9519 7.25735 12.035 7.09585C12.0615 7.04335 12.19 6.91584 12.22 6.89334C12.5635 6.69784 12.9595 6.76184 13.326 6.90834C13.6655 7.04735 13.9225 7.30236 14.292 7.66287C14.6695 8.09838 14.7375 8.21838 14.9525 8.54539C15.1225 8.8009 15.277 9.06341 15.3831 9.36392C15.4471 9.55142 15.3641 9.70493 15.1415 9.79893Z"
+  }
+};
+function brand(mark, size, className, name) {
+  const height = Math.round(size * mark.ratio * 100) / 100;
+  return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(
+    "svg",
+    {
+      width: size,
+      height,
+      viewBox: mark.viewBox,
+      fill: "currentColor",
+      className,
+      style: { display: "block" },
+      "aria-hidden": "true",
+      focusable: "false",
+      "data-provider-icon": name,
+      children: /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { d: mark.d, fill: "currentColor" })
+    }
+  );
+}
+var MARKS = {
+  // DeepSeek：鲸尾（对称双叶 + 尾柄），占满 3–13
+  deepseek: (size, className) => shell(
+    size,
+    className,
+    "deepseek",
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(import_jsx_runtime10.Fragment, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { d: "M8 13.4V8.7" }),
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { d: "M8 8.7C5 8.7 3 6.6 3.4 3.3c3.2.5 4.9 2.6 4.6 5.3" }),
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { d: "M8 8.7c3 0 5-2.1 4.6-5.4-3.2.5-4.9 2.6-4.6 5.3" })
+    ] })
+  ),
+  // opencode：竖向的圆角方框（对齐它自己的标识；线稿、内部留空）
+  opencode: (size, className) => shell(size, className, "opencode", /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("rect", { x: "4.9", y: "2.5", width: "6.2", height: "11", rx: "2" })),
+  // CommandCode / Goat：命令键 ⌘（中间一方块 + 四角四个回路）
+  commandcode: (size, className) => shell(
+    size,
+    className,
+    "commandcode",
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(import_jsx_runtime10.Fragment, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("rect", { x: "5.7", y: "5.7", width: "4.6", height: "4.6", rx: "0.5" }),
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("circle", { cx: "3.9", cy: "3.9", r: "1.7" }),
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("circle", { cx: "12.1", cy: "3.9", r: "1.7" }),
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("circle", { cx: "3.9", cy: "12.1", r: "1.7" }),
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("circle", { cx: "12.1", cy: "12.1", r: "1.7" })
+    ] })
+  ),
+  // 本地账本：本子 + 装订线 + 两行字
+  manual: (size, className) => shell(
+    size,
+    className,
+    "manual",
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(import_jsx_runtime10.Fragment, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("rect", { x: "3.3", y: "2.9", width: "9.4", height: "10.2", rx: "1.4" }),
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { d: "M6 2.9v10.2" }),
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { d: "M8.3 6.3h2.5M8.3 8.7h2.5" })
+    ] })
+  ),
+  // 通用兜底：一枚中性的供应商盒子
+  generic: (size, className) => shell(
+    size,
+    className,
+    "generic",
+    /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(import_jsx_runtime10.Fragment, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { d: "M8 2.5 13.3 5.6v6.3L8 15 2.7 11.9V5.6z" }),
+      /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("path", { d: "M8 8.7V15M2.9 5.7 8 8.7l5.1-3" })
+    ] })
+  )
+};
+var PROVIDER_ICON_NAMES = Object.keys(MARKS);
+var PROVIDER_BRAND_NAMES = Object.keys(BRANDS);
+function ProviderIcon(props) {
+  const name = typeof props.name === "string" ? props.name.trim().toLowerCase() : "";
+  const size = props.size ?? 16;
+  const official = BRANDS[name];
+  if (official !== void 0) return brand(official, size, props.className, name);
+  const draw = MARKS[name] ?? MARKS["generic"];
+  if (draw === void 0) return null;
+  return draw(size, props.className);
+}
+var TYPE_ICON_FALLBACK = {
+  deepseek: "deepseek",
+  "deepseek-api": "deepseek",
+  "deepseek-web": "deepseek",
+  opencode: "opencode",
+  "opencode-go": "opencode",
+  "opencode-zen": "opencode",
+  commandcode: "commandcode",
+  manual: "manual"
+};
+function iconOf(type, metaIcon) {
+  if (typeof metaIcon === "string" && metaIcon.trim() !== "") return metaIcon.trim().toLowerCase();
+  return TYPE_ICON_FALLBACK[type] ?? "generic";
+}
+
+// src/client/QuotaRing.tsx
 var import_jsx_runtime11 = require("react/jsx-runtime");
-var X_PAL = ["#4c7ef3", "#2fb261", "#f5a623", "#e05e4e", "#9a6ef1", "#25b8c4"];
+function QuotaRing(props) {
+  const spec = props.spec;
+  const size = props.size ?? 18;
+  const stroke = props.stroke ?? 2.2;
+  const r = (size - stroke) / 2;
+  const c = size / 2;
+  const circ = 2 * Math.PI * r;
+  const pct = spec.pct === null ? null : Math.min(100, Math.max(0, spec.pct));
+  const arcPct = pct === null ? spec.tone === "bad" || spec.tone === "warn" ? 100 : 0 : pct;
+  const arc = arcPct / 100 * circ;
+  return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
+    "svg",
+    {
+      className: styles_module_css_default.ring,
+      width: size,
+      height: size,
+      viewBox: "0 0 " + size + " " + size,
+      "data-tone": spec.tone,
+      "data-empty": pct === null ? "1" : void 0,
+      "aria-hidden": "true",
+      focusable: "false",
+      children: [
+        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("circle", { className: styles_module_css_default.ringTrack, cx: c, cy: c, r, fill: "none", strokeWidth: stroke }),
+        arcPct > 0 ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+          "circle",
+          {
+            className: styles_module_css_default.ringArc,
+            cx: c,
+            cy: c,
+            r,
+            fill: "none",
+            strokeWidth: stroke,
+            strokeLinecap: "round",
+            strokeDasharray: arc + " " + (circ - arc),
+            transform: "rotate(-90 " + c + " " + c + ")"
+          }
+        ) : null
+      ]
+    }
+  );
+}
+
+// src/client/providers/templates.ts
+function ringSizeOf(variant) {
+  void variant;
+  return 16;
+}
+function toneOfPct(pct) {
+  if (!isFinite(pct)) return "idle";
+  if (pct >= 90) return "bad";
+  if (pct >= 70) return "warn";
+  return "ok";
+}
+function clampPct(value) {
+  const n = Number(value);
+  if (!isFinite(n)) return null;
+  return Math.min(100, Math.max(0, n));
+}
+function windowPct(w) {
+  if (!w || typeof w !== "object") return null;
+  const direct = clampPct(w.pct);
+  if (direct !== null) return direct;
+  const used = Number(w.used);
+  const limit = Number(w.limit);
+  if (!isFinite(used) || !isFinite(limit) || limit <= 0) return null;
+  return clampPct(used / limit * 100);
+}
+function worstWindowPct(snap) {
+  const wins = Array.isArray(snap.windows) ? snap.windows : [];
+  let worst = null;
+  for (const w of wins) {
+    const pct = windowPct(w);
+    if (pct === null) continue;
+    if (worst === null || pct > worst) worst = pct;
+  }
+  return worst;
+}
+function windowOfMetric(snap, metric) {
+  const wins = Array.isArray(snap.windows) ? snap.windows : [];
+  if (wins.length === 0) return null;
+  const key = String(metric || "").toLowerCase();
+  if (key === "") return null;
+  const byKey = wins.filter((w) => String(w.key || "").toLowerCase() === key)[0];
+  if (byKey) return byKey;
+  const alias = {
+    "5h": ["5 \u5C0F\u65F6", "5\u5C0F\u65F6", "\u6EDA\u52A8"],
+    weekly: ["\u6BCF\u5468", "\u5468"],
+    monthly: ["\u6BCF\u6708", "\u6708"]
+  };
+  const labels = alias[key];
+  if (labels === void 0) return null;
+  const hit = wins.filter((w) => labels.some((l) => String(w.label || "").indexOf(l) >= 0))[0];
+  return hit ?? null;
+}
+function balanceText(snap, K) {
+  const b = snap.billing || {};
+  const balance = b["balance"];
+  if (balance === void 0 || balance === null || b["isAvailable"] === false) return null;
+  const n = Number(balance);
+  if (!isFinite(n)) return null;
+  return K.curSymbol(String(b["currency"] || "")) + K.fmt(n);
+}
+function failureRingSpec(snap, name) {
+  const info = snap.errorInfo;
+  const tone = info && info.tone === "bad" ? "bad" : "warn";
+  const what = info && (info.title || info.hint) || "\u989D\u5EA6\u8BFB\u53D6\u5931\u8D25";
+  return { pct: null, tone, title: name + "\uFF1A" + String(what) };
+}
+function defaultRingSpec(ctx, K) {
+  const snap = ctx.snap;
+  const name = ctx.vendorName || snap.vendorName || "\u989D\u5EA6";
+  if (!snap.ok) return failureRingSpec(snap, name);
+  const pct = worstWindowPct(snap);
+  if (pct !== null) {
+    const label = "\u6700\u9AD8\u7A97\u53E3";
+    return {
+      pct,
+      tone: toneOfPct(pct),
+      text: Math.round(pct) + "%",
+      title: name + "\uFF1A" + label + "\u5DF2\u7528 " + Math.round(pct) + "%"
+    };
+  }
+  const money = balanceText(snap, K);
+  if (money !== null) {
+    return { pct: null, tone: "idle", text: money, title: name + "\uFF1A\u4F59\u989D " + money };
+  }
+  return { pct: null, tone: "idle", title: name + "\uFF1A\u6682\u65E0\u989D\u5EA6\u6570\u636E" };
+}
+
+// src/client/providers/kit.tsx
+var import_jsx_runtime12 = require("react/jsx-runtime");
+var SEG_TONE = {
+  brand: styles_module_css_default.segBrand,
+  ok: styles_module_css_default.segOk,
+  warn: styles_module_css_default.segWarn,
+  bad: styles_module_css_default.segBad,
+  info: styles_module_css_default.segInfo,
+  muted: styles_module_css_default.segMuted
+};
+var SEG_PAL = [
+  styles_module_css_default.segPal0,
+  styles_module_css_default.segPal1,
+  styles_module_css_default.segPal2,
+  styles_module_css_default.segPal3,
+  styles_module_css_default.segPal4,
+  styles_module_css_default.segPal5,
+  styles_module_css_default.segPal6,
+  styles_module_css_default.segPal7
+];
 function SectionTitle(props) {
-  return props.text ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.xtitle, children: props.text }) : null;
+  return props.text ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: styles_module_css_default.xtitle, children: props.text }) : null;
 }
 function statusText(st) {
   const k = st.toLowerCase().replace(/[\s_-]/g, "");
@@ -4682,25 +4877,25 @@ function RollingBar(deps, props) {
   const lvl = deps.levelOf(pct);
   const bad = props.status && props.status !== "ok" ? props.status : "";
   const barTitle = deps.levelTip(lvl) + "\uFF08" + Math.round(pct) + "%\uFF09" + (bad ? " \xB7 \u4E0A\u6E38\u72B6\u6001\uFF1A" + bad : "");
-  return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: styles_module_css_default.qrow, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: styles_module_css_default.qlabel, children: props.label }),
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.qbar, title: barTitle, children: /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: styles_module_css_default.qrow, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.qlabel, children: props.label }),
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: styles_module_css_default.qbar, title: barTitle, children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
       "span",
       {
         className: styles_module_css_default.qfill + (lvl === "ok" ? "" : " " + styles_module_css_default[lvl]),
         style: { width: Math.min(100, pct) + "%" }
       }
     ) }),
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: styles_module_css_default.qpct + (lvl === "ok" ? "" : " " + styles_module_css_default[lvl]), children: Math.round(pct) + "%" }),
-    bad ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: styles_module_css_default.qstatus, title: "\u4E0A\u6E38\u7A97\u53E3\u72B6\u6001\uFF1A" + bad, children: statusText(bad) }) : null,
-    props.left ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: styles_module_css_default.qleft, children: props.left }) : null
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.qpct + (lvl === "ok" ? "" : " " + styles_module_css_default[lvl]), children: Math.round(pct) + "%" }),
+    bad ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.qstatus, title: "\u4E0A\u6E38\u7A97\u53E3\u72B6\u6001\uFF1A" + bad, children: statusText(bad) }) : null,
+    props.left ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.qleft, children: props.left }) : null
   ] }, props.barKey);
 }
 function WindowGroup(deps, props) {
   const wins = (Array.isArray(props.windows) ? props.windows : []).filter((w) => w && w.label !== void 0);
   if (!wins.length) return null;
   const kids = [];
-  if (props.title) kids.push(/* @__PURE__ */ (0, import_jsx_runtime11.jsx)(SectionTitle, { text: props.title }, "t"));
+  if (props.title) kids.push(/* @__PURE__ */ (0, import_jsx_runtime12.jsx)(SectionTitle, { text: props.title }, "t"));
   wins.forEach((w, i) => {
     const left = w.resetInSec > 0 ? deps.fmtLeft(deps.remainOf(w, props.snap, props.now)) : void 0;
     kids.push(
@@ -4717,10 +4912,10 @@ function WindowGroup(deps, props) {
     const worst = wins.reduce((m, w) => w.pct > m.pct ? w : m, wins[0]);
     const minRem = wins.reduce((m, w) => Math.min(m, deps.remainOf(w, props.snap, props.now)), Infinity);
     kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.paygSub, children: "\u6700\u9AD8\u5360\u7528 " + worst.label + " " + Math.round(worst.pct) + "% \xB7 \u6700\u65E9\u91CD\u7F6E" + deps.fmtLeft(minRem) }, "sum")
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: styles_module_css_default.paygSub, children: "\u6700\u9AD8\u5360\u7528 " + worst.label + " " + Math.round(worst.pct) + "% \xB7 \u6700\u65E9\u91CD\u7F6E" + deps.fmtLeft(minRem) }, "sum")
     );
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.body, children: kids });
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: styles_module_css_default.body, children: kids });
 }
 function BalanceBlock(deps, props) {
   const b = props.billing || {};
@@ -4737,14 +4932,14 @@ function BalanceBlock(deps, props) {
   const warnLine = b["lowWarn"] !== void 0 && b["lowWarn"] !== null && b["lowWarn"] !== "" ? deps.num(b["lowWarn"], 0) : null;
   const infos = Array.isArray(b["infos"]) ? b["infos"] : [];
   const kids = [];
-  if (props.title) kids.push(/* @__PURE__ */ (0, import_jsx_runtime11.jsx)(SectionTitle, { text: props.title }, "t"));
+  if (props.title) kids.push(/* @__PURE__ */ (0, import_jsx_runtime12.jsx)(SectionTitle, { text: props.title }, "t"));
   kids.push(
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: styles_module_css_default.paygTop, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: styles_module_css_default.paygCur, children: deps.curSymbol(cur) + cur }),
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: styles_module_css_default.paygAmt + (amt < 0 ? " " + styles_module_css_default.neg : ""), children: deps.fmt(amt) })
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: styles_module_css_default.paygTop, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.paygCur, children: deps.curSymbol(cur) || cur }),
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.paygAmt + (amt < 0 ? " " + styles_module_css_default.neg : ""), children: deps.fmt(amt) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: styles_module_css_default.avail + " " + styles_module_css_default[availCls], title: availTip, children: availTxt })
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.avail + " " + styles_module_css_default[availCls], title: availTip, children: availTxt })
     ] }, "top")
   );
   const parts = [];
@@ -4753,34 +4948,34 @@ function BalanceBlock(deps, props) {
   if (warnLine !== null) parts.push("\u9884\u8B66\u7EBF " + deps.fmt(warnLine));
   if (parts.length)
     kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.paygSub, children: parts.join(" \xB7 ") }, "parts")
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: styles_module_css_default.paygSub, children: parts.join(" \xB7 ") }, "parts")
     );
   if (infos.length > 1)
     kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.infos, children: infos.map((x, i) => /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: styles_module_css_default.inforow, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: String(x["currency"] || "?") }),
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("b", { children: deps.fmt(x["total"]) })
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: styles_module_css_default.infos, children: infos.map((x, i) => /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: styles_module_css_default.inforow, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { children: String(x["currency"] || "?") }),
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("b", { children: deps.fmt(x["total"]) })
       ] }, String(x["currency"] || i))) }, "infos")
     );
   const low = !empty && warnLine !== null && amt <= warnLine;
   if (empty)
     kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.warn + " " + styles_module_css_default.bad, children: "\u4F59\u989D\u4E0D\u8DB3\uFF0CAPI \u8C03\u7528\u53EF\u80FD\u88AB\u62D2\u7EDD\uFF0C\u8BF7\u53CA\u65F6\u5145\u503C\u3002" }, "warn")
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: styles_module_css_default.warnLine + " " + styles_module_css_default.bad, children: "\u4F59\u989D\u4E0D\u8DB3\uFF0CAPI \u8C03\u7528\u53EF\u80FD\u88AB\u62D2\u7EDD\uFF0C\u8BF7\u53CA\u65F6\u5145\u503C\u3002" }, "warn")
     );
   else if (low)
     kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.warn, children: "\u4F59\u989D\u4F4E\u4E8E\u9884\u8B66\u7EBF " + deps.fmt(warnLine) + "\uFF0C\u5EFA\u8BAE\u53CA\u65F6\u5145\u503C\u3002" }, "warn")
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: styles_module_css_default.warnLine, children: "\u4F59\u989D\u4F4E\u4E8E\u9884\u8B66\u7EBF " + deps.fmt(warnLine) + "\uFF0C\u5EFA\u8BAE\u53CA\u65F6\u5145\u503C\u3002" }, "warn")
     );
-  return /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: props.compact ? styles_module_css_default.paygCompact : void 0, children: kids });
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: props.compact ? styles_module_css_default.paygCompact : void 0, children: kids });
 }
 function MetricRows(deps, props) {
   const items = (Array.isArray(props.items) ? props.items : []).filter((it) => it && it.label);
   if (!items.length) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: styles_module_css_default.xstats, children: [
-    props.title ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(SectionTitle, { text: props.title }, "t") : null,
-    items.map((it, i) => /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: styles_module_css_default.xrow, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { children: String(it.label) }),
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("b", { children: String(it.value) })
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: styles_module_css_default.xstats, children: [
+    props.title ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(SectionTitle, { text: props.title }, "t") : null,
+    items.map((it, i) => /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: styles_module_css_default.xrow, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { children: String(it.label) }),
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("b", { children: String(it.value) })
     ] }, "r" + i))
   ] });
 }
@@ -4798,11 +4993,11 @@ function MetricGrid(deps, props) {
   } else {
     for (const it of items) cells.push(it);
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: styles_module_css_default.xgrid, children: [
-    props.title ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(SectionTitle, { text: props.title }, "t") : null,
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.xgridBody, children: cells.map((c, i) => /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: styles_module_css_default.xcell, title: c.label + "\uFF1A" + c.value, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: styles_module_css_default.xcellLabel, children: c.label }),
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("b", { className: styles_module_css_default.xcellValue, children: c.value })
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: styles_module_css_default.xgrid, children: [
+    props.title ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(SectionTitle, { text: props.title }, "t") : null,
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: styles_module_css_default.xgridBody, children: cells.map((c, i) => /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: styles_module_css_default.xcell, title: c.label + "\uFF1A" + c.value, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.xcellLabel, children: c.label }),
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("b", { className: styles_module_css_default.xcellValue, children: c.value })
     ] }, "c" + i)) }, "g")
   ] });
 }
@@ -4810,24 +5005,34 @@ function SplitBar(deps, props) {
   const segs = (Array.isArray(props.segments) ? props.segments : []).filter((sg) => sg && isFinite(Number(sg.value)) && Number(sg.value) > 0).slice(0, 8);
   if (!segs.length) return null;
   const sum = segs.reduce((acc, x) => acc + Number(x.value), 0);
-  const color = (i) => segs[i]?.color || X_PAL[i % X_PAL.length];
-  return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { children: [
-    props.title ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(SectionTitle, { text: props.title }, "t") : null,
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.xsplit, children: segs.map((sg, i) => /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { style: { flexGrow: Number(sg.value), background: color(i) } }, "g" + i)) }),
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.xstats, children: segs.map((sg, i) => /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: styles_module_css_default.xrow, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("span", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: styles_module_css_default.xdot, style: { background: color(i) } }),
+  const segClass = (i) => {
+    const tone = segs[i]?.tone;
+    if (tone !== void 0 && SEG_TONE[tone] !== void 0) return SEG_TONE[tone];
+    return SEG_PAL[i % SEG_PAL.length];
+  };
+  const segStyle = (i) => {
+    const style = { flexGrow: Number(segs[i]?.value) };
+    const legacy = segs[i]?.color;
+    if (segs[i]?.tone === void 0 && typeof legacy === "string" && legacy !== "") style.background = legacy;
+    return style;
+  };
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { children: [
+    props.title ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(SectionTitle, { text: props.title }, "t") : null,
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: styles_module_css_default.xsplit, children: segs.map((sg, i) => /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: segClass(i), style: segStyle(i) }, "g" + i)) }),
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: styles_module_css_default.xstats, children: segs.map((sg, i) => /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: styles_module_css_default.xrow, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("span", { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.xdot + " " + String(segClass(i)), style: segStyle(i) }),
         String(sg.label || "")
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("b", { children: String(Math.round(Number(sg.value) * 100 / sum)) + "%" })
+      /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("b", { children: String(Math.round(Number(sg.value) * 100 / sum)) + "%" })
     ] }, "l" + i)) })
   ] });
 }
 function NoteLine(deps, props) {
   const t = typeof props.text === "string" ? props.text : "";
   if (!t) return null;
-  const tone = props.tone === "bad" ? styles_module_css_default.warn + " " + styles_module_css_default.bad : props.tone === "warn" ? styles_module_css_default.warn : styles_module_css_default.paygSub;
-  return /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: tone, children: t });
+  const tone = props.tone === "bad" ? styles_module_css_default.warnLine + " " + styles_module_css_default.bad : props.tone === "warn" ? styles_module_css_default.warnLine : styles_module_css_default.paygSub;
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: tone, children: t });
 }
 function MiniChart(deps, props) {
   const ch = props.chart;
@@ -4841,17 +5046,17 @@ function MiniChart(deps, props) {
   const pts = vals.map((v, i) => [Pd + step * i, Hh - Pd - v / max * (Hh - Pd * 2)]);
   const line = pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
   const area = Pd + "," + (Hh - Pd) + " " + line + " " + (W - Pd) + "," + (Hh - Pd);
-  return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)("div", { className: styles_module_css_default.xchart, children: [
-    ch && ch.title ? /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.xtitle, children: String(ch.title) }) : null,
-    /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: styles_module_css_default.xchart, children: [
+    ch && ch.title ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: styles_module_css_default.xtitle, children: String(ch.title) }) : null,
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
       "svg",
       {
         viewBox: "0 0 " + W + " " + Hh,
         preserveAspectRatio: "none",
         style: { display: "block", width: "100%", height: Hh + "px" },
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("polygon", { points: area, style: { fill: "var(--dsw-alias-state-business-primary)", opacity: 0.15 } }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("polygon", { points: area, style: { fill: "var(--dsw-alias-state-business-primary)", opacity: 0.15 } }),
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
             "polyline",
             {
               points: line,
@@ -4881,7 +5086,103 @@ var VCHIP_TONE = {
 function Chips(deps, props) {
   const chips = (Array.isArray(props.chips) ? props.chips : []).filter((c) => c && c.text);
   if (!chips.length) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("div", { className: styles_module_css_default.vchips, children: chips.map((c, i) => /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("span", { className: cx4(styles_module_css_default.vchip, c.tone ? VCHIP_TONE[c.tone] : void 0), children: c.text }, i)) });
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: styles_module_css_default.vchips, children: chips.map((c, i) => /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: cx4(styles_module_css_default.vchip, c.tone ? VCHIP_TONE[c.tone] : void 0), children: c.text }, i)) });
+}
+function ButtonLayout(props) {
+  if (props.variant === "rail") {
+    return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.btnRail, children: props.rail ?? /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(import_jsx_runtime12.Fragment, { children: [
+      props.icon !== void 0 && props.icon !== "" ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(ProviderIcon, { name: props.icon, size: 14 }) : null,
+      props.leading
+    ] }) });
+  }
+  if (props.variant === "row") {
+    return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.btnRow, children: props.glyph ?? props.leading });
+  }
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(import_jsx_runtime12.Fragment, { children: [
+    props.icon !== void 0 && props.icon !== "" ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.btnIcon, "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(ProviderIcon, { name: props.icon, size: 16 }) }) : null,
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.btnLead, children: props.leading }),
+    props.name !== void 0 && props.name !== "" ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.btnName, children: props.name }) : null,
+    props.value !== void 0 && props.value !== "" ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.btnValue, "data-tone": props.tone ?? "", children: props.value }) : null
+  ] });
+}
+function WindowBars(deps, props) {
+  const wins = (Array.isArray(props.windows) ? props.windows : []).filter((w) => windowPct(w) !== null).slice(0, 4);
+  if (wins.length === 0) return null;
+  const h = props.height ?? 4;
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.btnBars, children: wins.map((w, i) => {
+    const pct = windowPct(w) ?? 0;
+    return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(
+      "span",
+      {
+        className: styles_module_css_default.btnBar,
+        "data-tone": toneOfPct(pct),
+        "data-active": props.activeKey !== void 0 && props.activeKey === w.key ? "1" : void 0,
+        title: String(w.label || "") + " \u5DF2\u7528 " + Math.round(pct) + "%",
+        children: [
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.btnBarLabel, children: shortWindowLabel(String(w.label || w.key || "")) }),
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.btnBarTrack, style: { height: h + "px" }, children: /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.btnBarFill, style: { width: Math.round(pct) + "%" } }) })
+        ]
+      },
+      String(w.key || i)
+    );
+  }) });
+}
+function tinyMoney(text) {
+  const m = /^([^0-9-]*)(-?\d+(?:\.\d+)?)$/.exec(String(text || ""));
+  if (!m) return String(text || "").slice(0, 6);
+  const sym = m[1];
+  const n = Number(m[2]);
+  if (!isFinite(n)) return String(text).slice(0, 6);
+  const abs = Math.abs(n);
+  if (abs >= 1e4) return sym + (n / 1e4).toFixed(1).replace(/\.0$/, "") + "\u4E07";
+  return sym + String(Math.round(n));
+}
+function shortWindowLabel(label) {
+  const s = String(label || "");
+  if (s === "") return "";
+  if (s.indexOf("5") >= 0 && s.indexOf("\u5C0F\u65F6") >= 0) return "5\u65F6";
+  if (s.indexOf("\u5468") >= 0) return "\u5468";
+  if (s.indexOf("\u6708") >= 0) return "\u6708";
+  if (s.indexOf("\u65E5") >= 0 || s.indexOf("\u5929") >= 0) return "\u65E5";
+  if (s.indexOf("\u5E74") >= 0) return "\u5E74";
+  return s.slice(0, 3);
+}
+function PrefSwitch(props) {
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("label", { className: styles_module_css_default.prefRow, title: props.hint, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+      "input",
+      {
+        type: "checkbox",
+        className: styles_module_css_default.prefBox,
+        checked: props.checked,
+        onChange: (event) => {
+          props.onChange(event.target.checked);
+        }
+      }
+    ),
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.prefLabel, children: props.label })
+  ] });
+}
+function PrefChoice(props) {
+  return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: styles_module_css_default.prefRow, role: "radiogroup", "aria-label": props.label ?? "\u9009\u9879", children: [
+    props.label !== void 0 && props.label !== "" ? /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.prefLabel, children: props.label }) : null,
+    /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("span", { className: styles_module_css_default.prefSeg, children: props.options.map((opt) => /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+      "button",
+      {
+        type: "button",
+        role: "radio",
+        "aria-checked": opt.value === props.value,
+        className: styles_module_css_default.prefOpt,
+        "data-on": opt.value === props.value ? "1" : void 0,
+        title: opt.hint ?? opt.label,
+        onClick: () => {
+          props.onChange(opt.value);
+        },
+        children: opt.label
+      },
+      opt.value
+    )) })
+  ] });
 }
 function createProviderKit(deps) {
   const ErrorCard = createErrorBox({
@@ -4901,6 +5202,14 @@ function createProviderKit(deps) {
     SectionTitle: (props) => SectionTitle(props),
     Chips: (props) => Chips(deps, props),
     ErrorCard,
+    Ring: (props) => /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(QuotaRing, { spec: props.spec, size: props.size ?? 18, stroke: props.stroke ?? 2.2 }),
+    ProviderIcon: (props) => /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(ProviderIcon, { name: props.name, size: props.size ?? 16 }),
+    ButtonLayout: (props) => ButtonLayout(props),
+    WindowBars: (props) => WindowBars(deps, props),
+    shortWindowLabel,
+    tinyMoney,
+    PrefSwitch: (props) => PrefSwitch(props),
+    PrefChoice: (props) => PrefChoice(props),
     num: deps.num,
     fmt: deps.fmt,
     fmtLeft: deps.fmtLeft,
@@ -4911,18 +5220,150 @@ function createProviderKit(deps) {
   };
 }
 
+// src/client/quota-prefs.ts
+var KEY = "tm-quota-prefs";
+var LEGACY_KEY = "tm-button-metric";
+var MAX_VENDORS = 64;
+var MAX_KEYS = 16;
+var ID_RE = /^[a-z0-9][a-z0-9._-]{0,63}$/i;
+var KEY_RE = /^[a-z0-9-]{1,24}$/;
+var VALUE_RE = /^[a-z0-9._-]{0,32}$/;
+function load() {
+  try {
+    if (typeof localStorage === "undefined") return {};
+    localStorage.removeItem(LEGACY_KEY);
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const out = {};
+    let vendors = 0;
+    for (const [id, bag] of Object.entries(parsed)) {
+      if (vendors >= MAX_VENDORS) break;
+      if (!ID_RE.test(id) || !bag || typeof bag !== "object" || Array.isArray(bag)) continue;
+      const clean = {};
+      let keys = 0;
+      for (const [k, v] of Object.entries(bag)) {
+        if (keys >= MAX_KEYS) break;
+        if (!KEY_RE.test(k) || typeof v !== "string") continue;
+        const value = v.trim().toLowerCase();
+        if (!VALUE_RE.test(value)) continue;
+        clean[k] = value;
+        keys += 1;
+      }
+      if (keys > 0) {
+        out[id] = clean;
+        vendors += 1;
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+function save(next) {
+  try {
+    if (typeof localStorage === "undefined") return;
+    localStorage.setItem(KEY, JSON.stringify(next));
+  } catch {
+  }
+}
+var prefs = load();
+var listeners = /* @__PURE__ */ new Set();
+function emit() {
+  for (const fn of listeners) {
+    try {
+      fn();
+    } catch {
+    }
+  }
+}
+var scopes = /* @__PURE__ */ new Map();
+var providerPrefs = {
+  /**
+   * 取某供应商的作用域接口（模板拿到的 `ctx.prefs` 就是它）。
+   *
+   * @param vendorId - 供应商 id。
+   * @returns 该供应商的偏好接口。
+   */
+  scope(vendorId) {
+    const cached = scopes.get(vendorId);
+    if (cached !== void 0) return cached;
+    const api = {
+      get: (key, fallback = "") => {
+        const bag = prefs[vendorId];
+        const hit = bag?.[key];
+        return typeof hit === "string" && hit !== "" ? hit : fallback;
+      },
+      set: (key, value) => {
+        if (!ID_RE.test(vendorId) || !KEY_RE.test(key)) return;
+        const v = String(value ?? "").trim().toLowerCase();
+        if (v !== "" && !VALUE_RE.test(v)) return;
+        const bag = { ...prefs[vendorId] };
+        if (v === "") delete bag[key];
+        else bag[key] = v;
+        const next = { ...prefs };
+        if (Object.keys(bag).length === 0) delete next[vendorId];
+        else next[vendorId] = bag;
+        prefs = next;
+        save(prefs);
+        emit();
+      }
+    };
+    scopes.set(vendorId, api);
+    return api;
+  },
+  /**
+   * 订阅变化（侧边栏按钮 / 弹层用它触发重画）。
+   *
+   * @param fn - 变化回调。
+   * @returns 取消订阅。
+   */
+  subscribe(fn) {
+    listeners.add(fn);
+    return () => {
+      listeners.delete(fn);
+    };
+  },
+  /**
+   * 丢掉不在册的供应商（被删掉后那几条用不到）。
+   *
+   * @param vendorIds - 当前配置里的供应商 id。
+   * @returns 无。
+   */
+  prune(vendorIds) {
+    const alive = new Set(vendorIds);
+    const next = {};
+    let changed = false;
+    for (const [id, bag] of Object.entries(prefs)) {
+      if (alive.has(id)) next[id] = bag;
+      else changed = true;
+    }
+    if (!changed) return;
+    prefs = next;
+    save(prefs);
+    emit();
+  },
+  /** 全部清空（测试与「重置」用）。 */
+  clear() {
+    prefs = {};
+    save(prefs);
+    emit();
+  }
+};
+
 // src/client/providers/sections.tsx
-var import_jsx_runtime12 = require("react/jsx-runtime");
+var import_jsx_runtime13 = require("react/jsx-runtime");
 function renderSection(K, s, ctx, i) {
   if (!s || typeof s !== "object") return null;
   const key = "sec:" + (s.key || s.kind) + ":" + i;
   switch (s.kind) {
     case "windows":
-      return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(K.WindowGroup, { windows: s.windows, snap: ctx.snap, now: ctx.now, title: s.title }, key);
+      return /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(K.WindowGroup, { windows: s.windows, snap: ctx.snap, now: ctx.now, title: s.title }, key);
     case "balance":
-      return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(K.BalanceBlock, { billing: s.billing, title: s.title }, key);
+      return /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(K.BalanceBlock, { billing: s.billing, title: s.title }, key);
     case "metrics":
-      return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(K.MetricRows, { items: s.items, title: s.title }, key);
+      return /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(K.MetricRows, { items: s.items, title: s.title }, key);
     case "progress": {
       const p = s.progress;
       if (!p) return null;
@@ -4931,17 +5372,17 @@ function renderSection(K, s, ctx, i) {
       if (!isFinite(total) || total <= 0 || !isFinite(used)) return null;
       const pct = Math.min(100, Math.max(0, used / total * 100));
       const left = p.left !== void 0 && p.left !== "" ? String(p.left) : "\u5269\u4F59 " + (total - used);
-      return /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)("div", { className: styles_module_css_default.xprog, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(K.SectionTitle, { text: s.title }, "t"),
-        /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(K.RollingBar, { label: String(p.label || s.title || "\u989D\u5EA6"), pct, left }, "bar")
+      return /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: styles_module_css_default.xprog, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(K.SectionTitle, { text: s.title }, "t"),
+        /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(K.RollingBar, { label: String(p.label || s.title || "\u989D\u5EA6"), pct, left }, "bar")
       ] }, key);
     }
     case "split":
-      return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(K.SplitBar, { segments: s.split && s.split.segments, title: s.title }, key);
+      return /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(K.SplitBar, { segments: s.split && s.split.segments, title: s.title }, key);
     case "note":
-      return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(K.NoteLine, { text: s.note && s.note.text, tone: s.note && s.note.tone }, key);
+      return /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(K.NoteLine, { text: s.note && s.note.text, tone: s.note && s.note.tone }, key);
     case "chart":
-      return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(K.MiniChart, { chart: s.chart }, key);
+      return /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(K.MiniChart, { chart: s.chart }, key);
     default:
       return null;
   }
@@ -4950,12 +5391,12 @@ function renderSections(K, sections, ctx) {
   if (!Array.isArray(sections) || !sections.length) return null;
   const kids = sections.map((s, i) => renderSection(K, s, ctx, i)).filter((n) => n !== null && n !== void 0 && n !== false);
   if (!kids.length) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("div", { className: styles_module_css_default.sections, children: kids });
+  return /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: styles_module_css_default.sections, children: kids });
 }
 
 // src/client/providers/ui/commandcode.tsx
-var import_jsx_runtime13 = require("react/jsx-runtime");
-function commandcodeUI(ctx, K) {
+var import_jsx_runtime14 = require("react/jsx-runtime");
+function commandcodeDetail(ctx, K) {
   const snap = ctx.snap;
   const b = snap.billing || {};
   const plan = b["plan"] ? String(b["plan"]) : "";
@@ -4977,38 +5418,183 @@ function commandcodeUI(ctx, K) {
     });
   if (alerts.length) chips.push({ text: "\u9700\u5904\u7406", tone: "bad" });
   else if (wins.some((w) => Number(w.pct) >= 100)) chips.push({ text: "\u7A97\u53E3\u5DF2\u6EE1", tone: "bad" });
-  if (chips.length) kids.push(/* @__PURE__ */ (0, import_jsx_runtime13.jsx)(K.Chips, { chips }, "chips"));
-  kids.push(/* @__PURE__ */ (0, import_jsx_runtime13.jsx)(K.BalanceBlock, { billing: b, compact: true }, "bal"));
+  if (chips.length) kids.push(/* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.Chips, { chips }, "chips"));
+  kids.push(/* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.BalanceBlock, { billing: b, compact: true }, "bal"));
   if (wins.length)
     kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(K.WindowGroup, { windows: wins, snap, now: ctx.now, title: "\u989D\u5EA6\u7A97\u53E3", noSummary: true }, "win")
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.WindowGroup, { windows: wins, snap, now: ctx.now, title: "\u989D\u5EA6\u7A97\u53E3", noSummary: true }, "win")
     );
   const monthly = K.num(b["monthlyCredits"], 0);
   const purchased = K.num(b["purchasedCredits"], 0);
   const free = K.num(b["freeCredits"], 0);
   const segs = [
-    { label: "\u6708\u5EA6\u989D\u5EA6", value: monthly, color: "#4c7ef3" },
-    { label: "\u5145\u503C\u989D\u5EA6", value: purchased, color: "#2fb261" },
-    { label: "\u8D60\u9001\u989D\u5EA6", value: free, color: "#f5a623" }
+    { label: "\u6708\u5EA6\u989D\u5EA6", value: monthly, tone: "brand" },
+    { label: "\u5145\u503C\u989D\u5EA6", value: purchased, tone: "ok" },
+    { label: "\u8D60\u9001\u989D\u5EA6", value: free, tone: "warn" }
   ].filter((s) => s.value > 0);
-  if (segs.length > 1) kids.push(/* @__PURE__ */ (0, import_jsx_runtime13.jsx)(K.SplitBar, { segments: segs, title: "\u989D\u5EA6\u6784\u6210" }, "split"));
+  if (segs.length > 1) kids.push(/* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.SplitBar, { segments: segs, title: "\u989D\u5EA6\u6784\u6210" }, "split"));
   const items = [];
-  for (const it of restMetrics) items.push({ label: it.label, value: it.value });
+  for (const it of restMetrics.slice(0, 6)) items.push({ label: it.label, value: it.value });
   if (!items.length) {
     if (plan) items.push({ label: "\u8BA2\u9605\u8BA1\u5212", value: plan });
     if (b["periodEnd"]) items.push({ label: "\u5F53\u524D\u5468\u671F\u81F3", value: String(b["periodEnd"]) });
   }
-  kids.push(/* @__PURE__ */ (0, import_jsx_runtime13.jsx)(K.MetricGrid, { items, title: "\u8D26\u6237\u4E0E\u7528\u91CF", mergePairs: true }, "metrics"));
+  kids.push(/* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.MetricGrid, { items, title: "\u8D26\u6237\u4E0E\u7528\u91CF" }, "metrics"));
+  const window2 = selectedWindow(ctx);
+  const showBalance = ctx.prefs.get(BALANCE_PREF, "0") === "1";
+  kids.push(
+    /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: styles_module_css_default.prefBlock, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+        K.PrefSwitch,
+        {
+          label: "\u6570\u503C\u4F4D\u663E\u793A\u4F59\u989D",
+          hint: "\u52FE\u4E0A\u540E\u6309\u94AE\u53F3\u4FA7\u663E\u793A\u5269\u4F59\u989D\u5EA6\uFF1B\u8FDB\u5EA6\u6761\u7167\u65E7\u753B\u5F53\u524D\u7A97\u53E3\u7684\u5360\u7528\u6BD4\u4F8B",
+          checked: showBalance,
+          onChange: (next) => ctx.prefs.set(BALANCE_PREF, next ? "1" : "0")
+        },
+        "bal"
+      ),
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+        K.PrefChoice,
+        {
+          label: "\u6309\u94AE\u753B\u54EA\u4E2A\u7A97\u53E3",
+          value: window2,
+          options: WINDOW_OPTIONS,
+          onChange: (next) => ctx.prefs.set(WINDOW_PREF, next)
+        },
+        "win"
+      )
+    ] }, "prefs")
+  );
   for (let i = 0; i < alerts.length && i < 2; i++) {
     const n = alerts[i];
-    kids.push(/* @__PURE__ */ (0, import_jsx_runtime13.jsx)(K.NoteLine, { text: n.text, tone: n.tone || "warn" }, "note" + i));
+    kids.push(/* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.NoteLine, { text: n.text, tone: n.tone || "warn" }, "note" + i));
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: styles_module_css_default.ui, children: kids });
+  return /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: styles_module_css_default.ui, children: kids });
 }
+function commandcodeButton(ctx, K) {
+  const snap = ctx.snap;
+  const name = ctx.vendorName || snap.vendorName || "CommandCode";
+  const size = ringSizeOf(ctx.variant);
+  if (!snap.ok) {
+    const fail = failureRingSpec(snap, name);
+    return /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      K.ButtonLayout,
+      {
+        variant: ctx.variant,
+        leading: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.Ring, { spec: fail, size }),
+        glyph: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.Ring, { spec: fail, size: 16 }),
+        name,
+        value: "\u8BFB\u53D6\u5931\u8D25",
+        tone: "bad"
+      }
+    );
+  }
+  const wins = Array.isArray(snap.windows) ? snap.windows : [];
+  const picked = windowOfMetric(snap, selectedWindow(ctx)) ?? wins[0] ?? null;
+  const spec = ringSpecOf(ctx, K, picked);
+  const ring = /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.Ring, { spec, size });
+  const showBalance = ctx.prefs.get(BALANCE_PREF, "0") === "1";
+  const money = balanceText(snap, K);
+  const value = showBalance ? money ?? "\u2014" : spec.text ?? "";
+  const tone = showBalance ? balanceLow(ctx, K) ? "bad" : void 0 : spec.tone;
+  return /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+    K.ButtonLayout,
+    {
+      variant: ctx.variant,
+      leading: ring,
+      rail: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("span", { className: styles_module_css_default.btnRailCombo, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.ProviderIcon, { name: ctx.icon, size: 14 }),
+        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.Ring, { spec, size: 16 })
+      ] }),
+      glyph: /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.Ring, { spec, size: 16 }),
+      name,
+      value,
+      tone,
+      icon: ctx.icon
+    }
+  );
+}
+function ringSpecOf(ctx, K, picked) {
+  const snap = ctx.snap;
+  const name = ctx.vendorName || snap.vendorName || "CommandCode";
+  const pct = picked ? windowPct(picked) : worstWindowPct(snap);
+  if (pct !== null) {
+    const label = picked ? String(picked.label || picked.key) : "\u6700\u7D27\u7A97\u53E3";
+    return {
+      pct,
+      tone: toneOfPct(pct),
+      text: Math.round(pct) + "%",
+      title: name + "\uFF1A" + label + "\u5DF2\u7528 " + Math.round(pct) + "%"
+    };
+  }
+  const money = balanceText(snap, K);
+  return {
+    pct: null,
+    tone: balanceLow(ctx, K) ? "bad" : "idle",
+    ...money !== null ? { text: money } : {},
+    title: name + "\uFF1A\u4F59\u989D " + (money ?? "\u672A\u77E5") + "\uFF08\u6CA1\u6709\u53EF\u663E\u793A\u7684\u7A97\u53E3\uFF09"
+  };
+}
+function balanceLow(ctx, K) {
+  const b = ctx.snap.billing || {};
+  if (b["isAvailable"] === false) return true;
+  const amount = K.num(b["balance"], Number.NaN);
+  if (!isFinite(amount)) return false;
+  if (amount <= 0) return true;
+  const warn = b["lowWarn"];
+  if (warn === void 0 || warn === null || warn === "") return false;
+  return amount <= K.num(warn, 0);
+}
+var WINDOW_PREF = "window";
+var BALANCE_PREF = "balance";
+var WINDOW_OPTIONS = [
+  { value: "5h", label: "5h", hint: "\u6309\u952E\u4E0A\u90A3\u679A\u73AF\u753B 5 \u5C0F\u65F6\u6EDA\u52A8\u7A97\u53E3\u7684\u5360\u7528" },
+  { value: "weekly", label: "1w", hint: "\u6309\u952E\u4E0A\u90A3\u679A\u73AF\u753B\u6BCF\u5468\u7A97\u53E3\u7684\u5360\u7528" },
+  { value: "monthly", label: "1m", hint: "\u6309\u952E\u4E0A\u90A3\u679A\u73AF\u753B\u6BCF\u6708\u7A97\u53E3\u7684\u5360\u7528\uFF08\u9ED8\u8BA4\uFF09" }
+];
+function selectedWindow(ctx) {
+  const v = ctx.prefs.get(WINDOW_PREF, "monthly");
+  return v === "5h" || v === "weekly" || v === "monthly" ? v : "monthly";
+}
+var commandcode = {
+  button: commandcodeButton,
+  buttonHint: (ctx, K) => {
+    const name = ctx.vendorName || ctx.snap.vendorName || "CommandCode";
+    if (!ctx.snap.ok) return failureRingSpec(ctx.snap, name).title;
+    const wins = Array.isArray(ctx.snap.windows) ? ctx.snap.windows : [];
+    const picked = windowOfMetric(ctx.snap, selectedWindow(ctx)) ?? wins[0] ?? null;
+    const base = ringSpecOf(ctx, K, picked).title;
+    if (ctx.prefs.get(BALANCE_PREF, "0") === "1") {
+      return base + "\uFF1B\u6570\u503C\u4F4D\u663E\u793A\u4F59\u989D " + (balanceText(ctx.snap, K) ?? "\u672A\u77E5");
+    }
+    return base;
+  },
+  detail: commandcodeDetail
+};
 
 // src/client/providers/ui/deepseek.tsx
-var import_jsx_runtime14 = require("react/jsx-runtime");
-function deepseekUI(ctx, K) {
+var import_jsx_runtime15 = require("react/jsx-runtime");
+function balanceRows(ctx, K) {
+  const b = ctx.snap.billing || {};
+  const sym = K.curSymbol(String(b["currency"] || ""));
+  const rows = [];
+  if (b["balance"] !== void 0 && b["balance"] !== null)
+    rows.push({ label: "\u4F59\u989D", value: sym + K.fmt(b["balance"]) });
+  if (b["granted"] !== void 0 && b["granted"] !== null)
+    rows.push({ label: "\u8D60\u9001", value: sym + K.fmt(b["granted"]) });
+  if (b["toppedUp"] !== void 0 && b["toppedUp"] !== null)
+    rows.push({ label: "\u5145\u503C", value: sym + K.fmt(b["toppedUp"]) });
+  const infos = Array.isArray(b["infos"]) ? b["infos"] : [];
+  for (const info of infos.slice(0, 3)) {
+    const cur = String(info["currency"] || "");
+    const total = Number(info["total"]);
+    if (!cur || !isFinite(total)) continue;
+    rows.push({ label: cur + " \u603B\u989D", value: K.curSymbol(cur) + K.fmt(total) });
+  }
+  return rows;
+}
+function deepseekDetail(ctx, K) {
   const snap = ctx.snap;
   const b = snap.billing || {};
   const via = String(snap.via || "");
@@ -5016,30 +5602,37 @@ function deepseekUI(ctx, K) {
   const kids = [];
   const chips = [];
   if (via) chips.push({ text: isWeb ? "\u7F51\u9875\u8D26\u5355\u63A5\u53E3" : "\u5B98\u65B9\u4F59\u989D\u63A5\u53E3", tone: isWeb ? "info" : "ok" });
-  if (snap.secretKind)
-    chips.push({ text: "\u51ED\u636E " + K.curSymbol("") + String(snap.secretKind), tone: "info" });
   if (isWeb) chips.push({ text: "\u7968\u636E\u4F1A\u8FC7\u671F", tone: "warn" });
-  if (chips.length) kids.push(/* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.Chips, { chips }, "chips"));
-  kids.push(/* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.BalanceBlock, { billing: b, title: "\u8D26\u6237\u4F59\u989D" }, "bal"));
+  if (chips.length) kids.push(/* @__PURE__ */ (0, import_jsx_runtime15.jsx)(K.Chips, { chips }, "chips"));
+  const rows = balanceRows(ctx, K);
+  if (rows.length) kids.push(/* @__PURE__ */ (0, import_jsx_runtime15.jsx)(K.MetricRows, { items: rows, title: "\u8D26\u6237\u4F59\u989D" }, "bal"));
+  const amt = K.num(b["balance"], 0);
+  const warnLine = b["lowWarn"] !== void 0 && b["lowWarn"] !== null && b["lowWarn"] !== "" ? K.num(b["lowWarn"], 0) : null;
+  if (b["isAvailable"] === false || amt <= 0) {
+    kids.push(/* @__PURE__ */ (0, import_jsx_runtime15.jsx)(K.NoteLine, { text: "\u4F59\u989D\u4E0D\u8DB3\uFF0CAPI \u8C03\u7528\u53EF\u80FD\u88AB\u62D2\u7EDD\uFF0C\u8BF7\u53CA\u65F6\u5145\u503C\u3002", tone: "bad" }, "empty"));
+  } else if (warnLine !== null && amt <= warnLine) {
+    kids.push(
+      /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(K.NoteLine, { text: "\u4F59\u989D\u4F4E\u4E8E\u9884\u8B66\u7EBF " + K.fmt(warnLine) + "\uFF0C\u5EFA\u8BAE\u53CA\u65F6\u5145\u503C\u3002", tone: "warn" }, "low")
+    );
+  }
   const granted = b["granted"] !== void 0 && b["granted"] !== null ? K.num(b["granted"], 0) : null;
   const topped = b["toppedUp"] !== void 0 && b["toppedUp"] !== null ? K.num(b["toppedUp"], 0) : null;
   const totalQuota = (granted || 0) + (topped || 0);
-  const balance = K.num(b["balance"], 0);
   if (totalQuota > 0) {
-    const used = Math.max(0, totalQuota - balance);
+    const used = Math.max(0, totalQuota - amt);
     const segs = [
-      { label: "\u8D60\u9001\u989D\u5EA6", value: granted || 0, color: "#4c7ef3" },
-      { label: "\u5145\u503C\u989D\u5EA6", value: topped || 0, color: "#2fb261" }
+      { label: "\u8D60\u9001\u989D\u5EA6", value: granted || 0, tone: "warn" },
+      { label: "\u5145\u503C\u989D\u5EA6", value: topped || 0, tone: "ok" }
     ].filter((s) => s.value > 0);
-    if (segs.length > 1) kids.push(/* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.SplitBar, { segments: segs, title: "\u989D\u5EA6\u6784\u6210" }, "split"));
+    if (segs.length > 1) kids.push(/* @__PURE__ */ (0, import_jsx_runtime15.jsx)(K.SplitBar, { segments: segs, title: "\u989D\u5EA6\u6784\u6210" }, "split"));
     kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: styles_module_css_default.xprog, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.SectionTitle, { text: "\u603B\u989D\u5EA6\u6D88\u8017" }, "t"),
-        /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime15.jsxs)("div", { className: styles_module_css_default.xprog, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(K.SectionTitle, { text: "\u603B\u989D\u5EA6\u6D88\u8017" }, "t"),
+        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
           K.RollingBar,
           {
             label: "\u603B\u989D\u5EA6",
-            pct: totalQuota > 0 ? Math.min(100, used / totalQuota * 100) : 0,
+            pct: Math.min(100, used / totalQuota * 100),
             left: "\u5DF2\u7528 " + K.fmt(used) + " / \u5171 " + K.fmt(totalQuota)
           },
           "bar"
@@ -5048,16 +5641,28 @@ function deepseekUI(ctx, K) {
     );
   }
   const items = (snap.extra && Array.isArray(snap.extra.stats) ? snap.extra.stats : []).slice(0, 8);
-  if (items.length) kids.push(/* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.MetricRows, { items, title: "\u6D88\u8D39\u7EDF\u8BA1" }, "metrics"));
+  if (items.length) kids.push(/* @__PURE__ */ (0, import_jsx_runtime15.jsx)(K.MetricRows, { items, title: "\u6D88\u8D39\u7EDF\u8BA1" }, "metrics"));
+  kids.push(
+    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: styles_module_css_default.prefBlock, children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+      K.PrefSwitch,
+      {
+        label: "\u6570\u503C\u4F4D\u663E\u793A\u4F59\u989D",
+        hint: "\u52FE\u4E0A\u540E\u6309\u94AE\u53F3\u4FA7\u663E\u793A\u8D26\u6237\u4F59\u989D\uFF1B\u73AF\u7167\u65E7\u753B\u603B\u989D\u5EA6\u6D88\u8017\u6BD4\u4F8B",
+        checked: ctx.prefs.get(BALANCE_PREF2, "0") === "1",
+        onChange: (next) => ctx.prefs.set(BALANCE_PREF2, next ? "1" : "0")
+      },
+      "bal"
+    ) }, "prefs")
+  );
   const chart = snap.extra && snap.extra.chart ? snap.extra.chart : null;
   if (chart && Array.isArray(chart.values) && chart.values.length > 1) {
-    kids.push(/* @__PURE__ */ (0, import_jsx_runtime14.jsx)(K.MiniChart, { chart }, "chart"));
+    kids.push(/* @__PURE__ */ (0, import_jsx_runtime15.jsx)(K.MiniChart, { chart }, "chart"));
   } else if (!isWeb) {
     kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
         K.NoteLine,
         {
-          text: "\u5B98\u65B9\u4F59\u989D\u63A5\u53E3\u4E0D\u63D0\u4F9B\u5386\u53F2\u8D8B\u52BF\uFF1B\u5982\u9700\u8D8B\u52BF\u56FE\uFF0C\u53EF\u5728\u300C\u7F16\u8F91\u300D\u91CC\u540C\u65F6\u586B\u5165\u7F51\u9875 token\uFF08\u4F1A\u8BDD\u7968\u636E\uFF09\uFF0C\u63D2\u4EF6\u4F1A\u81EA\u52A8\u6539\u7528\u7F51\u9875\u8D26\u5355\u63A5\u53E3\u3002",
+          text: "\u5B98\u65B9\u4F59\u989D\u63A5\u53E3\u4E0D\u63D0\u4F9B\u5386\u53F2\u8D8B\u52BF\uFF1B\u5982\u9700\u8D8B\u52BF\u56FE\uFF0C\u53EF\u5728\u8BBE\u7F6E\u91CC\u540C\u65F6\u586B\u5165\u7F51\u9875 token\uFF08\u4F1A\u8BDD\u7968\u636E\uFF09\uFF0C\u63D2\u4EF6\u4F1A\u81EA\u52A8\u6539\u7528\u7F51\u9875\u8D26\u5355\u63A5\u53E3\u3002",
           tone: "info"
         },
         "nochart"
@@ -5066,22 +5671,82 @@ function deepseekUI(ctx, K) {
   }
   if (isWeb) {
     kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
         K.NoteLine,
         {
-          text: "\u5F53\u524D\u8D70\u7F51\u9875\u8D26\u5355\u63A5\u53E3\uFF08\u542B\u8D8B\u52BF\uFF09\uFF0C\u4F9D\u8D56\u767B\u5F55\u4F1A\u8BDD\u7968\u636E\uFF1B\u7968\u636E\u8FC7\u671F\u540E\u5361\u7247\u4F1A\u63D0\u793A\u91CD\u65B0\u6293\u53D6\u3002\u5B98\u65B9 sk- \u5BC6\u94A5\u957F\u671F\u6709\u6548\u4F46\u65E0\u8D8B\u52BF\u3002",
+          text: "\u5F53\u524D\u8D70\u7F51\u9875\u8D26\u5355\u63A5\u53E3\uFF08\u542B\u8D8B\u52BF\uFF09\uFF0C\u4F9D\u8D56\u767B\u5F55\u4F1A\u8BDD\u7968\u636E\uFF1B\u7968\u636E\u8FC7\u671F\u540E\u8FD9\u91CC\u4F1A\u63D0\u793A\u91CD\u65B0\u6293\u53D6\u3002\u5B98\u65B9 sk- \u5BC6\u94A5\u957F\u671F\u6709\u6548\u4F46\u65E0\u8D8B\u52BF\u3002",
           tone: "info"
         },
         "note"
       )
     );
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime14.jsx)("div", { className: styles_module_css_default.ui, children: kids });
+  return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: styles_module_css_default.ui, children: kids });
 }
+function deepseekButton(ctx, K) {
+  const snap = ctx.snap;
+  const name = ctx.vendorName || snap.vendorName || "DeepSeek";
+  const spec = ringSpecOf2(ctx, K);
+  const ring = /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(K.Ring, { spec, size: ringSizeOf(ctx.variant) });
+  const showBalance = ctx.prefs.get(BALANCE_PREF2, "0") === "1";
+  const money = balanceText(snap, K);
+  const value = showBalance ? money ?? "\u2014" : spec.text ?? "";
+  return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+    K.ButtonLayout,
+    {
+      variant: ctx.variant,
+      leading: ring,
+      glyph: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(K.Ring, { spec, size: 16 }),
+      name,
+      value,
+      tone: showBalance ? void 0 : spec.tone,
+      icon: ctx.icon
+    }
+  );
+}
+function ringSpecOf2(ctx, K) {
+  const snap = ctx.snap;
+  const name = ctx.vendorName || snap.vendorName || "DeepSeek";
+  if (!snap.ok) return failureRingSpec(snap, name);
+  const b = snap.billing || {};
+  const granted = b["granted"] !== void 0 && b["granted"] !== null ? K.num(b["granted"], 0) : 0;
+  const topped = b["toppedUp"] !== void 0 && b["toppedUp"] !== null ? K.num(b["toppedUp"], 0) : 0;
+  const total = granted + topped;
+  const amt = K.num(b["balance"], 0);
+  if (total > 0) {
+    const pct = clampPct(Math.max(0, total - amt) / total * 100) ?? 0;
+    return {
+      pct,
+      tone: toneOfPct(pct),
+      text: Math.round(pct) + "%",
+      title: name + "\uFF1A\u603B\u989D\u5EA6\u5DF2\u7528 " + Math.round(pct) + "%\uFF08" + K.fmt(Math.max(0, total - amt)) + " / " + K.fmt(total) + "\uFF09"
+    };
+  }
+  const money = balanceText(snap, K);
+  const low = b["isAvailable"] === false || amt <= 0;
+  return {
+    pct: null,
+    tone: low ? "bad" : "idle",
+    ...money !== null ? { text: money } : {},
+    title: name + "\uFF1A\u4F59\u989D " + (money ?? "\u672A\u77E5") + "\uFF08\u7F51\u9875\u8D26\u5355\u63A5\u53E3\u4E0D\u63D0\u4F9B\u603B\u989D\u5EA6\uFF0C\u73AF\u7559\u7A7A\uFF09"
+  };
+}
+var BALANCE_PREF2 = "balance";
+var deepseek = {
+  button: deepseekButton,
+  buttonHint: (ctx, K) => {
+    const base = ringSpecOf2(ctx, K).title;
+    if (ctx.prefs.get(BALANCE_PREF2, "0") === "1") {
+      return base + "\uFF1B\u6570\u503C\u4F4D\u663E\u793A\u4F59\u989D " + (balanceText(ctx.snap, K) ?? "\u672A\u77E5");
+    }
+    return base;
+  },
+  detail: deepseekDetail
+};
 
 // src/client/providers/ui/opencode.tsx
-var import_jsx_runtime15 = require("react/jsx-runtime");
-function opencodeUI(ctx, K) {
+var import_jsx_runtime16 = require("react/jsx-runtime");
+function opencodeDetail(ctx, K) {
   const snap = ctx.snap;
   const b = snap.billing || {};
   const plan = b["plan"] ? String(b["plan"]) : "";
@@ -5090,29 +5755,50 @@ function opencodeUI(ctx, K) {
   const kids = [];
   const chips = [];
   if (plan) chips.push({ text: "\u8BA2\u9605 " + plan, tone: "info" });
-  for (const w of wins) {
-    const pct = Math.round(Number(w.pct) || 0);
-    chips.push({ text: w.label + " " + pct + "%", tone: pct >= 90 ? "bad" : pct >= 70 ? "warn" : "ok" });
-  }
   if (!wins.length && balance !== null) chips.push({ text: "\u6309\u91CF\u8BA1\u8D39", tone: "info" });
-  if (chips.length) kids.push(/* @__PURE__ */ (0, import_jsx_runtime15.jsx)(K.Chips, { chips }, "chips"));
+  if (chips.length) kids.push(/* @__PURE__ */ (0, import_jsx_runtime16.jsx)(K.Chips, { chips }, "chips"));
   if (wins.length) {
-    kids.push(/* @__PURE__ */ (0, import_jsx_runtime15.jsx)(K.WindowGroup, { windows: wins, snap, now: ctx.now, title: "\u8BA2\u9605\u7A97\u53E3" }, "win"));
+    kids.push(/* @__PURE__ */ (0, import_jsx_runtime16.jsx)(K.WindowGroup, { windows: wins, snap, now: ctx.now, title: "\u8BA2\u9605\u7A97\u53E3" }, "win"));
   }
   if (balance !== null && balance !== void 0) {
     const onlyBalance = !wins.length;
-    kids.push(/* @__PURE__ */ (0, import_jsx_runtime15.jsx)(K.BalanceBlock, { billing: b, title: onlyBalance ? "\u8D26\u6237\u4F59\u989D" : "\u5145\u503C\u4F59\u989D" }, "bal"));
+    kids.push(/* @__PURE__ */ (0, import_jsx_runtime16.jsx)(K.BalanceBlock, { billing: b, title: onlyBalance ? "\u8D26\u6237\u4F59\u989D" : "\u5145\u503C\u4F59\u989D" }, "bal"));
   }
+  const showBalance = ctx.prefs.get(BALANCE_PREF3, "0") === "1";
+  kids.push(
+    /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("div", { className: styles_module_css_default.prefBlock, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+        K.PrefSwitch,
+        {
+          label: "\u6570\u503C\u4F4D\u663E\u793A\u4F59\u989D",
+          hint: "\u52FE\u4E0A\u540E\u6309\u94AE\u53F3\u4FA7\u663E\u793A\u5145\u503C\u4F59\u989D\uFF1B\u8FDB\u5EA6\u6761\u7167\u65E7\u753B\u5F53\u524D\u7A97\u53E3\u7684\u5360\u7528\u6BD4\u4F8B",
+          checked: showBalance,
+          onChange: (next) => ctx.prefs.set(BALANCE_PREF3, next ? "1" : "0")
+        },
+        "bal"
+      ),
+      /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+        K.PrefChoice,
+        {
+          label: "\u6309\u94AE\u753B\u54EA\u4E2A\u7A97\u53E3",
+          value: selectedWindow2(ctx),
+          options: WINDOW_OPTIONS2,
+          onChange: (next) => ctx.prefs.set(WINDOW_PREF2, next)
+        },
+        "win"
+      )
+    ] }, "prefs")
+  );
   const notes = (snap.extra && Array.isArray(snap.extra.blocks) ? snap.extra.blocks : []).filter(
     (x) => x && x.kind === "note" && x.text
   );
   if (notes.length) {
-    kids.push(/* @__PURE__ */ (0, import_jsx_runtime15.jsx)(K.NoteLine, { text: notes[0].text, tone: "info" }, "note"));
+    kids.push(/* @__PURE__ */ (0, import_jsx_runtime16.jsx)(K.NoteLine, { text: notes[0].text, tone: "info" }, "note"));
   } else if (wins.length) {
     const monthly = wins.filter((w) => w.key === "monthly")[0];
     if (monthly && monthly.resetInSec > 0) {
       kids.push(
-        /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
           K.NoteLine,
           {
             text: "\u8BA2\u9605\u7EA6 " + K.fmtLeft(monthly.resetInSec) + "\u540E\u91CD\u7F6E/\u5230\u671F\uFF08\u4EE5\u6BCF\u6708\u7A97\u53E3\u4E3A\u51C6\uFF09\u3002",
@@ -5123,23 +5809,113 @@ function opencodeUI(ctx, K) {
       );
     }
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime15.jsx)("div", { className: styles_module_css_default.ui, children: kids });
+  return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: styles_module_css_default.ui, children: kids });
 }
+function opencodeButton(ctx, K) {
+  const snap = ctx.snap;
+  const name = ctx.vendorName || snap.vendorName || "opencode";
+  const size = ringSizeOf(ctx.variant);
+  if (!snap.ok) {
+    const fail = failureRingSpec(snap, name);
+    return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+      K.ButtonLayout,
+      {
+        variant: ctx.variant,
+        leading: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(K.Ring, { spec: fail, size }),
+        glyph: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(K.Ring, { spec: fail, size: 16 }),
+        name,
+        value: "\u8BFB\u53D6\u5931\u8D25",
+        tone: "bad"
+      }
+    );
+  }
+  const wins = Array.isArray(snap.windows) ? snap.windows : [];
+  const picked = windowOfMetric(snap, selectedWindow2(ctx)) ?? wins[0] ?? null;
+  const spec = ringSpecOf3(ctx, K, picked);
+  const ring = /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(K.Ring, { spec, size });
+  const showBalance = ctx.prefs.get(BALANCE_PREF3, "0") === "1";
+  const money = balanceText(snap, K);
+  const value = showBalance ? money ?? "\u2014" : spec.text ?? "";
+  const tone = showBalance ? void 0 : spec.tone;
+  return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+    K.ButtonLayout,
+    {
+      variant: ctx.variant,
+      leading: ring,
+      rail: /* @__PURE__ */ (0, import_jsx_runtime16.jsxs)("span", { className: styles_module_css_default.btnRailCombo, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(K.ProviderIcon, { name: ctx.icon, size: 14 }),
+        /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(K.Ring, { spec, size: 16 })
+      ] }),
+      glyph: /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(K.Ring, { spec, size: 16 }),
+      name,
+      value,
+      tone,
+      icon: ctx.icon
+    }
+  );
+}
+function ringSpecOf3(ctx, K, picked) {
+  const snap = ctx.snap;
+  const name = ctx.vendorName || snap.vendorName || "opencode";
+  const pct = picked ? windowPct(picked) : worstWindowPct(snap);
+  if (pct !== null) {
+    const label = picked ? String(picked.label || picked.key) : "\u6700\u7D27\u7A97\u53E3";
+    return {
+      pct,
+      tone: toneOfPct(pct),
+      text: Math.round(pct) + "%",
+      title: name + "\uFF1A" + label + "\u5DF2\u7528 " + Math.round(pct) + "%"
+    };
+  }
+  const money = balanceText(snap, K);
+  return {
+    pct: null,
+    tone: "idle",
+    ...money !== null ? { text: money } : {},
+    title: name + "\uFF1A\u6309\u91CF\u8BA1\u8D39\uFF0C\u4F59\u989D " + (money ?? "\u672A\u77E5")
+  };
+}
+var WINDOW_PREF2 = "window";
+var BALANCE_PREF3 = "balance";
+var WINDOW_OPTIONS2 = [
+  { value: "5h", label: "5h", hint: "\u73AF\u753B 5 \u5C0F\u65F6\u6EDA\u52A8\u7A97\u53E3\u7684\u5360\u7528" },
+  { value: "weekly", label: "1w", hint: "\u73AF\u753B\u6BCF\u5468\u7A97\u53E3\u7684\u5360\u7528" },
+  { value: "monthly", label: "1m", hint: "\u73AF\u753B\u6BCF\u6708\u7A97\u53E3\u7684\u5360\u7528\uFF08\u9ED8\u8BA4\uFF09" }
+];
+function selectedWindow2(ctx) {
+  const v = ctx.prefs.get(WINDOW_PREF2, "monthly");
+  return v === "5h" || v === "weekly" || v === "monthly" ? v : "monthly";
+}
+var opencode = {
+  button: opencodeButton,
+  buttonHint: (ctx, K) => {
+    const name = ctx.vendorName || ctx.snap.vendorName || "opencode";
+    if (!ctx.snap.ok) return failureRingSpec(ctx.snap, name).title;
+    const wins = Array.isArray(ctx.snap.windows) ? ctx.snap.windows : [];
+    const picked = windowOfMetric(ctx.snap, selectedWindow2(ctx)) ?? wins[0] ?? null;
+    const base = ringSpecOf3(ctx, K, picked).title;
+    if (ctx.prefs.get(BALANCE_PREF3, "0") === "1") {
+      return base + "\uFF1B\u6570\u503C\u4F4D\u663E\u793A\u5145\u503C\u4F59\u989D " + (balanceText(ctx.snap, K) ?? "\u672A\u77E5");
+    }
+    return base;
+  },
+  detail: opencodeDetail
+};
 
 // src/client/providers/ui/manual.tsx
-var import_jsx_runtime16 = require("react/jsx-runtime");
-function manualUI(ctx, K) {
+var import_jsx_runtime17 = require("react/jsx-runtime");
+function manualDetail(ctx, K) {
   const snap = ctx.snap;
   const b = snap.billing || {};
   const wins = Array.isArray(snap.windows) ? snap.windows : [];
   const kids = [];
-  kids.push(/* @__PURE__ */ (0, import_jsx_runtime16.jsx)(K.Chips, { chips: [{ text: "\u672C\u5730\u624B\u586B", tone: "info" }] }, "chips"));
+  kids.push(/* @__PURE__ */ (0, import_jsx_runtime17.jsx)(K.Chips, { chips: [{ text: "\u672C\u5730\u624B\u586B", tone: "info" }] }, "chips"));
   if (wins.length) {
-    kids.push(/* @__PURE__ */ (0, import_jsx_runtime16.jsx)(K.WindowGroup, { windows: wins, snap, now: ctx.now, title: "\u989D\u5EA6" }, "win"));
+    kids.push(/* @__PURE__ */ (0, import_jsx_runtime17.jsx)(K.WindowGroup, { windows: wins, snap, now: ctx.now, title: "\u989D\u5EA6" }, "win"));
   }
   if (Object.keys(b).length) {
     const isPayg = !wins.length;
-    kids.push(/* @__PURE__ */ (0, import_jsx_runtime16.jsx)(K.BalanceBlock, { billing: b, title: isPayg ? "\u5F53\u524D\u4F59\u989D" : void 0 }, "bal"));
+    kids.push(/* @__PURE__ */ (0, import_jsx_runtime17.jsx)(K.BalanceBlock, { billing: b, title: isPayg ? "\u5F53\u524D\u4F59\u989D" : void 0 }, "bal"));
   }
   const items = [];
   const total = wins.length ? K.num(wins[0]?.limit, 0) : 0;
@@ -5149,40 +5925,98 @@ function manualUI(ctx, K) {
     items.push({ label: "\u5DF2\u7528", value: K.fmt(used) });
     items.push({ label: "\u5269\u4F59", value: K.fmt(Math.max(0, total - used)) });
   }
-  if (items.length) kids.push(/* @__PURE__ */ (0, import_jsx_runtime16.jsx)(K.MetricRows, { items, title: "\u8D26\u672C\u660E\u7EC6" }, "metrics"));
+  if (items.length) kids.push(/* @__PURE__ */ (0, import_jsx_runtime17.jsx)(K.MetricRows, { items, title: "\u8D26\u672C\u660E\u7EC6" }, "metrics"));
   kids.push(
-    /* @__PURE__ */ (0, import_jsx_runtime16.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
       K.NoteLine,
       {
-        text: "\u6570\u636E\u6765\u81EA\u672C\u5730\u624B\u586B\uFF08\u975E\u5E73\u53F0\u5B9E\u65F6\u63A5\u53E3\uFF09\uFF1A\u5728\u300C\u8BBE\u7F6E \u2192 " + DISPLAY_NAME + " \u2192 \u7F16\u8F91\u300D\u91CC\u66F4\u65B0\uFF0C\u6539\u5B8C\u70B9\u300C\u5237\u65B0\u300D\u5373\u53EF\u3002",
+        text: "\u6570\u636E\u6765\u81EA\u672C\u5730\u624B\u586B\uFF08\u975E\u5E73\u53F0\u5B9E\u65F6\u63A5\u53E3\uFF09\uFF1A\u5728\u300C\u8BBE\u7F6E \u2192 " + DISPLAY_NAME + " \u2192 \u989D\u5EA6\u914D\u7F6E\u300D\u91CC\u66F4\u65B0\uFF0C\u6539\u5B8C\u70B9\u300C\u62C9\u53D6\u300D\u5373\u53EF\u3002",
         tone: "info"
       },
       "note"
     )
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime16.jsx)("div", { className: styles_module_css_default.ui, children: kids });
+  return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.ui, children: kids });
 }
+function manualButton(ctx, K) {
+  const snap = ctx.snap;
+  const name = ctx.vendorName || snap.vendorName || "\u672C\u5730\u8D26\u672C";
+  const spec = ringSpecOf4(ctx, K);
+  const ring = /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(K.Ring, { spec, size: ringSizeOf(ctx.variant) });
+  const showBalance = ctx.prefs.get(BALANCE_PREF4, "0") === "1";
+  const money = balanceText(snap, K);
+  const value = showBalance ? money ?? "\u2014" : spec.text ?? "";
+  return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+    K.ButtonLayout,
+    {
+      variant: ctx.variant,
+      leading: ring,
+      glyph: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(K.Ring, { spec, size: 16 }),
+      name,
+      value,
+      tone: showBalance ? void 0 : spec.tone,
+      icon: ctx.icon
+    }
+  );
+}
+function ringSpecOf4(ctx, K) {
+  const snap = ctx.snap;
+  const name = ctx.vendorName || snap.vendorName || "\u672C\u5730\u8D26\u672C";
+  const wins = Array.isArray(snap.windows) ? snap.windows : [];
+  if (wins.length > 0) {
+    const total = K.num(wins[0]?.limit, 0);
+    const used = K.num(wins[0]?.used, 0);
+    const pct = total > 0 ? clampPct(used / total * 100) ?? 0 : 0;
+    return {
+      pct,
+      tone: toneOfPct(pct),
+      text: Math.round(pct) + "%",
+      title: name + "\uFF08\u672C\u5730\u624B\u586B\uFF09\uFF1A\u5DF2\u7528 " + K.fmt(used) + " / " + K.fmt(total)
+    };
+  }
+  const money = balanceText(snap, K);
+  return {
+    pct: null,
+    tone: "idle",
+    ...money !== null ? { text: money } : {},
+    title: name + "\uFF08\u672C\u5730\u624B\u586B\uFF09\uFF1A\u4F59\u989D " + (money ?? "\u672A\u586B")
+  };
+}
+var BALANCE_PREF4 = "balance";
+var manual = {
+  button: manualButton,
+  buttonHint: (ctx, K) => {
+    const base = ringSpecOf4(ctx, K).title;
+    if (ctx.prefs.get(BALANCE_PREF4, "0") === "1") {
+      return base + "\uFF1B\u6570\u503C\u4F4D\u663E\u793A\u4F59\u989D " + (balanceText(ctx.snap, K) ?? "\u672A\u586B");
+    }
+    return base;
+  },
+  detail: manualDetail
+};
 
 // src/client/providers/ui/index.ts
-var UIS = /* @__PURE__ */ new Map();
-function registerProviderUI(type, ui) {
-  if (typeof type === "string" && type && typeof ui === "function") UIS.set(type, ui);
+var TEMPLATES = /* @__PURE__ */ new Map();
+function registerProviderTemplates(type, templates) {
+  if (typeof type === "string" && type && templates && typeof templates === "object")
+    TEMPLATES.set(type, templates);
 }
-function getProviderUI(type) {
-  return UIS.get(type);
+function getProviderTemplates(type) {
+  return TEMPLATES.get(type);
 }
-function hasProviderUI(type) {
-  return UIS.has(type);
+function hasProviderTemplates(type) {
+  return TEMPLATES.has(type);
 }
-function providerUITypes() {
-  return [...UIS.keys()];
+function providerTemplateTypes() {
+  return [...TEMPLATES.keys()];
 }
-registerProviderUI("commandcode", commandcodeUI);
-registerProviderUI("deepseek", deepseekUI);
-registerProviderUI("opencode", opencodeUI);
-registerProviderUI("manual", manualUI);
+registerProviderTemplates("commandcode", commandcode);
+registerProviderTemplates("deepseek", deepseek);
+registerProviderTemplates("opencode", opencode);
+registerProviderTemplates("manual", manual);
 
 // src/client/providers/registry.tsx
+var import_jsx_runtime18 = require("react/jsx-runtime");
 function legacySections(snap) {
   const out = [];
   if (snap.billingKind === "payg")
@@ -5228,29 +6062,214 @@ function createProviderRenderers(K) {
     if (rendered) return rendered;
     return renderSections(K, legacySections(ctx.snap), ctx);
   }
-  function renderBody(type, snap, now) {
-    const ctx = { snap, now, type, vendorName: snap.vendorName || "" };
-    const ui = getProviderUI(type);
-    if (ui) {
+  function renderBody(input) {
+    const ctx = {
+      snap: input.snap,
+      now: input.now,
+      type: input.type,
+      vendorName: input.snap.vendorName || "",
+      prefs: providerPrefs.scope(input.vendorId)
+    };
+    const detail = getProviderTemplates(input.type)?.detail;
+    if (detail) {
       try {
-        const out = ui(ctx, K);
+        const out = detail(ctx, K);
         if (out !== null && out !== void 0) return out;
       } catch {
       }
     }
     return generic(ctx);
   }
+  function renderButton(input) {
+    const templates = getProviderTemplates(input.type);
+    const ctx = {
+      snap: input.snap,
+      now: input.now,
+      type: input.type,
+      vendorName: input.snap.vendorName || "",
+      variant: input.variant,
+      icon: input.icon !== void 0 && input.icon !== "" ? input.icon : "generic",
+      prefs: providerPrefs.scope(input.vendorId)
+    };
+    const button = templates?.button;
+    if (button) {
+      try {
+        const out = button(ctx, K);
+        if (out !== null && out !== void 0 && out !== false) return out;
+      } catch {
+      }
+    }
+    const spec = defaultRingSpec(ctx, K);
+    return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
+      K.ButtonLayout,
+      {
+        variant: ctx.variant,
+        leading: /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(K.Ring, { spec, size: ctx.variant === "wide" ? 16 : 18 }),
+        name: ctx.vendorName,
+        value: spec.text,
+        tone: spec.tone,
+        icon: ctx.icon
+      }
+    );
+  }
+  function buttonTitle(input) {
+    const templates = getProviderTemplates(input.type);
+    const ctx = {
+      snap: input.snap,
+      now: input.now,
+      type: input.type,
+      vendorName: input.snap.vendorName || "",
+      variant: input.variant,
+      icon: input.icon !== void 0 && input.icon !== "" ? input.icon : "generic",
+      prefs: providerPrefs.scope(input.vendorId)
+    };
+    if (templates?.buttonHint) {
+      try {
+        const out = templates.buttonHint(ctx, K);
+        if (typeof out === "string" && out !== "") return out;
+      } catch {
+      }
+    }
+    return defaultRingSpec(ctx, K).title;
+  }
   return {
     renderBody,
-    hasBespoke: (type) => hasProviderUI(type),
-    bespokeTypes: () => providerUITypes()
+    renderButton,
+    buttonTitle,
+    hasBespoke: (type) => hasProviderTemplates(type),
+    bespokeTypes: () => providerTemplateTypes()
   };
 }
 
+// src/client/QuotaTrayPanel.tsx
+var import_react8 = require("react");
+var ReactDOM3 = __toESM(require("react-dom"), 1);
+var import_dsh_client_ui_primitives4 = require("@deepseek-ai/dsh-client-ui-primitives");
+var import_jsx_runtime19 = require("react/jsx-runtime");
+function QuotaTrayPanel(props) {
+  const style = (0, import_dsh_client_ui_primitives4.useAnchoredPosition)({
+    open: props.open,
+    anchorRef: props.anchorRef,
+    panelRef: props.panelRef,
+    side: "top",
+    gap: 8,
+    margin: 12
+  });
+  (0, import_dsh_client_ui_primitives4.useDismissOnOutsidePointer)(props.rootRef, props.open, props.setOpen, props.panelRef);
+  const escRef = (0, import_react8.useRef)(props.setOpen);
+  escRef.current = props.setOpen;
+  (0, import_react8.useEffect)(() => {
+    if (!props.open || typeof window === "undefined") return;
+    const onKey = (event) => {
+      if (event.key === "Escape") escRef.current(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [props.open]);
+  if (!props.open) return null;
+  const node = /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)(
+    "section",
+    {
+      className: styles_module_css_default.trayPanel,
+      ref: (element) => {
+        props.panelRef.current = element;
+      },
+      style: style ?? { visibility: "hidden" },
+      role: "dialog",
+      "aria-label": "\u989D\u5EA6",
+      children: [
+        /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("header", { className: styles_module_css_default.trayPanelHead, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.trayPanelGlyph, "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(QuotaIcon, { size: 14 }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.trayPanelTitle, children: "\u989D\u5EA6" }),
+          props.loading ? /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.traySpin, "aria-hidden": "true" }) : null,
+          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.traySpacer }),
+          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+            "button",
+            {
+              type: "button",
+              className: styles_module_css_default.trayIconBtn,
+              title: "\u91CD\u65B0\u62C9\u53D6\u300C" + props.activeName + "\u300D\u7684\u989D\u5EA6",
+              "aria-label": "\u5237\u65B0\u989D\u5EA6",
+              disabled: props.loading,
+              onClick: props.onRefresh,
+              children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(RefreshGlyph, {})
+            }
+          )
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.trayBody, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.trayCard, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.trayCardHead, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.trayCardGlyph, children: props.activeGlyph }),
+              /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.trayCardName, title: props.activeName, children: props.activeName })
+            ] }),
+            /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: styles_module_css_default.trayCardBody, children: props.detail })
+          ] }),
+          /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.trayList, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: styles_module_css_default.trayListHead, children: "\u5207\u6362\u4F9B\u5E94\u5546" }),
+            props.vendors.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: styles_module_css_default.trayEmpty, children: "\u8FD8\u6CA1\u6709\u914D\u7F6E\u4EFB\u4F55\u4F9B\u5E94\u5546\u3002" }) : props.vendors.map((row) => /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)(
+              "button",
+              {
+                type: "button",
+                className: styles_module_css_default.trayRow,
+                "data-active": row.active ? "1" : void 0,
+                "data-off": row.disabled ? "1" : void 0,
+                title: row.buttonHint,
+                onClick: () => props.onSwitch(row.id),
+                children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.trayRowGlyph, children: row.button }),
+                  /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.trayRowName, children: row.name }),
+                  /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.trayRowType, children: row.typeLabel }),
+                  /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.trayRowStatus, "data-tone": row.statusTone, children: row.status }),
+                  row.active ? /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.trayRowCheck, children: "\u5F53\u524D" }) : null
+                ]
+              },
+              row.id
+            ))
+          ] })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("footer", { className: styles_module_css_default.trayFoot, children: [
+          props.error ? /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.trayFootError, role: "alert", title: props.error, children: props.error }) : null,
+          /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("span", { className: styles_module_css_default.trayFootRow, children: [
+            props.freshness ? /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { children: props.freshness }) : null,
+            props.freshness ? /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.trayFootDot, children: "\xB7" }) : null,
+            /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { children: props.manageHint })
+          ] })
+        ] })
+      ]
+    }
+  );
+  try {
+    return ReactDOM3.createPortal(node, document.body);
+  } catch {
+    return node;
+  }
+}
+function RefreshGlyph() {
+  return /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)(
+    "svg",
+    {
+      width: "13",
+      height: "13",
+      viewBox: "0 0 16 16",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "1.4",
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      "aria-hidden": "true",
+      focusable: "false",
+      children: [
+        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("path", { d: "M13.2 8a5.2 5.2 0 1 1-1.6-3.75" }),
+        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("path", { d: "M13.4 1.9v3h-3" })
+      ]
+    }
+  );
+}
+
 // src/client/QuotaSection.tsx
-var import_jsx_runtime17 = require("react/jsx-runtime");
+var import_jsx_runtime20 = require("react/jsx-runtime");
 var BASE2 = "/ext/dshp-token-meter";
-var ID_RE = /^[a-z0-9][a-z0-9-]{1,30}$/;
+var ID_RE2 = /^[a-z0-9][a-z0-9-]{1,30}$/;
 function num(v, d) {
   const n = Number(v);
   return isFinite(n) ? n : d;
@@ -5305,54 +6324,6 @@ var TYPE_TITLE_FALLBACK = [
   { type: "commandcode", title: "commandcode\uFF08Command Code\uFF09" },
   { type: "manual", title: "manual\uFF08\u624B\u52A8\uFF09" }
 ];
-var FLOAT_LS_OPEN = "tm-quota-float";
-var FLOAT_LS_POS = "tm-quota-float-pos";
-var OLD_FLOAT_LS_OPEN = "tquota.float.open";
-var OLD_FLOAT_LS_POS = "tquota.float.pos";
-function loadFloatOpen() {
-  try {
-    if (window.localStorage.getItem(FLOAT_LS_OPEN) === "1") return true;
-    if (window.localStorage.getItem(OLD_FLOAT_LS_OPEN) === "1") return true;
-  } catch {
-  }
-  return false;
-}
-function loadFloatPos() {
-  try {
-    const raw = window.localStorage.getItem(FLOAT_LS_POS) || window.localStorage.getItem(OLD_FLOAT_LS_POS) || "null";
-    const v = JSON.parse(raw);
-    if (v && isFinite(v.x) && isFinite(v.y)) return { x: Number(v.x), y: Number(v.y) };
-  } catch {
-  }
-  return null;
-}
-function saveFloat(open, pos) {
-  try {
-    window.localStorage.setItem(FLOAT_LS_OPEN, open ? "1" : "0");
-    if (pos)
-      window.localStorage.setItem(
-        FLOAT_LS_POS,
-        JSON.stringify({ x: Math.round(pos.x), y: Math.round(pos.y) })
-      );
-  } catch {
-  }
-}
-function defaultFloatPos() {
-  try {
-    const vw = window.innerWidth || 1024, vh = window.innerHeight || 768;
-    return { x: Math.max(8, vw - 320), y: Math.max(8, Math.min(120, vh - 320)) };
-  } catch {
-    return { x: 100, y: 100 };
-  }
-}
-function clampFloatPos(p) {
-  try {
-    const vw = window.innerWidth || 1024, vh = window.innerHeight || 768;
-    return { x: Math.max(8, Math.min(p.x, vw - 304)), y: Math.max(8, Math.min(p.y, vh - 140)) };
-  } catch {
-    return p;
-  }
-}
 function cx5(...names) {
   return names.filter((name) => name !== void 0).join(" ");
 }
@@ -5363,37 +6334,18 @@ var BADGE_CLASS2 = {
   info: styles_module_css_default.badgeInfo,
   bad: styles_module_css_default.badgeBad
 };
-var DOT_TONE_CLASS = {
-  bad: styles_module_css_default.bad,
-  warn: styles_module_css_default.warn
-};
-function createQuotaSection(widgets2) {
-  const WG = widgets2 || null;
-  function tmPortal2(node) {
-    if (node === null || node === void 0) return null;
-    try {
-      if (ReactDOM3 && typeof ReactDOM3.createPortal === "function" && typeof document !== "undefined" && document.body) {
-        return ReactDOM3.createPortal(node, document.body);
-      }
-    } catch {
-    }
-    return node;
-  }
+function createQuotaSection() {
   const store2 = {
     state: {
       cfg: null,
       snaps: {},
       loading: false,
       error: "",
-      menuOpen: false,
       errOpen: false,
-      menuAt: null,
       lastErr: null,
       namespace: "",
       docPath: "",
-      providers: null,
-      floatOpen: typeof window !== "undefined" ? loadFloatOpen() : false,
-      floatPos: typeof window !== "undefined" ? loadFloatPos() : null
+      providers: null
     },
     listeners: /* @__PURE__ */ new Set(),
     get() {
@@ -5489,7 +6441,7 @@ function createQuotaSection(widgets2) {
   }
   async function reload() {
     loaded = false;
-    store2.set({ menuOpen: false, errOpen: false, menuAt: null, lastErr: null });
+    store2.set({ errOpen: false, lastErr: null });
     await ensureLoad();
   }
   async function syncState() {
@@ -5538,19 +6490,14 @@ function createQuotaSection(widgets2) {
       const r = await call("quota.set-active", { id });
       if (r && r.ok) {
         const cfg = Object.assign({}, store2.get().cfg, { activeVendor: id });
-        store2.set({ cfg, menuOpen: false, errOpen: false, menuAt: null, lastErr: null, error: "" });
-        if (id && cfg && cfg.enabled !== false) void refreshVendor(id);
+        store2.set({ cfg, errOpen: false, lastErr: null, error: "" });
+        if (id) void refreshVendor(id);
       } else {
-        store2.set({ menuOpen: false, menuAt: null, error: r && r.error || "\u5207\u6362\u4F9B\u5E94\u5546\u5931\u8D25" });
+        store2.set({ error: r && r.error || "\u5207\u6362\u4F9B\u5E94\u5546\u5931\u8D25" });
       }
     } catch {
-      store2.set({ menuOpen: false, menuAt: null, error: "\u8FDE\u63A5 Host \u5931\u8D25\uFF0C\u4F9B\u5E94\u5546\u672A\u5207\u6362" });
+      store2.set({ error: "\u8FDE\u63A5 Host \u5931\u8D25\uFF0C\u4F9B\u5E94\u5546\u672A\u5207\u6362" });
     }
-  }
-  function setFloatOpen(open) {
-    const pos = clampFloatPos(store2.get().floatPos || loadFloatPos() || defaultFloatPos());
-    store2.set({ floatOpen: open, floatPos: pos });
-    saveFloat(open, pos);
   }
   async function savePrefs(patch) {
     try {
@@ -5563,15 +6510,6 @@ function createQuotaSection(widgets2) {
       return { ok: false, error: r && r.error || "\u4FDD\u5B58\u5931\u8D25" };
     } catch {
       return { ok: false, error: "\u8FDE\u63A5 Host \u5931\u8D25" };
-    }
-  }
-  async function setEnabled(enabled) {
-    try {
-      const r = await call("quota.set-enabled", { enabled });
-      if (r && r.ok) await reload();
-      else store2.set({ error: r && r.error || "\u4FDD\u5B58\u5931\u8D25" });
-    } catch {
-      store2.set({ error: "\u8FDE\u63A5 Host \u5931\u8D25" });
     }
   }
   async function setVendorEnabled(id, enabled) {
@@ -5606,17 +6544,9 @@ function createQuotaSection(widgets2) {
     }
   }
   function useStore() {
-    const force = (0, import_react8.useState)(0)[1];
-    (0, import_react8.useEffect)(() => store2.subscribe(() => force((x) => x + 1)), []);
+    const force = (0, import_react9.useState)(0)[1];
+    (0, import_react9.useEffect)(() => store2.subscribe(() => force((x) => x + 1)), []);
     return store2.get();
-  }
-  function useNow(step) {
-    const st = (0, import_react8.useState)(Date.now());
-    (0, import_react8.useEffect)(() => {
-      const id = window.setInterval(() => st[1](Date.now()), step || 1e3);
-      return () => window.clearInterval(id);
-    }, []);
-    return st[0];
   }
   function remainOf(w, snap, nowMs) {
     const f = snap.fetchedAtMs || nowMs;
@@ -5675,388 +6605,26 @@ function createQuotaSection(widgets2) {
   });
   const providerViews = createProviderRenderers(kit);
   const ErrBox = kit.ErrorCard;
-  function SnapBody(props) {
-    return providerViews.renderBody(props.type || "", props.snap, props.now);
-  }
   function errInfoOf(snap, fallbackMsg) {
     const info = snap && snap.errorInfo;
     if (info && typeof info === "object" && typeof info.title === "string") return info;
     return fallbackErrorInfo(snap && snap.error || fallbackMsg);
   }
-  function dotToneOf(snap) {
-    if (!snap) return void 0;
-    if (snap.ok) return void 0;
-    const info = snap.errorInfo;
-    const tone = info && info.tone ? String(info.tone) : "warn";
-    return tone === "bad" ? DOT_TONE_CLASS["bad"] : DOT_TONE_CLASS["warn"];
-  }
-  function openMenu(e) {
-    const open = !store2.get().menuOpen;
-    let at = null;
-    if (open) {
-      let x = 160, y = 220;
-      if (e && typeof e.clientX === "number" && typeof e.clientY === "number") {
-        x = e.clientX + 4;
-        y = e.clientY + 4;
-      }
-      try {
-        const vw = window.innerWidth || 1024, vh = window.innerHeight || 768;
-        x = Math.max(8, Math.min(x, vw - 280));
-        y = Math.max(8, Math.min(y, vh - 260));
-      } catch {
-        x = Math.max(8, x);
-        y = Math.max(8, y);
-      }
-      at = { x, y };
-    }
-    store2.set({ menuOpen: open, menuAt: open ? at : null, error: "" });
-  }
-  function VendorPopOverlay() {
-    const s = useStore();
-    if (!s.menuOpen || !s.menuAt) return null;
-    const vendors = s.cfg && s.cfg.vendors || [];
-    const a0 = activeOf(s);
-    const curId = a0 ? a0.id : "";
-    let mx = s.menuAt.x, my = s.menuAt.y;
-    try {
-      const vw = window.innerWidth || 1024, vh = window.innerHeight || 768;
-      mx = Math.max(8, Math.min(mx, vw - 280));
-      my = Math.max(8, Math.min(my, vh - 260));
-    } catch {
-      mx = Math.max(8, mx);
-      my = Math.max(8, my);
-    }
-    const style = { left: mx + "px", top: my + "px" };
-    return tmPortal2(
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-          "button",
-          {
-            className: styles_module_css_default.backdrop,
-            "aria-label": "\u5173\u95ED\u4F9B\u5E94\u5546\u83DC\u5355",
-            onClick: () => store2.set({ menuOpen: false, menuAt: null })
-          }
-        ),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: cx5(styles_module_css_default.popmenu, styles_module_css_default.in), style, children: [
-          vendors.map((v) => /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
-            "button",
-            {
-              className: cx5(styles_module_css_default.mitem, v.id === curId ? styles_module_css_default.active : void 0),
-              onClick: () => void setActive(v.id),
-              children: [
-                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.grow, children: v.name }),
-                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.vtype, children: typeLabel(v.type) })
-              ]
-            },
-            v.id
-          )),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
-            "button",
-            {
-              className: cx5(styles_module_css_default.mitem, !curId ? styles_module_css_default.active : void 0),
-              title: "\u4E0D\u663E\u793A\u4EFB\u4F55\u4F9B\u5E94\u5546\u989D\u5EA6\uFF0C\u4FDD\u6301\u6781\u7B80",
-              onClick: () => void setActive(""),
-              children: [
-                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.grow, children: "\u65E0 \xB7 \u6781\u7B80\u6A21\u5F0F" }),
-                /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.vtype, children: "\u9690\u85CF" })
-              ]
-            },
-            "__none"
-          )
-        ] })
-      ] })
-    );
-  }
-  function quotaContent(s, a, snap, now) {
-    const stale = s.lastErr && (!s.lastErr.id || s.lastErr.id === a.id) && snap && snap.ok ? s.lastErr : null;
-    let cbody = null;
-    if (snap && snap.ok) {
-      cbody = /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(SnapBody, { snap, type: a.type, now });
-    } else if (s.loading) {
-      cbody = /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.qmeta, children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "\u62C9\u53D6\u4E2D\u2026" }) });
-    } else {
-      const le0 = s.lastErr && (!s.lastErr.id || s.lastErr.id === a.id) ? s.lastErr : null;
-      const msg = snap && snap.error || (le0 ? le0.msg : "") || s.error || "\u6682\u65E0\u6570\u636E\uFF0C\u70B9\u51FB\u21BB\u5237\u65B0";
-      const meta = a.name + (snap && snap.at ? " \xB7 \u5931\u8D25\u4E8E" + timeAgo(snap.at) : le0 && le0.at ? " \xB7 \u5931\u8D25\u4E8E" + timeAgo(le0.at) : "") + (snap && snap.secretKind ? " \xB7 \u51ED\u636E:" + snap.secretKind : "");
-      cbody = /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-        ErrBox,
-        {
-          info: snap ? errInfoOf(snap, msg) : fallbackErrorInfo(msg),
-          msg,
-          meta,
-          onRetry: () => void refreshVendor(a.id)
-        }
-      );
-    }
-    return [
-      s.error ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.err, children: s.error }, "e") : null,
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { children: cbody }, "b"),
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.qmeta, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: (snap && snap.at ? "\u66F4\u65B0" + timeAgo(snap.at) : "\u672A\u62C9\u53D6") + (snap && snap.ok && snap.via ? " \xB7 " + snap.via : "") }),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { children: [
-          stale ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-            "button",
-            {
-              className: cx5(styles_module_css_default.mini, styles_module_css_default.warn),
-              title: stale.msg + "\uFF08\u65E7\u6570\u636E\u4ECD\u53EF\u7528\uFF09",
-              onClick: () => store2.set({ errOpen: !store2.get().errOpen }),
-              children: "\u26A0\u65E7\u6570\u636E"
-            }
-          ) : null,
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("button", { className: styles_module_css_default.mini, title: "\u5237\u65B0\u5F53\u524D\u4F9B\u5E94\u5546", onClick: () => void refreshVendor(a.id), children: "\u21BB \u5237\u65B0" })
-        ] })
-      ] }, "m"),
-      stale && s.errOpen ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.errdetail, children: stale.msg }, "d") : null
-    ];
-  }
-  function gripDragOut(e) {
-    if (e.button !== void 0 && e.button !== 0) return;
-    if (e.preventDefault) e.preventDefault();
-    const sx = e.clientX, sy = e.clientY;
-    let out = false;
-    function mv(ev) {
-      if (!out && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 8) return;
-      out = true;
-      store2.set({ floatOpen: true, floatPos: clampFloatPos({ x: ev.clientX - 60, y: ev.clientY - 20 }) });
-    }
-    function up() {
-      try {
-        window.removeEventListener("pointermove", mv);
-      } catch {
-      }
-      try {
-        window.removeEventListener("pointerup", up);
-      } catch {
-      }
-      if (out) saveFloat(true, store2.get().floatPos);
-      else setFloatOpen(true);
-    }
-    try {
-      window.addEventListener("pointermove", mv);
-    } catch {
-    }
-    try {
-      window.addEventListener("pointerup", up);
-    } catch {
-    }
-  }
-  function startFloatDrag(e) {
-    if (e.button !== void 0 && e.button !== 0) return;
-    if (e.target && e.target.closest && e.target.closest("button")) return;
-    if (e.preventDefault) e.preventDefault();
-    const p0 = clampFloatPos(store2.get().floatPos || loadFloatPos() || defaultFloatPos());
-    const ox = e.clientX - p0.x, oy = e.clientY - p0.y;
-    function mv(ev) {
-      store2.set({ floatPos: clampFloatPos({ x: ev.clientX - ox, y: ev.clientY - oy }) });
-    }
-    function up() {
-      try {
-        window.removeEventListener("pointermove", mv);
-      } catch {
-      }
-      try {
-        window.removeEventListener("pointerup", up);
-      } catch {
-      }
-      saveFloat(store2.get().floatOpen, store2.get().floatPos);
-    }
-    try {
-      window.addEventListener("pointermove", mv);
-    } catch {
-    }
-    try {
-      window.addEventListener("pointerup", up);
-    } catch {
-    }
-  }
-  function FloatingQuota() {
-    const s = useStore();
-    const now = useNow(1e3);
-    (0, import_react8.useEffect)(() => {
-      void ensureLoad();
-    }, []);
-    if (!s.floatOpen) return null;
-    const a = activeOf(s);
-    if (!s.cfg || s.cfg.enabled === false || !a) return null;
-    const pos = clampFloatPos(s.floatPos || loadFloatPos() || defaultFloatPos());
-    const snap = s.snaps[a.id];
-    return tmPortal2(
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: cx5(styles_module_css_default.float, styles_module_css_default.in), style: { left: pos.x + "px", top: pos.y + "px" }, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
-          "div",
-          {
-            className: styles_module_css_default.floatHd,
-            title: "\u6309\u4F4F\u62D6\u5230\u4EFB\u610F\u4F4D\u7F6E \xB7 \u53CC\u51FB\u6536\u56DE\u4FA7\u8FB9\u680F",
-            onPointerDown: startFloatDrag,
-            onDoubleClick: () => setFloatOpen(false),
-            children: [
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: cx5(styles_module_css_default.dot, snap && !snap.ok ? dotToneOf(snap) : void 0) }),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.vname, children: a.name }),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.vtype, children: typeLabel(a.type) }),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                "button",
-                {
-                  className: styles_module_css_default.mini,
-                  title: "\u5207\u6362\u4F9B\u5E94\u5546",
-                  onClick: (e) => {
-                    if (e.stopPropagation) e.stopPropagation();
-                    openMenu(e);
-                  },
-                  children: "\u25BE"
-                }
-              ),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                "button",
-                {
-                  className: styles_module_css_default.mini,
-                  title: "\u5237\u65B0\u5F53\u524D\u4F9B\u5E94\u5546",
-                  onClick: (e) => {
-                    if (e.stopPropagation) e.stopPropagation();
-                    void refreshVendor(a.id);
-                  },
-                  children: "\u21BB"
-                }
-              ),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                "button",
-                {
-                  className: styles_module_css_default.mini,
-                  title: "\u6536\u56DE\u4FA7\u8FB9\u680F",
-                  onClick: (e) => {
-                    if (e.stopPropagation) e.stopPropagation();
-                    setFloatOpen(false);
-                  },
-                  children: "\u{1F4CC}"
-                }
-              )
-            ]
-          }
-        ),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.floatBd, children: quotaContent(s, a, snap, now) })
-      ] })
-    );
-  }
-  function QuotaFloatEntry() {
-    return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(import_jsx_runtime17.Fragment, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(VendorPopOverlay, {}),
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(FloatingQuota, {})
-    ] });
-  }
-  function QuotaSidebar(props) {
-    const s = useStore();
-    const now = useNow(1e3);
-    (0, import_react8.useEffect)(() => {
-      void ensureLoad();
-    }, []);
-    const vendors0 = s.cfg && s.cfg.vendors || [];
-    const av0 = s.cfg ? s.cfg.activeVendor : void 0;
-    const effA = av0 === "" ? null : av0 === void 0 || av0 === null ? vendors0[0] || null : vendors0.filter((v) => v.id === av0)[0] || vendors0[0] || null;
-    const effId = effA ? effA.id : "";
-    const rawSec = s.cfg ? s.cfg.refreshSec : void 0;
-    const numSec = rawSec === void 0 || rawSec === null || rawSec === "" ? 60 : Number(rawSec);
-    const effSec = numSec === 0 ? 0 : isFinite(numSec) ? Math.min(3600, Math.max(10, numSec || 60)) : 60;
-    const effShown = !s.cfg || s.cfg.enabled !== false;
-    (0, import_react8.useEffect)(() => {
-      if (!effShown || !effId || !(effSec > 0)) return void 0;
-      const id = window.setInterval(() => {
-        const cur = store2.get();
-        if (cur.loading) return;
-        const curA = activeOf(cur);
-        if (curA && curA.id === effId) void refreshVendor(effId);
-      }, effSec * 1e3);
-      return () => window.clearInterval(id);
-    }, [effShown, effId, effSec]);
-    const wide = !(props && props.wide === false);
-    if (!wide) {
-      const a2 = activeOf(s);
-      const snap2 = a2 && s.snaps[a2.id];
-      const bad = snap2 && !snap2.ok;
-      return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { title: a2 ? a2.name : "Token \u989D\u5EA6\uFF08\u5DF2\u9690\u85CF\uFF09", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: cx5(styles_module_css_default.dot, bad ? styles_module_css_default.bad : void 0) }) });
-    }
-    const vendors = s.cfg && s.cfg.vendors || [];
-    const a = activeOf(s);
-    if (!s.cfg)
-      return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.side, children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.qmeta, children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: s.loading ? "\u989D\u5EA6\u52A0\u8F7D\u4E2D\u2026" : s.error || "\u989D\u5EA6\u52A0\u8F7D\u5931\u8D25" }) }) });
-    if (s.cfg.enabled === false) {
-      return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: cx5(styles_module_css_default.side, styles_module_css_default.in), children: /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.qmeta, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "\u989D\u5EA6\u663E\u793A\u5DF2\u5173\u95ED" }),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "\u8BBE\u7F6E\u9875\u53EF\u91CD\u65B0\u6253\u5F00" })
-      ] }) });
-    }
-    if (!a) {
-      return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: cx5(styles_module_css_default.side, styles_module_css_default.in), children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
-          "button",
-          {
-            className: styles_module_css_default.vendor,
-            title: "\u70B9\u51FB\u9009\u62E9\u8BA1\u8D39\u4F9B\u5E94\u5546\uFF08\u5F53\u524D\uFF1A\u65E0\uFF09",
-            onClick: (e) => openMenu(e),
-            children: [
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.dot }),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.vname, children: "\u989D\u5EA6\u5DF2\u9690\u85CF" }),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.vtype, children: "\u6781\u7B80" }),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.vcaret, children: s.menuOpen ? "\u25B4" : "\u25BE" })
-            ]
-          }
-        ),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.qmeta, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "\u6781\u7B80\u6A21\u5F0F \xB7 \u4E0D\u62C9\u53D6\u989D\u5EA6" }),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: vendors.length ? vendors.length + " \u4E2A\u4F9B\u5E94\u5546" : "" })
-        ] })
-      ] });
-    }
-    if (s.floatOpen) return null;
-    const snap = s.snaps[a.id];
-    const failed = !!(snap && !snap.ok);
-    return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
-      "div",
-      {
-        className: cx5(
-          styles_module_css_default.side,
-          styles_module_css_default.in,
-          s.loading ? styles_module_css_default.loading : void 0,
-          failed && !s.loading ? styles_module_css_default.error : void 0,
-          moodClass(a.enabled === false, isPeakHour(new Date(now)))
-        ),
-        children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.vendorRow, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.grip, title: "\u6309\u4F4F\u62D6\u51FA\u4E3A\u6D6E\u7A97\uFF0C\u70B9\u6309\u76F4\u63A5\u5F39\u51FA", onPointerDown: gripDragOut, children: "\u283F" }),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("button", { className: styles_module_css_default.vendor, title: "\u70B9\u51FB\u5207\u6362\u8BA1\u8D39\u4F9B\u5E94\u5546", onClick: (e) => openMenu(e), children: [
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: cx5(styles_module_css_default.dot, snap && !snap.ok ? dotToneOf(snap) : void 0) }),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.vname, children: a.name }),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.vtype, children: typeLabel(a.type) }),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.vcaret, children: s.menuOpen ? "\u25B4" : "\u25BE" })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-              "button",
-              {
-                className: styles_module_css_default.mini,
-                title: "\u5F39\u51FA\u4E3A\u6D6E\u7A97\uFF08\u53EF\u62D6\u5230\u5C4F\u5E55\u4EFB\u610F\u4F4D\u7F6E\uFF09",
-                onClick: () => setFloatOpen(true),
-                children: "\u29C9"
-              }
-            )
-          ] }),
-          quotaContent(s, a, snap, now)
-        ]
-      }
-    );
-  }
   function Badge2(props) {
-    return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: cx5(styles_module_css_default.badge, BADGE_CLASS2[props.kind || "muted"]), children: props.text });
+    return /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { className: cx5(styles_module_css_default.badge, BADGE_CLASS2[props.kind || "muted"]), children: props.text });
   }
   function SecRow(props) {
-    return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
+    return /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)(
       "div",
       {
         className: styles_module_css_default.row,
         style: props.wrap ? { flexWrap: "wrap", flexDirection: "column", alignItems: "stretch" } : void 0,
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.rowText, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.rowLabel, children: props.label }),
-            props.desc ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.rowDesc, children: props.desc }) : null
+          /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("div", { className: styles_module_css_default.rowText, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: styles_module_css_default.rowLabel, children: props.label }),
+            props.desc ? /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: styles_module_css_default.rowDesc, children: props.desc }) : null
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
             "span",
             {
               className: props.wrap ? styles_module_css_default.rowValue : void 0,
@@ -6069,19 +6637,19 @@ function createQuotaSection(widgets2) {
     );
   }
   function FormField(props) {
-    return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.field, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.fieldHead, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.fieldLabel, children: props.label }),
-        props.required ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.fieldReq, children: "\u5FC5\u586B" }) : null,
-        props.hint ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.fieldOpt, children: props.hint }) : null
+    return /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("div", { className: styles_module_css_default.field, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("div", { className: styles_module_css_default.fieldHead, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { className: styles_module_css_default.fieldLabel, children: props.label }),
+        props.required ? /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { className: styles_module_css_default.fieldReq, children: "\u5FC5\u586B" }) : null,
+        props.hint ? /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { className: styles_module_css_default.fieldOpt, children: props.hint }) : null
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.fieldControl, children: props.children }),
-      props.desc ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.fieldDesc, children: props.desc }) : null
+      /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: styles_module_css_default.fieldControl, children: props.children }),
+      props.desc ? /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: styles_module_css_default.fieldDesc, children: props.desc }) : null
     ] });
   }
   function PillSelect(props) {
-    const [open, setOpen] = (0, import_react8.useState)(false);
-    const selector = /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
+    const [open, setOpen] = (0, import_react9.useState)(false);
+    const selector = /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)(
       "button",
       {
         type: "button",
@@ -6091,16 +6659,16 @@ function createQuotaSection(widgets2) {
         disabled: props.disabled,
         onClick: () => setOpen((v) => !v),
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.selectorLabel, children: props.selectedLabel }),
-          import_dsh_client_ui_primitives4.IconChevronDownOutline14 ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(import_dsh_client_ui_primitives4.IconChevronDownOutline14, { className: styles_module_css_default.chevron }) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.chevron, children: "\u25BE" })
+          /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { className: styles_module_css_default.selectorLabel, children: props.selectedLabel }),
+          import_dsh_client_ui_primitives5.IconChevronDownOutline14 ? /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(import_dsh_client_ui_primitives5.IconChevronDownOutline14, { className: styles_module_css_default.chevron }) : /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { className: styles_module_css_default.chevron, children: "\u25BE" })
         ]
       }
     );
-    if (!import_dsh_client_ui_primitives4.Menu) {
+    if (!import_dsh_client_ui_primitives5.Menu) {
       if (!open) return selector;
-      return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { children: [
+      return /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("div", { children: [
         selector,
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.popmenu, style: { position: "absolute" }, children: props.options.map((o) => /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: styles_module_css_default.popmenu, style: { position: "absolute" }, children: props.options.map((o) => /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
           "button",
           {
             className: cx5(styles_module_css_default.mitem, o.id === props.value ? styles_module_css_default.active : void 0),
@@ -6114,8 +6682,8 @@ function createQuotaSection(widgets2) {
         )) })
       ] });
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-      import_dsh_client_ui_primitives4.Menu,
+    return /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+      import_dsh_client_ui_primitives5.Menu,
       {
         open,
         onClose: () => setOpen(false),
@@ -6132,14 +6700,14 @@ function createQuotaSection(widgets2) {
     );
   }
   function secretBadge(kind) {
-    if (kind === "ref") return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Badge2, { kind: "ok", text: "\u5BC6\u94A5:$\u5F15\u7528" });
-    if (kind === "plain") return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Badge2, { kind: "warn", text: "\u5BC6\u94A5:\u660E\u6587" });
-    if (kind === "env" || kind === "cred") return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Badge2, { kind: "info", text: "\u5BC6\u94A5:" + kind + "(\u65E7)" });
-    if (kind === "empty") return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Badge2, { kind: "warn", text: "\u5BC6\u94A5:\u672A\u586B" });
+    if (kind === "ref") return /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(Badge2, { kind: "ok", text: "\u5BC6\u94A5:$\u5F15\u7528" });
+    if (kind === "plain") return /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(Badge2, { kind: "warn", text: "\u5BC6\u94A5:\u660E\u6587" });
+    if (kind === "env" || kind === "cred") return /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(Badge2, { kind: "info", text: "\u5BC6\u94A5:" + kind + "(\u65E7)" });
+    if (kind === "empty") return /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(Badge2, { kind: "warn", text: "\u5BC6\u94A5:\u672A\u586B" });
     return null;
   }
   function VendorForm(props) {
-    const Btn = import_dsh_client_ui_primitives4.Button || (({ children, ...rest }) => /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("button", { type: "button", className: styles_module_css_default.btn, ...rest, children }));
+    const Btn = import_dsh_client_ui_primitives5.Button || (({ children, ...rest }) => /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("button", { type: "button", className: styles_module_css_default.btn, ...rest, children }));
     const d = props.draft;
     const set = props.set;
     const busy = !!props.busy;
@@ -6147,11 +6715,11 @@ function createQuotaSection(widgets2) {
     const put = (k) => (v) => set(Object.assign({}, d, { [k]: v }));
     const putP = (k) => (v) => set(Object.assign({}, d, { params: Object.assign({}, d.params, { [k]: v }) }));
     const p = d.params || {};
-    const idOk = ID_RE.test(d.id || "");
+    const idOk = ID_RE2.test(d.id || "");
     const nameOk = !!(d.name && String(d.name).trim());
     const canSubmit = idOk && nameOk && !busy;
     const secretPh = isEdit ? "\u7559\u7A7A=\u4FDD\u7559\u539F\u503C\uFF0C\u6216\u586B $NAME \u5F15\u7528 / \u65B0\u660E\u6587" : "\u586B $NAME \u5F15\u7528\uFF08\u63A8\u8350\uFF09\u6216\u7C98\u8D34\u660E\u6587";
-    const inputWrap = (opts, inner) => /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+    const inputWrap = (opts, inner) => /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
       "div",
       {
         className: styles_module_css_default.inputWrap,
@@ -6161,7 +6729,7 @@ function createQuotaSection(widgets2) {
     );
     const textInput = (opts) => inputWrap(
       opts,
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
         "input",
         {
           className: cx5(styles_module_css_default.ninput, opts && opts.mono ? styles_module_css_default.mono : void 0),
@@ -6177,7 +6745,7 @@ function createQuotaSection(widgets2) {
     );
     const rows = [];
     rows.push(
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
         FormField,
         {
           label: "\u663E\u793A\u540D\u79F0",
@@ -6192,7 +6760,7 @@ function createQuotaSection(widgets2) {
         "name"
       )
     );
-    const typeSel = /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+    const typeSel = /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
       PillSelect,
       {
         disabled: busy,
@@ -6211,16 +6779,16 @@ function createQuotaSection(widgets2) {
       }
     );
     rows.push(
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
         FormField,
         {
           label: "ID\uFF08\u914D\u7F6E\u6807\u8BC6\uFF09",
           required: !isEdit,
           hint: isEdit ? "\u6DFB\u52A0\u540E\u4E0D\u53EF\u4FEE\u6539" : void 0,
           desc: isEdit ? "\u8FD9\u662F\u8BE5\u4F9B\u5E94\u5546\u5728\u914D\u7F6E\u91CC\u7684\u552F\u4E00\u6807\u8BC6\uFF08\u4E3B\u952E\uFF09\uFF0C\u7528\u6765\u5728 settings.yaml \u4E2D\u533A\u5206\u4E0D\u540C\u8D26\u53F7\uFF0C\u4E5F\u88AB\u300C\u8BBE\u4E3A\u5F53\u524D\u300D\u7B49\u64CD\u4F5C\u5F15\u7528\u3002\u5DF2\u6DFB\u52A0\u7684\u4F9B\u5E94\u5546\u4E0D\u80FD\u6539 ID\uFF0C\u9700\u8981\u522B\u7684 ID \u8BF7\u5220\u6389\u91CD\u65B0\u6DFB\u52A0\u3002" : "\u8BE5\u4F9B\u5E94\u5546\u5728\u914D\u7F6E\u91CC\u7684\u552F\u4E00\u6807\u8BC6\uFF08\u4E3B\u952E\uFF09\uFF1A\u7528\u4E8E\u5728 settings.yaml \u4E2D\u533A\u5206\u4E0D\u540C\u8D26\u53F7\uFF0C\u4E5F\u88AB\u300C\u8BBE\u4E3A\u5F53\u524D\u300D\u7B49\u64CD\u4F5C\u5F15\u7528\u3002\u586B\u7B80\u77ED\u82F1\u6587/\u6570\u5B57\u5373\u53EF\uFF0C\u4F8B\u5982 ds-main\u3001cc-work\u3001go-2\u3002\u89C4\u5219\uFF1A\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u3001\u6A2A\u7EBF\uFF0C2\u201331 \u4F4D\uFF0C\u5B57\u6BCD\u6216\u6570\u5B57\u5F00\u5934\uFF1B\u6DFB\u52A0\u540E\u4E0D\u53EF\u4FEE\u6539\u3002",
-          children: isEdit ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: cx5(styles_module_css_default.inputWrap, styles_module_css_default.inputReadonly), title: "ID \u662F\u914D\u7F6E\u4E3B\u952E\uFF0C\u4E0D\u53EF\u4FEE\u6539", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: cx5(styles_module_css_default.ninput, styles_module_css_default.mono), children: d.id }) }) : inputWrap(
+          children: isEdit ? /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { className: cx5(styles_module_css_default.inputWrap, styles_module_css_default.inputReadonly), title: "ID \u662F\u914D\u7F6E\u4E3B\u952E\uFF0C\u4E0D\u53EF\u4FEE\u6539", children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { className: cx5(styles_module_css_default.ninput, styles_module_css_default.mono), children: d.id }) }) : inputWrap(
             {},
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
               "input",
               {
                 className: cx5(styles_module_css_default.ninput, styles_module_css_default.mono),
@@ -6238,10 +6806,10 @@ function createQuotaSection(widgets2) {
     );
     if (!isEdit && !idOk && (d.id || ""))
       rows.push(
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("p", { className: cx5(styles_module_css_default.notice, styles_module_css_default.noticeWarn), children: "ID \u4E0D\u5408\u6CD5\uFF1A\u9700\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u6216\u6A2A\u7EBF\uFF0C2\u201331 \u4F4D\uFF0C\u4E14\u4EE5\u5B57\u6BCD\u6216\u6570\u5B57\u5F00\u5934\uFF08\u4E0D\u80FD\u6709\u7A7A\u683C\u3001\u4E0B\u5212\u7EBF\u3001\u4E2D\u6587\uFF09\u3002" }, "idhint")
+        /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("p", { className: cx5(styles_module_css_default.notice, styles_module_css_default.noticeWarn), children: "ID \u4E0D\u5408\u6CD5\uFF1A\u9700\u5C0F\u5199\u5B57\u6BCD\u3001\u6570\u5B57\u6216\u6A2A\u7EBF\uFF0C2\u201331 \u4F4D\uFF0C\u4E14\u4EE5\u5B57\u6BCD\u6216\u6570\u5B57\u5F00\u5934\uFF08\u4E0D\u80FD\u6709\u7A7A\u683C\u3001\u4E0B\u5212\u7EBF\u3001\u4E2D\u6587\uFF09\u3002" }, "idhint")
       );
     rows.push(
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
         FormField,
         {
           label: "\u7C7B\u578B",
@@ -6267,13 +6835,13 @@ function createQuotaSection(widgets2) {
         if (f.kind === "select") {
           const selVal = val === void 0 || val === null || val === "" ? f.key === "billing" ? "rolling" : "" : String(val);
           rows.push(
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
               FormField,
               {
                 label: f.label || f.key,
                 required: f.required === true,
                 desc: f.hint || void 0,
-                children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+                children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
                   PillSelect,
                   {
                     disabled: busy,
@@ -6289,7 +6857,7 @@ function createQuotaSection(widgets2) {
           );
         } else if (f.kind === "number") {
           rows.push(
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
               FormField,
               {
                 label: f.label || f.key,
@@ -6309,7 +6877,7 @@ function createQuotaSection(widgets2) {
         } else {
           const isSecret = f.kind === "secret";
           rows.push(
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
               FormField,
               {
                 label: f.label || f.key,
@@ -6330,827 +6898,218 @@ function createQuotaSection(widgets2) {
       });
       if (dynMeta.hint)
         rows.push(
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("p", { className: styles_module_css_default.fieldNote, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("b", { children: "\u5173\u4E8E\u8BE5\u7C7B\u578B\uFF1A" }),
+          /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("p", { className: styles_module_css_default.fieldNote, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("b", { children: "\u5173\u4E8E\u8BE5\u7C7B\u578B\uFF1A" }),
             dynMeta.hint
           ] }, "dyn:hint")
         );
     } else {
       rows.push(
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("p", { className: cx5(styles_module_css_default.notice, styles_module_css_default.noticeWarn), children: "Host \u672A\u4E0A\u62A5\u7C7B\u578B\u300C" + String(d.type) + "\u300D\u7684\u5B57\u6BB5\u5B9A\u4E49\uFF1A\u8BF7\u91CD\u542F dsh web \u8BA9\u63D2\u4EF6\u91CD\u65B0\u6CE8\u518C\uFF0C\u7136\u540E\u5237\u65B0\u672C\u9875\u3002" }, "nometa")
+        /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("p", { className: cx5(styles_module_css_default.notice, styles_module_css_default.noticeWarn), children: "Host \u672A\u4E0A\u62A5\u7C7B\u578B\u300C" + String(d.type) + "\u300D\u7684\u5B57\u6BB5\u5B9A\u4E49\uFF1A\u8BF7\u91CD\u542F dsh web \u8BA9\u63D2\u4EF6\u91CD\u65B0\u6CE8\u518C\uFF0C\u7136\u540E\u5237\u65B0\u672C\u9875\u3002" }, "nometa")
       );
     }
     rows.push(
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.bar, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Btn, { variant: "primary", size: "sm", disabled: !canSubmit, onClick: props.onSubmit, children: busy ? "\u4FDD\u5B58\u4E2D\u2026" : props.submitLabel || "\u4FDD\u5B58" }),
-        props.onCancel ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Btn, { variant: "outline", size: "sm", disabled: busy, onClick: props.onCancel, children: "\u53D6\u6D88" }) : null,
-        !idOk || !nameOk ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.hint, children: !nameOk ? "\u8BF7\u5148\u586B\u5199\u663E\u793A\u540D\u79F0\u3002" : "ID \u4E0D\u5408\u6CD5\uFF1A\u9700\u5C0F\u5199\u5B57\u6BCD/\u6570\u5B57/\u6A2A\u7EBF\uFF0C2\u201331 \u4F4D\uFF0C\u5B57\u6BCD\u6216\u6570\u5B57\u5F00\u5934\u3002" }) : null
+      /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("div", { className: styles_module_css_default.bar, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(Btn, { variant: "primary", size: "sm", disabled: !canSubmit, onClick: props.onSubmit, children: busy ? "\u4FDD\u5B58\u4E2D\u2026" : props.submitLabel || "\u4FDD\u5B58" }),
+        props.onCancel ? /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(Btn, { variant: "outline", size: "sm", disabled: busy, onClick: props.onCancel, children: "\u53D6\u6D88" }) : null,
+        !idOk || !nameOk ? /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { className: styles_module_css_default.hint, children: !nameOk ? "\u8BF7\u5148\u586B\u5199\u663E\u793A\u540D\u79F0\u3002" : "ID \u4E0D\u5408\u6CD5\uFF1A\u9700\u5C0F\u5199\u5B57\u6BCD/\u6570\u5B57/\u6A2A\u7EBF\uFF0C2\u201331 \u4F4D\uFF0C\u5B57\u6BCD\u6216\u6570\u5B57\u5F00\u5934\u3002" }) : null
       ] }, "actions")
     );
-    return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.section, children: rows });
+    return /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: styles_module_css_default.section, children: rows });
   }
-  const NEW_VENDOR2 = { id: "", name: "", type: "opencode", params: { workspaceId: "", cookie: "" } };
-  const SEC_PRESETS2 = [0, 30, 60, 120, 300, 600, 1800, 3600];
-  function secLabel2(n) {
-    return n === 0 ? "\u5173\u95ED\u81EA\u52A8\u5237\u65B0" : n + " \u79D2";
-  }
-  function aiManual(namespace, docPath) {
-    let types = "opencode / deepseek / commandcode / manual";
-    try {
-      const ps = providerMetas();
-      if (ps && ps.length) types = ps.map((x) => x.type).join(" / ");
-    } catch {
-    }
-    return [
-      "\u3010\u7ED9 AI \u7684\u914D\u7F6E\u8BF4\u660E\u4E66\u3011\u76F4\u63A5\u6539 settings.yaml \u7684 " + namespace + " \u5206\u8282" + (docPath ? "\uFF08\u6587\u4EF6\uFF1A" + docPath + "\uFF09" : "") + "\uFF0C\u4FDD\u5B58\u5373\u70ED\u91CD\u8F7D\u751F\u6548\uFF0C\u65E0\u9700\u70B9\u4EFB\u4F55\u6309\u94AE\u3002",
-      "dshp-token-meter:",
-      '  activeVendor: "ds-main"   # "" = \u6781\u7B80\u6A21\u5F0F\uFF0C\u4FA7\u8FB9\u680F\u53EA\u5360\u4F4D\u3001\u4E0D\u62C9\u53D6',
-      "  refreshSec: 60            # \u5F53\u524D\u4F9B\u5E94\u5546\u81EA\u52A8\u5237\u65B0\u79D2\u6570\uFF0C0=\u5173\u95ED\uFF08\u5176\u4F59 10~3600\uFF09",
-      "  enabled: true             # false=\u9690\u85CF\u4FA7\u8FB9\u680F\u989D\u5EA6\u5361\uFF08\u4EC5\u5360\u4F4D\uFF0C\u4E0D\u62C9\u53D6\uFF09",
-      "  vendors:",
-      "    - id: go-main           # \u5C0F\u5199\u5B57\u6BCD/\u6570\u5B57/\u6A2A\u7EBF\uFF0C2-31 \u4F4D\uFF08\u4E3B\u952E\uFF0C\u4E0D\u53EF\u6539\uFF09",
-      "      name: \u663E\u793A\u540D",
-      "      type: opencode",
-      '      params: { workspaceId: "wrk_xxx", cookie: "$TQUOTA_GO" }',
-      "    - id: ds-main",
-      "      name: DeepSeek \u5B98\u65B9",
-      "      type: deepseek",
-      '      params: { token: "$DS_TOKEN", apiKey: "$DEEPSEEK_API_KEY", lowWarn: 5 }',
-      "      # deepseek \u4E00\u4E2A\u7C7B\u578B\u641E\u5B9A\u4E24\u79CD\u51ED\u636E\uFF1Ask- \u5F00\u5934\u7684 apiKey \u8D70\u5B98\u65B9\u4F59\u989D\uFF0C\u4F1A\u8BDD token \u8D70\u7F51\u9875\u8D26\u5355\uFF08\u542B\u5386\u53F2\uFF09\uFF1B\u4E00\u8DEF\u5931\u6548\u81EA\u52A8\u6362\u8DEF",
-      "      # \u65E7 type deepseek-api / deepseek-web \u5DF2\u5408\u5E76\u4E3A\u522B\u540D\uFF0C\u8001\u914D\u7F6E\u539F\u6837\u53EF\u7528\uFF08\u8BFB\u8DEF\u5F84\u81EA\u52A8\u5F52\u4E00\uFF0C\u4E0D\u4F1A\u6539\u5199\u4F60\u7684\u6587\u4EF6\uFF09",
-      "    - id: cc-main",
-      "      name: Command Code",
-      "      type: commandcode",
-      '      params: { apiKey: "$COMMAND_CODE_API_KEY", lowWarn: 10 }',
-      "      # apiKey \u7559\u7A7A\u65F6\u81EA\u52A8\u56DE\u9000\u8BFB $COMMAND_CODE_API_KEY\uFF08\u4E0E CLI \u540C\u4E00\u7EA6\u5B9A\uFF09",
-      "    - id: m1",
-      "      name: \u624B\u52A8\u8D26\u672C",
-      "      type: manual",
-      "      params: { billing: payg, balance: 50, granted: 100, lowWarn: 10 }",
-      "\u5BC6\u94A5\uFF1A$NAME\uFF08\u63A8\u8350\uFF1A\u5148\u8BFB ~/.dsh/.credentials.yaml\uFF0C\u518D\u8BFB\u73AF\u5883\u53D8\u91CF\uFF09/ \u660E\u6587\uFF08\u8BBE\u7F6E\u9875\u4E0D\u660E\u6587\u56DE\u663E\uFF0C\u7F16\u8F91\u7559\u7A7A\u5373\u4FDD\u7559\uFF09/ {env:}/{cred:}\uFF08\u65E7\u5199\u6CD5\uFF0C\u4EC5\u517C\u5BB9\uFF09",
-      "cookie\uFF1A\u6D4F\u89C8\u5668\u5F00\u53D1\u8005\u5DE5\u5177 \u2192 Application \u2192 Cookies \u2192 \u590D\u5236 auth \u7684\u503C\uFF0C\u6574\u6BB5 Cookie \u539F\u6837\u7C98\u8D34\u4EA6\u53EF\uFF1BworkspaceId \u89C1\u5404\u5B57\u6BB5\u4E0B\u65B9\u7684\u83B7\u53D6\u8BF4\u660E",
-      "deepseek\uFF1A\u5355\u7C7B\u578B\u81EA\u52A8\u9009\u8DEF\uFF08\u65E7 deepseek-api / deepseek-web \u4E3A\u522B\u540D\uFF09\uFF1BapiKey \u4E0E\u4F1A\u8BDD\u7968\u636E\u4E0D\u901A\u7528\uFF08\u5B9E\u6D4B 40003\uFF09\uFF0C\u4E0D\u8981\u6DF7\u586B\u5230\u5BF9\u65B9\u5B57\u6BB5",
-      "manual\uFF1Abilling=rolling \u586B total/used\uFF1Bbilling=payg \u586B balance/granted/lowWarn",
-      "\u53EF\u7528 type\uFF08\u672C\u673A Host \u5DF2\u6CE8\u518C\uFF09\uFF1A" + types + "\uFF08\u65B0\u589E\u4F9B\u5E94\u5546\u53EA\u9700 Host \u6CE8\u518C\uFF0C\u65B0 type \u81EA\u52A8\u51FA\u73B0\u5728\u6B64\uFF09"
-    ].join("\n");
-  }
-  function QuotaSettingsPage() {
-    const Btn = import_dsh_client_ui_primitives4.Button || (({ children, ...rest }) => /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("button", { type: "button", className: styles_module_css_default.btn, ...rest, children }));
-    const s = useStore();
-    (0, import_react8.useEffect)(() => {
-      void ensureLoad();
-    }, []);
-    const ds = (0, import_react8.useState)(JSON.parse(JSON.stringify(NEW_VENDOR2)));
-    const draft = ds[0];
-    const setDraft = ds[1];
-    const es = (0, import_react8.useState)(null);
-    const editing = es[0];
-    const setEditing = es[1];
-    const bs = (0, import_react8.useState)(false);
-    const busy = bs[0];
-    const setBusy = bs[1];
-    const cs = (0, import_react8.useState)(null);
-    const confirmDel = cs[0];
-    const setConfirmDel = cs[1];
-    const ackS = (0, import_react8.useState)(false);
-    const acked = ackS[0];
-    const setAcked = ackS[1];
-    async function withBusy(fn) {
-      setBusy(true);
-      try {
-        await fn();
-      } finally {
-        setBusy(false);
-      }
-    }
-    async function saveVendor(v, isEdit) {
-      await withBusy(async () => {
-        try {
-          const r = await call(isEdit ? "quota.update-vendor" : "quota.add-vendor", { vendor: v });
-          if (r && r.ok) {
-            if (!isEdit) setDraft(JSON.parse(JSON.stringify(NEW_VENDOR2)));
-            else setEditing(null);
-            await reload();
-          } else store2.set({ error: r && r.error || "\u4FDD\u5B58\u5931\u8D25" });
-        } catch {
-          store2.set({ error: "\u8FDE\u63A5 Host \u5931\u8D25" });
-        }
-      });
-    }
-    async function delVendor(id) {
-      await withBusy(async () => {
-        try {
-          const r = await call("quota.delete-vendor", { id });
-          if (!(r && r.ok)) store2.set({ error: r && r.error || "\u5220\u9664\u5931\u8D25" });
-          await reload();
-        } catch {
-          store2.set({ error: "\u8FDE\u63A5 Host \u5931\u8D25" });
-        }
-      });
-    }
-    const requestDelVendor = (v) => {
-      setAcked(false);
-      setConfirmDel(v);
-    };
-    async function toCred(id) {
-      await withBusy(async () => {
-        try {
-          const r = await call("quota.secret-to-cred", { id });
-          if (r && r.ok) await reload();
-          else store2.set({ error: r && r.error || "\u8F6C\u5B58\u5931\u8D25" });
-        } catch {
-          store2.set({ error: "\u8FDE\u63A5 Host \u5931\u8D25" });
-        }
-      });
-    }
-    async function applyActive(id) {
-      await withBusy(async () => {
-        await setActive(id);
-        await reload();
-      });
-    }
-    async function saveSecVal(n) {
-      await withBusy(async () => {
-        try {
-          const r = await call("quota.set-refresh", { sec: n });
-          if (r && r.ok) await reload();
-          else store2.set({ error: r && r.error || "\u4FDD\u5B58\u5931\u8D25" });
-        } catch {
-          store2.set({ error: "\u8FDE\u63A5 Host \u5931\u8D25" });
-        }
-      });
-    }
-    async function toggleEnabled() {
-      const next = s.cfg ? s.cfg.enabled === false : false;
-      await withBusy(async () => {
-        try {
-          const r = await call("quota.set-enabled", { enabled: next });
-          if (r && r.ok) await reload();
-          else store2.set({ error: r && r.error || "\u4FDD\u5B58\u5931\u8D25" });
-        } catch {
-          store2.set({ error: "\u8FDE\u63A5 Host \u5931\u8D25" });
-        }
-      });
-    }
-    const vendors = s.cfg && s.cfg.vendors || [];
-    const activeId = s.cfg ? s.cfg.activeVendor || "" : "";
-    const shown = s.cfg ? s.cfg.enabled !== false : true;
-    const rawSec = s.cfg ? s.cfg.refreshSec : void 0;
-    const curSec = rawSec === void 0 || rawSec === null || rawSec === "" ? 60 : Number(rawSec) === 0 ? 0 : isFinite(Number(rawSec)) ? Math.min(3600, Math.max(10, Number(rawSec) || 60)) : 60;
-    const kids = [];
-    kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("p", { className: styles_module_css_default.intro, children: [
-        "\u591A\u4F9B\u5E94\u5546\u6EDA\u52A8\u989D\u5EA6 / \u6309\u91CF\u4F59\u989D\uFF0C\u4FA7\u8FB9\u680F\u5B9E\u65F6\u5361\u7247\u5C55\u793A\u3002\u914D\u7F6E\u6301\u4E45\u5316\u5728 settings.yaml\uFF08",
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("code", { className: styles_module_css_default.mono, children: s.namespace || "dshp-token-meter" }),
-        " \u547D\u540D\u7A7A\u95F4" + (s.docPath ? "\uFF0C\u6587\u4EF6 " + s.docPath : "") + "\uFF09\uFF0C\u5916\u90E8\u7F16\u8F91\u70ED\u91CD\u8F7D\uFF1B\u5BC6\u94A5\u7528 $NAME \u5F15\u7528\u6216\u660E\u6587\u3002"
-      ] }, "d")
-    );
-    if (s.error)
-      kids.push(
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("p", { className: cx5(styles_module_css_default.notice, styles_module_css_default.noticeErr), children: s.error }, "err")
-      );
-    if (!s.cfg) {
-      kids.push(
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.loading, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.spinner }),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.loadingText, children: s.loading ? "\u6B63\u5728\u8BFB\u53D6\u989D\u5EA6\u914D\u7F6E\u2026" : "\u989D\u5EA6\u914D\u7F6E\u52A0\u8F7D\u5931\u8D25" })
-        ] }, "loading")
-      );
-      return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.page, children: kids });
-    }
-    const a0 = activeOf(s);
-    const aSnap = a0 && s.snaps[a0.id];
-    kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.section, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(SecRow, { label: "\u5F53\u524D\u4F9B\u5E94\u5546", desc: "\u4FA7\u8FB9\u680F\u5361\u7247\u5C55\u793A\u7684\u989D\u5EA6\u6765\u6E90\u3002", children: a0 ? /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { children: [
-          a0.name,
-          " ",
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Badge2, { kind: "info", text: typeLabel(a0.type) })
-        ] }) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Badge2, { kind: "muted", text: "\u6781\u7B80\u6A21\u5F0F\uFF08\u65E0\uFF09" }) }, "a"),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(SecRow, { label: "\u4F9B\u5E94\u5546\u6570\u91CF", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Badge2, { kind: vendors.length ? "info" : "muted", text: vendors.length + " \u4E2A" }) }, "n"),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(SecRow, { label: "\u989D\u5EA6\u663E\u793A", children: shown ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Badge2, { kind: "ok", text: "\u663E\u793A\u4E2D" }) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Badge2, { kind: "muted", text: "\u5DF2\u9690\u85CF" }) }, "v"),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(SecRow, { label: "\u81EA\u52A8\u5237\u65B0", children: curSec === 0 ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Badge2, { kind: "muted", text: "\u5DF2\u5173\u95ED" }) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Badge2, { kind: "ok", text: "\u6BCF " + curSec + " \u79D2" }) }, "r"),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(SecRow, { label: "\u6700\u8FD1\u62C9\u53D6", children: aSnap && aSnap.at ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.hint, children: timeAgo(aSnap.at) }) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.hint, children: a0 ? "\u672A\u62C9\u53D6" : "\u2014" }) }, "u"),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(SecRow, { label: "\u6D6E\u7A97", children: s.floatOpen ? /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: styles_module_css_default.bar, style: { padding: 0, border: "none" }, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Badge2, { kind: "info", text: "\u5DF2\u5F39\u51FA" }),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Btn, { variant: "outline", size: "sm", disabled: busy, onClick: () => setFloatOpen(false), children: "\u6536\u56DE\u4FA7\u8FB9\u680F" })
-        ] }) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.hint, children: "\u5728\u4FA7\u8FB9\u680F\u4E2D\uFF08\u5361\u7247\u6807\u9898\u680F \u283F \u53EF\u62D6\u51FA\uFF09" }) }, "f")
-      ] }, "status")
-    );
-    kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.section, children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-        SecRow,
+  function buttonOf(vendor, snap, now, variant) {
+    const size = ringSizeOf(variant);
+    const idle = (title) => {
+      const empty = /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(QuotaRing, { spec: { pct: null, tone: "idle", title }, size });
+      return /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+        ButtonLayout,
         {
-          label: "\u4FA7\u8FB9\u680F\u989D\u5EA6\u5361",
-          desc: "\u5173\u95ED\u540E\u4FA7\u8FB9\u680F\u4EC5\u4FDD\u7559\u5360\u4F4D\u63D0\u793A\uFF0C\u4E0D\u518D\u81EA\u52A8\u62C9\u53D6\uFF1B\u4F9B\u5E94\u5546\u914D\u7F6E\u4E0E\u624B\u52A8\u62C9\u53D6\u4E0D\u53D7\u5F71\u54CD\u3002",
-          children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-            "button",
-            {
-              className: cx5(styles_module_css_default.switch, shown ? styles_module_css_default.switchOn : void 0),
-              role: "switch",
-              "aria-checked": shown,
-              disabled: busy,
-              "aria-label": "\u4FA7\u8FB9\u680F\u989D\u5EA6\u5361",
-              onClick: () => void toggleEnabled(),
-              children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.knob })
-            }
-          )
-        },
-        "sw"
-      ) }, "display")
-    );
-    const activeSelect = /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-      PillSelect,
-      {
-        disabled: busy,
-        value: activeId,
-        selectedLabel: a0 ? a0.name + "\uFF08" + typeLabel(a0.type) + "\uFF09" : "\u65E0 \xB7 \u6781\u7B80\u6A21\u5F0F\uFF08\u4E0D\u62C9\u53D6\uFF09",
-        options: [{ id: "", label: "\u65E0 \xB7 \u6781\u7B80\u6A21\u5F0F\uFF08\u4E0D\u62C9\u53D6\uFF09" }].concat(
-          vendors.map((v) => ({ id: v.id, label: v.name + "\uFF08" + typeLabel(v.type) + "\uFF09" }))
-        ),
-        onSelect: (id) => void applyActive(id)
-      }
-    );
-    const vrows = [
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(SecRow, { label: "\u5F53\u524D\u4F9B\u5E94\u5546", desc: "\u70B9\u5F00\u9009\u62E9\u4FA7\u8FB9\u680F\u5C55\u793A\u7684\u4F9B\u5E94\u5546\uFF1B\u65E0 = \u6781\u7B80\u6A21\u5F0F\u3002", children: activeSelect }, "__active")
-    ];
-    vendors.forEach((v) => {
-      const snap = s.snaps[v.id];
-      const isCur = v.id === activeId;
-      const status = snap && snap.ok ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.hint, children: "\u66F4\u65B0" + timeAgo(snap.at) }) : snap ? import_dsh_client_ui_primitives4.Tooltip ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(import_dsh_client_ui_primitives4.Tooltip, { label: snap.error || "\u62C9\u53D6\u5931\u8D25", side: "top", children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.hint, children: "\u62C9\u53D6\u5931\u8D25" }) }) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.hint, title: snap.error || "\u62C9\u53D6\u5931\u8D25", children: "\u62C9\u53D6\u5931\u8D25" }) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.hint, children: "\u672A\u62C9\u53D6" });
-      vrows.push(
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-          SecRow,
-          {
-            wrap: true,
-            label: /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { style: { display: "flex", alignItems: "center", gap: 6, minWidth: 0, maxWidth: "100%" }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: cx5(styles_module_css_default.dot, snap && !snap.ok ? dotToneOf(snap) : void 0) }),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.vname2, style: { maxWidth: 280 }, children: v.name }),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Badge2, { kind: "info", text: typeLabel(v.type) }),
-              isCur ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Badge2, { kind: "ok", text: "\u5F53\u524D" }) : null,
-              secretBadge(v.secretKind)
-            ] }),
-            children: /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { className: styles_module_css_default.bar, style: { width: "100%", padding: 0, border: "none" }, children: [
-              status,
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { style: { flex: 1 } }),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Btn, { variant: "outline", size: "sm", disabled: busy, onClick: () => void refreshVendor(v.id), children: "\u62C9\u53D6" }),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                Btn,
-                {
-                  variant: "outline",
-                  size: "sm",
-                  disabled: busy,
-                  onClick: () => setEditing({ id: v.id, data: JSON.parse(JSON.stringify(v)) }),
-                  children: "\u7F16\u8F91"
-                }
-              ),
-              v.secretKind === "plain" ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                Btn,
-                {
-                  variant: "ghost",
-                  size: "sm",
-                  disabled: busy,
-                  title: "\u660E\u6587\u8F6C\u5B58\u7CFB\u7EDF\u51ED\u636E\uFF0C\u6539\u5199\u4E3A $NAME \u5F15\u7528",
-                  onClick: () => void toCred(v.id),
-                  children: "\u5B58\u51ED\u636E"
-                }
-              ) : null,
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Btn, { variant: "ghost", size: "sm", disabled: busy, onClick: () => requestDelVendor(v), children: "\u5220\u9664" })
-            ] })
-          },
-          "v:" + v.id
-        )
+          variant,
+          leading: empty,
+          glyph: empty,
+          ...variant === "wide" && vendor ? { name: vendor.name } : {}
+        }
       );
-    });
-    kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.section, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.sectionHead, children: "\u4F9B\u5E94\u5546" }),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("p", { className: styles_module_css_default.cardHint, style: { margin: "0 0 4px" }, children: "\u4FA7\u8FB9\u680F\u5361\u7247\u70B9\u4F9B\u5E94\u5546\u540D\u4E5F\u53EF\u5207\u6362\u3002\u5BC6\u94A5 $NAME \u5F15\u7528\u4F18\u5148\uFF0C\u660E\u6587\u4FDD\u5B58\u540E\u4E0D\u660E\u6587\u56DE\u663E\u3002" }),
-        vrows
-      ] }, "vendors")
-    );
-    if (editing)
-      kids.push(
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.section, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.sectionHead, children: "\u7F16\u8F91 " + editing.id }),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("p", { className: styles_module_css_default.cardHint, style: { margin: "0 0 4px" }, children: "ID \u662F\u4E3B\u952E\uFF0C\u4E0D\u53EF\u4FEE\u6539\uFF1B\u5BC6\u94A5\u7559\u7A7A\u5373\u4FDD\u7559\u539F\u503C\u3002" }),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-            VendorForm,
-            {
-              draft: editing.data,
-              set: (nd) => setEditing({ id: editing.id, data: nd }),
-              submitLabel: "\u4FDD\u5B58\u4FEE\u6539",
-              busy,
-              isEdit: true,
-              onCancel: () => setEditing(null),
-              onSubmit: () => void saveVendor(editing.data, true)
-            }
-          )
-        ] }, "edit")
-      );
-    kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.section, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.sectionHead, children: "\u6DFB\u52A0\u4F9B\u5E94\u5546" }),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-          VendorForm,
-          {
-            draft,
-            set: setDraft,
-            submitLabel: "\u6DFB\u52A0",
-            busy,
-            onSubmit: () => void saveVendor(draft, false)
-          }
-        )
-      ] }, "add")
-    );
-    const allSecs = SEC_PRESETS2.indexOf(curSec) >= 0 ? SEC_PRESETS2 : [curSec].concat(SEC_PRESETS2);
-    kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.section, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.sectionHead, children: "\u81EA\u52A8\u5237\u65B0" }),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-          SecRow,
-          {
-            label: "\u5237\u65B0\u95F4\u9694",
-            desc: "\u5F53\u524D\u4F9B\u5E94\u5546\u6309\u95F4\u9694\u81EA\u52A8\u62C9\u53D6\uFF1B\u5207\u6362\u4F9B\u5E94\u5546\u4F1A\u7ACB\u5373\u5237\u65B0\u4E00\u6B21\uFF1B\u5931\u8D25\u65F6\u4FDD\u7559\u65E7\u6570\u636E\u5E76\u5728\u5361\u7247\u6807\u6CE8\u3002",
-            children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-              PillSelect,
-              {
-                disabled: busy,
-                value: String(curSec),
-                selectedLabel: secLabel2(curSec),
-                options: allSecs.map((n) => ({ id: String(n), label: secLabel2(n) })),
-                onSelect: (id) => void saveSecVal(Number(id))
-              }
-            )
-          },
-          "sec"
-        )
-      ] }, "refresh")
-    );
-    kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.section, children: /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.bar, style: { borderBottom: "none" }, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Btn, { variant: "outline", size: "sm", disabled: busy, onClick: () => void withBusy(() => reload()), children: busy ? "\u8BFB\u53D6\u4E2D\u2026" : "\u91CD\u65B0\u8BFB\u53D6" }),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-          Btn,
-          {
-            variant: "outline",
-            size: "sm",
-            disabled: busy,
-            onClick: () => void withBusy(() => refreshVendor()),
-            children: "\u5168\u90E8\u62C9\u53D6"
-          }
-        )
-      ] }) }, "tools")
-    );
-    const manual = aiManual(s.namespace || "dshp-token-meter", s.docPath || "");
-    kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.section, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.sectionHead, children: "\u7ED9 AI \u7684\u914D\u7F6E\u8BF4\u660E\u4E66" }),
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("p", { className: styles_module_css_default.cardHint, style: { margin: "0 0 4px" }, children: [
-          "AI \u53EF\u76F4\u63A5\u7F16\u8F91 settings.yaml \u7684 ",
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("code", { className: styles_module_css_default.mono, children: s.namespace || "dshp-token-meter" }),
-          " \u5206\u8282\uFF0C\u4FDD\u5B58\u5373\u751F\u6548\uFF08\u70ED\u91CD\u8F7D\uFF09\uFF0C\u65E0\u9700\u8D70\u8868\u5355\u3002\u5BC6\u94A5\u4F18\u5148\u7528 $NAME \u5F15\u7528\u5199\u6CD5\u3002"
-        ] }),
-        import_dsh_client_ui_primitives4.CodeBlock ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-          import_dsh_client_ui_primitives4.CodeBlock,
-          {
-            code: manual,
-            lang: "yaml",
-            copyLabel: "\u590D\u5236",
-            copiedLabel: "\u5DF2\u590D\u5236",
-            className: styles_module_css_default.codeblock
-          }
-        ) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-          "pre",
-          {
-            className: styles_module_css_default.mono,
-            style: { fontSize: 11, whiteSpace: "pre-wrap", wordBreak: "break-all" },
-            children: manual
-          }
-        )
-      ] }, "manual")
-    );
-    kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("p", { className: styles_module_css_default.footerNote, style: { marginTop: 4 }, children: "manual \u7C7B\u578B\u76F4\u63A5\u5199\u6570\u5B57\uFF0C\u65E0\u9700\u62C9\u53D6\uFF1BactiveVendor \u4E3A\u7A7A\u5B57\u7B26\u4E32\u65F6\u8FDB\u5165\u6781\u7B80\u6A21\u5F0F\u3002" }, "foot")
-    );
-    if (confirmDel) {
-      const target = confirmDel;
-      if (import_dsh_client_ui_primitives4.RiskConfirmation) {
-        kids.push(
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-            import_dsh_client_ui_primitives4.RiskConfirmation,
-            {
-              open: true,
-              title: "\u5220\u9664\u4F9B\u5E94\u5546\u300C" + target.name + "\u300D\uFF1F",
-              description: "\u8BE5\u4F9B\u5E94\u5546\u7684\u914D\u7F6E\u4E0E\u4FA7\u8FB9\u680F\u5FEB\u7167\u5C06\u4E00\u5E76\u6E05\u9664\uFF0C\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002",
-              acknowledgeLabel: "\u6211\u5DF2\u4E86\u89E3\uFF0C\u5220\u9664\u8BE5\u4F9B\u5E94\u5546",
-              cancelLabel: "\u53D6\u6D88",
-              closeLabel: "\u5173\u95ED",
-              confirmLabel: "\u5220\u9664",
-              acknowledged: acked,
-              onAcknowledgedChange: setAcked,
-              onCancel: () => setConfirmDel(null),
-              onConfirm: () => {
-                setConfirmDel(null);
-                void delVendor(target.id);
-              }
-            },
-            "confirm-del"
-          )
-        );
-      } else if (acked) {
-        kids.push(
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.errbox, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { children: "\u786E\u8BA4\u5220\u9664\u300C" + target.name + "\u300D\uFF1F" }),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { style: { display: "flex", gap: 8, marginTop: 6 }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                Btn,
-                {
-                  variant: "outline",
-                  size: "sm",
-                  onClick: () => {
-                    setConfirmDel(null);
-                    void delVendor(target.id);
-                  },
-                  children: "\u786E\u8BA4\u5220\u9664"
-                }
-              ),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                Btn,
-                {
-                  variant: "outline",
-                  size: "sm",
-                  onClick: () => {
-                    setConfirmDel(null);
-                    setAcked(false);
-                  },
-                  children: "\u53D6\u6D88"
-                }
-              )
-            ] })
-          ] }, "confirm-del")
-        );
-      } else {
-        kids.push(
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.errbox, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { children: "\u5220\u9664\u4F9B\u5E94\u5546\u300C" + target.name + "\u300D\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002" }),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { style: { display: "flex", gap: 8, marginTop: 6 }, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Btn, { variant: "outline", size: "sm", onClick: () => setAcked(true), children: "\u6211\u5DF2\u4E86\u89E3" }),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Btn, { variant: "outline", size: "sm", onClick: () => setConfirmDel(null), children: "\u53D6\u6D88" })
-            ] })
-          ] }, "confirm-del")
-        );
-      }
-    }
-    return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.page, children: kids });
-  }
-  function QuotaVendorWidget(props) {
-    const Btn = import_dsh_client_ui_primitives4.Button || (({ children, ...rest }) => /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("button", { type: "button", className: styles_module_css_default.btn, ...rest, children }));
-    const s = useStore();
-    const now = useNow(1e3);
-    (0, import_react8.useEffect)(() => {
-      void ensureLoad();
-    }, []);
-    const rawSec = s.cfg ? s.cfg.refreshSec : void 0;
-    const numSec = rawSec === void 0 || rawSec === null || rawSec === "" ? 60 : Number(rawSec);
-    const effSec2 = numSec === 0 ? 0 : isFinite(numSec) ? Math.min(3600, Math.max(10, numSec || 60)) : 60;
-    const syncMs = effSec2 > 0 ? Math.max(10, Math.min(30, effSec2)) * 1e3 : 0;
-    (0, import_react8.useEffect)(() => {
-      if (!(syncMs > 0)) return void 0;
-      startSyncLoop(syncMs);
-      return () => stopSyncLoop();
-    }, [syncMs]);
-    const v = (s.cfg && s.cfg.vendors || []).filter((x) => x.id === props.vendorId)[0];
-    if (!s.cfg)
-      return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.card, children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.hint, children: s.loading ? "\u989D\u5EA6\u52A0\u8F7D\u4E2D\u2026" : s.error || "\u989D\u5EA6\u52A0\u8F7D\u5931\u8D25" }) });
-    if (!v)
-      return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.card, children: /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.hint, children: "\u4F9B\u5E94\u5546\u5DF2\u5220\u9664\uFF0C\u5173\u95ED\u672C\u6D6E\u7A97\u5373\u53EF\u3002" }) });
-    const snap = s.snaps[v.id];
-    const isCur = v.id === s.cfg.activeVendor;
-    const failed = !!(snap && !snap.ok);
-    const off = v.enabled === false;
-    const peakNow = isPeakHour(new Date(now));
-    const wid = "quota:" + v.id;
-    return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
-      "div",
-      {
-        className: cx5(
-          styles_module_css_default.card,
-          failed && !s.loading ? cx5(styles_module_css_default.side, styles_module_css_default.error) : void 0,
-          moodClass(off, peakNow)
-        ),
-        children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { style: { display: "flex", alignItems: "center", gap: 6, minWidth: 0, flexWrap: "wrap" }, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-              "span",
-              {
-                className: cx5(styles_module_css_default.dot, off ? styles_module_css_default.off : snap && !snap.ok ? dotToneOf(snap) : void 0)
-              }
-            ),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.vname2, style: { maxWidth: 220 }, children: v.name }),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Badge2, { kind: "info", text: typeLabel(v.type) }),
-            secretBadge(v.secretKind),
-            isCur ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Badge2, { kind: "ok", text: "\u5F53\u524D" }) : null,
-            off ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Badge2, { kind: "bad", text: "\u5DF2\u7981\u7528" }) : null,
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { style: { flex: "1 1 auto" } }),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("span", { style: { display: "inline-flex", gap: 6, alignItems: "center", flexWrap: "wrap" }, children: [
-              isCur ? null : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Btn, { variant: "outline", size: "sm", disabled: s.loading, onClick: () => void setActive(v.id), children: "\u8BBE\u4E3A\u5F53\u524D" }),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                Btn,
-                {
-                  variant: "outline",
-                  size: "sm",
-                  disabled: s.loading,
-                  title: off ? "\u5DF2\u7981\u7528\u5B9A\u65F6\u62C9\u53D6\uFF0C\u624B\u52A8\u62C9\u53D6\u4ECD\u7136\u53EF\u7528" : void 0,
-                  onClick: () => void refreshVendor(v.id),
-                  children: "\u62C9\u53D6"
-                }
-              ),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-                Btn,
-                {
-                  variant: "ghost",
-                  size: "sm",
-                  disabled: s.loading,
-                  title: off ? "\u91CD\u65B0\u52A0\u5165 Host \u5B9A\u65F6\u62C9\u53D6" : "\u9000\u51FA Host \u5B9A\u65F6\u62C9\u53D6\uFF08\u624B\u52A8\u62C9\u53D6\u4E0D\u53D7\u5F71\u54CD\uFF09",
-                  onClick: () => void setVendorEnabled(v.id, off),
-                  children: off ? "\u542F\u7528" : "\u7981\u7528"
-                }
-              ),
-              WG ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(WG.WidgetToggle, { id: wid, name: v.name ? "\u989D\u5EA6 \xB7 " + v.name : void 0 }) : null
-            ] })
-          ] }),
-          snap ? snap.ok ? /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { style: { marginTop: 6 }, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(SnapBody, { snap, type: v.type, now }),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.qmeta, children: [
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "\u66F4\u65B0" + timeAgo(snap.at) + (snap.via ? " \xB7 " + snap.via : "") }),
-              /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "" })
-            ] })
-          ] }) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-            ErrBox,
-            {
-              info: errInfoOf(snap, snap.error || "\u62C9\u53D6\u5931\u8D25"),
-              msg: snap.error || "\u62C9\u53D6\u5931\u8D25",
-              meta: v.name + " \xB7 \u5931\u8D25\u4E8E" + timeAgo(snap.at),
-              onRetry: () => void refreshVendor(v.id)
-            }
-          ) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.hint, style: { marginTop: 6 }, children: "\u5C1A\u672A\u62C9\u53D6\uFF0C\u70B9\u51FB\u62C9\u53D6\u83B7\u53D6\u6700\u65B0\u989D\u5EA6\u3002" })
-        ]
-      }
-    );
-  }
-  const CN_OFFSET_MS = 8 * 36e5;
-  const PEAK_SEGMENTS = [
-    [9, 12],
-    // ← UTC 01:00–04:00
-    [14, 18]
-    // ← UTC 06:00–10:00
-  ];
-  const PEAK_WEEKDAYS = [1, 2, 3, 4, 5];
-  const CN_WEEK_LABEL = ["\u5468\u65E5", "\u5468\u4E00", "\u5468\u4E8C", "\u5468\u4E09", "\u5468\u56DB", "\u5468\u4E94", "\u5468\u516D"];
-  function pad2(n) {
-    return String(n).padStart(2, "0");
-  }
-  function cnAt(ms) {
-    const d = new Date(ms + CN_OFFSET_MS);
-    return { day: d.getUTCDay(), hour: d.getUTCHours(), min: d.getUTCMinutes() };
-  }
-  function cnHm(ms) {
-    const c = cnAt(ms);
-    return pad2(c.hour) + ":" + pad2(c.min);
-  }
-  function cnDayKey(ms) {
-    return Math.floor((ms + CN_OFFSET_MS) / 864e5);
-  }
-  function cnWhen(targetMs, nowMs) {
-    const diff = cnDayKey(targetMs) - cnDayKey(nowMs);
-    const d = new Date(targetMs + CN_OFFSET_MS);
-    const hm = pad2(d.getUTCHours()) + ":" + pad2(d.getUTCMinutes());
-    if (diff <= 0) return "\u4ECA\u5929 " + hm;
-    if (diff === 1) return "\u660E\u5929 " + hm;
-    if (diff === 2) return "\u540E\u5929 " + hm;
-    return CN_WEEK_LABEL[d.getUTCDay()] + " " + hm;
-  }
-  function isPeakMs(ms) {
-    const c = cnAt(ms);
-    if (!PEAK_WEEKDAYS.includes(c.day)) return false;
-    return PEAK_SEGMENTS.some(([s, e]) => c.hour >= s && c.hour < e);
-  }
-  function isPeakHour(t) {
-    return isPeakMs(t.getTime());
-  }
-  function moodClass(off, peak) {
-    if (off) return styles_module_css_default.off;
-    return peak ? styles_module_css_default.moodPeak : styles_module_css_default.moodValley;
-  }
-  function nextPeakSwitch(nowMs, peak) {
-    const step = 6e4;
-    for (let i = 1; i < 8 * 24 * 60; i++) {
-      if (isPeakMs(nowMs + i * step) !== peak) return { ms: i * step, toPeak: !peak };
-    }
-    return { ms: 7 * 24 * 36e5, toPeak: peak };
-  }
-  function fmtDur2(ms) {
-    const m = Math.round(ms / 6e4);
-    const hh = Math.floor(m / 60);
-    const mm = m % 60;
-    if (hh >= 24) return Math.floor(hh / 24) + " \u5929 " + hh % 24 + " \u5C0F\u65F6";
-    if (hh > 0) return hh + " \u5C0F\u65F6 " + mm + " \u5206";
-    return mm + " \u5206";
-  }
-  function fmtDurShort(ms) {
-    const m = Math.max(1, Math.round(ms / 6e4));
-    const hh = Math.floor(m / 60);
-    if (hh >= 24) return Math.floor(hh / 24) + "d" + hh % 24 + "h";
-    if (hh > 0) return hh + "h" + pad2(m % 60) + "m";
-    return m + "m";
-  }
-  function PeakPopover(props) {
-    const now = props.now;
-    const ns = nextPeakSwitch(now, props.peak);
-    const segTxt = PEAK_SEGMENTS.map(([s, e]) => pad2(s) + ":00\u2013" + pad2(e) + ":00").join("\u3001");
-    return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
-      "div",
-      {
-        className: cx5(styles_module_css_default.tipfixed, styles_module_css_default.peakPop),
-        style: { left: props.at.left + "px", top: props.at.top, bottom: props.at.bottom },
-        children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.peakPopHead, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: cx5(styles_module_css_default.peakPopDot, props.peak ? styles_module_css_default.peak : styles_module_css_default.valley) }),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { children: "\u5CF0\u8C37\u5B9A\u4EF7 \xB7 \u5317\u4EAC\u65F6\u95F4" }),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.peakPopClock, children: cnHm(now) }, cnHm(now))
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.tiprow, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.tipK, children: "\u5F53\u524D" }),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.tipV, children: (props.peak ? "\u5CF0\u65F6\u6BB5" : "\u8C37\u65F6\u6BB5") + (props.isWeekend ? "\uFF08\u5468\u672B\uFF09" : "") })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.tiprow, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.tipK, children: "\u5CF0\u6BB5" }),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.tipV, children: segTxt })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.tiprow, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.tipK, children: "\u5CF0\u65E5" }),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.tipV, children: "\u5468\u4E00\u81F3\u5468\u4E94" })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.tiprow, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.tipK, children: ns.toPeak ? "\u8F6C\u5165\u5CF0" : "\u8F6C\u5165\u8C37" }),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.tipV, children: cnWhen(now + ns.ms, now) })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.tiprow, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.tipK, children: "\u5012\u8BA1\u65F6" }),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.tipV, children: fmtDur2(ns.ms) })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.peakPopFoot, children: "\u6298\u7B97\u81EA 01-04 & 06-10 UTC, Mon-Fri \xB7 \u6BCF\u65E5 7h \u5CF0 / 17h \u8C37" })
-        ]
-      }
-    );
-  }
-  function PeakIndicator(props) {
-    const now = useNow(6e4);
-    const [popAt, setPopAt] = (0, import_react8.useState)(null);
-    const c = cnAt(now);
-    const peak = isPeakMs(now);
-    const isWeekend = c.day === 0 || c.day === 6;
-    const ns = nextPeakSwitch(now, peak);
-    const segTxt = PEAK_SEGMENTS.map(([s, e]) => pad2(s) + ":00\u2013" + pad2(e) + ":00").join("\u3001");
-    const cells = [];
-    for (let hr = 0; hr < 24; hr++) {
-      const on = !isWeekend && PEAK_SEGMENTS.some(([s, e]) => hr >= s && hr < e);
-      cells.push(
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-          "span",
-          {
-            className: cx5(styles_module_css_default.peakCell, on ? styles_module_css_default.on : styles_module_css_default.von, hr === c.hour ? styles_module_css_default.now : void 0),
-            title: pad2(hr) + ":00\u2013" + pad2((hr + 1) % 24) + ":00 " + (on ? "\u5CF0" : "\u8C37") + "\uFF08\u5317\u4EAC\u65F6\u95F4\uFF09"
-          },
-          hr
-        )
-      );
-    }
-    const curTxt = peak ? "\u5CF0" : "\u8C37";
-    const nextTxt = (ns.toPeak ? "\u8DDD\u5CF0 " : "\u8DDD\u8C37 ") + fmtDurShort(ns.ms);
-    const openPop = (el) => {
-      try {
-        if (!el || typeof el.getBoundingClientRect !== "function") return;
-        const r = el.getBoundingClientRect();
-        const W = 252;
-        const H = 168;
-        const vw = window.innerWidth || 1024;
-        const vh = window.innerHeight || 768;
-        const left = Math.max(8, Math.min(r.left, vw - W - 8));
-        const below = r.bottom + 8;
-        if (below + H <= vh - 8) setPopAt({ left, top: below + "px", bottom: void 0 });
-        else setPopAt({ left, top: void 0, bottom: Math.max(8, vh - r.top + 8) + "px" });
-      } catch {
-      }
     };
-    return /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)(
-      "div",
-      {
-        className: cx5(styles_module_css_default.peak, peak ? styles_module_css_default.peak : styles_module_css_default.valley),
-        tabIndex: 0,
-        "aria-label": "\u5CF0\u8C37\u5B9A\u4EF7\uFF1A\u5F53\u524D" + (peak ? "\u5CF0\u65F6\u6BB5" : "\u8C37\u65F6\u6BB5") + "\uFF0C" + nextTxt,
-        onMouseEnter: (e) => openPop(e.currentTarget),
-        onMouseLeave: () => setPopAt(null),
-        onFocus: (e) => openPop(e.currentTarget),
-        onBlur: () => setPopAt(null),
-        children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.peakHead, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: cx5(styles_module_css_default.peakDot, peak ? styles_module_css_default.peak : styles_module_css_default.valley) }),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.peakTitle, children: "\u5CF0\u8C37\u5B9A\u4EF7" }),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: cx5(styles_module_css_default.peakChip, peak ? styles_module_css_default.peak : styles_module_css_default.valley), children: curTxt }),
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(
-              "span",
-              {
-                className: styles_module_css_default.peakTime,
-                title: "\u5317\u4EAC\u65F6\u95F4 " + cnHm(now) + " \xB7 " + nextTxt + "\uFF08" + cnWhen(now + ns.ms, now) + "\uFF09",
-                children: nextTxt
-              }
-            ),
-            props.widgets && props.widgetId ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(props.widgets.WidgetToggle, { id: props.widgetId }) : null
-          ] }, "hd"),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.peakBand, children: cells }, "band"),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.peakHint, children: [
-            isWeekend ? "\u5CF0\u8C37\u5B9A\u4EF7\uFF08\u5317\u4EAC\u65F6\u95F4\uFF09\uFF1A\u5468\u672B\u5168\u5929\u4E3A\u8C37\uFF0C" : "\u5CF0\u8C37\u5B9A\u4EF7\uFF08\u5317\u4EAC\u65F6\u95F4\uFF09\uFF1A\u5468\u4E00\u81F3\u5468\u4E94 " + segTxt + " \u4E3A\u5CF0\uFF0C",
-            /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("b", { children: peak ? "\u5F53\u524D\u4E3A\u5CF0\uFF0C\u7528\u91CF\u6D88\u8017\u52A0\u901F\u3001\u989D\u5EA6\u8D70\u5F97\u66F4\u5FEB\uFF0C\u5EFA\u8BAE\u9519\u5CF0\u8DD1\u91CF\u6216\u7559\u610F\u4F59\u989D\u3002" : "\u5F53\u524D\u4E3A\u8C37\uFF0C\u8D39\u7387\u76F8\u5BF9\u4F4E\uFF0C\u9002\u5408\u6279\u91CF\u4E0E\u957F\u4EFB\u52A1\u8DD1\u91CF\u3002" })
-          ] }, "hint"),
-          popAt === null ? null : tmPortal2(/* @__PURE__ */ (0, import_jsx_runtime17.jsx)(PeakPopover, { now, peak, isWeekend, at: popAt }))
-        ]
-      }
-    );
+    if (!vendor) return idle("\u672A\u9009\u62E9\u4F9B\u5E94\u5546\uFF08\u6781\u7B80\u6A21\u5F0F\uFF09\uFF1A\u5728\u8BBE\u7F6E\u91CC\u9009\u4E00\u4E2A");
+    if (!snap) return idle(vendor.name + "\uFF1A\u8FD8\u6CA1\u6709\u989D\u5EA6\u6570\u636E\uFF0C\u70B9\u5F00\u53EF\u624B\u52A8\u62C9\u53D6");
+    return providerViews.renderButton({
+      type: vendor.type,
+      snap,
+      now,
+      vendorId: vendor.id,
+      variant,
+      icon: iconOf(vendor.type, iconMetaOf(vendor.type))
+    });
   }
-  function QuotaView2(props) {
-    const Btn = import_dsh_client_ui_primitives4.Button || (({ children, ...rest }) => /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("button", { type: "button", className: styles_module_css_default.btn, ...rest, children }));
+  function iconMetaOf(type) {
+    const ps = providerMetas();
+    if (ps) {
+      const hit = ps.filter((x) => x && x.type === type)[0];
+      if (hit && typeof hit.icon === "string" && hit.icon !== "") return hit.icon;
+    }
+    return void 0;
+  }
+  function buttonTitleOf(vendor, snap, variant) {
+    if (!vendor) return "\u672A\u9009\u62E9\u4F9B\u5E94\u5546\uFF08\u6781\u7B80\u6A21\u5F0F\uFF09\uFF1A\u5728\u8BBE\u7F6E\u91CC\u9009\u4E00\u4E2A";
+    if (!snap) return vendor.name + "\uFF1A\u8FD8\u6CA1\u6709\u989D\u5EA6\u6570\u636E\uFF0C\u70B9\u5F00\u53EF\u624B\u52A8\u62C9\u53D6";
+    return providerViews.buttonTitle({
+      type: vendor.type,
+      snap,
+      now: Date.now(),
+      vendorId: vendor.id,
+      variant,
+      icon: iconOf(vendor.type, iconMetaOf(vendor.type))
+    });
+  }
+  function QuotaSidebarAction2(props) {
     const s = useStore();
-    (0, import_react8.useEffect)(() => {
+    const [, forcePrefs] = (0, import_react9.useState)(0);
+    (0, import_react9.useEffect)(() => providerPrefs.subscribe(() => forcePrefs((x) => x + 1)), []);
+    const [open, setOpen] = (0, import_react9.useState)(false);
+    const rootRef = (0, import_react9.useRef)(null);
+    const btnRef = (0, import_react9.useRef)(null);
+    const panelRef = (0, import_react9.useRef)(null);
+    const [now, setNow] = (0, import_react9.useState)(() => Date.now());
+    (0, import_react9.useEffect)(() => {
+      if (!open) return;
+      setNow(Date.now());
+      const id = window.setInterval(() => setNow(Date.now()), 1e3);
+      return () => window.clearInterval(id);
+    }, [open]);
+    (0, import_react9.useEffect)(() => {
       void ensureLoad();
     }, []);
-    const floats = WG && typeof WG.useWidgets === "function" ? WG.useWidgets() : [];
-    const kids = [];
-    if (!floats.some((w) => w.id === "peak")) {
-      kids.push(/* @__PURE__ */ (0, import_jsx_runtime17.jsx)(PeakIndicator, { widgets: WG || void 0, widgetId: "peak" }, "peak"));
-    }
-    if (s.error)
-      kids.push(
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("p", { className: cx5(styles_module_css_default.notice, styles_module_css_default.noticeErr), children: s.error }, "err")
-      );
-    if (!s.cfg) {
-      kids.push(
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: styles_module_css_default.loading, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.spinner }),
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("span", { className: styles_module_css_default.loadingText, children: s.loading ? "\u6B63\u5728\u8BFB\u53D6\u989D\u5EA6\u914D\u7F6E\u2026" : "\u989D\u5EA6\u914D\u7F6E\u52A0\u8F7D\u5931\u8D25" })
-        ] }, "loading")
-      );
-      return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.page, children: kids });
-    }
-    const vendors = s.cfg.vendors || [];
-    if (!vendors.length) {
-      kids.push(
-        /* @__PURE__ */ (0, import_jsx_runtime17.jsxs)("div", { className: cx5(styles_module_css_default.card, styles_module_css_default.empty), children: [
-          /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { children: "\u8FD8\u6CA1\u6709\u914D\u7F6E\u4EFB\u4F55\u4F9B\u5E94\u5546\u3002" }),
-          props.onOpenSettings ? /* @__PURE__ */ (0, import_jsx_runtime17.jsx)(Btn, { variant: "outline", size: "sm", style: { marginTop: 10 }, onClick: props.onOpenSettings, children: "\u53BB\u6DFB\u52A0\u4F9B\u5E94\u5546" }) : /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.hint, style: { marginTop: 6 }, children: "\u53BB \u8BBE\u7F6E \u2192 " + DISPLAY_NAME + " \u6DFB\u52A0\u7B2C\u4E00\u4E2A\u3002" })
-        ] }, "empty")
-      );
-      return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.page, children: kids });
-    }
-    const activeId = s.cfg.activeVendor || "";
+    const hasCfg = s.cfg !== null;
+    const refreshSec = hasCfg ? Number(s.cfg.refreshSec) : 0;
+    const autoOff = hasCfg && refreshSec === 0;
+    (0, import_react9.useEffect)(() => {
+      if (!hasCfg || autoOff) return;
+      const ms = Math.min(3600, Math.max(10, refreshSec || 60)) * 1e3;
+      startSyncLoop(ms);
+      return () => stopSyncLoop();
+    }, [hasCfg, autoOff, refreshSec]);
+    const vendors = s.cfg && s.cfg.vendors || [];
+    const vendorIds = vendors.map((v) => v.id).join("\0");
+    (0, import_react9.useEffect)(() => {
+      if (!hasCfg) return;
+      providerPrefs.prune(vendors.map((v) => v.id));
+    }, [hasCfg, vendorIds]);
+    const activeVendor = activeOf(s);
+    const activeId = activeVendor ? activeVendor.id : "";
+    const minimal = activeVendor === null && vendors.length > 0;
+    const activeSnap = activeVendor ? s.snaps[activeVendor.id] : void 0;
+    const variant = props.wide ? "wide" : "rail";
+    const activeButton = buttonOf(activeVendor, activeSnap, now, variant);
+    const activeGlyph = buttonOf(activeVendor, activeSnap, now, "row");
     const rankOf = (v) => v.id === activeId ? 0 : v.enabled === false ? 2 : 1;
     const ordered = [];
-    for (const rank of [0, 1, 2]) {
-      for (const v of vendors) if (rankOf(v) === rank) ordered.push(v);
+    for (const rank of [0, 1, 2]) for (const v of vendors) if (rankOf(v) === rank) ordered.push(v);
+    const rows = ordered.map((v) => {
+      const snap = s.snaps[v.id];
+      const off = v.enabled === false;
+      const status = off ? "\u5DF2\u7981\u7528" : !snap ? "\u672A\u62C9\u53D6" : snap.ok ? "\u62C9\u53D6\u6B63\u5E38" : "\u62C9\u53D6\u5931\u8D25";
+      const row = {
+        id: v.id,
+        name: v.name,
+        typeLabel: typeLabel(v.type),
+        active: v.id === activeId,
+        disabled: off,
+        button: buttonOf(v, snap, now, "row"),
+        buttonHint: buttonTitleOf(v, snap, "row"),
+        status
+      };
+      row.statusTone = off ? "off" : !snap ? "idle" : snap.ok ? "ok" : snap.errorInfo && snap.errorInfo.tone === "bad" ? "bad" : "warn";
+      return row;
+    });
+    let detail;
+    if (!activeVendor) {
+      detail = /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: styles_module_css_default.trayEmpty, children: "\u672A\u9009\u62E9\u4F9B\u5E94\u5546\uFF08\u6781\u7B80\u6A21\u5F0F\uFF09\uFF1A\u5728\u8BBE\u7F6E\u91CC\u9009\u4E00\u4E2A\u5373\u53EF\u663E\u793A\u989D\u5EA6\u3002" });
+    } else if (s.loading && !activeSnap) {
+      detail = /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: styles_module_css_default.trayEmpty, children: "\u6B63\u5728\u8BFB\u53D6\u989D\u5EA6\u2026" });
+    } else if (!activeSnap) {
+      detail = /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("div", { className: styles_module_css_default.trayEmpty, children: "\u8FD8\u6CA1\u6709\u62C9\u53D6\u8FC7\uFF1A\u70B9\u53F3\u4E0A\u89D2 \u27F3 \u62C9\u53D6\u4E00\u6B21\u3002" });
+    } else if (!activeSnap.ok) {
+      detail = /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+        ErrBox,
+        {
+          info: errInfoOf(activeSnap, "\u62C9\u53D6\u5931\u8D25"),
+          msg: activeSnap.error,
+          meta: activeSnap.vendorName,
+          onRetry: () => {
+            void refreshVendor(activeVendor.id);
+          },
+          compact: true
+        }
+      );
+    } else {
+      detail = providerViews.renderBody({
+        type: activeVendor.type,
+        snap: activeSnap,
+        now,
+        vendorId: activeVendor.id
+      });
     }
-    const grid = [];
-    for (const v of ordered) {
-      if (floats.some((w) => w.id === "quota:" + v.id)) continue;
-      grid.push(/* @__PURE__ */ (0, import_jsx_runtime17.jsx)(QuotaVendorWidget, { vendorId: v.id }, v.id));
-    }
-    kids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.vgrid, children: grid }, "grid")
-    );
-    return /* @__PURE__ */ (0, import_jsx_runtime17.jsx)("div", { className: styles_module_css_default.page, children: kids });
+    const freshness = [
+      activeSnap && activeSnap.at ? timeAgo(activeSnap.at) : "",
+      autoOff ? "\u81EA\u52A8\u5237\u65B0\u5DF2\u5173\u95ED" : ""
+    ].filter((part) => part !== "").join(" \xB7 ");
+    if (minimal) return null;
+    const activeHint = buttonTitleOf(activeVendor, activeSnap, variant);
+    return /* @__PURE__ */ (0, import_jsx_runtime20.jsxs)("div", { className: cx5(styles_module_css_default.trayRoot, props.wide ? void 0 : styles_module_css_default.trayRail), ref: rootRef, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(import_dsh_client_ui_primitives5.Tooltip, { label: activeHint, side: "top", delayMs: 400, disabled: open, children: /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+        "button",
+        {
+          type: "button",
+          ref: btnRef,
+          className: styles_module_css_default.trayBtn,
+          "aria-haspopup": "dialog",
+          "aria-expanded": open,
+          "aria-label": activeHint,
+          onClick: () => setOpen(!open),
+          children: activeButton
+        }
+      ) }),
+      /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(
+        QuotaTrayPanel,
+        {
+          open,
+          setOpen,
+          rootRef,
+          anchorRef: btnRef,
+          panelRef,
+          vendors: rows,
+          activeGlyph,
+          activeHint,
+          activeName: activeVendor ? activeVendor.name : "\u672A\u9009\u62E9\u4F9B\u5E94\u5546",
+          detail,
+          freshness,
+          loading: s.loading,
+          error: s.error || s.lastErr && s.lastErr.msg || "",
+          manageHint: "\u589E\u5220\u6539\u4F9B\u5E94\u5546\uFF1A\u8BBE\u7F6E \u2192 TokenMeter \u2192 \u989D\u5EA6\u914D\u7F6E",
+          onRefresh: () => {
+            void refreshVendor(activeVendor ? activeVendor.id : void 0);
+          },
+          onSwitch: (id) => {
+            void setActive(id);
+          }
+        }
+      )
+    ] });
   }
   return {
-    QuotaSettingsPage,
-    QuotaSidebar,
-    QuotaFloatEntry,
-    QuotaView: QuotaView2,
-    QuotaVendorWidget,
-    PeakIndicator,
+    QuotaSidebarAction: QuotaSidebarAction2,
     quotaStore: {
       useStore,
       get: () => store2.get(),
       subscribe: (fn) => store2.subscribe(fn),
-      useNow,
       ensureLoad,
       reload,
       refreshVendor,
       syncState,
       setActive,
-      setEnabled,
       setVendorEnabled,
       setRefresh,
-      setFloatOpen,
-      openMenu,
       savePrefs,
       activeOf,
       typeLabel,
@@ -7162,13 +7121,12 @@ function createQuotaSection(widgets2) {
 }
 
 // src/client/widgets.tsx
-var import_react9 = require("react");
+var import_react10 = require("react");
 var ReactDOM4 = __toESM(require("react-dom"), 1);
 
 // src/client/widget-bridge.ts
 var WK_OWNER = "token-meter";
 var SUFFIX_MAX = 32;
-var SLUG_MAX = 20;
 var STATS_KINDS = ["cards", "trend", "heat", "donut", "today"];
 var STATS_TITLES = {
   cards: "\u6307\u6807\u5361",
@@ -7177,18 +7135,11 @@ var STATS_TITLES = {
   donut: "\u6A21\u578B\u5206\u5E03",
   today: "\u4ECA\u65E5\u6D88\u8017"
 };
-var PEAK_ID = "peak";
-var PEAK_TITLE = "\u5CF0\u8C37\u5B9A\u4EF7";
-var QUOTA_PREFIX = "quota:";
 var STATS_PREFIX = "stats:";
 function isFloatId(id) {
   if (typeof id !== "string" || id === "") return false;
-  if (id === PEAK_ID) return true;
-  if (id.startsWith(STATS_PREFIX)) {
-    return STATS_KINDS.includes(id.slice(STATS_PREFIX.length));
-  }
-  if (id.startsWith(QUOTA_PREFIX)) return id.length > QUOTA_PREFIX.length;
-  return false;
+  if (!id.startsWith(STATS_PREFIX)) return false;
+  return STATS_KINDS.includes(id.slice(STATS_PREFIX.length));
 }
 function hash32(text) {
   let h = 2166136261;
@@ -7198,20 +7149,11 @@ function hash32(text) {
   }
   return h.toString(36).padStart(4, "0").slice(0, 4);
 }
-function slugifyVendor(vendorId) {
-  const slug = String(vendorId).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+/, "").slice(0, SLUG_MAX).replace(/-+$/, "");
-  return slug === "" ? "v" : slug;
-}
 function encodeFloatId(legacy) {
   let suffix;
-  if (legacy === PEAK_ID) {
-    suffix = "peak";
-  } else if (legacy.startsWith(STATS_PREFIX)) {
+  if (legacy.startsWith(STATS_PREFIX)) {
     const kind = legacy.slice(STATS_PREFIX.length);
     suffix = STATS_KINDS.includes(kind) ? `stats-${kind}` : `stats-x-${hash32(kind)}`;
-  } else if (legacy.startsWith(QUOTA_PREFIX)) {
-    const vendorId = legacy.slice(QUOTA_PREFIX.length);
-    suffix = `quota-${slugifyVendor(vendorId)}-${hash32(vendorId)}`;
   } else {
     suffix = `x-${hash32(legacy)}`;
   }
@@ -7219,29 +7161,20 @@ function encodeFloatId(legacy) {
 }
 function floatTitle(legacy, hint) {
   if (hint !== void 0 && hint !== "") return hint;
-  if (legacy === PEAK_ID) return PEAK_TITLE;
   if (legacy.startsWith(STATS_PREFIX)) {
     const kind = legacy.slice(STATS_PREFIX.length);
     return STATS_TITLES[kind] ?? "\u7528\u91CF\u7EDF\u8BA1";
   }
-  if (legacy.startsWith(QUOTA_PREFIX)) {
-    const vendorId = legacy.slice(QUOTA_PREFIX.length);
-    return vendorId === "" ? "\u4F9B\u5E94\u5546\u989D\u5EA6" : `\u989D\u5EA6 \xB7 ${vendorId}`;
-  }
-  return "\u5C0F\u7EC4\u4EF6";
+  return "\u7528\u91CF\u7EDF\u8BA1";
 }
 var FLOAT_SIZES = {
   cards: { defaultSize: { w: 460, h: 360 }, minSize: { w: 300, h: 220 } },
   trend: { defaultSize: { w: 520, h: 320 }, minSize: { w: 340, h: 200 } },
   heat: { defaultSize: { w: 560, h: 230 }, minSize: { w: 360, h: 170 } },
   donut: { defaultSize: { w: 460, h: 420 }, minSize: { w: 320, h: 320 } },
-  today: { defaultSize: { w: 320, h: 200 }, minSize: { w: 260, h: 150 } },
-  peak: { defaultSize: { w: 440, h: 200 }, minSize: { w: 320, h: 160 } },
-  quota: { defaultSize: { w: 400, h: 320 }, minSize: { w: 320, h: 220 } }
+  today: { defaultSize: { w: 320, h: 200 }, minSize: { w: 260, h: 150 } }
 };
 function floatFamily(legacy) {
-  if (legacy === PEAK_ID) return "peak";
-  if (legacy.startsWith(QUOTA_PREFIX)) return "quota";
   if (legacy.startsWith(STATS_PREFIX)) {
     const kind = legacy.slice(STATS_PREFIX.length);
     if (STATS_KINDS.includes(kind)) return kind;
@@ -7253,7 +7186,7 @@ function floatSize(legacy) {
 }
 
 // src/client/widgets.tsx
-var import_jsx_runtime18 = require("react/jsx-runtime");
+var import_jsx_runtime21 = require("react/jsx-runtime");
 var LS_KEY = "tm-widgets";
 var FLOAT_W = 360;
 var FLOAT_H = Math.round(FLOAT_W * 0.6);
@@ -7272,8 +7205,6 @@ var disposersOf = /* @__PURE__ */ new Map();
 var hints = /* @__PURE__ */ new Map();
 var hostDisposers = [];
 function floatIcon(legacy) {
-  if (legacy.startsWith(QUOTA_PREFIX)) return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(QuotaIcon, { size: 16 });
-  if (legacy === PEAK_ID) return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(Glyph, { name: "clock", size: 16 });
   const kind = legacy.startsWith(STATS_PREFIX) ? legacy.slice(STATS_PREFIX.length) : "";
   const glyph = {
     cards: "chartBar",
@@ -7282,7 +7213,7 @@ function floatIcon(legacy) {
     donut: "donut",
     today: "calendar"
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(Glyph, { name: glyph[kind] ?? "chartBar", size: 16 });
+  return /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(Glyph, { name: glyph[kind] ?? "chartBar", size: 16 });
 }
 function ensureRegistered(legacy, hint) {
   if (service === null || !isFloatId(legacy)) return;
@@ -7295,10 +7226,10 @@ function ensureRegistered(legacy, hint) {
       title: () => floatTitle(legacy, hints.get(legacy)),
       icon: floatIcon(legacy),
       presentation: "card",
-      // 不占活动栏：这些卡片由中心区里的按钮开合（一个拥有者一个图标 + 多张自由卡片）
+      // 不占活动栏：这些卡片由中心区「用量统计」工具条上的按钮开合
       trayIcon: false,
       content: {
-        render: () => contentRenderer === null ? null : /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("div", { className: styles_module_css_default.wkFrame, children: contentRenderer(legacy) })
+        render: () => contentRenderer === null ? null : /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("div", { className: styles_module_css_default.wkFrame, children: contentRenderer(legacy) })
       },
       // 尺寸按内容形状逐族给（见 widget-bridge.ts 的 FLOAT_SIZES 表）：
       // 热力图宽而扁、模型分布要留高、今日卡天生小 —— 一套尺寸打天下就是「有的太高、有的太矮」
@@ -7414,10 +7345,10 @@ function cascadePos(count) {
 function createWidgetSystem() {
   let open = typeof window !== "undefined" ? loadAll() : {};
   let order = Object.keys(open);
-  const listeners = /* @__PURE__ */ new Set();
-  function emit(save) {
-    if (save) saveAll(open);
-    for (const fn of listeners) {
+  const listeners2 = /* @__PURE__ */ new Set();
+  function emit2(save2) {
+    if (save2) saveAll(open);
+    for (const fn of listeners2) {
       try {
         fn();
       } catch {
@@ -7438,19 +7369,19 @@ function createWidgetSystem() {
     const i = order.indexOf(id);
     if (i < 0 || i === order.length - 1) return;
     order = order.filter((x) => x !== id).concat(id);
-    emit(false);
+    emit2(false);
   }
   function zOf(id) {
     const i = order.indexOf(id);
     return 300 + (i < 0 ? 0 : i);
   }
   function useWidgets() {
-    const [, force] = (0, import_react9.useReducer)((x) => x + 1, 0);
-    (0, import_react9.useEffect)(() => {
+    const [, force] = (0, import_react10.useReducer)((x) => x + 1, 0);
+    (0, import_react10.useEffect)(() => {
       const fn = () => force();
-      listeners.add(fn);
+      listeners2.add(fn);
       return () => {
-        listeners.delete(fn);
+        listeners2.delete(fn);
       };
     }, []);
     if (service !== null) return bridgedOpenList();
@@ -7488,7 +7419,7 @@ function createWidgetSystem() {
     );
     open = Object.assign({}, open, { [id]: pos });
     order = order.filter((x) => x !== id).concat(id);
-    emit(true);
+    emit2(true);
   }
   function forget(prefix) {
     if (service !== null) {
@@ -7507,7 +7438,7 @@ function createWidgetSystem() {
     }
     if (!changed) return;
     open = next;
-    emit(true);
+    emit2(true);
   }
   function closeWidget(id) {
     if (service !== null) {
@@ -7525,15 +7456,15 @@ function createWidgetSystem() {
     delete next[id];
     open = next;
     order = order.filter((x) => x !== id);
-    emit(true);
+    emit2(true);
   }
   function moveWidget(id, pos) {
     if (!Object.hasOwn(open, id)) return;
     open = Object.assign({}, open, { [id]: clampPos(pos) });
-    emit(false);
+    emit2(false);
   }
   function commitWidget() {
-    emit(true);
+    emit2(true);
   }
   function clampAllToViewport() {
     let changed = false;
@@ -7547,7 +7478,7 @@ function createWidgetSystem() {
     }
     if (changed) {
       open = next;
-      emit(true);
+      emit2(true);
     }
   }
   function gripOut(id, e) {
@@ -7639,7 +7570,7 @@ function createWidgetSystem() {
   function WidgetFloat(props) {
     const list = useWidgets();
     const cur = service === null ? list.filter((w) => w.id === props.id)[0] : void 0;
-    (0, import_react9.useEffect)(() => {
+    (0, import_react10.useEffect)(() => {
       const onR = () => {
         const p = open[props.id];
         if (!p) return;
@@ -7651,7 +7582,7 @@ function createWidgetSystem() {
     }, [props.id]);
     if (!cur) return null;
     return portal2(
-      /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
         "div",
         {
           className: styles_module_css_default.widgetFloat + " " + styles_module_css_default.in,
@@ -7680,7 +7611,7 @@ function createWidgetSystem() {
     const opened = service === null ? list.some((w) => w.id === props.id) : isOpen(props.id);
     const what = props.name ? "\u300C" + props.name + "\u300D" : "\u672C\u5361\u7247";
     if (service !== null) {
-      return /* @__PURE__ */ (0, import_jsx_runtime18.jsx)("span", { style: { display: "inline-flex", gap: 2, alignItems: "center", marginLeft: 6, flex: "none" }, children: opened ? /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
+      return /* @__PURE__ */ (0, import_jsx_runtime21.jsx)("span", { style: { display: "inline-flex", gap: 2, alignItems: "center", marginLeft: 6, flex: "none" }, children: opened ? /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
         "button",
         {
           className: styles_module_css_default.minibtn,
@@ -7688,7 +7619,7 @@ function createWidgetSystem() {
           onClick: () => closeWidget(props.id),
           children: "\u56DE\u5F52"
         }
-      ) : /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
+      ) : /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
         "button",
         {
           className: styles_module_css_default.minibtn,
@@ -7701,8 +7632,8 @@ function createWidgetSystem() {
         }
       ) });
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime18.jsxs)("span", { style: { display: "inline-flex", gap: 2, alignItems: "center", marginLeft: 6, flex: "none" }, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime21.jsxs)("span", { style: { display: "inline-flex", gap: 2, alignItems: "center", marginLeft: 6, flex: "none" }, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
         "span",
         {
           className: styles_module_css_default.grip,
@@ -7712,7 +7643,7 @@ function createWidgetSystem() {
           children: "\u283F"
         }
       ),
-      opened ? /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
+      opened ? /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
         "button",
         {
           className: styles_module_css_default.minibtn,
@@ -7720,7 +7651,7 @@ function createWidgetSystem() {
           onClick: () => closeWidget(props.id),
           children: "\u56DE\u5F52"
         }
-      ) : /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(
+      ) : /* @__PURE__ */ (0, import_jsx_runtime21.jsx)(
         "button",
         {
           className: styles_module_css_default.minibtn,
@@ -7739,13 +7670,13 @@ function createWidgetSystem() {
     service = next;
     try {
       serviceOff = service.subscribe(() => {
-        emit(false);
+        emit2(false);
       });
     } catch (error) {
       serviceOff = null;
       console.error("[dshp-token-meter] \u8BA2\u9605\u5BBF\u4E3B\u6CE8\u518C\u8868\u5931\u8D25\uFF08\u5361\u7247\u5F00\u5173\u72B6\u6001\u53EF\u80FD\u4E0D\u5237\u65B0\uFF09\uFF1A", error);
     }
-    emit(false);
+    emit2(false);
     return true;
   }
   function detach() {
@@ -7776,7 +7707,7 @@ function createWidgetSystem() {
       }
     }
     service = null;
-    emit(false);
+    emit2(false);
   }
   return {
     useWidgets,
@@ -7817,7 +7748,7 @@ function createWidgetSystem() {
 }
 
 // src/client/TokenMeterSection.tsx
-var import_jsx_runtime19 = require("react/jsx-runtime");
+var import_jsx_runtime22 = require("react/jsx-runtime");
 var STATS_WIDGET_BTNS = [
   ["cards", "\u6307\u6807\u5361"],
   ["trend", "\u8D8B\u52BF"],
@@ -7834,7 +7765,7 @@ function cx6(...names) {
   return names.filter((name) => name !== void 0).join(" ");
 }
 var widgets = createWidgetSystem();
-var quota = createQuotaSection(widgets);
+var quota = createQuotaSection();
 var quotaStore = quota.quotaStore;
 var store = quotaStore;
 var UI = quota.quotaUI;
@@ -7847,15 +7778,15 @@ function notifyPrefs(patch) {
 }
 function TokenMeterSettings() {
   const s = store.useStore();
-  (0, import_react10.useEffect)(() => {
+  (0, import_react11.useEffect)(() => {
     void store.ensureLoad();
   }, []);
-  const [busy, setBusy] = (0, import_react10.useState)(false);
-  const [opErr, setOpErr] = (0, import_react10.useState)("");
-  const [draft, setDraft] = (0, import_react10.useState)(JSON.parse(JSON.stringify(NEW_VENDOR)));
-  const [editing, setEditing] = (0, import_react10.useState)(null);
-  const [confirmDel, setConfirmDel] = (0, import_react10.useState)(null);
-  const [acked, setAcked] = (0, import_react10.useState)(false);
+  const [busy, setBusy] = (0, import_react11.useState)(false);
+  const [opErr, setOpErr] = (0, import_react11.useState)("");
+  const [draft, setDraft] = (0, import_react11.useState)(JSON.parse(JSON.stringify(NEW_VENDOR)));
+  const [editing, setEditing] = (0, import_react11.useState)(null);
+  const [confirmDel, setConfirmDel] = (0, import_react11.useState)(null);
+  const [acked, setAcked] = (0, import_react11.useState)(false);
   async function withBusy(fn) {
     setBusy(true);
     setOpErr("");
@@ -7906,11 +7837,11 @@ function TokenMeterSettings() {
     if (!r.ok) setOpErr(String(r.error || "\u4FDD\u5B58\u5931\u8D25"));
     else notifyPrefs({ defaultRange: v });
   });
-  const [tab, setTab] = (0, import_react10.useState)("stats");
-  const [statsSnap, setStatsSnap] = (0, import_react10.useState)(null);
-  const [clearArmed, setClearArmed] = (0, import_react10.useState)(false);
-  const [clearMsg, setClearMsg] = (0, import_react10.useState)("");
-  (0, import_react10.useEffect)(() => {
+  const [tab, setTab] = (0, import_react11.useState)("stats");
+  const [statsSnap, setStatsSnap] = (0, import_react11.useState)(null);
+  const [clearArmed, setClearArmed] = (0, import_react11.useState)(false);
+  const [clearMsg, setClearMsg] = (0, import_react11.useState)("");
+  (0, import_react11.useEffect)(() => {
     let alive = true;
     const tick = () => {
       void fetchStats().then((v) => {
@@ -7930,20 +7861,20 @@ function TokenMeterSettings() {
   const quotaKids = [];
   if (s.error)
     commonKids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("p", { className: cx6(styles_module_css_default.notice, styles_module_css_default.noticeErr), children: s.error }, "err")
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("p", { className: cx6(styles_module_css_default.notice, styles_module_css_default.noticeErr), children: s.error }, "err")
     );
   if (opErr)
     commonKids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("p", { className: cx6(styles_module_css_default.notice, styles_module_css_default.noticeErr), children: opErr }, "operr")
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("p", { className: cx6(styles_module_css_default.notice, styles_module_css_default.noticeErr), children: opErr }, "operr")
     );
   if (!s.cfg) {
     commonKids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.loading, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.spinner }),
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.loadingText, children: s.loading ? "\u6B63\u5728\u8BFB\u53D6\u914D\u7F6E\u2026" : "\u914D\u7F6E\u52A0\u8F7D\u5931\u8D25" })
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: styles_module_css_default.loading, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { className: styles_module_css_default.spinner }),
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { className: styles_module_css_default.loadingText, children: s.loading ? "\u6B63\u5728\u8BFB\u53D6\u914D\u7F6E\u2026" : "\u914D\u7F6E\u52A0\u8F7D\u5931\u8D25" })
       ] }, "loading")
     );
-    return /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: styles_module_css_default.page, children: commonKids });
+    return /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("div", { className: styles_module_css_default.page, children: commonKids });
   }
   const vendors = s.cfg.vendors || [];
   const activeId = s.cfg.activeVendor || "";
@@ -7952,14 +7883,14 @@ function TokenMeterSettings() {
   const curSec = rawSec === void 0 || rawSec === null || rawSec === "" ? 60 : Number(rawSec) === 0 ? 0 : isFinite(Number(rawSec)) ? Math.min(3600, Math.max(10, Number(rawSec) || 60)) : 60;
   const defRange = String(s.cfg.defaultRange || "all");
   quotaKids.push(
-    /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.section, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: styles_module_css_default.sectionHead, children: "\u504F\u597D" }),
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: styles_module_css_default.section, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("div", { className: styles_module_css_default.sectionHead, children: "\u504F\u597D" }),
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
         UI.SecRow,
         {
           label: "\u81EA\u52A8\u5237\u65B0",
           desc: "\u6BCF\u9694\u8FD9\u4E48\u4E45\u81EA\u52A8\u53BB\u5E73\u53F0\u62C9\u4E00\u6B21\u989D\u5EA6\uFF08\u53EA\u62C9\u300C\u5DF2\u542F\u7528\u300D\u7684\u4F9B\u5E94\u5546\uFF0C\u7981\u7528\u7684\u89C1\u4E0B\u65B9\u5217\u8868\uFF09\u3002\u9009\u300C\u5173\u95ED\u81EA\u52A8\u5237\u65B0\u300D\u540E\u4E0D\u518D\u5B9A\u65F6\u62C9\u53D6\uFF0C\u4ECD\u53EF\u968F\u65F6\u624B\u52A8\u70B9\u300C\u62C9\u53D6\u300D\u3002",
-          children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+          children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
             UI.PillSelect,
             {
               disabled: busy,
@@ -7986,20 +7917,20 @@ function TokenMeterSettings() {
   const snapReused = statsSnap && typeof statsSnap.reused === "number" ? statsSnap.reused : null;
   const gapNow = String(s.cfg.onlineGapMin ?? 5);
   statsKids.push(
-    /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.card, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: styles_module_css_default.title, children: "\u6570\u636E\u6765\u6E90\uFF1A\u4F1A\u8BDD\u8BB0\u5F55\uFF08\u552F\u4E00\u771F\u76F8\u6E90\uFF09" }),
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("p", { className: styles_module_css_default.desc, style: { margin: "4px 0 0" }, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: styles_module_css_default.card, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("div", { className: styles_module_css_default.title, children: "\u6570\u636E\u6765\u6E90\uFF1A\u4F1A\u8BDD\u8BB0\u5F55\uFF08\u552F\u4E00\u771F\u76F8\u6E90\uFF09" }),
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("p", { className: styles_module_css_default.desc, style: { margin: "4px 0 0" }, children: [
         "\u6240\u6709\u7EDF\u8BA1\uFF08Token \u7528\u91CF\u3001\u5728\u7EBF\u65F6\u957F\u3001\u6A21\u578B\u5206\u5E03\u3001\u70ED\u529B\u56FE\u2026\uFF09\u90FD\u7531 ",
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("code", { className: styles_module_css_default.mono, children: "$DSH_HOME/sessions/" }),
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("code", { className: styles_module_css_default.mono, children: "$DSH_HOME/sessions/" }),
         " \u4E0B\u7684\u4F1A\u8BDD\u65E5\u5FD7\u805A\u5408\u800C\u6765\u3002\u4E0B\u9762\u7684\u7F13\u5B58\u53EA\u662F**\u53EF\u4E22\u7684\u6D3E\u751F\u6570\u636E**\uFF1A\u5220\u6389\u540E\u4F1A\u81EA\u52A8\u51ED\u4F1A\u8BDD\u65E5\u5FD7\u91CD\u7B97\uFF0C\u4F46**\u4F1A\u8BDD\u8BB0\u5F55\u672C\u8EAB\u4E22\u4E86\u5C31\u518D\u4E5F\u7B97\u4E0D\u56DE\u6765**\u3002"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("p", { className: styles_module_css_default.desc, style: { margin: "4px 0 0" }, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("p", { className: styles_module_css_default.desc, style: { margin: "4px 0 0" }, children: [
         "\u8FC1\u79FB / \u5907\u4EFD / \u6362\u673A\u65F6\uFF1A**\u4FDD\u7559 `sessions/` \u76EE\u5F55**\uFF08\u4F53\u79EF\u4EE5\u672C\u673A\u4E3A\u4F8B\u7EA6 250MB\uFF09\uFF1B",
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("code", { className: styles_module_css_default.mono, children: "storages/token_stats.json" }),
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("code", { className: styles_module_css_default.mono, children: "storages/token_stats.json" }),
         " \u4E0D\u5FC5\u5907\u4EFD\uFF08\u91CD\u5EFA\u5373\u53EF\uFF09\u3002"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: styles_module_css_default.toolbar, style: { marginTop: 8 }, children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
-        import_dsh_client_ui_primitives5.Button,
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("div", { className: styles_module_css_default.toolbar, style: { marginTop: 8 }, children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
+        import_dsh_client_ui_primitives6.Button,
         {
           variant: "outline",
           size: "sm",
@@ -8017,24 +7948,24 @@ function TokenMeterSettings() {
     ] }, "source")
   );
   statsKids.push(
-    /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.section, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: styles_module_css_default.sectionHead, children: "\u7F13\u5B58\u4E0E\u626B\u63CF\u72B6\u6001" }),
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.card, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.chartTitle, style: { marginBottom: 4 }, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.chartName, children: "\u6D3E\u751F\u7F13\u5B58" }),
-          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.hint, children: statsSnap && statsSnap.generatedAt ? "\u66F4\u65B0\u4E8E " + new Date(statsSnap.generatedAt).toLocaleTimeString() : "\u8BFB\u53D6\u4E2D\u2026" })
+    /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: styles_module_css_default.section, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("div", { className: styles_module_css_default.sectionHead, children: "\u7F13\u5B58\u4E0E\u626B\u63CF\u72B6\u6001" }),
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: styles_module_css_default.card, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: styles_module_css_default.chartTitle, style: { marginBottom: 4 }, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { className: styles_module_css_default.chartName, children: "\u6D3E\u751F\u7F13\u5B58" }),
+          /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { className: styles_module_css_default.hint, children: statsSnap && statsSnap.generatedAt ? "\u66F4\u65B0\u4E8E " + new Date(statsSnap.generatedAt).toLocaleTimeString() : "\u8BFB\u53D6\u4E2D\u2026" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.cacheRow, style: { marginTop: 0 }, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { children: "\u4F1A\u8BDD " + (snapScanned ?? "\u2014") + "/" + (snapTotal ?? "\u2014") + " \u5DF2\u626B\u63CF" }),
-          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { children: "\u590D\u7528 " + (snapReused ?? "\u2014") + (snapHits != null ? "\uFF08\u7F13\u5B58 " + snapHits + "\uFF09" : "") }),
-          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { children: "\u626B\u63CF\u5931\u8D25 " + (snapErrors ?? "\u2014") }),
-          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { children: "\u76F4\u8BFB " + (statsSnap && statsSnap.directReads != null ? statsSnap.directReads : "\u2014") }),
-          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { children: "\u5B58\u50A8 " + (statsSnap && statsSnap.storage ? statsSnap.storage : "\u2014") })
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: styles_module_css_default.cacheRow, style: { marginTop: 0 }, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { children: "\u4F1A\u8BDD " + (snapScanned ?? "\u2014") + "/" + (snapTotal ?? "\u2014") + " \u5DF2\u626B\u63CF" }),
+          /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { children: "\u590D\u7528 " + (snapReused ?? "\u2014") + (snapHits != null ? "\uFF08\u7F13\u5B58 " + snapHits + "\uFF09" : "") }),
+          /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { children: "\u626B\u63CF\u5931\u8D25 " + (snapErrors ?? "\u2014") }),
+          /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { children: "\u76F4\u8BFB " + (statsSnap && statsSnap.directReads != null ? statsSnap.directReads : "\u2014") }),
+          /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { children: "\u5B58\u50A8 " + (statsSnap && statsSnap.storage ? statsSnap.storage : "\u2014") })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("p", { className: styles_module_css_default.desc, style: { margin: "6px 0 0" }, children: "\u300C\u590D\u7528\u300D= \u8BE5\u4F1A\u8BDD\u65E5\u5FD7\u6CA1\u53D8\uFF0C\u76F4\u63A5\u6CBF\u7528\u4E0A\u6B21\u7ED3\u679C\uFF08\u91CD\u542F\u540E\u6765\u81EA\u6301\u4E45\u5316\u7F13\u5B58\uFF0C\u8FD0\u884C\u4E2D\u6765\u81EA\u5185\u5B58\uFF09\uFF1B\u65E5\u5FD7\u53D8\u5927\u65F6\u53EA\u8BFB\u65B0\u589E\u90E8\u5206\u3002" }),
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.toolbar, style: { marginTop: 8 }, children: [
-          clearArmed ? /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
-            import_dsh_client_ui_primitives5.Button,
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("p", { className: styles_module_css_default.desc, style: { margin: "6px 0 0" }, children: "\u300C\u590D\u7528\u300D= \u8BE5\u4F1A\u8BDD\u65E5\u5FD7\u6CA1\u53D8\uFF0C\u76F4\u63A5\u6CBF\u7528\u4E0A\u6B21\u7ED3\u679C\uFF08\u91CD\u542F\u540E\u6765\u81EA\u6301\u4E45\u5316\u7F13\u5B58\uFF0C\u8FD0\u884C\u4E2D\u6765\u81EA\u5185\u5B58\uFF09\uFF1B\u65E5\u5FD7\u53D8\u5927\u65F6\u53EA\u8BFB\u65B0\u589E\u90E8\u5206\u3002" }),
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: styles_module_css_default.toolbar, style: { marginTop: 8 }, children: [
+          clearArmed ? /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
+            import_dsh_client_ui_primitives6.Button,
             {
               variant: "outline",
               size: "sm",
@@ -8049,18 +7980,18 @@ function TokenMeterSettings() {
               }),
               children: "\u786E\u8BA4\u6E05\u9664\u5E76\u91CD\u7B97"
             }
-          ) : /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(import_dsh_client_ui_primitives5.Button, { variant: "outline", size: "sm", disabled: busy, onClick: () => setClearArmed(true), children: "\u6E05\u9664\u7EDF\u8BA1\u7F13\u5B58" }),
-          clearArmed ? /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(import_dsh_client_ui_primitives5.Button, { variant: "outline", size: "sm", onClick: () => setClearArmed(false), children: "\u53D6\u6D88" }) : null,
-          clearMsg ? /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.hint, children: clearMsg }) : null
+          ) : /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(import_dsh_client_ui_primitives6.Button, { variant: "outline", size: "sm", disabled: busy, onClick: () => setClearArmed(true), children: "\u6E05\u9664\u7EDF\u8BA1\u7F13\u5B58" }),
+          clearArmed ? /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(import_dsh_client_ui_primitives6.Button, { variant: "outline", size: "sm", onClick: () => setClearArmed(false), children: "\u53D6\u6D88" }) : null,
+          clearMsg ? /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { className: styles_module_css_default.hint, children: clearMsg }) : null
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("p", { className: styles_module_css_default.desc, style: { margin: "6px 0 0" }, children: "\u6E05\u9664\u540E\u4E0B\u4E00\u6B21\u626B\u63CF\u4F1A\u91CD\u65B0\u8BFB\u53D6\u5168\u90E8\u4F1A\u8BDD\u65E5\u5FD7\uFF08\u672C\u673A\u7EA6 6 \u79D2\uFF09\uFF0C\u671F\u95F4\u9762\u677F\u663E\u793A\u300C\u540E\u53F0\u8865\u626B\u4E2D\u300D\u3002" })
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("p", { className: styles_module_css_default.desc, style: { margin: "6px 0 0" }, children: "\u6E05\u9664\u540E\u4E0B\u4E00\u6B21\u626B\u63CF\u4F1A\u91CD\u65B0\u8BFB\u53D6\u5168\u90E8\u4F1A\u8BDD\u65E5\u5FD7\uFF08\u672C\u673A\u7EA6 6 \u79D2\uFF09\uFF0C\u671F\u95F4\u9762\u677F\u663E\u793A\u300C\u540E\u53F0\u8865\u626B\u4E2D\u300D\u3002" })
       ] })
     ] }, "cache")
   );
   statsKids.push(
-    /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.section, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: styles_module_css_default.sectionHead, children: "\u504F\u597D" }),
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(UI.SecRow, { label: "\u9ED8\u8BA4\u8303\u56F4", desc: "\u4E2D\u5FC3\u533A\u300C\u7528\u91CF\u7EDF\u8BA1\u300D\u6253\u5F00\u65F6\u9ED8\u8BA4\u7EDF\u8BA1\u591A\u5C11\u5929\u7684\u6570\u636E\u3002", children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: styles_module_css_default.section, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("div", { className: styles_module_css_default.sectionHead, children: "\u504F\u597D" }),
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(UI.SecRow, { label: "\u9ED8\u8BA4\u8303\u56F4", desc: "\u4E2D\u5FC3\u533A\u300C\u7528\u91CF\u7EDF\u8BA1\u300D\u6253\u5F00\u65F6\u9ED8\u8BA4\u7EDF\u8BA1\u591A\u5C11\u5929\u7684\u6570\u636E\u3002", children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
         UI.PillSelect,
         {
           disabled: busy,
@@ -8075,12 +8006,12 @@ function TokenMeterSettings() {
           onSelect: (id) => void pickRange(id)
         }
       ) }, "range"),
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
         UI.SecRow,
         {
           label: "\u5728\u7EBF\u65F6\u957F\u7A7A\u95F2\u9608\u503C",
           desc: "\u5728\u7EBF = \u6709\u4E8B\u4EF6\u3001\u4E14\u76F8\u90BB\u4E8B\u4EF6\u95F4\u9694\u4E0D\u8D85\u8FC7\u5B83\u7684\u5899\u949F\u65F6\u95F4\uFF1A\u95F4\u9694 \u2264 \u9608\u503C\u5219\u6574\u6BB5\u8BA1\u5165\uFF08\u542B\u4E2D\u95F4\u7A7A\u6863\uFF09\uFF0C\u8D85\u8FC7\u5C31\u65AD\u5F00\u3001\u4E2D\u95F4\u4E0D\u8BA1\uFF1B\u6BCF\u6BB5\u53EA\u7B97\u5230\u6700\u540E\u4E00\u4E2A\u4E8B\u4EF6\uFF0C\u6240\u4EE5\u4EFB\u4F55\u6863\u4F4D\u90FD\u662F\u4E0B\u754C\u3002\u63A8\u8350 15 \u5206\u949F\uFF08\u80FD\u515C\u4F4F\u8BFB\u957F\u56DE\u7B54/\u60F3\u9700\u6C42\u7684\u9759\u9ED8\u671F\uFF0C\u53C8\u4E0D\u4F1A\u628A\u5F00\u4F1A\u5403\u996D\u7B97\u8FDB\u6765\uFF09\uFF1B\u8BE6\u7EC6\u8BF4\u660E\u4E0E\u5404\u6863\u5B9E\u6D4B\u5BF9\u6BD4\u89C1\u300C\u5728\u7EBF\u7EDF\u8BA1\u300D\u9762\u677F\u9876\u90E8\u3002",
-          children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+          children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
             UI.PillSelect,
             {
               disabled: busy,
@@ -8100,12 +8031,12 @@ function TokenMeterSettings() {
     ] }, "statpref")
   );
   const vrows = [
-    /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
       UI.SecRow,
       {
         label: "\u5F53\u524D\u4F9B\u5E94\u5546",
-        desc: "\u4FA7\u8FB9\u680F\u4E0E\u4E2D\u5FC3\u533A\u989D\u5EA6\u5361\u5C55\u793A\u54EA\u4E00\u5BB6\u7684\u989D\u5EA6\uFF1B\u9009\u300C\u65E0\u300D= \u6781\u7B80\u6A21\u5F0F\uFF08\u4E0D\u5C55\u793A\u3001\u4E5F\u4E0D\u62C9\u53D6\u4EFB\u4F55\u989D\u5EA6\uFF09\u3002",
-        children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+        desc: "\u4FA7\u8FB9\u680F\u5E95\u90E8\u7684\u989D\u5EA6\u6309\u94AE\u5C55\u793A\u54EA\u4E00\u5BB6\u7684\u989D\u5EA6\uFF1B\u9009\u300C\u65E0\u300D= \u6781\u7B80\u6A21\u5F0F\uFF08\u4E0D\u663E\u793A\u90A3\u679A\u6309\u94AE\uFF0C\u4E5F\u4E0D\u62C9\u53D6\u4EFB\u4F55\u989D\u5EA6\uFF09\u3002",
+        children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
           UI.PillSelect,
           {
             disabled: busy,
@@ -8131,30 +8062,30 @@ function TokenMeterSettings() {
     const snap = s.snaps[v.id];
     const isCur = v.id === activeId;
     const off = v.enabled === false;
-    const status = off ? /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: cx6(styles_module_css_default.hint, styles_module_css_default.offtxt), children: "\u5DF2\u7981\u7528\u5B9A\u65F6\u62C9\u53D6" }) : snap && snap.ok ? /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.hint, children: "\u62C9\u53D6\u6B63\u5E38" }) : snap ? /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.hint, title: snap.error || "\u62C9\u53D6\u5931\u8D25", children: "\u62C9\u53D6\u5931\u8D25" }) : /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.hint, children: "\u672A\u62C9\u53D6" });
+    const status = off ? /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { className: cx6(styles_module_css_default.hint, styles_module_css_default.offtxt), children: "\u5DF2\u7981\u7528\u5B9A\u65F6\u62C9\u53D6" }) : snap && snap.ok ? /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { className: styles_module_css_default.hint, children: "\u62C9\u53D6\u6B63\u5E38" }) : snap ? /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { className: styles_module_css_default.hint, title: snap.error || "\u62C9\u53D6\u5931\u8D25", children: "\u62C9\u53D6\u5931\u8D25" }) : /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { className: styles_module_css_default.hint, children: "\u672A\u62C9\u53D6" });
     vrows.push(
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
         UI.SecRow,
         {
           wrap: true,
-          label: /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("span", { style: { display: "flex", alignItems: "center", gap: 6, minWidth: 0, maxWidth: "100%" }, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+          label: /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("span", { style: { display: "flex", alignItems: "center", gap: 6, minWidth: 0, maxWidth: "100%" }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
               "span",
               {
                 className: cx6(styles_module_css_default.dot, off ? styles_module_css_default.off : snap && !snap.ok ? styles_module_css_default.bad : void 0)
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.vname2, style: { maxWidth: 280 }, children: v.name }),
-            /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(UI.Badge, { kind: "info", text: store.typeLabel(v.type) }),
-            isCur ? /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(UI.Badge, { kind: "ok", text: "\u5F53\u524D" }) : null,
-            off ? /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(UI.Badge, { kind: "bad", text: "\u5DF2\u7981\u7528" }) : null,
+            /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { className: styles_module_css_default.vname2, style: { maxWidth: 280 }, children: v.name }),
+            /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(UI.Badge, { kind: "info", text: store.typeLabel(v.type) }),
+            isCur ? /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(UI.Badge, { kind: "ok", text: "\u5F53\u524D" }) : null,
+            off ? /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(UI.Badge, { kind: "bad", text: "\u5DF2\u7981\u7528" }) : null,
             UI.secretBadge(v.secretKind)
           ] }),
-          children: /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("span", { className: styles_module_css_default.bar, style: { width: "100%", padding: 0, border: "none" }, children: [
+          children: /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("span", { className: styles_module_css_default.bar, style: { width: "100%", padding: 0, border: "none" }, children: [
             status,
-            /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { style: { flex: 1 } }),
-            /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
-              import_dsh_client_ui_primitives5.Button,
+            /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { style: { flex: 1 } }),
+            /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
+              import_dsh_client_ui_primitives6.Button,
               {
                 variant: "outline",
                 size: "sm",
@@ -8163,8 +8094,8 @@ function TokenMeterSettings() {
                 children: "\u62C9\u53D6"
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
-              import_dsh_client_ui_primitives5.Button,
+            /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
+              import_dsh_client_ui_primitives6.Button,
               {
                 variant: "ghost",
                 size: "sm",
@@ -8174,8 +8105,8 @@ function TokenMeterSettings() {
                 children: off ? "\u542F\u7528" : "\u7981\u7528"
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
-              import_dsh_client_ui_primitives5.Button,
+            /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
+              import_dsh_client_ui_primitives6.Button,
               {
                 variant: "outline",
                 size: "sm",
@@ -8184,8 +8115,8 @@ function TokenMeterSettings() {
                 children: "\u7F16\u8F91"
               }
             ),
-            v.secretKind === "plain" ? /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
-              import_dsh_client_ui_primitives5.Button,
+            v.secretKind === "plain" ? /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
+              import_dsh_client_ui_primitives6.Button,
               {
                 variant: "ghost",
                 size: "sm",
@@ -8195,8 +8126,8 @@ function TokenMeterSettings() {
                 children: "\u5B58\u51ED\u636E"
               }
             ) : null,
-            /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
-              import_dsh_client_ui_primitives5.Button,
+            /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
+              import_dsh_client_ui_primitives6.Button,
               {
                 variant: "ghost",
                 size: "sm",
@@ -8215,18 +8146,18 @@ function TokenMeterSettings() {
     );
   });
   quotaKids.push(
-    /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.section, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: styles_module_css_default.sectionHead, children: "\u4F9B\u5E94\u5546\uFF08" + vendors.length + "\uFF09" }),
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("p", { className: styles_module_css_default.cardHint, style: { margin: "0 0 4px" }, children: "\u5BC6\u94A5\u5EFA\u8BAE\u586B $NAME \u5F15\u7528\uFF08\u5148\u5B58\u7CFB\u7EDF\u51ED\u636E\uFF0C\u914D\u7F6E\u6587\u4EF6\u91CC\u770B\u4E0D\u5230\u660E\u6587\uFF09\uFF1B\u76F4\u63A5\u586B\u660E\u6587\u4E5F\u4E0D\u4F1A\u88AB\u56DE\u663E\u3002\u300C\u7981\u7528\u300D\u53EA\u662F\u9000\u51FA\u5B9A\u65F6\u62C9\u53D6\uFF0C\u968F\u65F6\u53EF\u4EE5\u624B\u52A8\u300C\u62C9\u53D6\u300D\uFF0C\u4E5F\u53EF\u518D\u70B9\u300C\u542F\u7528\u300D\u6062\u590D\u3002" }),
+    /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: styles_module_css_default.section, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("div", { className: styles_module_css_default.sectionHead, children: "\u4F9B\u5E94\u5546\uFF08" + vendors.length + "\uFF09" }),
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("p", { className: styles_module_css_default.cardHint, style: { margin: "0 0 4px" }, children: "\u5BC6\u94A5\u5EFA\u8BAE\u586B $NAME \u5F15\u7528\uFF08\u5148\u5B58\u7CFB\u7EDF\u51ED\u636E\uFF0C\u914D\u7F6E\u6587\u4EF6\u91CC\u770B\u4E0D\u5230\u660E\u6587\uFF09\uFF1B\u76F4\u63A5\u586B\u660E\u6587\u4E5F\u4E0D\u4F1A\u88AB\u56DE\u663E\u3002\u300C\u7981\u7528\u300D\u53EA\u662F\u9000\u51FA\u5B9A\u65F6\u62C9\u53D6\uFF0C\u968F\u65F6\u53EF\u4EE5\u624B\u52A8\u300C\u62C9\u53D6\u300D\uFF0C\u4E5F\u53EF\u518D\u70B9\u300C\u542F\u7528\u300D\u6062\u590D\u3002" }),
       vrows
     ] }, "vendors")
   );
   if (editing)
     quotaKids.push(
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.section, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: styles_module_css_default.sectionHead, children: "\u7F16\u8F91 " + editing.id }),
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("p", { className: styles_module_css_default.cardHint, style: { margin: "0 0 4px" }, children: "ID \u662F\u4E3B\u952E\uFF0C\u4E0D\u53EF\u4FEE\u6539\uFF1B\u5BC6\u94A5\u7559\u7A7A\u5373\u4FDD\u7559\u539F\u503C\u3002" }),
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: styles_module_css_default.section, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("div", { className: styles_module_css_default.sectionHead, children: "\u7F16\u8F91 " + editing.id }),
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("p", { className: styles_module_css_default.cardHint, style: { margin: "0 0 4px" }, children: "ID \u662F\u4E3B\u952E\uFF0C\u4E0D\u53EF\u4FEE\u6539\uFF1B\u5BC6\u94A5\u7559\u7A7A\u5373\u4FDD\u7559\u539F\u503C\u3002" }),
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
           UI.VendorForm,
           {
             draft: editing.data,
@@ -8241,9 +8172,9 @@ function TokenMeterSettings() {
       ] }, "edit")
     );
   quotaKids.push(
-    /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.section, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: styles_module_css_default.sectionHead, children: "\u6DFB\u52A0\u4F9B\u5E94\u5546" }),
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: styles_module_css_default.section, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("div", { className: styles_module_css_default.sectionHead, children: "\u6DFB\u52A0\u4F9B\u5E94\u5546" }),
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
         UI.VendorForm,
         {
           draft,
@@ -8257,10 +8188,10 @@ function TokenMeterSettings() {
   );
   if (confirmDel) {
     const target = confirmDel;
-    if (import_dsh_client_ui_primitives5.RiskConfirmation) {
+    if (import_dsh_client_ui_primitives6.RiskConfirmation) {
       quotaKids.push(
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
-          import_dsh_client_ui_primitives5.RiskConfirmation,
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
+          import_dsh_client_ui_primitives6.RiskConfirmation,
           {
             open: true,
             title: "\u5220\u9664\u4F9B\u5E94\u5546\u300C" + target.name + "\u300D\uFF1F",
@@ -8282,11 +8213,11 @@ function TokenMeterSettings() {
       );
     } else {
       quotaKids.push(
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.errbox, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { children: "\u5220\u9664\u4F9B\u5E94\u5546\u300C" + target.name + "\u300D\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002" + (acked ? "" : "\u8BF7\u5148\u786E\u8BA4\u3002") }),
-          /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { style: { display: "flex", gap: 8, marginTop: 6 }, children: [
-            acked ? /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
-              import_dsh_client_ui_primitives5.Button,
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: styles_module_css_default.errbox, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("div", { children: "\u5220\u9664\u4F9B\u5E94\u5546\u300C" + target.name + "\u300D\uFF1F\u6B64\u64CD\u4F5C\u4E0D\u53EF\u64A4\u9500\u3002" + (acked ? "" : "\u8BF7\u5148\u786E\u8BA4\u3002") }),
+          /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { style: { display: "flex", gap: 8, marginTop: 6 }, children: [
+            acked ? /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
+              import_dsh_client_ui_primitives6.Button,
               {
                 variant: "outline",
                 size: "sm",
@@ -8297,9 +8228,9 @@ function TokenMeterSettings() {
                 },
                 children: "\u786E\u8BA4\u5220\u9664"
               }
-            ) : /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(import_dsh_client_ui_primitives5.Button, { variant: "outline", size: "sm", onClick: () => setAcked(true), children: "\u6211\u5DF2\u4E86\u89E3" }),
-            /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
-              import_dsh_client_ui_primitives5.Button,
+            ) : /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(import_dsh_client_ui_primitives6.Button, { variant: "outline", size: "sm", onClick: () => setAcked(true), children: "\u6211\u5DF2\u4E86\u89E3" }),
+            /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
+              import_dsh_client_ui_primitives6.Button,
               {
                 variant: "outline",
                 size: "sm",
@@ -8315,7 +8246,7 @@ function TokenMeterSettings() {
       );
     }
   }
-  const tabBtn = (id, label) => /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+  const tabBtn = (id, label) => /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
     "button",
     {
       type: "button",
@@ -8325,19 +8256,19 @@ function TokenMeterSettings() {
     },
     id
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.page, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: styles_module_css_default.page, children: [
     commonKids,
-    /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("div", { className: styles_module_css_default.tabs, children: [tabBtn("stats", "\u7EDF\u8BA1\u8BBE\u7F6E"), tabBtn("quota", "\u989D\u5EA6\u914D\u7F6E")] }),
-    /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("p", { className: styles_module_css_default.intro, children: [
-      tab === "stats" ? "\u7EDF\u8BA1\u8BBE\u7F6E\uFF1A\u6570\u636E\u6765\u6E90\u3001\u6D3E\u751F\u7F13\u5B58\u4E0E\u9ED8\u8BA4\u53E3\u5F84\u3002\u8BE6\u7EC6\u56FE\u8868\u5728\u4E2D\u5FC3\u533A\u300C" + DISPLAY_NAME + " \u2192 \u7528\u91CF\u7EDF\u8BA1 / \u5728\u7EBF\u7EDF\u8BA1\u300D\u3002" : "\u989D\u5EA6\u914D\u7F6E\uFF1A\u4F9B\u5E94\u5546\u4E0E\u62C9\u53D6\u504F\u597D\u3002\u8BE6\u7EC6\u989D\u5EA6\u5361\u5728\u4E2D\u5FC3\u533A\u300C" + DISPLAY_NAME + " \u2192 \u989D\u5EA6\u67E5\u8BE2\u300D\u3002\u914D\u7F6E\u6301\u4E45\u5316\u5728 settings.yaml\uFF08",
-      tab === "stats" ? null : /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("code", { className: styles_module_css_default.mono, children: s.namespace || "dshp-token-meter" }),
+    /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("div", { className: styles_module_css_default.tabs, children: [tabBtn("stats", "\u7EDF\u8BA1\u8BBE\u7F6E"), tabBtn("quota", "\u989D\u5EA6\u914D\u7F6E")] }),
+    /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("p", { className: styles_module_css_default.intro, children: [
+      tab === "stats" ? "\u7EDF\u8BA1\u8BBE\u7F6E\uFF1A\u6570\u636E\u6765\u6E90\u3001\u6D3E\u751F\u7F13\u5B58\u4E0E\u9ED8\u8BA4\u53E3\u5F84\u3002\u8BE6\u7EC6\u56FE\u8868\u5728\u4E2D\u5FC3\u533A\u300C" + DISPLAY_NAME + " \u2192 \u7528\u91CF\u7EDF\u8BA1 / \u5728\u7EBF\u7EDF\u8BA1\u300D\u3002" : "\u989D\u5EA6\u914D\u7F6E\uFF1A\u4F9B\u5E94\u5546\u4E0E\u62C9\u53D6\u504F\u597D\u3002\u989D\u5EA6\u663E\u793A\u5728\u5DE6\u4FA7\u8FB9\u680F\u5E95\u90E8\u7684\u989D\u5EA6\u6309\u94AE\u4E0A\uFF08\u70B9\u5F00\u662F\u4F7F\u7528\u8BE6\u60C5\u4E0E\u4F9B\u5E94\u5546\u5207\u6362\uFF09\u3002\u914D\u7F6E\u6301\u4E45\u5316\u5728 settings.yaml\uFF08",
+      tab === "stats" ? null : /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("code", { className: styles_module_css_default.mono, children: s.namespace || "dshp-token-meter" }),
       tab === "stats" ? null : " \u547D\u540D\u7A7A\u95F4\uFF09\uFF0C\u5916\u90E8\u7F16\u8F91\u70ED\u91CD\u8F7D\u3002"
     ] }),
     tab === "stats" ? statsKids : quotaKids
   ] });
 }
 function StatsView() {
-  const [prefs, setPrefs] = (0, import_react10.useState)({
+  const [prefs2, setPrefs] = (0, import_react11.useState)({
     showToday: false,
     defaultRange: "all"
   });
@@ -8353,7 +8284,7 @@ function StatsView() {
     } catch {
     }
   };
-  (0, import_react10.useEffect)(() => {
+  (0, import_react11.useEffect)(() => {
     void loadPrefs();
     const fn = () => {
       void loadPrefs();
@@ -8361,20 +8292,20 @@ function StatsView() {
     window.addEventListener("tm-prefs-changed", fn);
     return () => window.removeEventListener("tm-prefs-changed", fn);
   }, []);
-  return /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.page, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("div", { className: styles_module_css_default.toolbar, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.hint, children: "\u5C0F\u7EC4\u4EF6" }),
-      STATS_WIDGET_BTNS.map(([k, t]) => /* @__PURE__ */ (0, import_jsx_runtime19.jsxs)("span", { className: styles_module_css_default.widgetBtn, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)("span", { className: styles_module_css_default.widgetBtnLabel, children: t }),
-        /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(widgets.WidgetToggle, { id: "stats:" + k })
+  return /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: styles_module_css_default.page, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("div", { className: styles_module_css_default.toolbar, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { className: styles_module_css_default.hint, children: "\u5C0F\u7EC4\u4EF6" }),
+      STATS_WIDGET_BTNS.map(([k, t]) => /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)("span", { className: styles_module_css_default.widgetBtn, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsx)("span", { className: styles_module_css_default.widgetBtnLabel, children: t }),
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(widgets.WidgetToggle, { id: "stats:" + k })
       ] }, k))
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(HiddenWhenFloated, { widgets, id: "stats:today", children: /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(TodayCard, { wide: true, bare: true, name: "\u4ECA\u65E5\u6D88\u8017", widgets, widgetId: "stats:today" }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(HiddenWhenFloated, { widgets, id: "stats:today", children: /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(TodayCard, { wide: true, bare: true, name: "\u4ECA\u65E5\u6D88\u8017", widgets, widgetId: "stats:today" }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(
       StatsSettingsPage,
       {
-        defaultRange: prefs.defaultRange,
-        showToday: prefs.showToday,
+        defaultRange: prefs2.defaultRange,
+        showToday: prefs2.showToday,
         onPrefs: () => void loadPrefs(),
         showPrefs: false,
         widgets
@@ -8387,35 +8318,23 @@ function renderFloatContent(id, withToggle) {
   const prefix = sep >= 0 ? id.slice(0, sep) : "";
   const rest = sep >= 0 ? id.slice(sep + 1) : id;
   const w = withToggle ? { widgets, widgetId: id } : {};
-  if (id === "peak") return /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(quota.PeakIndicator, { ...w });
-  if (prefix === "quota") return /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(quota.QuotaVendorWidget, { vendorId: rest });
-  if (prefix === "stats") return /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(StatsWidget, { kind: rest, ...w });
+  if (prefix === "stats") return /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(StatsWidget, { kind: rest, ...w });
   return null;
 }
 function syncFloatWidgets() {
-  const s = store.get();
-  const vendors = s && s.cfg && s.cfg.vendors || [];
-  widgets.syncRegistered([
-    { id: "peak", title: PEAK_TITLE },
-    ...STATS_KINDS.map((kind) => ({ id: "stats:" + kind, title: STATS_TITLES[kind] })),
-    ...vendors.map((v) => ({
-      id: "quota:" + v.id,
-      title: v.name ? "\u989D\u5EA6 \xB7 " + v.name : void 0
-    }))
-  ]);
+  widgets.syncRegistered(STATS_KINDS.map((kind) => ({ id: "stats:" + kind, title: STATS_TITLES[kind] })));
 }
 function WidgetFloatLayer() {
   const list = widgets.useWidgets();
   if (widgets.isBridged() || !list.length) return null;
-  return /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(import_jsx_runtime19.Fragment, { children: list.map((w) => /* @__PURE__ */ (0, import_jsx_runtime19.jsx)(widgets.WidgetFloat, { id: w.id, children: renderFloatContent(w.id, true) }, w.id)) });
+  return /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(import_jsx_runtime22.Fragment, { children: list.map((w) => /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(widgets.WidgetFloat, { id: w.id, children: renderFloatContent(w.id, true) }, w.id)) });
 }
-var QuotaView = quota.QuotaView;
+var QuotaSidebarAction = quota.QuotaSidebarAction;
 
 // src/client/index.tsx
 var CENTER_VIEW = "dshp-token-meter";
 var CenterView = createCenterView(
   {
-    QuotaView,
     StatsView,
     OnlineView,
     OnlineEmbed,
@@ -8423,7 +8342,7 @@ var CenterView = createCenterView(
     SettingsView: TokenMeterSettings,
     SharePanel
   },
-  { QuotaIcon, UsageIcon, OnlineIcon, SettingsIcon, ShareIcon }
+  { UsageIcon, OnlineIcon, SettingsIcon, ShareIcon }
 );
 var inject = ["slots"];
 function apply(ctx) {
@@ -8442,9 +8361,6 @@ function apply(ctx) {
         return;
       }
       widgetsApi.setContentRenderer((id) => renderFloatContent(id, false));
-      if (!widgetsApi.registerHost(createMenuWidget(widgetsApi))) {
-        console.warn("[dshp-token-meter] \u6CE8\u518C\u6258\u76D8\u83DC\u5355\u5931\u8D25\uFF0C\u5C0F\u7EC4\u4EF6\u53EA\u80FD\u4ECE\u4E2D\u5FC3\u533A\u5DE5\u5177\u6761\u5F39\u51FA\u3002");
-      }
       scope.effect(
         () => () => {
           widgetsApi.detach();
@@ -8459,11 +8375,11 @@ function apply(ctx) {
       try {
         scope.effect(() => quotaStore.subscribe(() => syncFloatWidgets()), "dshp-token-meter: widget sync");
       } catch (error) {
-        console.error("[dshp-token-meter] \u8BA2\u9605\u989D\u5EA6 store \u5931\u8D25\uFF08\u4F9B\u5E94\u5546\u589E\u5220\u540E\u5C0F\u7EC4\u4EF6\u5217\u8868\u53EF\u80FD\u4E0D\u540C\u6B65\uFF09\uFF1A", error);
+        console.error("[dshp-token-meter] \u8BA2\u9605\u989D\u5EA6 store \u5931\u8D25\uFF08\u5C0F\u7EC4\u4EF6\u5217\u8868\u53EF\u80FD\u4E0D\u540C\u6B65\uFF09\uFF1A", error);
       }
     });
   } catch (error) {
-    console.error("[dshp-token-meter] \u6302\u8F7D\u5C0F\u7EC4\u4EF6\u5BBF\u4E3B\u5931\u8D25\uFF0C\u5C0F\u7EC4\u4EF6\u6539\u7528\u81EA\u5E26\u6D6E\u7A97\u6E32\u67D3\uFF1A", error);
+    console.error("[dshp-token-meter] \u6302\u8F7D\u5C0F\u7EC4\u4EF6\u5BBF\u4E3B\u5931\u8D25\uFF0C\u7EDF\u8BA1\u5C0F\u7EC4\u4EF6\u6539\u7528\u81EA\u5E26\u6D6E\u7A97\u6E32\u67D3\uFF1A", error);
   }
   try {
     window.localStorage.removeItem("token-stats.sidebar-today");
@@ -8495,6 +8411,20 @@ function apply(ctx) {
   try {
     ctx.effect(
       () => slots.inject(
+        "sidebar.footer.action",
+        () => slots.register(
+          { name: "sidebar.footer.action", id: "dshp-token-meter", order: 10 },
+          QuotaSidebarAction
+        )
+      ),
+      "dshp-token-meter: sidebar quota action"
+    );
+  } catch (error) {
+    console.error("[dshp-token-meter] \u6CE8\u518C\u4FA7\u8FB9\u680F\u989D\u5EA6\u6309\u94AE\u5931\u8D25\uFF0C\u989D\u5EA6\u53EA\u80FD\u5728\u8BBE\u7F6E\u9875\u91CC\u770B\uFF1A", error);
+  }
+  try {
+    ctx.effect(
+      () => slots.inject(
         "shell.overlay",
         () => slots.register({ name: "shell.overlay", id: "dshp-token-meter-float" }, WidgetFloatLayer)
       ),
@@ -8515,7 +8445,7 @@ function apply(ctx) {
       "dshp-token-meter: center view"
     );
   } catch (error) {
-    console.error("[dshp-token-meter] \u6CE8\u518C\u4E2D\u5FC3\u533A tab \u5931\u8D25\uFF0C\u989D\u5EA6/\u7528\u91CF/\u5728\u7EBF\u9762\u677F\u90FD\u770B\u4E0D\u4E86\uFF1A", error);
+    console.error("[dshp-token-meter] \u6CE8\u518C\u4E2D\u5FC3\u533A tab \u5931\u8D25\uFF0C\u7528\u91CF/\u5728\u7EBF\u9762\u677F\u90FD\u770B\u4E0D\u4E86\uFF1A", error);
   }
 }
 return module.exports; } });

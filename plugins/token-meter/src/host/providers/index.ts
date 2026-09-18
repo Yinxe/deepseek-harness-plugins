@@ -227,6 +227,7 @@ export function describeProviders(): ProviderMeta[] {
     title: p.title,
     secretField: p.secretField,
     hint: p.hint || '',
+    ...(p.icon !== undefined && p.icon !== '' ? { icon: p.icon } : {}),
     fields: (p.fields || []).map((f) => {
       const out: import('../types.js').ProviderField = {
         key: f.key,

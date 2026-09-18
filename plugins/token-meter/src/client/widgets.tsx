@@ -1,8 +1,11 @@
 /**
  * 通用小组件浮窗系统（**双后端**）
  *
- * 中心区面板里的独立组件（供应商额度卡 `quota:<vendorId>`、统计图表 `stats:<kind>`、
- * 峰谷显示器 `peak`）都可以拖出为全局浮窗，坐标与开关持久化到 localStorage。
+ * 中心区「用量统计」里的独立图表（统计图表 `stats:<kind>`）都可以拖出为全局浮窗，
+ * 坐标与开关持久化到 localStorage。
+ *
+ * 2026-09 UI 重构后本系统**只服务统计族**：额度改成了侧边栏底部按钮 + 上方浮层
+ * （`sidebar.footer.action`，见 QuotaSection/QuotaTrayPanel），峰谷显示器随额度显示面删除。
  *
  * ## 两个后端
  *
@@ -11,35 +14,24 @@
  * | `@dshp/widget-kit`  | 装了（且启用了）框架插件时                 | 框架：拖拽/缩放/最小化/锁定/吸附/动效/持久化 |
  * | 自带浮层（legacy）  | 没装框架插件时                             | 本文件（`WidgetFloat` + portal） |
  *
- * 两者共用同一个外观接口（`WidgetSystem`），所以 `StatsSection` / `QuotaSection` / 中心区
- * 一行都不用改：它们只调 `WidgetToggle` / `useWidgets`。挂载由 `index.tsx` 在
- * `ctx.inject(['widgets'], …)` 里做（**可选依赖**：框架缺席时这个回调永不执行，插件其余部分照常）。
+ * 两者共用同一个外观接口（`WidgetSystem`），所以 `StatsSection` / 中心区一行都不用改：
+ * 它们只调 `WidgetToggle` / `useWidgets`。挂载由 `index.tsx` 在 `ctx.inject(['widgets'], …)` 里做
+ * （**可选依赖**：框架缺席时这个回调永不执行，插件其余部分照常）。
  *
- * 进宿主前把 legacy id 编码成宿主要求的形状（`peak` / `stats:trend` / `quota:deepseek` →
- * `token-meter:…`，见 `widget-bridge.ts`），**本插件内部一律沿用旧 id**。
+ * 进宿主前把 legacy id 编码成宿主要求的形状（`stats:trend` → `token-meter:stats-trend`，
+ * 见 `widget-bridge.ts`），**本插件内部一律沿用 legacy id**。
  *
- * 宿主是 `trayIcon: false` 的自由卡片：不占活动栏图标，由中心区各行/工具条上的「⧉」按钮开合，
+ * 宿主是 `trayIcon: false` 的自由卡片：不占活动栏图标，由中心区「用量统计」工具条上的按钮开合，
  * 也可以被任何别的组件用 `ctx.widgets.toggle('token-meter:stats-trend')` 打开。因为刷新后
- * 布局里「开着」的卡片要能自己长回来，注册是**常驻**的：`syncRegistered()` 在启动与供应商增删时
+ * 布局里「开着」的卡片要能自己长回来，注册是**常驻**的：`syncRegistered()` 在启动时
  * 把当前该有的卡片一次性对齐（新增注册、缺席注销）。
- *
- * 与额度/今日卡旧浮窗并存（旧浮窗跟随当前供应商/今日，widget 浮窗绑定固定组件）。
  *
  * @module @dshp/token-meter/client/widgets
  */
 import { useEffect, useReducer, type ReactNode } from 'react';
 import * as ReactDOM from 'react-dom';
 import { Glyph } from './glyphs.js';
-import { QuotaIcon } from './icons.js';
-import {
-  PEAK_ID,
-  QUOTA_PREFIX,
-  STATS_PREFIX,
-  encodeFloatId,
-  floatSize,
-  floatTitle,
-  isFloatId,
-} from './widget-bridge.js';
+import { STATS_PREFIX, encodeFloatId, floatSize, floatTitle, isFloatId } from './widget-bridge.js';
 import styles from './styles.module.css';
 // 宿主契约直接从 @dshp/widget-kit 的 spec 拿类型（workspace devDependency，纯类型、
 // 运行时零 import：`verbatimModuleSyntax` + tsup 的 external 让它在产物里不留痕迹）。
@@ -101,16 +93,14 @@ const hints = new Map<string, string>();
 const hostDisposers: Array<() => void> = [];
 
 /**
- * 卡片图标（宿主在托盘溢出菜单 / 组件箱里会画它）。
+ * 卡片图标（宿主在组件箱 / 溢出菜单里会画它）。
  *
- * 统计族按图表语义挑 glyph，供应商用额度图标 —— 与中心区里的观感一致。
+ * 按图表语义挑 glyph —— 与中心区里的观感一致。
  *
  * @param legacy - legacy id。
  * @returns 图标节点。
  */
 function floatIcon(legacy: string): ReactNode {
-  if (legacy.startsWith(QUOTA_PREFIX)) return <QuotaIcon size={16} />;
-  if (legacy === PEAK_ID) return <Glyph name="clock" size={16} />;
   const kind = legacy.startsWith(STATS_PREFIX) ? legacy.slice(STATS_PREFIX.length) : '';
   const glyph: Record<string, string> = {
     cards: 'chartBar',
@@ -128,7 +118,7 @@ function floatIcon(legacy: string): ReactNode {
  * 注册是**常驻**的：宿主渲染一张卡片的前提是描述符在册，而 `trayIcon: false` 的卡片没有图标，
  * 「刷新后仍开着」只能靠这里提前注册。重复调用只更新标题提示，不会重复注册。
  *
- * @param legacy - legacy id（`peak` / `stats:*` / `quota:*`）。
+ * @param legacy - legacy id（`stats:*`）。
  * @param hint - 更具体的标题（供应商名）；不传时用 `floatTitle` 的默认表。
  * @returns 无。
  */
@@ -143,7 +133,7 @@ function ensureRegistered(legacy: string, hint?: string | undefined): void {
       title: () => floatTitle(legacy, hints.get(legacy)),
       icon: floatIcon(legacy),
       presentation: 'card',
-      // 不占活动栏：这些卡片由中心区里的按钮开合（一个拥有者一个图标 + 多张自由卡片）
+      // 不占活动栏：这些卡片由中心区「用量统计」工具条上的按钮开合
       trayIcon: false,
       content: {
         render: () =>

@@ -32,17 +32,55 @@
  */
 import type { ReactNode } from 'react';
 import { createErrorBox, fallbackErrorInfo } from '../ErrorBox.js';
+import { ProviderIcon } from '../provider-icons.js';
+import type { PrefsApi } from '../quota-prefs.js';
+import { QuotaRing } from '../QuotaRing.js';
 import styles from '../styles.module.css';
 import type { ErrorInfo, QuotaBilling, QuotaWindow, VendorSnapshot } from '../types.js';
+import type { QuotaRingSpec, QuotaTone, ButtonVariant } from './templates.js';
+import { toneOfPct, windowPct } from './templates.js';
 
-const X_PAL = ['#4c7ef3', '#2fb261', '#f5a623', '#e05e4e', '#9a6ef1', '#25b8c4'];
+/**
+ * 分段占比条的**语义色调 → 类名**（颜色全在 styles.module.css 里，一律取主题 token）。
+ *
+ * 为什么不再用写死的十六进制调色板：比例条（额度构成、模型构成…）以前用 `X_PAL` 的
+ * 蓝/绿/橙/红，换主题时一律不变 —— 那正是「安全/警告/危险色固定」的来源。
+ * 现在供应商只声明语义（`brand`/`ok`/`warn`/`bad`/`info`/`muted`），配色交给主题。
+ */
+const SEG_TONE: Record<string, string | undefined> = {
+  brand: styles.segBrand,
+  ok: styles.segOk,
+  warn: styles.segWarn,
+  bad: styles.segBad,
+  info: styles.segInfo,
+  muted: styles.segMuted,
+};
 
-/** 渲染上下文：快照 + 当前时间（窗口倒计时用）+ 供应商身份。 */
+/** 没声明色调时的轮转槽（仍是 token 派生，不是写死色值）。 */
+const SEG_PAL = [
+  styles.segPal0,
+  styles.segPal1,
+  styles.segPal2,
+  styles.segPal3,
+  styles.segPal4,
+  styles.segPal5,
+  styles.segPal6,
+  styles.segPal7,
+];
+
+/**
+ * 渲染上下文：快照 + 当前时间（窗口倒计时用）+ 供应商身份 + **该供应商自己的展示偏好**。
+ *
+ * `prefs` 是按供应商分作用域的键值袋（浏览器本地）：键值由供应商模板**自己定义**
+ * （Goat 用 `window` / `balance`，别的供应商可以完全不同），客户端不解释任何键名。
+ * 按钮模板读它决定画什么，详情模板画控件写它 —— 点一下按钮立刻重画。
+ */
 export interface RenderCtx {
   snap: VendorSnapshot;
   now: number;
   type: string;
   vendorName: string;
+  prefs: PrefsApi;
 }
 
 /** kit 构造依赖（由 QuotaSection 注入，避免循环依赖与重复实现）。 */
@@ -86,6 +124,25 @@ export interface ProviderUIKit {
     compact?: boolean | undefined;
   }) => ReactNode;
 
+  /* ── 按钮级模板专用零件（侧边栏那枚按钮里能画什么）───────────────── */
+
+  /** 环形进度（把 `QuotaRingSpec` 画成 SVG；几何/配色/动画统一在这里）。 */
+  Ring: (props: { spec: QuotaRingSpec; size?: number | undefined; stroke?: number | undefined }) => ReactNode;
+  /** 供应商图标（自绘抽象标记；未知名字给通用那枚）。 */
+  ProviderIcon: (props: { name?: string | undefined; size?: number | undefined }) => ReactNode;
+  /** 按钮骨架：宽栏 = 图标 + 主图形 + 名字 + 数值；窄栏/切换行 = 只留主图形。 */
+  ButtonLayout: (props: ButtonLayoutProps) => ReactNode;
+  /** 多条滚动窗口的迷你条（5 小时 / 每周 / 每月并排；比三个环更适合宽栏）。 */
+  WindowBars: (props: WindowBarsProps) => ReactNode;
+  /** 窗口短标签（`5 小时` → `5时`）—— 窄栏里能省一个字是一个。 */
+  shortWindowLabel: (label: string) => string;
+  /** 极短金额（`$46.6` → `$47`、`¥12345` → `¥1.2万`）—— 窄栏 36px 圆里只塞得下这个。 */
+  tinyMoney: (text: string) => string;
+  /** 偏好开关（勾选即写 `ctx.prefs`，按钮立刻重画）。 */
+  PrefSwitch: (props: PrefSwitchProps) => ReactNode;
+  /** 偏好单选组（`data-on` 标出当前项）。 */
+  PrefChoice: (props: PrefChoiceProps) => ReactNode;
+
   num: KitDeps['num'];
   fmt: KitDeps['fmt'];
   fmtLeft: KitDeps['fmtLeft'];
@@ -93,6 +150,65 @@ export interface ProviderUIKit {
   remainOf: KitDeps['remainOf'];
   timeAgo: KitDeps['timeAgo'];
   levelOf: KitDeps['levelOf'];
+}
+
+/** 按钮骨架 props（三档位置共用一套排版规则）。 */
+export interface ButtonLayoutProps {
+  /** 哪一档（`wide` 显示文字，`rail`/`row` 只显示主图形）。 */
+  variant: ButtonVariant;
+  /** 主图形：环 / 图标 / 迷你条 / 任意节点（窄栏与切换行只显示它）。 */
+  leading: ReactNode;
+  /** 供应商名（仅宽栏显示）。 */
+  name?: string | undefined;
+  /** 右对齐的数值文案（仅宽栏显示；如 `91%` / `¥9.06`）。 */
+  value?: string | undefined;
+  /** 数值的色调（`bad` 变红等）；与环的档位同源。 */
+  tone?: QuotaTone | undefined;
+  /** 供应商图标名（仅宽栏显示，放在主图形之前）。 */
+  icon?: string | undefined;
+  /**
+   * 窄栏（56px 轨道）专用内容；缺省 = 「供应商图标 + `leading`」并排。
+   *
+   * 之所以要它：窄栏里有些画法需要另排（例如 `balance` 指标要换成紧凑金额、
+   * 主图形尺寸更小），而宽栏那套在 36px 的圆里塞不下。
+   */
+  rail?: ReactNode | undefined;
+  /**
+   * 切换行（浮层里的供应商列表，16px 槽）专用内容；缺省用 `leading`。
+   *
+   * 与 `rail` 分开是因为两者约束不同：窄栏有 36px 可以放「图标 + 环」，
+   * 而切换行只有 16px —— 余额那种长内容必须在这里换成紧凑图形（环 / 图标）。
+   */
+  glyph?: ReactNode | undefined;
+}
+
+/** 迷你窗口条 props。 */
+export interface WindowBarsProps {
+  /** 要画的窗口（按给定顺序；通常 5 小时 / 每周 / 每月）。 */
+  windows?: QuotaWindow[] | undefined;
+  /** 高亮哪一条（用户选中的指标键；空 = 不高亮）。 */
+  activeKey?: string | undefined;
+  /** 条高 px。 */
+  height?: number | undefined;
+}
+
+/** 偏好开关 props（如「显示余额」）。 */
+export interface PrefSwitchProps {
+  /** 开关文案。 */
+  label: string;
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  /** 可选说明（title）。 */
+  hint?: string | undefined;
+}
+
+/** 偏好单选组 props（如 `5h / 1w / 1m`）。 */
+export interface PrefChoiceProps {
+  /** 组标签（可省）。 */
+  label?: string | undefined;
+  value: string;
+  options: Array<{ value: string; label: string; hint?: string | undefined }>;
+  onChange: (next: string) => void;
 }
 
 /** 分区小标题 props。 */
@@ -143,7 +259,7 @@ export interface MetricGridProps {
 
 /** 分段占比条 props。 */
 export interface SplitBarProps {
-  segments?: Array<{ label: string; value: number; color?: string }> | undefined;
+  segments?: Array<{ label: string; value: number; tone?: string; color?: string }> | undefined;
   title?: string | undefined;
 }
 
@@ -272,7 +388,9 @@ export function BalanceBlock(deps: KitDeps, props: BalanceBlockProps): ReactNode
   kids.push(
     <div key="top" className={styles.paygTop}>
       <div>
-        <span className={styles.paygCur}>{deps.curSymbol(cur) + cur}</span>
+        {/* 币种只出现一次：curSymbol 对已知币种给符号（$ / ¥），未知币种给「代码 + 空格」，
+            以前这里又拼了一遍 cur，于是显示成 `$USD 46.07` */}
+        <span className={styles.paygCur}>{deps.curSymbol(cur) || cur}</span>
         <span className={styles.paygAmt + (amt < 0 ? ' ' + styles.neg : '')}>{deps.fmt(amt)}</span>
       </div>
       <span className={styles.avail + ' ' + styles[availCls]} title={availTip}>
@@ -305,13 +423,13 @@ export function BalanceBlock(deps: KitDeps, props: BalanceBlockProps): ReactNode
   const low = !empty && warnLine !== null && amt <= warnLine;
   if (empty)
     kids.push(
-      <div key="warn" className={styles.warn + ' ' + styles.bad}>
+      <div key="warn" className={styles.warnLine + ' ' + styles.bad}>
         {'余额不足，API 调用可能被拒绝，请及时充值。'}
       </div>,
     );
   else if (low)
     kids.push(
-      <div key="warn" className={styles.warn}>
+      <div key="warn" className={styles.warnLine}>
         {'余额低于预警线 ' + deps.fmt(warnLine) + '，建议及时充值。'}
       </div>,
     );
@@ -377,20 +495,31 @@ export function SplitBar(deps: KitDeps, props: SplitBarProps): ReactNode {
     .slice(0, 8);
   if (!segs.length) return null;
   const sum = segs.reduce((acc, x) => acc + Number(x.value), 0);
-  const color = (i: number): string => segs[i]?.color || (X_PAL[i % X_PAL.length] as string);
+  /** 一段的配色：语义色调 → 类名；旧适配器给的 `color` 仍作为**静态色兜底**（不推荐）。 */
+  const segClass = (i: number): string | undefined => {
+    const tone = segs[i]?.tone;
+    if (tone !== undefined && SEG_TONE[tone] !== undefined) return SEG_TONE[tone];
+    return SEG_PAL[i % SEG_PAL.length];
+  };
+  const segStyle = (i: number): { flexGrow?: number; background?: string } => {
+    const style: { flexGrow?: number; background?: string } = { flexGrow: Number(segs[i]?.value) };
+    const legacy = segs[i]?.color;
+    if (segs[i]?.tone === undefined && typeof legacy === 'string' && legacy !== '') style.background = legacy;
+    return style;
+  };
   return (
     <div>
       {props.title ? <SectionTitle key="t" text={props.title} /> : null}
       <div className={styles.xsplit}>
         {segs.map((sg, i) => (
-          <span key={'g' + i} style={{ flexGrow: Number(sg.value), background: color(i) }} />
+          <span key={'g' + i} className={segClass(i)} style={segStyle(i)} />
         ))}
       </div>
       <div className={styles.xstats}>
         {segs.map((sg, i) => (
           <div key={'l' + i} className={styles.xrow}>
             <span>
-              <span className={styles.xdot} style={{ background: color(i) }} />
+              <span className={styles.xdot + ' ' + String(segClass(i))} style={segStyle(i)} />
               {String(sg.label || '')}
             </span>
             <b>{String(Math.round((Number(sg.value) * 100) / sum)) + '%'}</b>
@@ -407,9 +536,9 @@ export function NoteLine(deps: KitDeps, props: NoteLineProps): ReactNode {
   if (!t) return null;
   const tone =
     props.tone === 'bad'
-      ? styles.warn + ' ' + styles.bad
+      ? styles.warnLine + ' ' + styles.bad
       : props.tone === 'warn'
-        ? styles.warn
+        ? styles.warnLine
         : styles.paygSub;
   return <div className={tone}>{t}</div>;
 }
@@ -500,6 +629,189 @@ export function Chips(deps: KitDeps, props: ChipsProps): ReactNode {
  * @param deps - QuotaSection 注入的格式化与错误展开态依赖。
  * @returns `ProviderUIKit`（专属 UI / 声明式渲染按 `K.零件名` 取用）。
  */
+/**
+ * 按钮骨架（三档位置共用的排版规则）。
+ *
+ * - `wide`：`[图标] 主图形 名字  …… 数值`（名字长走省略号，数值右对齐）；
+ * - `rail`：只有主图形（56px 轨道里放不下文字，说明走 tooltip）；
+ * - `row`：只有主图形（`glyph` 优先；与浮层里其它行左对齐、同尺寸）。
+ *
+ * @param props - 见 {@link ButtonLayoutProps}。
+ * @returns 骨架节点。
+ */
+export function ButtonLayout(props: ButtonLayoutProps): ReactNode {
+  if (props.variant === 'rail') {
+    // 窄栏：没给 `rail` 时默认「供应商图标 14 + 主图形（环 16）+ 3px 间距 = 33px」并排，塞得进 36×36 圆
+    return (
+      <span className={styles.btnRail}>
+        {props.rail ?? (
+          <>
+            {props.icon !== undefined && props.icon !== '' ? (
+              <ProviderIcon name={props.icon} size={14} />
+            ) : null}
+            {props.leading}
+          </>
+        )}
+      </span>
+    );
+  }
+  if (props.variant === 'row') {
+    return <span className={styles.btnRow}>{props.glyph ?? props.leading}</span>;
+  }
+  return (
+    <>
+      {props.icon !== undefined && props.icon !== '' ? (
+        <span className={styles.btnIcon} aria-hidden="true">
+          <ProviderIcon name={props.icon} size={16} />
+        </span>
+      ) : null}
+      <span className={styles.btnLead}>{props.leading}</span>
+      {props.name !== undefined && props.name !== '' ? (
+        <span className={styles.btnName}>{props.name}</span>
+      ) : null}
+      {props.value !== undefined && props.value !== '' ? (
+        <span className={styles.btnValue} data-tone={props.tone ?? ''}>
+          {props.value}
+        </span>
+      ) : null}
+    </>
+  );
+}
+
+/**
+ * 多条滚动窗口的迷你条：一根细条 + 短标签，三条并排也只占一行。
+ *
+ * 这是「宽栏按钮上放 5 小时 / 每周 / 每月」的推荐画法（比三个环省地方，也比一串数字好扫）。
+ * 占用档位与环同源（70/90 → warn/bad），所以并排时颜色自己会跳出来。
+ *
+ * @param deps - kit 依赖（时间格式化）。
+ * @param props - 见 {@link WindowBarsProps}。
+ * @returns 迷你条组。
+ */
+export function WindowBars(deps: KitDeps, props: WindowBarsProps): ReactNode {
+  const wins = (Array.isArray(props.windows) ? props.windows : [])
+    .filter((w) => windowPct(w) !== null)
+    .slice(0, 4);
+  if (wins.length === 0) return null;
+  const h = props.height ?? 4;
+  return (
+    <span className={styles.btnBars}>
+      {wins.map((w, i) => {
+        const pct = windowPct(w) ?? 0;
+        return (
+          <span
+            key={String(w.key || i)}
+            className={styles.btnBar}
+            data-tone={toneOfPct(pct)}
+            data-active={props.activeKey !== undefined && props.activeKey === w.key ? '1' : undefined}
+            title={String(w.label || '') + ' 已用 ' + Math.round(pct) + '%'}
+          >
+            <span className={styles.btnBarLabel}>{shortWindowLabel(String(w.label || w.key || ''))}</span>
+            <span className={styles.btnBarTrack} style={{ height: h + 'px' }}>
+              <span className={styles.btnBarFill} style={{ width: Math.round(pct) + '%' }} />
+            </span>
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
+/**
+ * 极短金额：给**窄栏**（36px 圆）用的金额文案。
+ *
+ * `$46.6` → `$47`（取整）、`¥12345` → `¥1.2万`（上万走「万」）—— 全精度留给宽栏与浮层，
+ * 窄栏里只保留「大概多少钱」这一条信息，否则图标 + 金额会撑出圆外被裁。
+ *
+ * @param text - 完整金额文案（含币种前缀）。
+ * @returns 短文案（≤6 字）。
+ */
+export function tinyMoney(text: string): string {
+  const m = /^([^0-9-]*)(-?\d+(?:\.\d+)?)$/.exec(String(text || ''));
+  if (!m) return String(text || '').slice(0, 6);
+  const sym = m[1];
+  const n = Number(m[2]);
+  if (!isFinite(n)) return String(text).slice(0, 6);
+  const abs = Math.abs(n);
+  if (abs >= 10000) return sym + (n / 10000).toFixed(1).replace(/\.0$/, '') + '万';
+  return sym + String(Math.round(n));
+}
+
+/**
+ * 窗口短标签：`5 小时` → `5时`、`每周` → `周`、`每月` → `月`（窄栏里能省一个字是一个）。
+ *
+ * @param label - 原始标签。
+ * @returns 短标签（未知标签原样返回，最多 3 个字）。
+ */
+export function shortWindowLabel(label: string): string {
+  const s = String(label || '');
+  if (s === '') return '';
+  if (s.indexOf('5') >= 0 && s.indexOf('小时') >= 0) return '5时';
+  if (s.indexOf('周') >= 0) return '周';
+  if (s.indexOf('月') >= 0) return '月';
+  if (s.indexOf('日') >= 0 || s.indexOf('天') >= 0) return '日';
+  if (s.indexOf('年') >= 0) return '年';
+  return s.slice(0, 3);
+}
+
+/**
+ * 偏好开关：标签 + 原生 checkbox（键盘可达、可读屏），勾选即 onChange。
+ *
+ * 放在**该供应商自己的详情模板**里 —— 谁有偏好谁负责画，插件不提供统一的「显示设置」面板。
+ *
+ * @param props - 见 {@link PrefSwitchProps}。
+ * @returns 一行开关。
+ */
+export function PrefSwitch(props: PrefSwitchProps): ReactNode {
+  return (
+    <label className={styles.prefRow} title={props.hint}>
+      <input
+        type="checkbox"
+        className={styles.prefBox}
+        checked={props.checked}
+        onChange={(event) => {
+          props.onChange(event.target.checked);
+        }}
+      />
+      <span className={styles.prefLabel}>{props.label}</span>
+    </label>
+  );
+}
+
+/**
+ * 偏好单选组：一小段分段控件（`role="radiogroup"` + `role="radio"`），当前项用 `data-on` 标明。
+ *
+ * @param props - 见 {@link PrefChoiceProps}。
+ * @returns 一行分段控件。
+ */
+export function PrefChoice(props: PrefChoiceProps): ReactNode {
+  return (
+    <div className={styles.prefRow} role="radiogroup" aria-label={props.label ?? '选项'}>
+      {props.label !== undefined && props.label !== '' ? (
+        <span className={styles.prefLabel}>{props.label}</span>
+      ) : null}
+      <span className={styles.prefSeg}>
+        {props.options.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            role="radio"
+            aria-checked={opt.value === props.value}
+            className={styles.prefOpt}
+            data-on={opt.value === props.value ? '1' : undefined}
+            title={opt.hint ?? opt.label}
+            onClick={() => {
+              props.onChange(opt.value);
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </span>
+    </div>
+  );
+}
+
 export function createProviderKit(deps: KitDeps): ProviderUIKit {
   const ErrorCard = createErrorBox({
     isOpen: deps.errOpen,
@@ -519,6 +831,18 @@ export function createProviderKit(deps: KitDeps): ProviderUIKit {
     SectionTitle: (props: SectionTitleProps) => SectionTitle(props),
     Chips: (props: ChipsProps) => Chips(deps, props),
     ErrorCard,
+    Ring: (props: { spec: QuotaRingSpec; size?: number | undefined; stroke?: number | undefined }) => (
+      <QuotaRing spec={props.spec} size={props.size ?? 18} stroke={props.stroke ?? 2.2} />
+    ),
+    ProviderIcon: (props: { name?: string | undefined; size?: number | undefined }) => (
+      <ProviderIcon name={props.name} size={props.size ?? 16} />
+    ),
+    ButtonLayout: (props: ButtonLayoutProps) => ButtonLayout(props),
+    WindowBars: (props: WindowBarsProps) => WindowBars(deps, props),
+    shortWindowLabel,
+    tinyMoney,
+    PrefSwitch: (props: PrefSwitchProps) => PrefSwitch(props),
+    PrefChoice: (props: PrefChoiceProps) => PrefChoice(props),
     num: deps.num,
     fmt: deps.fmt,
     fmtLeft: deps.fmtLeft,

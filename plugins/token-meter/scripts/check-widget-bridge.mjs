@@ -3,10 +3,12 @@
  * 宿主桥自检：legacy id → `@dshp/widget-kit` 的 id 编码必须**合法、稳定、不撞车**。
  *
  * 三件事各自会怎么坏：
- *  - **不合法**：宿主 `register()` 直接抛 `WidgetSpecError`，那张小组件永远弹不出来
- *    （供应商 id 是用户在 settings.yaml 里手写的，什么字符都可能出现）；
- *  - **不稳定**：宿主按 id 存卡片几何，同一供应商两次编码得到不同 id = 每次刷新布局重置；
- *  - **撞车**：两个供应商拿到同一个宿主 id，后注册者覆盖前者，一张卡片凭空消失。
+ *  - **不合法**：宿主 `register()` 直接抛 `WidgetSpecError`，那张小组件永远弹不出来；
+ *  - **不稳定**：宿主按 id 存卡片几何，同一 id 两次编码得到不同宿主 id = 每次刷新布局重置；
+ *  - **撞车**：两个 id 拿到同一个宿主 id，后注册者覆盖前者，一张卡片凭空消失。
+ *
+ * 2026-09 UI 重构后只剩**统计族**（`stats:<kind>`）：额度改成了侧边栏按钮 + 上方浮层
+ * （不是可弹出卡片），峰谷显示器随额度显示面删除，因此这里不再有供应商 id 的 slug 编码。
  *
  * 纯函数、不依赖浏览器，所以放进 `pnpm test`。
  */
@@ -25,7 +27,6 @@ import {
   floatTitle,
   hash32,
   isFloatId,
-  slugifyVendor,
 } from '../src/client/widget-bridge.ts';
 
 let groups = 0;
@@ -41,105 +42,80 @@ const assertLegal = (wkId, legacy) => {
   assert.equal(wkId.slice(0, wkId.indexOf(':')), WK_OWNER, `${legacy} → ${wkId} owner 段不对`);
 };
 
-/** 故意难看的供应商 id：settings.yaml 里真的可能出现这些写法。 */
-const VENDORS = [
-  'deepseek',
-  'opencode',
-  'commandcode',
-  'My_Vendor',
-  'my-vendor',
-  'my.vendor',
-  'my vendor',
-  'VENDOR-2',
-  'a',
-  'a:b',
-  '额度',
-  'vendor/with/slash',
+/** 故意难看、且**不属于任何已知族**的 id：走 x-<hash> 保底分支。 */
+const ALIENS = [
+  'whatever',
+  'online:today',
+  'peak',
+  'quota:deepseek',
   'x'.repeat(200),
-  'Ünïcøde-Name',
   'weird\u0000control',
+  '额度',
+  'a:b:c',
 ];
 
 check('1. legacy → 宿主 id：全部合法（owner 段 + 形状）', () => {
-  assertLegal(encodeFloatId('peak'), 'peak');
   for (const kind of STATS_KINDS) assertLegal(encodeFloatId('stats:' + kind), 'stats:' + kind);
-  for (const v of VENDORS) assertLegal(encodeFloatId('quota:' + v), 'quota:' + v);
-  assertLegal(encodeFloatId('online:whatever'), 'online:whatever');
+  for (const id of ALIENS) assertLegal(encodeFloatId(id), id);
 });
 
 check('2. 编码稳定：同一输入永远同一 id（几何持久化的前提）', () => {
-  for (const v of VENDORS) {
-    const a = encodeFloatId('quota:' + v);
-    const b = encodeFloatId('quota:' + v);
-    assert.equal(a, b, `quota:${v} 两次编码不一致`);
+  for (const kind of STATS_KINDS) {
+    assert.equal(encodeFloatId('stats:' + kind), encodeFloatId('stats:' + kind));
   }
-  assert.equal(encodeFloatId('stats:trend'), encodeFloatId('stats:trend'));
+  for (const id of ALIENS) assert.equal(encodeFloatId(id), encodeFloatId(id));
   // 哈希对固定输入固定（换实现就会让所有人的布局重置，必须显式钉住）
   assert.equal(hash32('deepseek'), 'fqfx');
   assert.equal(hash32(''), 'ztnt');
+  // 统计族不走哈希：id 直读，改族名就会改宿主 id（有意为之，族名是契约）
+  assert.equal(encodeFloatId('stats:heat'), 'token-meter:stats-heat');
 });
 
-check('3. 不撞车：不同供应商 id 得到不同宿主 id', () => {
+check('3. 不撞车：不同来源得到不同宿主 id', () => {
   const seen = new Map();
-  for (const v of VENDORS) {
-    const wk = encodeFloatId('quota:' + v);
-    assert.equal(seen.has(wk), false, `quota:${v} 与 quota:${seen.get(wk)} 撞成 ${wk}`);
-    seen.set(wk, v);
+  for (const id of [...STATS_KINDS.map((kind) => 'stats:' + kind), ...ALIENS]) {
+    const wk = encodeFloatId(id);
+    assert.equal(seen.has(wk), false, `${id} 与 ${String(seen.get(wk))} 撞成 ${wk}`);
+    seen.set(wk, id);
   }
-  // 同一个供应商 id 不可能既算 quota 又算别的族
-  assert.notEqual(encodeFloatId('quota:deepseek'), encodeFloatId('stats:deepseek'));
 });
 
-check('4. 静态族可反解：peak / stats:* 往返一致', () => {
-  assert.equal(decodeFloatId(encodeFloatId('peak')), 'peak');
+check('4. 统计族可反解：stats:* 往返一致', () => {
   for (const kind of STATS_KINDS) {
     assert.equal(decodeFloatId(encodeFloatId('stats:' + kind)), 'stats:' + kind);
   }
-  // 供应商族故意不反解（slug 是单向的），别的 owner 也不认
+  // 保底分支与别的 owner 都不认
+  assert.equal(decodeFloatId(encodeFloatId('peak')), null);
   assert.equal(decodeFloatId(encodeFloatId('quota:deepseek')), null);
-  assert.equal(decodeFloatId('other-plugin:peak'), null);
-  assert.equal(decodeFloatId('peak'), null);
+  assert.equal(decodeFloatId('other-plugin:stats-heat'), null);
+  assert.equal(decodeFloatId('stats:heat'), null);
 });
 
-check('5. isFloatId：只认本插件的三个族', () => {
-  assert.equal(isFloatId('peak'), true);
+check('5. isFloatId：只认统计族', () => {
   assert.equal(isFloatId('stats:cards'), true);
+  for (const kind of STATS_KINDS) assert.equal(isFloatId('stats:' + kind), true);
   assert.equal(isFloatId('stats:nope'), false);
-  assert.equal(isFloatId('quota:deepseek'), true);
-  assert.equal(isFloatId('quota:'), false);
+  assert.equal(isFloatId('peak'), false, '峰谷显示器已删除，不该再被当成小组件');
+  assert.equal(isFloatId('quota:deepseek'), false, '额度已改为侧边栏按钮，不该再注册卡片');
   assert.equal(isFloatId('online:today'), false);
   assert.equal(isFloatId(''), false);
 });
 
-check('6. 标题：默认表 + 供应商名提示', () => {
+check('6. 标题：默认表 + 调用方提示', () => {
   for (const kind of STATS_KINDS) {
     assert.equal(floatTitle('stats:' + kind), STATS_TITLES[kind]);
   }
-  assert.equal(floatTitle('peak'), '峰谷定价');
-  assert.equal(floatTitle('quota:deepseek'), '额度 · deepseek');
-  assert.equal(floatTitle('quota:deepseek', '额度 · DeepSeek 官方'), '额度 · DeepSeek 官方');
+  assert.equal(floatTitle('stats:trend', '自定义标题'), '自定义标题');
   // 空提示回落到默认表（不能出现没有标题的卡片）
-  assert.equal(floatTitle('quota:deepseek', ''), '额度 · deepseek');
-  assert.equal(floatTitle('whatever'), '小组件');
+  assert.equal(floatTitle('stats:trend', ''), STATS_TITLES.trend);
+  assert.equal(floatTitle('whatever'), '用量统计');
 });
 
-check('7. slug 永远是宿主认的形状', () => {
-  for (const v of VENDORS) {
-    const slug = slugifyVendor(v);
-    assert.match(slug, /^[a-z0-9-]+$/, `${v} → ${slug} 含非法字符`);
-    assert.equal(slug.startsWith('-'), false, `${v} → ${slug} 以 - 开头`);
-    assert.equal(slug.endsWith('-'), false, `${v} → ${slug} 以 - 结尾`);
-    assert.ok(slug.length <= 20, `${v} → ${slug} 过长`);
-  }
-});
-
-check('8. 尺寸表：逐族各有一套，且不越框架地板', () => {
+check('7. 尺寸表：逐族各有一套，且不越框架地板', () => {
   const families = Object.keys(FLOAT_SIZES);
-  assert.equal(families.length, 7, '尺寸族数量变了（新增小组件族时这里要一起加）');
+  assert.equal(families.length, 5, '尺寸族数量变了（新增小组件族时这里要一起加）');
 
   // 映射：legacy id → 族
-  assert.equal(floatFamily('peak'), 'peak');
-  assert.equal(floatFamily('quota:deepseek'), 'quota');
   for (const kind of STATS_KINDS) assert.equal(floatFamily('stats:' + kind), kind);
   assert.equal(floatFamily('whatever'), 'cards', '未知 id 要有保底族（不能没尺寸）');
 
@@ -168,7 +144,7 @@ check('8. 尺寸表：逐族各有一套，且不越框架地板', () => {
   assert.ok(FLOAT_SIZES.heat.defaultSize.h < FLOAT_SIZES.trend.defaultSize.h, '热力图该比趋势矮');
   assert.ok(FLOAT_SIZES.heat.defaultSize.w > FLOAT_SIZES.trend.defaultSize.w, '热力图该比趋势宽');
   assert.ok(FLOAT_SIZES.donut.defaultSize.h > FLOAT_SIZES.trend.defaultSize.h, '模型分布该比趋势高');
-  assert.ok(FLOAT_SIZES.today.defaultSize.w < FLOAT_SIZES.quota.defaultSize.w, '今日卡该比供应商卡窄');
+  assert.ok(FLOAT_SIZES.today.defaultSize.w < FLOAT_SIZES.heat.defaultSize.w, '今日卡该比热力图窄');
 
   // floatSize 每次返回同一个对象（调用方不该改它，也不该每次新建）
   assert.equal(floatSize('stats:heat'), floatSize('stats:heat'));

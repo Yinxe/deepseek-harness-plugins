@@ -27,9 +27,9 @@ import { clearStatsCache, fetchState, fetchStats } from './api.js';
 import { createQuotaSection } from './QuotaSection.js';
 import { HiddenWhenFloated, StatsSettingsPage, StatsWidget, TodayCard } from './StatsSection.js';
 import { createWidgetSystem } from './widgets.js';
-import { PEAK_TITLE, STATS_KINDS, STATS_TITLES } from './widget-bridge.js';
+import { STATS_KINDS, STATS_TITLES } from './widget-bridge.js';
 import styles from './styles.module.css';
-import type { StatsSnapshot, Vendor } from './types.js';
+import type { StatsSnapshot } from './types.js';
 import { DISPLAY_NAME } from '../name.js';
 
 const STATS_WIDGET_BTNS: Array<[string, string]> = [
@@ -71,8 +71,8 @@ function cx(...names: Array<string | undefined>): string {
 /** 小组件注册表（浮层的唯一实例）。 */
 const widgets = createWidgetSystem();
 
-/** 额度侧装配产出（`widgets` 是真实注入依赖，故保留工厂形态）。 */
-const quota = createQuotaSection(widgets);
+/** 额度侧装配产出（store + 配置零件 + 侧边栏额度按钮）。 */
+const quota = createQuotaSection();
 
 /** 额度 store 与设置页共用的小构件集合。 */
 export const quotaStore = quota.quotaStore;
@@ -427,7 +427,7 @@ export function TokenMeterSettings(): ReactNode {
     <UI.SecRow
       key="__active"
       label="当前供应商"
-      desc="侧边栏与中心区额度卡展示哪一家的额度；选「无」= 极简模式（不展示、也不拉取任何额度）。"
+      desc="侧边栏底部的额度按钮展示哪一家的额度；选「无」= 极简模式（不显示那枚按钮，也不拉取任何额度）。"
     >
       <UI.PillSelect
         disabled={busy}
@@ -662,9 +662,7 @@ export function TokenMeterSettings(): ReactNode {
           ? '统计设置：数据来源、派生缓存与默认口径。详细图表在中心区「' +
             DISPLAY_NAME +
             ' → 用量统计 / 在线统计」。'
-          : '额度配置：供应商与拉取偏好。详细额度卡在中心区「' +
-            DISPLAY_NAME +
-            ' → 额度查询」。配置持久化在 settings.yaml（'}
+          : '额度配置：供应商与拉取偏好。额度显示在左侧边栏底部的额度按钮上（点开是使用详情与供应商切换）。配置持久化在 settings.yaml（'}
         {tab === 'stats' ? null : (
           <code className={styles.mono}>{(s.namespace as string) || 'dshp-token-meter'}</code>
         )}
@@ -739,7 +737,7 @@ export function StatsView(): ReactNode {
  *  2. 宿主卡片（`widget-kit` 的 `content.render`，见 `index.tsx` 里的 `setContentRenderer`）；
  *  3. 未来新增的承载面。
  *
- * @param id - legacy id（`peak` / `stats:<kind>` / `quota:<vendorId>`）。
+ * @param id - legacy id（`stats:<kind>`）。
  * @param withToggle - 内容里是否带「回归」开关（自带浮层需要：浮窗没有框架标题栏；
  *   宿主卡片不需要：框架标题栏自带关闭按钮，再画一个就是两个关闭按钮）。
  * @returns 组件节点；未知 id 返回 `null`。
@@ -749,8 +747,6 @@ export function renderFloatContent(id: string, withToggle: boolean): ReactNode {
   const prefix = sep >= 0 ? id.slice(0, sep) : '';
   const rest = sep >= 0 ? id.slice(sep + 1) : id;
   const w = withToggle ? { widgets, widgetId: id } : {};
-  if (id === 'peak') return <quota.PeakIndicator {...w} />;
-  if (prefix === 'quota') return <quota.QuotaVendorWidget vendorId={rest} />;
   if (prefix === 'stats') return <StatsWidget kind={rest} {...w} />;
   return null;
 }
@@ -759,28 +755,21 @@ export function renderFloatContent(id: string, withToggle: boolean): ReactNode {
  * 把宿主注册表对齐到「当前该有的卡片」。
  *
  * `widget-kit` 渲染一张卡片的前提是描述符在册，而**这些卡片全是 `trayIcon: false`**
- * （不占活动栏图标），所以「刷新后仍开着」不能靠图标重新注册 —— 必须在启动时和供应商增删时
- * 主动对齐：新增的注册上去、删掉的注销掉、已存在的只更新标题（供应商改名）。
+ * （不占活动栏图标），所以「刷新后仍开着」不能靠图标重新注册 —— 必须在启动时主动对齐。
+ *
+ * 现在只剩下用量统计族：额度已改成侧边栏底部按钮（`sidebar.footer.action`），
+ * 不再是一张可弹出的卡片，因此这里与供应商增删无关。
  *
  * 没挂宿主时是 no-op（`widgets.syncRegistered` 自己判）。
  *
  * @returns 无。
  */
 export function syncFloatWidgets(): void {
-  const s = store.get();
-  const vendors: Vendor[] = (s && s.cfg && s.cfg.vendors) || [];
-  widgets.syncRegistered([
-    { id: 'peak', title: PEAK_TITLE },
-    ...STATS_KINDS.map((kind) => ({ id: 'stats:' + kind, title: STATS_TITLES[kind] })),
-    ...vendors.map((v) => ({
-      id: 'quota:' + v.id,
-      title: v.name ? '额度 · ' + v.name : undefined,
-    })),
-  ]);
+  widgets.syncRegistered(STATS_KINDS.map((kind) => ({ id: 'stats:' + kind, title: STATS_TITLES[kind] })));
 }
 
 /**
- * 全局小组件浮层：渲染所有已弹出的 widget（`quota:<id>` / `stats:<kind>` / `peak`）。
+ * 全局小组件浮层：渲染所有已弹出的统计小组件（`stats:<kind>`）。
  * 浮窗只有定位，没有外框 —— 组件自身的卡片即浮窗外观，与原位完全一致。
  *
  * 挂上 `@dshp/widget-kit` 后**恒为 `null`**：卡片由框架的画布渲染（拖拽/缩放/最小化/吸附/
@@ -802,5 +791,5 @@ export function WidgetFloatLayer(): ReactNode {
   );
 }
 
-/** 额度查询视图（中心区分区直接复用 QuotaSection 的产出）。 */
-export const QuotaView = quota.QuotaView;
+/** 侧边栏底部额度按钮（`sidebar.footer.action` 的唯一条目；由 index.tsx 注册）。 */
+export const QuotaSidebarAction = quota.QuotaSidebarAction;

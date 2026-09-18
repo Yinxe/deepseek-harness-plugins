@@ -14,14 +14,19 @@
  * 所以本文件就是一个**普通 ES 模块**：导出 `inject` / `apply`。react / react/jsx-runtime /
  * react-dom / primitives 都在 external 列表里，由 factory 的 `require`（shell 的冻结模块表）解析。
  *
- * 界面收敛为三个入口：
- *  1. `settings.section`（id `dshp-token-meter`，order 27）：精简偏好 + 供应商增删改（唯一配置入口）
- *  2. `conversation.view`（order 40）：中心区 tab，与原生「对话 / 轨迹」并列；
- *     tab 内部用左侧菜单切换 额度查询 / 用量统计 / 在线统计（见 CenterView.tsx）
- *  3. `shell.overlay`：小组件浮层（把某个图表/额度卡单独拖出来常驻）
+ * 界面收敛为四个入口：
+ *  1. `sidebar.footer.action`（id `dshp-token-meter`）：**额度**的唯一入口 —— 左侧边栏底部一枚
+ *     额度按钮（内容由该供应商的**按钮级模板**自由渲染：环 / 余额 / 三条窗口 / 图标…），
+ *     点开在按钮上方弹出使用详情 + 一次只激活一个的供应商切换
+ *     （按钮与详情分别来自 provider 的 button / detail 模板，见 providers/ui/*）
+ *  2. `settings.section`（id `dshp-token-meter`，order 27）：偏好 + 供应商增删改（唯一配置入口）
+ *  3. `conversation.view`（order 40）：中心区 tab，与原生「对话 / 轨迹」并列；
+ *     tab 内部用左侧菜单切换 用量统计 / 在线统计 / 设置（见 CenterView.tsx）
+ *  4. `shell.overlay`：统计小组件浮层（把某个图表单独拖出来常驻）
  *
- * 历史：额度/用量/在线曾各自占一个右侧栏 tab（sidebar.right.pane.tab），2026-09 收敛为
- * 中心区单 tab + 侧边菜单 —— 三个会话级 tab 会盖过产品自带的 对话/轨迹。
+ * 历史：额度曾与用量/在线一起挤在中心区 tab 与侧栏卡片里（卡片网格 + 浮窗 + 活动栏菜单），
+ * 2026-09 UI 重构把额度收敛成一枚侧边栏按钮、那些额度显示面全部删除 —— 额度是「随时扫一眼」，
+ * 不是「一个需要占满中心区的面板」。
  *
  * 样式与反注册：`styles.module.css` 由构建预设内联进 bundle，模块被求值时就地插一条
  * `<style data-plugin>`（卸载由 shell 按 data-plugin 清理），所以这里没有「手插样式」与
@@ -31,11 +36,10 @@
  */
 import { createCenterView } from './CenterView.js';
 import { OnlineEmbed, OnlineView } from './OnlineSection.js';
-import { QuotaIcon, OnlineIcon, SettingsIcon, ShareIcon, UsageIcon } from './icons.js';
-import { createMenuWidget } from './MenuPanel.js';
+import { OnlineIcon, SettingsIcon, ShareIcon, UsageIcon } from './icons.js';
 import { SharePanel } from './StatsSection.js';
 import {
-  QuotaView,
+  QuotaSidebarAction,
   StatsView,
   TokenMeterSettings,
   WidgetFloatLayer,
@@ -62,7 +66,6 @@ const CENTER_VIEW = 'dshp-token-meter';
  */
 const CenterView = createCenterView(
   {
-    QuotaView,
     StatsView,
     OnlineView,
     OnlineEmbed,
@@ -70,7 +73,7 @@ const CenterView = createCenterView(
     SettingsView: TokenMeterSettings,
     SharePanel,
   },
-  { QuotaIcon, UsageIcon, OnlineIcon, SettingsIcon, ShareIcon },
+  { UsageIcon, OnlineIcon, SettingsIcon, ShareIcon },
 );
 
 /** client 半声明的服务依赖（缺了就不激活，由 cordis 在 slots 出现后重试）。 */
@@ -106,11 +109,8 @@ export function apply(ctx: ClientContext): void {
         return;
       }
       widgetsApi.setContentRenderer((id) => renderFloatContent(id, false));
-      // 本插件在活动栏上的**唯一**图标：点开是「小组件菜单」（里面逐个开合上面那些
-      // trayIcon: false 的自由卡片）。没有它，想开一张图得先钻进中心区那个 tab。
-      if (!widgetsApi.registerHost(createMenuWidget(widgetsApi))) {
-        console.warn('[dshp-token-meter] 注册托盘菜单失败，小组件只能从中心区工具条弹出。');
-      }
+      // 本插件**不再占用活动栏图标**：额度入口是侧边栏底部那枚环（`sidebar.footer.action`），
+      // 统计卡片（`trayIcon: false`）由中心区「用量统计」工具条上的按钮开合。
       scope.effect(
         () => () => {
           widgetsApi.detach();
@@ -118,7 +118,7 @@ export function apply(ctx: ClientContext): void {
         'dshp-token-meter: widget-kit bridge',
       );
       // 常驻注册：卡片都是 trayIcon: false（不占活动栏），刷新后布局里「开着」的卡片
-      // 只能靠这里提前注册回来。供应商增删后同步一次（增的注册、删的注销）。
+      // 只能靠这里提前注册回来。
       void quotaStore
         .ensureLoad()
         .then(() => {
@@ -130,15 +130,15 @@ export function apply(ctx: ClientContext): void {
       try {
         scope.effect(() => quotaStore.subscribe(() => syncFloatWidgets()), 'dshp-token-meter: widget sync');
       } catch (error) {
-        console.error('[dshp-token-meter] 订阅额度 store 失败（供应商增删后小组件列表可能不同步）：', error);
+        console.error('[dshp-token-meter] 订阅额度 store 失败（小组件列表可能不同步）：', error);
       }
     });
   } catch (error) {
-    console.error('[dshp-token-meter] 挂载小组件宿主失败，小组件改用自带浮窗渲染：', error);
+    console.error('[dshp-token-meter] 挂载小组件宿主失败，统计小组件改用自带浮窗渲染：', error);
   }
 
-  // 旧 localStorage 一次性清理：左栏开关、旧双浮窗系统、右侧栏 tab 自动展开标记
-  // 都已停用，旧键直接删掉，避免残留项影响后续行为。
+  // 旧 localStorage 一次性清理：左栏开关、旧双浮窗系统、右侧栏 tab 自动展开标记、
+  // 旧额度浮窗（额度已改为侧边栏按钮）都已停用，旧键直接删掉，避免残留项影响后续行为。
   try {
     window.localStorage.removeItem('token-stats.sidebar-today');
     window.localStorage.removeItem('tquota.float.open');
@@ -170,6 +170,24 @@ export function apply(ctx: ClientContext): void {
     console.error('[dshp-token-meter] 注册设置节失败，只能手改 settings.yaml 或看中心区面板：', error);
   }
 
+  // ── 侧边栏底部额度按钮（额度唯一入口）───
+  // 槽位契约（sidebar 包声明）：list / root 作用域，注册项 = id + order + label，
+  // owner props 只有 `{ wide }`（false = 56px 轨道）。按钮自己负责弹层、定位与点外部关闭。
+  try {
+    ctx.effect(
+      () =>
+        slots.inject('sidebar.footer.action', () =>
+          slots.register(
+            { name: 'sidebar.footer.action', id: 'dshp-token-meter', order: 10 },
+            QuotaSidebarAction,
+          ),
+        ),
+      'dshp-token-meter: sidebar quota action',
+    );
+  } catch (error) {
+    console.error('[dshp-token-meter] 注册侧边栏额度按钮失败，额度只能在设置页里看：', error);
+  }
+
   // ── 小组件浮层（shell.overlay）───
   try {
     ctx.effect(
@@ -184,7 +202,8 @@ export function apply(ctx: ClientContext): void {
   }
 
   // ── 中心区单 tab（官方模式：inject 声明 + slots.inject 持有）───
-  // 与原生「对话 / 轨迹」并列的一个 tab；tab 内用侧边菜单切换四块内容。
+  // 与原生「对话 / 轨迹」并列的一个 tab；tab 内用侧边菜单切换 用量 / 在线 / 设置 三块内容
+  // （额度已搬到侧边栏按钮，不再占这里的版面）。
   // order 40：排在内置 chat(0) / trajectory(10) 与第三方视图之后。
   try {
     ctx.effect(
@@ -198,6 +217,6 @@ export function apply(ctx: ClientContext): void {
       'dshp-token-meter: center view',
     );
   } catch (error) {
-    console.error('[dshp-token-meter] 注册中心区 tab 失败，额度/用量/在线面板都看不了：', error);
+    console.error('[dshp-token-meter] 注册中心区 tab 失败，用量/在线面板都看不了：', error);
   }
 }

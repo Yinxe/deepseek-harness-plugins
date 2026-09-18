@@ -202,9 +202,10 @@ function useOpen(widgets: WidgetsService, id: string): boolean {
 
 **`trayIcon: false` 的卡片必须提前注册。** 框架渲染一张卡片的前提是描述符在册，而这类卡片没有图标可点：
 刷新后布局里「还开着」的卡片，只能靠你在启动时（以及数据变化时）主动注册回来。
-本仓的 `@dshp/token-meter` 就是第一个按这套契约接入的实例：它的额度卡 / 统计图表 / 峰谷显示器
-全是 `trayIcon: false` 的自由卡片（启动与供应商增删时对齐注册表），而**活动栏上只占一个图标** ——
-那是它自己注册的菜单小面板 `token-meter:menu`，点开逐张开合这些卡片，正是「一菜单多卡片」的落地写法。
+本仓的 `@dshp/token-meter` 就是第一个按这套契约接入的实例：它的统计图表
+（指标卡 / 趋势 / 热力 / 模型分布 / 今日消耗，共 5 张）全是 `trayIcon: false` 的自由卡片，
+启动时对齐注册表；它们的开关在插件自己的「用量统计」工具条上 —— 这个插件**一个活动栏图标都不占**
+（额度入口是侧边栏底部按钮，不走小组件）。
 
 ## 3. 描述符逐字段
 
@@ -390,7 +391,8 @@ function useOpen(widgets: WidgetsService, id: string): boolean {
 3. **只做菜单入口**（`trayIcon: false`，仅 `presentation: 'card'` 可写）：卡片**不占**活动栏位置，
    由别的组件打开。典型场景：一个宿主插件只注册一个常驻/迷你菜单图标，菜单里同时挂多个自由卡片 ——
    卡片设 `trayIcon: false`，宿主用自己的 `ctx.widgets.toggle(id)` 开关它们
-   （`@dshp/token-meter` 的 `token-meter:menu` 就是这么做的；`dshp-widget-kit:registry` 是一张不占图标的卡片）。
+   （`dshp-widget-kit:registry` 是一张不占图标的卡片；`@dshp/token-meter` 的统计卡则由它自己的
+   「用量统计」工具条开关，那个插件**一个活动栏图标都不占**）。
    `tray` 形态必须有图标、`popover` 需要图标当锚点，所以只有卡片能用这个开关。
 4. **让框架的统一入口「组件箱」替你挂出来**：`trayIcon: false` + `listedInBox: true` —— 你没有自己的菜单，
    也不想为了几张低频卡片自己写一个，就可以声明「可被收录」，卡片会出现在活动栏的「组件箱」菜单里
@@ -589,9 +591,10 @@ interface PersistedV1 {
       并确认「常驻」是用户想要的（常驻的菜单/选择器会被打回）。
 - [ ] 若用 `card`：最小化只折叠成标题栏、内容仍在树上 —— 需要停掉自己的定时器/动画就自己看
       `props.minimized`；`props.locked` 为真时不要再画自己的拖动/缩放控件。
-- [ ] **`trayIcon: false` 的卡片必须有入口**：要么自己注册一个菜单 popover（`token-meter:menu` 那种），
-      要么声明 `listedInBox: true` 让「组件箱」收录（此时 `minFramework` 至少写 `'0.11.0'` ——
-      更早的框架不认识这个字段，会静默忽略，卡片会变成够不着的孤儿）。
+- [ ] **`trayIcon: false` 的卡片必须有入口**：要么自己写一个常驻在插件 UI 里的开关（如 `@dshp/token-meter`
+      在「用量统计」工具条上逐张开合那 5 张统计卡），要么自己注册一个菜单 popover，要么声明 `listedInBox: true`
+      让「组件箱」收录（此时 `minFramework` 至少写 `'0.11.0'` —— 更早的框架不认识这个字段，会静默忽略，
+      卡片会变成够不着的孤儿）。
 - [ ] 不要自己实现拖动、吸附或贴边（框架的 `dockRect` 已经做了）：提供方只渲染内容，
       标题栏的按钮由框架给。
 
@@ -626,16 +629,16 @@ load: async (ctx) => (await fetch('/ext/my-plugin/data', { signal: ctx.signal })
 - `SPEC_VERSION`（当前 **1**）是契约版本：字段改名、语义变化、默认值改变 → **+1**，
   并在本节写下迁移步骤；字段**新增**（可选、有默认）不升版本 —— 例如 `popover` 形态选项就是 v1 内的新增。
 - **0.11.0（框架版本，契约仍为 v1）**：**「组件箱」从示例升级成显式契约**。0.10.0 那版它是一张
-  「列出**所有** `presentation: 'card'`」的参考菜单 —— 于是第三方插件（`@dshp/token-meter` 的三张自由卡片）
-  被无条件收进框架自己的演示菜单，而它们本来就有自己的活动栏入口（`token-meter:menu`），等于多出一个
-  没人同意的重复入口。现在：
+  「列出**所有** `presentation: 'card'`」的参考菜单 —— 于是第三方插件（`@dshp/token-meter` 的自由卡片）
+  被无条件收进框架自己的演示菜单，而它们本来就有自己的入口（当时是 `token-meter:menu`，后来改成
+  插件自己的「用量统计」工具条），等于多出一个没人同意的重复入口。现在：
   1. 描述符新增可选字段 **`listedInBox`（默认 `false` = 不收录，只有 `card` 能写）**：
      「允许被组件箱收录」必须由卡片所有者明确声明；`trayIcon: false` + `listedInBox: true` 表达的正是
      「我没有自己的图标，让组件箱替我挂出来」。`ctx.widgets.list()` 的摘要也带这个标记
      （`WidgetSummary.listedInBox`，SUMMARY 字段新增），别的聚合入口可以按同一条声明决定收不收。
   2. 组件箱**不再算参考组件**：它与「装载参考组件」偏好无关，始终在册 —— 否则关掉参考组件会让声明过
      收录的卡片彻底没有入口。它的菜单布局也改成与 `token-meter:menu` 同构（提示行 + 状态点/标题/开合按钮 +
-     「n / m 已打开」+ 全部收起）。
+     「n / m 已打开」+ 全部收起；那个菜单面板本身后来已随 token-meter 的额度 UI 重构删除）。
   3. 迁移：**不声明就什么都不会变**（原来出现在箱里的第三方卡片会自动消失，回到各自的入口）。
      想被收录就加 `listedInBox: true`，并把 `minFramework` 提到 `'0.11.0'`：更早的框架会**静默忽略**
      这个未知字段，于是 `trayIcon: false` 的卡片会变成没有入口的孤儿。可选字段 + 有默认值 → `SPEC_VERSION` 仍为 1。
@@ -660,8 +663,9 @@ load: async (ctx) => (await fetch('/ext/my-plugin/data', { signal: ctx.signal })
 - **0.10.1（框架版本，契约仍为 v1）**：**只改文档**——新增 §2.1「依赖与加载」把边界写死
   （注册是 client 半对 client 半、Host 半只影响偏好、其它插件不参与注册），并纠正「快速开始」里
   那句会误导的 `inject: ['slots', 'widgets']`：**增强型依赖必须用 `ctx.inject(['widgets'], …)`**，
-  否则没装框架时整个插件都不激活。第一个按本契约接入的真实实例是 `@dshp/token-meter`
-  （三种小组件、全是 `trayIcon: false` 的自由卡片）。
+  否则没装框架时整个插件都不激活。第一个按本契约接入的真实实例是 `@dshp/token-meter`，
+  它的统计小组件全是 `trayIcon: false` 的自由卡片（该插件 2026-09 UI 重构后只剩 5 张统计卡，
+  入口是它自己的「用量统计」工具条；**一个活动栏图标都不占**，当时那个 `token-meter:menu` 菜单面板已删除）。
 - **0.10.0（框架版本，契约仍为 v1）**：外观默认值改成 **70% 透明 + 5px 毛玻璃**；
   新增活动栏文字扩展点 `tray.label`（≤6 字，可写函数）与 `trayIcon: false`（卡片不占图标、由别的组件打开
   —— 一菜单多卡片）；临时（悬停）面板的层内 z-index 提到常驻面板之上；

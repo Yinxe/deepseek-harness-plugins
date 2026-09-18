@@ -1394,6 +1394,7 @@ function parseOpencodePages(goHtml, billingHtml, opts) {
 }
 var opencode = {
   type: "opencode",
+  icon: "opencode",
   label: "OC",
   title: "opencode\uFF08Go+Zen \u5408\u5E76\uFF09",
   secretField: "cookie",
@@ -2131,6 +2132,7 @@ function buildDeepseekView(which, billing, extra2, secretKind) {
 }
 var deepseek = {
   type: "deepseek",
+  icon: "deepseek",
   label: "DS",
   title: "deepseek\uFF08\u5B98\u65B9\xB7\u81EA\u52A8\u9009\u8DEF\uFF09",
   secretField: "token",
@@ -2497,6 +2499,7 @@ function buildCommandCodeView(data, opts) {
 }
 var commandcode = {
   type: "commandcode",
+  icon: "commandcode",
   label: "CC",
   title: "commandcode\uFF08Command Code\uFF09",
   secretField: "apiKey",
@@ -2598,6 +2601,7 @@ var commandcode_default = commandcode;
 // src/host/providers/manual.ts
 var manual = {
   type: "manual",
+  icon: "manual",
   label: "\u624B\u52A8",
   title: "manual\uFF08\u624B\u52A8\uFF09",
   secretField: "",
@@ -2830,6 +2834,7 @@ function describeProviders() {
     title: p.title,
     secretField: p.secretField,
     hint: p.hint || "",
+    ...p.icon !== void 0 && p.icon !== "" ? { icon: p.icon } : {},
     fields: (p.fields || []).map((f) => {
       const out = {
         key: f.key,

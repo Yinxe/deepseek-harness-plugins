@@ -35,6 +35,15 @@ export interface QuotaBilling {
   plan?: string;
 }
 
+/**
+ * 分段/占比条的语义色调。
+ *
+ * 颜色**一律由主题 token 决定**（`brand` = 主题强调色、`ok`/`warn`/`bad` = 安全/警告/危险、
+ * `info` = 业务信息色、`muted` = 弱化），供应商只声明「这一段是什么语义」，
+ * 不写死色值 —— 换主题时整条比例条跟着换。
+ */
+export type SegmentTone = 'brand' | 'ok' | 'warn' | 'bad' | 'info' | 'muted';
+
 export interface ProviderBlock {
   kind: 'kv' | 'progress' | 'split' | 'note';
   label?: string;
@@ -42,7 +51,12 @@ export interface ProviderBlock {
   used?: number;
   total?: number;
   left?: string;
-  segments?: Array<{ label: string; value: number; color?: string }>;
+  segments?: Array<{
+    label: string;
+    value: number;
+    /** 语义色调（跟随主题 token）；旧适配器可继续给 `color` 写死色值 */ tone?: SegmentTone;
+    color?: string;
+  }>;
   text?: string;
   tone?: 'info' | 'warn' | 'bad';
 }
@@ -66,7 +80,7 @@ export interface ProviderSection {
   billing?: QuotaBilling;
   items?: Array<{ label: string; value: string }>;
   progress?: { label?: string; used: number; total: number; left?: string };
-  split?: { segments: Array<{ label: string; value: number; color?: string }> };
+  split?: { segments: Array<{ label: string; value: number; tone?: SegmentTone; color?: string }> };
   note?: { text: string; tone?: 'info' | 'warn' | 'bad' };
   chart?: { title?: string; labels: string[]; values: number[] };
 }
@@ -133,6 +147,8 @@ export interface ProviderMeta {
   title: string;
   secretField: string;
   hint: string;
+  /** 供应商图标名（Host 声明；缺省 = 客户端按 type 兜底）。 */
+  icon?: string;
   fields: ProviderField[];
   /** 新增供应商时的 params 初始值（provider 自声明；缺省 {}） */
   defaultParams?: Record<string, unknown>;
@@ -298,10 +314,11 @@ export interface SlotsService {
    * 注册一个槽位条目。
    *
    * @param spec - 注册选项（list 槽位用 `id` + `order`）。
-   * @param component - 组件（props 由槽位契约决定）。
+   * @param component - 组件（props = 槽位 owner props + `inject()` 的产出）。
+   * @typeParam P - 该槽位的 props（list 槽位是 owner props，本插件只注册 `{ wide }` 那一个）。
    * @returns 卸载该条注册的 disposer。
    */
-  register(spec: SlotRegistrationSpec, component: (props: never) => ReactNode): unknown;
+  register<P>(spec: SlotRegistrationSpec, component: (props: P) => ReactNode): unknown;
 }
 
 /** 槽位注册选项（本插件注册的三个都是 list 槽位，故只需要 id + order + label）。 */

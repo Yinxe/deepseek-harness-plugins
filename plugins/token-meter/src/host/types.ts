@@ -102,6 +102,13 @@ export interface ProviderDeps {
  * 客户端按 `kind` 分发渲染，完全不需要认识具体供应商。
  * 未知 kind / 缺失字段一律跳过 → 老客户端遇到新 provider 也不会崩（前向兼容）。
  */
+/**
+ * 分段/占比条的语义色调（客户端按主题 token 上色；与 `client/types.ts` 的 `SegmentTone` 同源）。
+ *
+ * 适配器只声明语义，不写死色值 —— 换主题时比例条跟着换。
+ */
+export type SegmentTone = 'brand' | 'ok' | 'warn' | 'bad' | 'info' | 'muted';
+
 export interface ProviderSection {
   kind: 'windows' | 'balance' | 'metrics' | 'progress' | 'split' | 'note' | 'chart';
   /** 稳定标识（React key / 去重用），可选 */
@@ -117,7 +124,7 @@ export interface ProviderSection {
   /** kind='progress'：单条进度（已用/总量） */
   progress?: { label?: string; used: number; total: number; left?: string };
   /** kind='split'：分段占比条 */
-  split?: { segments: Array<{ label: string; value: number; color?: string }> };
+  split?: { segments: Array<{ label: string; value: number; tone?: SegmentTone; color?: string }> };
   /** kind='note'：提示条 */
   note?: { text: string; tone?: 'info' | 'warn' | 'bad' };
   /** kind='chart'：趋势折线 */
@@ -160,7 +167,12 @@ export interface ProviderBlock {
   used?: number;
   total?: number;
   left?: string;
-  segments?: Array<{ label: string; value: number; color?: string }>;
+  segments?: Array<{
+    label: string;
+    value: number;
+    /** 语义色调（跟随主题 token）；旧适配器可继续给 `color` 写死色值 */ tone?: SegmentTone;
+    color?: string;
+  }>;
   text?: string;
   tone?: 'info' | 'warn' | 'bad';
 }
@@ -173,6 +185,11 @@ export interface ProviderAdapter {
   secretFields?: string[];
   fields: ProviderField[];
   hint?: string;
+  /**
+   * 供应商图标名（客户端按名字取一枚自绘 mark，见 `client/provider-icons.tsx`）。
+   * Host 只传名字 —— 适配器不携带任何图片/SVG，运行时零依赖。
+   */
+  icon?: string;
   /**
    * 新增供应商时 params 的初始值（provider 自己声明表单默认值，
    * 客户端在「切换类型」时套用；缺省为空对象）。
@@ -192,6 +209,8 @@ export interface ProviderMeta {
   title: string;
   secretField: string;
   hint: string;
+  /** 图标名（缺省 = 客户端按 type 兜底）。 */
+  icon?: string;
   fields: ProviderField[];
   /** 新增供应商时的 params 初始值（provider 自声明） */
   defaultParams: Record<string, unknown>;

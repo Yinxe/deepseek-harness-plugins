@@ -464,7 +464,7 @@
   background: linear-gradient(
     100deg,
     var(--dsw-alias-state-business-primary),
-    color-mix(in srgb, var(--dsw-alias-state-business-primary) 52%, #34d399)
+    color-mix(in srgb, var(--dsw-alias-state-business-primary) 52%, var(--dsw-alias-state-success-primary))
   );
   -webkit-background-clip: text;
   background-clip: text;
@@ -1227,6 +1227,8 @@
 }
 .qpct {
   flex: none;
+  width: 34px;
+  text-align: right;
   font-size: 11px;
   color: var(--dsw-alias-label-primary);
   font-variant-numeric: tabular-nums;
@@ -1256,8 +1258,11 @@
   }
 }
 .qleft {
-  flex: 0 1 auto;
-  min-width: 0;
+  /* 倒计时文案长短不一（「1 小时后」/「23 天后」），给它固定槽并右对齐，
+     三行窗口的右缘才会齐 —— 之前是「多长算多长」，右边缘参差不齐 */
+  flex: none;
+  width: 62px;
+  text-align: right;
   font-size: 10px;
   color: var(--dsw-alias-label-secondary);
   white-space: nowrap;
@@ -1363,13 +1368,17 @@
   color: var(--dsw-alias-label-primary);
   font-variant-numeric: tabular-nums;
 }
-.warn {
+/* 余额告警段落：**不能叫 `.warn`** —— 那个名字是给 `.qfill` / `.qpct` / `.dot` / `.mini` 当
+   **色调修饰类**用的（`.qfill.warn { background: … }`），CSS Module 会把同名规则合并成一条，
+   于是段落自己的 `margin: 8px 0 0` 会落到 warn 档的进度条上，把它顶出 6px 高的轨道
+   —— 表现就是「一到 70% 变黄，进度条就没了」。 */
+.warnLine {
   margin: 8px 0 0;
   font-size: 11px;
   line-height: 1.6;
   color: var(--dsw-alias-state-warn-primary);
 }
-.warn.bad {
+.warnLine.bad {
   color: var(--dsw-alias-state-error-primary);
 }
 .mini.warn {
@@ -1434,7 +1443,7 @@
 .paygCompact .paygSub {
   margin-top: 0;
 }
-.paygCompact .warn {
+.paygCompact .warnLine {
   margin-top: 4px;
 }
 /* 分组标题：说明「已禁用沉底」是有意排序，不是配置顺序 */
@@ -1457,6 +1466,51 @@
 .xsplit span {
   display: block;
   height: 100%;
+}
+/* 分段占比条的色调槽：颜色**一律取主题 token**（不写死 hex），换主题这里跟着换。
+   `segPal*` 是「没声明语义色调」时的轮转（旧 Host 只给 label/value），
+   派生色用 color-mix 从同一批 token 调深浅，因此不引入新 token。 */
+.segBrand {
+  background: var(--dsw-alias-brand-primary);
+}
+.segOk {
+  background: var(--dsw-alias-state-success-primary);
+}
+.segWarn {
+  background: var(--dsw-alias-state-warn-primary);
+}
+.segBad {
+  background: var(--dsw-alias-state-error-primary);
+}
+.segInfo {
+  background: var(--dsw-alias-state-business-primary);
+}
+.segMuted {
+  background: var(--dsw-alias-label-tertiary);
+}
+.segPal0 {
+  background: var(--dsw-alias-brand-primary);
+}
+.segPal1 {
+  background: var(--dsw-alias-state-success-primary);
+}
+.segPal2 {
+  background: var(--dsw-alias-state-warn-primary);
+}
+.segPal3 {
+  background: var(--dsw-alias-state-business-primary);
+}
+.segPal4 {
+  background: color-mix(in srgb, var(--dsw-alias-state-success-primary) 55%, var(--dsw-alias-bg-layer-1));
+}
+.segPal5 {
+  background: color-mix(in srgb, var(--dsw-alias-state-warn-primary) 55%, var(--dsw-alias-bg-layer-1));
+}
+.segPal6 {
+  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 55%, var(--dsw-alias-bg-layer-1));
+}
+.segPal7 {
+  background: var(--dsw-alias-label-tertiary);
 }
 .xdot {
   display: inline-block;
@@ -1903,7 +1957,8 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* 侧栏 footer actions 垂直布局：与 Cordis 徽章并排会横向溢出被裁（折叠侧栏仅 56px），改为垂直堆叠 */
+/* 侧栏 footer actions 垂直布局：与 Cordis 徽章并排会横向溢出被裁（折叠侧栏仅 56px），改为垂直堆叠。
+   额度按钮（.trayRoot）也吃这条：每个入口独占一行、拉满宽度，与「设置 / 手机端 / Cordis」三行同构。 */
 div:has(> div[data-slot='sidebar.footer.action']) {
   flex-direction: column;
   align-items: stretch;
@@ -3759,4 +3814,492 @@ div:has(> div[data-slot='sidebar.footer.action']) {
   .cbody {
     padding: 14px 14px 40px;
   }
+}
+
+/* ───────────────────────── 侧边栏额度按钮 + 上方浮层 ─────────────────────────
+   额度只剩这一个入口：左侧边栏底部一枚环形进度按钮（`sidebar.footer.action`），
+   点开在按钮上方弹出使用详情 + 供应商切换。
+
+   尺寸/圆角/内边距与 sidebar 自带的两条 footer action 对齐（42px 高、12px 圆角、
+   宽栏 `flex: 1 1 auto`）；窄栏（56px 轨道）时收成 36×36 的圆，只留那枚环。
+
+   浮层挂到 `document.body`（侧边栏展开/收起动画会给祖先加 transform，
+   那会让 fixed 定位相对那个祖先并被裁），因此这里的类名必须能独立成立。 */
+
+.trayRoot {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.trayRail {
+  flex: 0 0 auto;
+  justify-content: center;
+}
+.trayBtn {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 42px;
+  margin: 4px 0;
+  padding: 0 10px 0 8px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 22px;
+  cursor: pointer;
+  overflow: hidden;
+}
+.trayBtn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+.trayBtn:focus-visible {
+  outline: 2px solid var(--dsw-alias-label-primary);
+  outline-offset: -2px;
+}
+.trayRail .trayBtn {
+  width: 36px;
+  height: 36px;
+  margin: 8px 0 10px;
+  padding: 0;
+  justify-content: center;
+  gap: 0;
+  border-radius: 50%;
+}
+/* ── 按钮内容零件（由 provider 的**按钮级模板**拼装）─────────────────────────
+   模板只决定「画什么」，排版规则集中在这里：宽栏 = 图标 + 主图形 + 名字 + 数值，
+   窄栏（36px 圆） = 主图形（或 `rail` 里给的紧凑组合），切换行 = 只有主图形。 */
+
+.btnRail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+}
+.btnRailCombo {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.btnLeadOnly {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+/* 浮层切换行的 16px 槽：只画 `glyph`（环/图标），内容再长也被裁在这里 */
+.btnRow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  overflow: hidden;
+}
+.btnLead {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+.btnIcon {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  color: var(--dsw-alias-label-secondary);
+}
+.btnName {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.btnValue {
+  flex: none;
+  margin-left: auto;
+  padding-left: 6px;
+  font-size: 12px;
+  color: var(--dsw-alias-label-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.btnValue[data-tone='ok'] {
+  color: var(--dsw-alias-state-success-primary);
+}
+.btnValue[data-tone='warn'] {
+  color: var(--dsw-alias-state-warn-primary);
+}
+.btnValue[data-tone='bad'] {
+  color: var(--dsw-alias-state-error-primary);
+}
+/* 余额画法：图标 + 金额（窄栏里金额会被换成紧凑写法） */
+.btnBalance {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: var(--dsw-alias-label-primary);
+}
+.btnBalanceText {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.btnRail .btnBalanceText {
+  font-size: 10px;
+  font-weight: 500;
+}
+/* 三条窗口并排（宽栏）：细条 + 短标签，三条也只是一行 */
+.btnBars {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.btnBar {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 30px;
+}
+.btnBarLabel {
+  font-size: 9px;
+  line-height: 10px;
+  color: var(--dsw-alias-label-tertiary);
+}
+.btnBar[data-active='1'] .btnBarLabel {
+  color: var(--dsw-alias-label-primary);
+}
+.btnBarTrack {
+  display: block;
+  width: 100%;
+  border-radius: 999px;
+  background: var(--dsw-alias-border-l2);
+  overflow: hidden;
+}
+.btnBarFill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--dsw-alias-brand-primary);
+}
+.btnBar[data-tone='warn'] .btnBarFill {
+  background: var(--dsw-alias-state-warn-primary);
+}
+.btnBar[data-tone='bad'] .btnBarFill {
+  background: var(--dsw-alias-state-error-primary);
+}
+
+/* 环形进度：几何/动画统一在这里，颜色按供应商模板给的档位（ok/warn/bad/idle） */
+.ring {
+  flex: none;
+  display: block;
+}
+.ringTrack {
+  stroke: var(--dsw-alias-border-l2);
+}
+.ringArc {
+  stroke: var(--dsw-alias-brand-primary);
+  transition: stroke-dasharray 0.35s ease;
+}
+.ring[data-tone='warn'] .ringArc {
+  stroke: var(--dsw-alias-state-warn-primary);
+}
+.ring[data-tone='bad'] .ringArc {
+  stroke: var(--dsw-alias-state-error-primary);
+}
+.ring[data-tone='idle'] .ringArc {
+  stroke: var(--dsw-alias-label-dimmed);
+}
+
+/* 浮层（按钮上方） */
+/* ── 供应商自己的偏好控件（画在它自己的详情模板里，不是插件的统一设置面板）──────
+   开关用原生 checkbox（键盘/读屏可达），单选组用分段控件（role=radiogroup/radio）。 */
+.prefBlock {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 0.5px solid var(--dsw-alias-border-l1);
+}
+.prefRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.prefLabel {
+  font-size: 11px;
+  color: var(--dsw-alias-label-secondary);
+}
+.prefBox {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--dsw-alias-brand-primary);
+  cursor: pointer;
+}
+.prefSeg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-2);
+}
+.prefOpt {
+  padding: 2px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 18px;
+  cursor: pointer;
+}
+.prefOpt:hover {
+  color: var(--dsw-alias-label-primary);
+}
+.prefOpt[data-on='1'] {
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-brand-primary);
+  font-weight: 600;
+}
+
+.trayPanel {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  width: 344px;
+  max-width: calc(100vw - 24px);
+  max-height: min(70vh, 560px);
+  background: var(--dsw-specific-menu);
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 12px;
+  box-shadow: var(--dsw-shadow-lv3);
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+  line-height: 1.6;
+  overflow: hidden;
+  container-type: inline-size;
+  container-name: tmTray;
+}
+.trayPanelHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l1);
+}
+.trayPanelGlyph {
+  display: inline-flex;
+  flex: none;
+  color: var(--dsw-alias-label-secondary);
+}
+.trayPanelTitle {
+  font-size: 13px;
+  font-weight: 600;
+}
+.traySpacer {
+  flex: 1 1 auto;
+}
+.traySpin {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--dsw-alias-border-l2);
+  border-top-color: var(--dsw-alias-brand-primary);
+  animation: traySpin 0.8s linear infinite;
+}
+@keyframes traySpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.trayIconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+}
+.trayIconBtn:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+.trayIconBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.trayBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px 12px;
+  overflow-y: auto;
+}
+.trayError {
+  margin: 0;
+  font-size: 12px;
+  color: var(--dsw-alias-state-error-primary);
+}
+/* 详景区：**不再叠第二层卡片** —— 背景 / 描边 / 圆角 / 阴影都由浮层自己（`.trayPanel`）
+   提供，这里只负责分组与内部间距。嵌套的「卡片上的卡片」在深色主题下会变成两块灰底互相压暗，
+   也很容易把浮层内边距算成两层。分组感交给下面的细分隔线（页脚线 + 切换列表上方那条）。 */
+.trayCard {
+  display: flex;
+  flex-direction: column;
+}
+.trayCardHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.trayCardName {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+.trayCardGlyph {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+}
+.trayRowGlyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  overflow: hidden;
+}
+.trayCardType {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  color: var(--dsw-alias-label-tertiary);
+}
+.trayCardBody {
+  display: flex;
+  flex-direction: column;
+}
+/* 切换列表：与上面的详景区之间用一条细分隔线分组（替代原来那层卡片边框） */
+.trayList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 2px;
+  padding-top: 8px;
+  border-top: 0.5px solid var(--dsw-alias-border-l1);
+}
+.trayListHead {
+  padding: 0 2px 2px;
+  font-size: 11px;
+  color: var(--dsw-alias-label-tertiary);
+}
+.trayRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.trayRow:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+.trayRow[data-active='1'] {
+  background: var(--dsw-alias-bg-layer-2);
+}
+.trayRow[data-off='1'] {
+  opacity: 0.6;
+}
+.trayRowName {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.trayRowType {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 11px;
+  color: var(--dsw-alias-label-tertiary);
+}
+.trayRowStatus {
+  flex: none;
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--dsw-alias-label-tertiary);
+}
+.trayRowStatus[data-tone='ok'] {
+  color: var(--dsw-alias-state-success-primary);
+}
+.trayRowStatus[data-tone='warn'] {
+  color: var(--dsw-alias-state-warn-primary);
+}
+.trayRowStatus[data-tone='bad'] {
+  color: var(--dsw-alias-state-error-primary);
+}
+.trayRowCheck {
+  flex: none;
+  font-size: 11px;
+  color: var(--dsw-alias-brand-primary);
+}
+.trayFoot {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-top: 0.5px solid var(--dsw-alias-border-l1);
+  font-size: 11px;
+  color: var(--dsw-alias-label-tertiary);
+}
+/* 错误提示放在页脚（与「去哪改」同一块）：它不是主体内容，压在第一屏只会显得乱 */
+.trayFootRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.trayFootDot {
+  opacity: 0.6;
+}
+.trayFootError {
+  color: var(--dsw-alias-state-error-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.trayEmpty {
+  padding: 10px 2px;
+  font-size: 12px;
+  color: var(--dsw-alias-label-tertiary);
 }
