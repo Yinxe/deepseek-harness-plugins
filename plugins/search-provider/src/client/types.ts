@@ -1,25 +1,73 @@
 /**
- * Client 侧协议类型（与 host 的 routes.ts / types.ts 对齐）与运行时注入声明
+ * Client 侧协议类型（与 host 的 routes.ts / types.ts 对齐）+ cordis 服务接缝
  *
  * 原实现：dsh-tavily-search/client.js 里散落的隐式结构（JS）
  * → 本文件为 TS 重写新增：把路由协议显式化，多供应商字段与 host 保持一致。
  *
- * @module @dshp/search-provider/client
+ * 这里只建模**官方类型没覆盖**的东西：路由协议、领域模型，以及 `ClientContext` /
+ * `SlotsService` 这两个「只用到哪几个成员就写哪几个」的服务接缝。官方组件（react 与
+ * `@deepseek-ai/dsh-client-ui-primitives`）的类型直接从各自包里 import，不再有 `DshRequire` /
+ * `AnyReact` / `AnyPrimitives` 那套 shim——loader 壳由构建预设生成，源码里也不再有
+ * `__ModuleLoader__` 的全局声明。
  */
+import type { ReactNode } from 'react';
 
-/** __ModuleLoader__ 注入的 require（react / primitives 由 DSH 运行时提供，绝不打包） */
-export interface DshRequire {
-  (id: 'react'): any;
-  (id: '@deepseek-ai/dsh-client-ui-primitives'): any;
-  (id: string): any;
+/**
+ * client 侧 cordis 上下文（本插件只用到这两个成员）。
+ *
+ * 不 import `@deepseek-ai/cordis` 的类型：client 半在 cordis 服务表面前是普通模块，`ctx` 由 shell
+ * 的模块系统注入，把整包 cordis 拉进 devDependencies 只为两个方法并不划算。这里的形状就是实际
+ * 用到的契约，改一处即可跟随上游。
+ */
+export interface ClientContext {
+  /**
+   * 取一个 cordis 服务；服务还没挂载时返回 `undefined`。
+   *
+   * @param name - 服务名。
+   */
+  get(name: string): unknown;
+  /**
+   * 注册一个随本插件一起收回的副作用。
+   *
+   * @param callback - 返回清理函数（或任意值）的回调。
+   * @param label - 诊断用标签。
+   */
+  effect(callback: () => unknown, label?: string): unknown;
 }
 
-declare global {
-  interface Window {
-    __ModuleLoader__?: {
-      load: (mod: { id: string; factory: (require: DshRequire) => unknown }) => void;
-    };
-  }
+/**
+ * slots 服务（本插件只用 inject + register）。
+ *
+ * 只建模用到的两个成员。**没有**直接 import 槽位包的 `SlotCore`：逐槽位的 props 检查要靠
+ * `SlotMap` 声明合并（由 settings / conversation / tool 各自的 UI 包 merge 进来），那是下一步。
+ */
+export interface SlotsService {
+  /**
+   * 等某个槽位被声明后再执行注册回调（**异步**：回调可能在槽位声明时才被调用）。
+   *
+   * @param name - 槽位名。
+   * @param fn - 注册逻辑；返回 generator 时，逐条注册会在槽位就绪后依次展开。
+   */
+  inject(name: string, fn: () => unknown): unknown;
+  /**
+   * 注册一个槽位条目。
+   *
+   * @param spec - 注册选项（list 槽位用 `id` + `order`）。
+   * @param component - 组件（props 由槽位契约决定）。
+   * @returns 卸载该条注册的 disposer。
+   */
+  register(spec: SlotRegistrationSpec, component: (props: never) => ReactNode): unknown;
+}
+
+/** 槽位注册选项（本插件只注册 list 槽位，故只需要 id + order + label）。 */
+export interface SlotRegistrationSpec {
+  name: string;
+  /** list 槽位的条目 id。 */
+  id?: string | undefined;
+  /** list 槽位的排序。 */
+  order?: number | undefined;
+  /** list 槽位（`settings.section`）在导航里显示的标题。 */
+  label?: string | undefined;
 }
 
 // ── 供应商元数据 / 状态 ─────────────────────────────────────────────────────

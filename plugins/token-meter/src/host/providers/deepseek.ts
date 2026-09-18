@@ -86,6 +86,7 @@ export function buildDeepseekView(
 
 const deepseek: ProviderAdapter = {
   type: 'deepseek',
+  icon: 'deepseek',
   label: 'DS',
   title: 'deepseek（官方·自动选路）',
   secretField: 'token',

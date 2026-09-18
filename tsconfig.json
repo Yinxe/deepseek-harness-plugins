@@ -12,6 +12,7 @@
     { "path": "./plugins/web-style" },
     { "path": "./plugins/skill-manager" },
     { "path": "./plugins/mcp-manager" },
-    { "path": "./plugins/file-change-viewer" }
+    { "path": "./plugins/file-change-viewer" },
+    { "path": "./plugins/widget-kit" }
   ]
 }

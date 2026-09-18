@@ -1,21 +1,16 @@
 /**
  * Client 半共享类型
  *
- * 数据来源两条，都与官方实现逐字段对齐（不 import 官方类型包——DSH 运行时暂无
- * 官方 npm 类型包，见 AGENT.md §2.2）：
+ * 数据来源两条，都与官方实现逐字段对齐：
  *
  *  1. `dsh-tool-fs` 的 edit / write 结果元数据 `meta.diffs`（真正落盘的 hunk，每 hunk 带 3 行上下文）；
  *  2. 调用尚未结算时的参数原文 `argsRaw`（模型产出的 JSON，可能只写了一半）。
  *
- * 卡片渲染本身交给官方 primitives（`DiffBlock` / `DisclosureRow`），
- * 这里只建模「我们要读的那几个 leaf 字段」。
+ * 官方组件的 props 类型**直接从 SDK 取**（`@deepseek-ai/dsh-client-ui-primitives` 是
+ * devDependency，只参与类型检查与构建；运行时仍由 shell 的冻结模块表注入，绝不打包），
+ * 这里只建模官方类型没覆盖的领域字段。
  */
-
-/** DSH __ModuleLoader__ 的 require（运行时提供 react / primitives） */
-export type DshRequire = (id: 'react' | '@deepseek-ai/dsh-client-ui-primitives' | string) => any;
-export type AnyReact = any;
-export type AnyPrimitives = any;
-export type AnyCtx = any;
+import type { ReactNode } from 'react';
 
 /**
  * 一次文件变更的 hunk。
@@ -26,10 +21,17 @@ export interface FileDiff {
   oldText: string | null;
   newText: string;
   /**
+   * 改名 / 移动的**源路径**（本插件 `patch` 工具的 `*** Move to:` 段）。
+   *
+   * 官方 `edit` / `write` 永远没有它；有值时卡头渲染成 `旧 → 新`，打开链接仍指向新路径。
+   */
+  oldPath?: string | undefined;
+  /**
    * 这个 hunk 在新文件里的起始行号（1 起）。
    *
    * 官方 `edit` / `write` 的结果元数据**不带**它（`{path, oldText, newText}` 而已），本插件的
-   * `patch` 工具会带上（`@@` 头里就有）。没有时由 `locate.ts` 拿文件内容去定位；都拿不到就退回 1。
+   * `patch` 工具会带上（落盘时算出「片段自己的落点 + 前面片段的行数漂移」）。没有时由
+   * `locate.ts` 拿文件内容去定位；都拿不到就退回 1。
    */
   startLine?: number | undefined;
 }
@@ -133,27 +135,22 @@ export interface ChangeHunk {
   changed: FileDiff;
 }
 
-/** DiffBlock 的本地化文案契约（字段名与官方 `diffBlockLabels(t)` 一致）。 */
-export interface DiffBlockLabels {
-  copy: string;
-  copied: string;
-  collapseAria: string;
-  expandAria: (hidden: number) => string;
-  collapse: string;
-  expand: (hidden: number) => string;
-  files: (count: number) => string;
-}
+/** DiffBlock 的本地化文案契约由官方 primitives 导出（`diffBlockLabels(t)` 同字段）。 */
+export type { DiffBlockLabels } from '@deepseek-ai/dsh-client-ui-primitives';
 
 /**
- * `tool.call.toolview` 交给我们的 props（owner + locale seat）。
+ * `tool.call.toolview` 交给我们的 props（owner + 槽位标准 props + locale seat）。
  *
  * 注册时传 `locale: 'conversation'`，框架才会注入 `t`；`cwd` / `home` 只用于把
- * 绝对路径显示成工作区相对路径与 `~`。
+ * 绝对路径显示成工作区相对路径与 `~`；`sessionId` 是**会话作用域槽位**的标准 prop，
+ * 会话级覆盖（页头快捷开关）用它区分「哪一个会话」。
  */
 export interface ToolViewProps {
   callId: string;
   toolName: string;
   block: ToolCallBlockLike;
+  /** 本行所属会话（标准 prop；宿主换了契约时可能缺失，缺了就没有会话级覆盖）。 */
+  sessionId?: string | undefined;
   cwd?: string | undefined;
   home?: string | undefined;
   openFile: (path: string, options?: { line?: number | undefined }) => void;
@@ -161,16 +158,52 @@ export interface ToolViewProps {
   t: (key: string, params?: Record<string, unknown>) => string;
 }
 
-/** slots 服务（本插件只用 inject + register）。 */
+/**
+ * client 侧 cordis 上下文（本插件只用到这两个成员）。
+ *
+ * 不 import `@deepseek-ai/cordis` 的类型：本插件的 client 半在 cordis 服务表面前是普通
+ * 模块，`ctx` 由 shell 的模块系统注入，把整包 cordis 拉进 devDependencies 只为两个方法
+ * 并不划算。这里的形状就是实际用到的契约，改一处即可跟随上游。
+ */
+export interface ClientContext {
+  /** 取一个 cordis 服务；服务还没挂载时返回 `undefined`。 */
+  get(name: string): unknown;
+  /**
+   * 注册一个随本插件一起收回的副作用。
+   *
+   * @param callback - 返回清理函数（或任意值）的回调。
+   * @param label - 诊断用标签。
+   */
+  effect(callback: () => unknown, label?: string): unknown;
+}
+
+/**
+ * slots 服务（本插件只用 inject + register）。
+ *
+ * 只建模用到的两个成员。**没有**直接 import `@deepseek-ai/dsh-client-ui-slots` 的
+ * `SlotCore`：槽位注册的完整类型是声明合并出来的（`SlotMap` 由 settings / conversation /
+ * tool 各自的 UI 包 merge），要拿到逐槽位的 props 检查就得把那些包也拉进来。那是下一步，
+ * 与本次「前端换 TSX + 用真实 SDK 类型」是两件事。
+ */
 export interface SlotsService {
+  /**
+   * 等某个槽位被声明后再执行注册回调（**异步**：回调可能在槽位声明时才被调用）。
+   *
+   * @param name - 槽位名。
+   * @param fn - 注册逻辑；返回 generator 时，逐条注册会在槽位就绪后依次展开。
+   */
   inject(name: string, fn: () => unknown): unknown;
   /**
    * 注册一个槽位条目。
    *
    * keyed 槽位用 `key`（+ `priority` 影子化：同 key 同 priority 会抛错，派发取 priority 最小的一条，
    * 官方内置行是 0，接管必须用负数）；list 槽位用 `id`（+ `order`）。`locale` 传了才会注入 `t`。
+   *
+   * @param spec - 注册选项。
+   * @param component - 组件（props 由槽位契约决定）。
+   * @returns 卸载该条注册的 disposer。
    */
-  register(spec: SlotRegistrationSpec, component: any): unknown;
+  register(spec: SlotRegistrationSpec, component: (props: never) => ReactNode): unknown;
 }
 
 /**
@@ -181,27 +214,48 @@ export interface SlotsService {
  */
 export type DiffView = 'highlight' | 'diff';
 
+/** 改动两侧多显示几行上下文（与 Host 半的 `ContextLines` 逐字对齐）。 */
+export type ContextLines = 0 | 3 | 5 | 8;
+
 /**
  * 两项显示偏好（= settings.yaml 的 `dshp-file-change-viewer` 分节）。
  *
- * 这是**全局默认值**：每个文件块还能在卡头就地临时覆盖折叠态与展示方式，覆盖只作用于当前会话的
- * 那一个块，不回写 settings.yaml。
+ * 这是**全局默认值**，也是唯一落盘的一层。会话里还有两层压在它上面：会话页头的两个快捷开关
+ * （内存里的会话级覆盖，见 `session.ts`，换会话即失效）与每个文件块自己的临时点击。三层合起来
+ * 的优先级是「块自己的点击 > 会话级覆盖 > 这里的全局偏好」。
  */
 export interface ViewerPrefs {
-  /** 差异展示方式。 */
+  /** 差异展示方式（**默认**值：会话页头可以临时改，改的只是当前会话）。 */
   view: DiffView;
   /**
    * **新渲染**的「编辑 / 写入」操作是否默认展开。
    *
    * 键名 `sectionsOpen` 是历史遗留（它一度只表示「行展开后文件块的开合」），含义已收敛为
    * 「这一行要不要默认展开」：开 = 直接看到改动（行内的文件块也默认展开），
-   * 关 = 与思考 / 读取行一致，点一下才展开。只决定**新渲染**时的初始状态。
+   * 关 = 与思考 / 读取行一致，点一下才展开。只决定**新渲染**时的初始状态，且会被会话级覆盖
+   * （会话页头的「展开 / 收起」）与用户对单行/单块的点击压过去。
    */
   sectionsOpen: boolean;
+  /**
+   * 差异卡片在改动两侧**多显示几行没受影响的上下文**（0 / 3 / 5 / 8）。
+   *
+   * 上下文取自文件当前内容（Host 的 `/locate` 路由定位后一并回传），**不是**模型在
+   * `old_string` / 补丁片段里带的那几行——模型只圈 1 行时，卡片照样看得到前后文。
+   * `0` = 只显示模型给的内容（等于旧行为）。
+   */
+  contextLines: ContextLines;
+  /**
+   * 是否启用 **`patch` 工具**（测试版，**默认关**）。
+   *
+   * 这一项与上两项不同：它**不**管渲染，而是决定 Host 半注不注册 `patch` 工具。改完立即经
+   * `/ext/.../config` 写回 settings.yaml，Host 在 settings 的 `onChange` 里重新判定——开启后
+   * 模型立刻多出这个工具，关掉就消失（正在进行的调用不受影响）。
+   */
+  patchTool: boolean;
 }
 
 /** 偏好字段名（写回 Host 时用）。 */
-export type PrefField = 'view' | 'sectionsOpen';
+export type PrefField = 'view' | 'sectionsOpen' | 'patchTool' | 'contextLines';
 
 /** 偏好的保存态（设置节用它显示「已保存 / 正在保存 / 保存失败」）。 */
 export type SavePhase = 'idle' | 'loading' | 'saving' | 'ready' | 'error';
@@ -213,10 +267,12 @@ export interface StateResponse {
   error?: string;
 }
 
-/** `POST /ext/dshp-file-change-viewer/config` 的请求体（只允许这两项）。 */
+/** `POST /ext/dshp-file-change-viewer/config` 的请求体（只允许这三项）。 */
 export interface ConfigPatch {
   view?: DiffView | undefined;
   sectionsOpen?: boolean | undefined;
+  patchTool?: boolean | undefined;
+  contextLines?: ContextLines | undefined;
 }
 
 /** 槽位注册选项（keyed 用 key，list 用 id）。 */

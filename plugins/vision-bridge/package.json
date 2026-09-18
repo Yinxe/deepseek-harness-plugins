@@ -1,6 +1,6 @@
 {
   "name": "@dshp/vision-bridge",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "DeepSeek Harness (DSH) vision bridge: let text-only models delegate image understanding to multimodal vision models via vision_describe tool, with persistent settings UI and primary/fallback auto-retry. 视觉桥：让纯文本模型通过 vision_describe 工具把图片理解委托给多模态视觉模型，带持久化设置界面与主备自动重试。",
   "license": "MIT",
   "author": "Yinxe",
@@ -34,7 +34,7 @@
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf lib *.tsbuildinfo",
-    "test": "node --check lib/host.js && node --check lib/client.js && echo \"syntax ok\"",
+    "test": "node --check lib/host.js && node --check lib/client.js && node ../../shared/scripts/check-css-modules.mjs src/client && echo \"syntax ok\"",
     "prepublishOnly": "pnpm typecheck && pnpm build",
     "lint": "oxlint --deny-warnings --config ../../.oxlintrc.json src tsup.config.ts"
   },
@@ -60,9 +60,11 @@
     }
   },
   "devDependencies": {
-    "@types/react": "^19.3.0",
-    "tsup": "^8.5.1",
-    "@deepseek-ai/schemastery": "^3.18.2"
+    "@deepseek-ai/dsh-client-ui-primitives": "0.1.5-rc.1",
+    "@deepseek-ai/schemastery": "^3.18.2",
+    "@types/react": "~18.3.1",
+    "react": "^18.3.1",
+    "tsup": "^8.5.1"
   },
   "dependencies": {}
 }

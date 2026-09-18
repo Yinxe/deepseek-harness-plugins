@@ -1,0 +1,290 @@
+/**
+ * 视觉桥设置页样式（CSS Modules，局部名不再需要 vb- 前缀）
+ *
+ * 由 `shared/tsup.preset.ts` 里的 esbuild 插件在构建期内联：lightningcss 把 `[hash]_[local]`
+ * 编译成真实类名，CSS 文本与类名映射一起塞进 lib/client.js，模块被求值时就地插一条
+ * `<style data-plugin>`。产物仍然只有一个 JS 文件（插件不能有第二个 HTTP 资源）。
+ *
+ * 局部名是**模块作用域**的，所以「`.vb-row` 打到别的段上」这类串味在结构上不可能了。少数的例外是
+ * 需要**运行时拼**的类名，那些留在模块之外（本插件目前没有）。
+ *
+ * 值全部照抄原 `styles.ts`（官方 `--dsw-alias-*` token，深浅主题靠 token 切换）。迁移时删掉了
+ * 6 条在本插件里没有任何引用的规则：`mono` / `inputWrap` / `input` / `notice-ok` / `modelName` / `dot`
+ * （原文件是从旧 `lib/client.js` 整段搬过来的，这几条是那时留下的死规则）。
+ */
+
+.page {
+  max-width: 720px;
+  color: var(--dsw-alias-label-primary);
+  flex-direction: column;
+  display: flex;
+}
+
+.section {
+  flex-direction: column;
+  width: 100%;
+  display: flex;
+}
+
+.sectionHead {
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  padding: 14px 0 2px;
+}
+
+.row {
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+  align-items: center;
+  gap: 8px;
+  padding: 16px 0;
+  display: flex;
+}
+
+.section .row:last-child {
+  border-bottom: none;
+}
+
+.rowWrap {
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rowText {
+  flex-direction: column;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+  padding-right: 48px;
+  display: flex;
+}
+
+.title {
+  color: var(--dsw-alias-label-primary);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+}
+
+.desc {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+}
+
+.intro {
+  color: var(--dsw-alias-label-tertiary);
+  margin: 0 0 4px;
+  font-size: 14px;
+  line-height: 22px;
+}
+
+/* 下拉胶囊（官方 TranscriptViewRow / PermissionRow 同款） */
+.selector {
+  background: var(--dsw-alias-bg-module-platform);
+  height: 36px;
+  font: inherit;
+  color: var(--dsw-alias-label-primary);
+  cursor: pointer;
+  border: none;
+  border-radius: 18px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  font-size: 14px;
+  line-height: 22px;
+  display: inline-flex;
+  max-width: 100%;
+}
+
+.selector:hover:not(:disabled) {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.selector:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.selectorLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  flex: none;
+}
+
+/* 开关（官方 ui-settings-plugins 同款规格） */
+.switch {
+  box-sizing: border-box;
+  background: var(--dsw-alias-border-l3);
+  cursor: pointer;
+  border: 0;
+  border-radius: 10px;
+  flex: none;
+  width: 36px;
+  height: 20px;
+  padding: 2px;
+  position: relative;
+}
+
+.switchOn {
+  background: var(--dsw-alias-brand-primary);
+}
+
+.switch:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.switch:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary);
+  outline-offset: 2px;
+}
+
+.thumb {
+  corner-shape: round;
+  background: var(--dsw-alias-label-primary-foreground);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  transition: transform 0.12s;
+  display: block;
+}
+
+.switchOn .thumb {
+  transform: translate(16px);
+}
+
+/* 文本输入（官方 Input 同款规格） */
+.textarea {
+  box-sizing: border-box;
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  background: var(--dsw-alias-bg-layer-1);
+  font: inherit;
+  color: var(--dsw-alias-label-primary);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  line-height: 20px;
+  outline: none;
+  width: 100%;
+  resize: vertical;
+  min-height: 72px;
+}
+
+.textarea:focus-visible {
+  border-color: var(--dsw-alias-brand-primary);
+}
+
+.textarea::placeholder {
+  color: var(--dsw-alias-label-dimmed);
+}
+
+.textarea:disabled {
+  opacity: 0.5;
+}
+
+/* 徽章（官方色板） */
+.badge {
+  white-space: nowrap;
+  align-items: center;
+  height: 20px;
+  border-radius: 10px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 20px;
+  display: inline-flex;
+}
+
+.badgeOk {
+  background: var(--dsw-alias-state-success-tertiary);
+  color: var(--dsw-alias-state-success-primary);
+}
+
+.badgeWarn {
+  background: var(--dsw-alias-state-warn-tertiary);
+  color: var(--dsw-alias-state-warn-label);
+}
+
+.badgeMuted {
+  background: var(--dsw-alias-button-ghost-active-fill);
+  color: var(--dsw-alias-label-caption);
+}
+
+.badgeInfo {
+  background: var(--dsw-alias-state-business-tertiary);
+  color: var(--dsw-alias-state-business-primary);
+}
+
+/* 状态行、提示、加载 */
+.notice {
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.noticeErr {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.noticeWarn {
+  color: var(--dsw-alias-state-warn-label);
+}
+
+.hint {
+  color: var(--dsw-alias-label-tertiary);
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.loading {
+  align-items: center;
+  gap: 8px;
+  display: flex;
+}
+
+.loadingText {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.bar {
+  align-items: center;
+  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 16px 0;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+}
+
+.section .bar {
+  border-bottom: none;
+}
+
+.modelLine {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thumb {
+    transition: none;
+  }
+}

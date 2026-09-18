@@ -2,7 +2,7 @@
  * 配置：默认值 / schemastery schema / 补丁消毒
  *
  * - 官方 settings 命名空间 `dshp-skill-manager`（与包名/路由前缀/cordis id 一致）
- * - 只认 NS：不做历史 key 兼容、不做迁移（AGENT.md §7.3）
+ * - 只认 NS：不做历史 key 兼容、不做迁移（docs/settings.md「不做迁移」）
  *
  * @module @dshp/skill-manager
  */

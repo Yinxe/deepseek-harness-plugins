@@ -133,12 +133,12 @@ plugins/skill-manager/
 │   ├── roots.ts        # 技能根解析 + 工作区枚举 + 路径安全
 │   └── skills.ts       # 扫描 / CRUD / 复制移动 / 遮蔽标记
 ├── src/client/
-│   ├── index.ts        # __ModuleLoader__ loader
-│   ├── SkillSection.ts # 设置页主组件
-│   ├── components.ts   # Badge / Switch / Selector / ActionMenu
-│   ├── styles.ts       # CSS（dsw-alias-* token）
-│   ├── api.ts          # fetch 封装
-│   └── types.ts        # 协议类型（与 host 对齐）
+│   ├── index.tsx           # 只导出 inject / apply（两处槽位注册；loader 壳由构建预设拼出）
+│   ├── SkillSection.tsx    # 设置页主组件（JSX）+ 输入框右侧探针 + 模块级 ctxHolder
+│   ├── components.tsx      # Badge / Switch / Selector / ActionMenu
+│   ├── styles.module.css   # CSS Modules（dsw-alias-* token；类名构建期哈希，不需要前缀）
+│   ├── api.ts              # fetch 封装
+│   └── types.ts            # 协议类型（与 host 对齐）+ ClientContext / SlotsService 接缝
 └── lib/                # 已提交的单文件产物（host.js + client.js）
 ```
 

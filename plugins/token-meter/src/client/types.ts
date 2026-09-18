@@ -5,7 +5,13 @@
  * 合并来源：
  *  - quota：client.js 的 state/config/snaps/providers 协议
  *  - stats：client.js 的 data/state/config 协议
+ *
+ * 这里只建模**官方类型没覆盖**的东西：路由协议、领域模型，以及 `ClientContext` /
+ * `SlotsService` 这两个「只用到哪几个成员就写哪几个」的服务接缝。官方组件的 props 类型直接从
+ * `@deepseek-ai/dsh-client-ui-primitives` import，不再有 `AnyReact` / `AnyPrimitives` / `DshRequire`
+ * 那套 shim——它们等于把整个前端退化成 `any`。
  */
+import type { ReactNode } from 'react';
 
 export interface QuotaWindow {
   key: string;
@@ -29,6 +35,15 @@ export interface QuotaBilling {
   plan?: string;
 }
 
+/**
+ * 分段/占比条的语义色调。
+ *
+ * 颜色**一律由主题 token 决定**（`brand` = 主题强调色、`ok`/`warn`/`bad` = 安全/警告/危险、
+ * `info` = 业务信息色、`muted` = 弱化），供应商只声明「这一段是什么语义」，
+ * 不写死色值 —— 换主题时整条比例条跟着换。
+ */
+export type SegmentTone = 'brand' | 'ok' | 'warn' | 'bad' | 'info' | 'muted';
+
 export interface ProviderBlock {
   kind: 'kv' | 'progress' | 'split' | 'note';
   label?: string;
@@ -36,7 +51,12 @@ export interface ProviderBlock {
   used?: number;
   total?: number;
   left?: string;
-  segments?: Array<{ label: string; value: number; color?: string }>;
+  segments?: Array<{
+    label: string;
+    value: number;
+    /** 语义色调（跟随主题 token）；旧适配器可继续给 `color` 写死色值 */ tone?: SegmentTone;
+    color?: string;
+  }>;
   text?: string;
   tone?: 'info' | 'warn' | 'bad';
 }
@@ -60,7 +80,7 @@ export interface ProviderSection {
   billing?: QuotaBilling;
   items?: Array<{ label: string; value: string }>;
   progress?: { label?: string; used: number; total: number; left?: string };
-  split?: { segments: Array<{ label: string; value: number; color?: string }> };
+  split?: { segments: Array<{ label: string; value: number; tone?: SegmentTone; color?: string }> };
   note?: { text: string; tone?: 'info' | 'warn' | 'bad' };
   chart?: { title?: string; labels: string[]; values: number[] };
 }
@@ -127,6 +147,8 @@ export interface ProviderMeta {
   title: string;
   secretField: string;
   hint: string;
+  /** 供应商图标名（Host 声明；缺省 = 客户端按 type 兜底）。 */
+  icon?: string;
   fields: ProviderField[];
   /** 新增供应商时的 params 初始值（provider 自声明；缺省 {}） */
   defaultParams?: Record<string, unknown>;
@@ -233,6 +255,7 @@ export interface StatsSnapshot {
   error?: string;
 }
 
+/** `POST /ext/dshp-token-meter/config` 的请求体（只允许这几项）。 */
 export type ConfigPatch = Partial<
   Pick<
     TokenMeterConfig,
@@ -240,7 +263,71 @@ export type ConfigPatch = Partial<
   >
 >;
 
-/** DSH __ModuleLoader__ 的 require（运行时提供 react / primitives） */
-export type DshRequire = (id: 'react' | '@deepseek-ai/dsh-client-ui-primitives' | string) => any;
-export type AnyReact = any;
-export type AnyPrimitives = any;
+/**
+ * client 侧 cordis 上下文（本插件只用到这两个成员）。
+ *
+ * 不 import `@deepseek-ai/cordis` 的类型：client 半在 cordis 服务表面前是普通模块，`ctx` 由 shell
+ * 的模块系统注入，把整包 cordis 拉进 devDependencies 只为两个方法并不划算。
+ */
+export interface ClientContext {
+  /**
+   * 取一个 cordis 服务；服务还没挂载时返回 `undefined`。
+   *
+   * @param name - 服务名。
+   */
+  get(name: string): unknown;
+  /**
+   * 注册一个随本插件一起收回的副作用。
+   *
+   * @param callback - 返回清理函数（或任意值）的回调。
+   * @param label - 诊断用标签。
+   */
+  effect(callback: () => unknown, label?: string): unknown;
+  /**
+   * 在「依赖就绪」的作用域里跑一段逻辑（cordis `ctx.inject(deps, cb)`）。
+   *
+   * **可选依赖必须用它**：写成 client 半顶层的 `inject: ['widgets']` 会让整个插件在
+   * 没装 / 停用了 `@dshp/widget-kit` 时整体不激活（连额度面板都不见了），
+   * 而 `ctx.inject` 只是让这段回调等着 —— 服务来了才跑，服务走了作用域随之销毁。
+   *
+   * @param deps - 依赖的服务名。
+   * @param callback - 依赖就绪时的回调（拿到的是作用域 ctx）。
+   */
+  inject(deps: string[], callback: (scope: ClientContext) => unknown): unknown;
+}
+
+/**
+ * slots 服务（本插件只用 inject + register）。
+ *
+ * 只建模用到的两个成员。逐槽位的 props 检查要靠 `SlotMap` 声明合并（由 settings / conversation /
+ * shell 各自的 UI 包 merge 进来），那是下一步。
+ */
+export interface SlotsService {
+  /**
+   * 等某个槽位被声明后再执行注册回调（**异步**：回调可能在槽位声明时才被调用）。
+   *
+   * @param name - 槽位名。
+   * @param fn - 注册逻辑；返回 generator 时，逐条注册会在槽位就绪后依次展开。
+   */
+  inject(name: string, fn: () => unknown): unknown;
+  /**
+   * 注册一个槽位条目。
+   *
+   * @param spec - 注册选项（list 槽位用 `id` + `order`）。
+   * @param component - 组件（props = 槽位 owner props + `inject()` 的产出）。
+   * @typeParam P - 该槽位的 props（list 槽位是 owner props，本插件只注册 `{ wide }` 那一个）。
+   * @returns 卸载该条注册的 disposer。
+   */
+  register<P>(spec: SlotRegistrationSpec, component: (props: P) => ReactNode): unknown;
+}
+
+/** 槽位注册选项（本插件注册的三个都是 list 槽位，故只需要 id + order + label）。 */
+export interface SlotRegistrationSpec {
+  name: string;
+  /** list 槽位的条目 id。 */
+  id?: string | undefined;
+  /** list 槽位的排序。 */
+  order?: number | undefined;
+  /** 导航 / tab 上显示的标题。 */
+  label?: string | undefined;
+}

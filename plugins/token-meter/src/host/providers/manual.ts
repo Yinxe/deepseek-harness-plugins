@@ -13,6 +13,7 @@ import type { ProviderAdapter, Vendor } from '../types.js';
 
 const manual: ProviderAdapter = {
   type: 'manual',
+  icon: 'manual',
   label: '手动',
   title: 'manual（手动）',
   secretField: '',

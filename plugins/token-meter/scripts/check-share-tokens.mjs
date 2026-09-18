@@ -1,5 +1,5 @@
 /**
- * 自检：分享卡导出用的 token 清单必须覆盖 styles.ts 里出现的全部 `--dsw-*`。
+ * 自检：分享卡导出用的 token 清单必须覆盖 styles.module.css 里出现的全部 `--dsw-*`。
  *
  * 为什么需要它：导出走 `<foreignObject>` 光栅化，那里读不到 DSH 壳层的样式表，
  * 只能把用到的设计 token 计算值**内联**进去。漏一个 token，组件在导出的图里就会掉色
@@ -15,9 +15,9 @@ import { dirname, join } from 'node:path';
 const here = dirname(fileURLToPath(import.meta.url));
 const read = (rel) => readFileSync(join(here, '..', rel), 'utf8');
 
-const used = new Set(read('src/client/styles.ts').match(/--dsw-[a-z0-9-]+/g) || []);
+const used = new Set(read('src/client/styles.module.css').match(/--dsw-[a-z0-9-]+/g) || []);
 const listed = new Set(
-  read('src/client/SharePanel.ts')
+  read('src/client/SharePanel.tsx')
     .match(/'(--dsw-[a-z0-9-]+)'/g)
     ?.map((s) => s.slice(1, -1)) || [],
 );
@@ -30,11 +30,11 @@ if (used.size === 0 || listed.size === 0) {
   process.exit(1);
 }
 if (missing.length > 0) {
-  console.error('✗ SHARE_TOKENS 漏了 styles.ts 里用到的 token：\n  ' + missing.join('\n  '));
+  console.error('✗ SHARE_TOKENS 漏了 styles.module.css 里用到的 token：\n  ' + missing.join('\n  '));
   process.exit(1);
 }
 if (extra.length > 0) {
-  console.error('✗ SHARE_TOKENS 里有 styles.ts 已不再使用的 token：\n  ' + extra.join('\n  '));
+  console.error('✗ SHARE_TOKENS 里有 styles.module.css 已不再使用的 token：\n  ' + extra.join('\n  '));
   process.exit(1);
 }
 console.log('✓ 分享卡 token 覆盖一致：' + listed.size + ' 个');

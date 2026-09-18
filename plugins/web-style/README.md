@@ -169,7 +169,7 @@ dshp-web-style:
 ```
 web-style/
 ├── package.json               # @dshp/web-style，dsh.bundle.patch + dsh.client.platform=web
-├── tsup.config.ts             # host ESM + client IIFE 双 bundle（运行时零依赖）
+├── tsup.config.ts             # host ESM + client CJS 双 bundle（loader 壳由 shared/tsup.preset.ts 拼出；运行时零依赖）
 ├── cordis.patch.yml           # bundle 挂载行（id: dshp-web-style）
 ├── src/
 │   ├── host/                  # Node 半：settings 持久化 + 同源路由 + 主题目录
@@ -182,8 +182,8 @@ web-style/
 │   │       ├── shared.ts      #     字体栈 / fillFontTokens / FLAT_SHADOWS / 类型
 │   │       └── <21 个主题模块>  #     每文件导出 { dark?, light?, meta }
 │   └── client/                # 浏览器半：设置节 UI + 覆盖层
-│       ├── index.ts           #   __ModuleLoader__ 注册 + apply 装配
-│       ├── GallerySection.ts  #   外观定制页（画廊 + 壁纸取色 + 圆角）
+│       ├── index.tsx          #   只导出 inject / apply（loader 壳由构建预设拼出）+ apply 装配
+│       ├── GallerySection.tsx #   外观定制页（画廊 + 壁纸取色 + 圆角，普通函数组件 + JSX）
 │       ├── apply-theme.ts     #   覆盖层：buildPair / applyThemeChoice / 启动恢复 / 卸载
 │       ├── md3.ts             #   Material You 引擎（seed → 调色板 → sys → --dsw-*，含 MD3 导出）
 │       ├── official.ts        #   官方 alias token 原值（对侧「无操作覆盖」用）
@@ -193,7 +193,7 @@ web-style/
 │       ├── radius.ts          #   全局圆角三档（语义属性选择器）
 │       ├── clipboard.ts       #   复制 MD3（Clipboard API + execCommand 回落）
 │       ├── types.ts           #   路由协议 / 服务类型
-│       └── styles.ts          #   画廊 CSS（只走 --dsw-* token）
+│       └── styles.module.css  #   画廊 CSS（CSS Modules，只走 --dsw-* token）
 ├── scripts/check-themes.mjs   # 目录 / client meta / 构建产物一致性校验（pnpm test 内跑）
 └── lib/                       # 构建产物（已提交）：host.js + client.js
 ```
@@ -233,7 +233,7 @@ dsh web
 | `lib/themes/index.js`                          | `src/host/themes/index.ts` + `shared.ts`                   | `expand()` / 顺序 / meta 全等，补类型（`ThemeModule` / `ThemeCatalogEntry`）                                                |
 | `lib/themes/<name>.js` × 21                    | `src/host/themes/<name>.ts` × 21                           | 脚本机械转换，token 值逐字未改；补 `ThemeMetaMap` 类型                                                                      |
 | `lib/themes/photo.js`（382 行，Host 从未引用） | `src/client/md3.ts`                                        | **双份手工同步的 MD3 引擎合并为一份**：Host 半不再打包 photo 引擎（原来就是死代码），client 侧以 `client.js` 的实时实现为准 |
-| `client.js`（997 行）                          | `src/client/*.ts`（11 个模块）                             | 画廊 / 覆盖层 / 圆角 / MD3 / 官方原值 / 样式按层拆分，行为逐行对齐                                                          |
+| `client.js`（997 行）                          | `src/client/*.ts(x)` + `styles.module.css`                 | 画廊 / 覆盖层 / 圆角 / MD3 / 官方原值按层拆分，行为逐行对齐；`.tsx` + JSX，样式是 CSS Modules                               |
 | `scripts/check-themes.mjs`                     | 同名脚本                                                   | 校验点升级：目录自洽 + client meta 逐项一致 + **构建产物**（id 存在、token 未内联、Host 路由与白名单齐全）                  |
 
 **有意的差异**（其余为纯机械等价）：
@@ -243,6 +243,7 @@ dsh web
 3. **MD3 导出注释**：`exported by dshp-inx-custom-ui` → `exported by dshp-web-style`。
 4. **删除死代码**：client 画廊 meta 里从未使用的 `group` 字段、CSS 里从未引用的 `.tg-photoSwatch`、`findTheme()` 中 photo 分支（调用点早已被 `PHOTO_ID` 分支拦掉）。
 5. **lint 修正**：`img.onload/onerror` → `addEventListener`；`new Array(12).fill(null).map()` → `Array.from({length:12})`；neobrutalism 未使用的 `FLAT_SHADOWS` import 移除。行为不变。
+6. **client 形态对齐仓库新规范**（机制重构，行为逐字节不变）：`index.ts` 的手写 loader 壳删除，改由 `shared/tsup.preset.ts` 的 banner / footer 拼出；`GallerySection.ts` 的 `React.createElement` → `GallerySection.tsx` + JSX（`createGallery(React, P)` 工厂取消，改为普通函数组件）；`styles.ts` 的 CSS 字符串 + 手插 `<style>` → `styles.module.css`（构建期内联，类名前缀 `tg-` 去掉，局部名改 camelCase）。
 
 **等价性验证**（移植时执行，脚本已删）：以原 `lib/themes/*` 与 `client.js` 为基准逐项比对——23 套目录条目（含全部 token）全等、10 个 seed × {palettes, light/dark scheme, `buildPhotoTokens`, `buildM3ExportCss`} 全等、`hexToHsl`/`hslToHex`/`withAlpha`/`extractDominant`/`extractPalette`/`buildWallpaperTheme` 全等、23 条画廊 meta 全等、88 + 88 个 `OFFICIAL_*` token 全等。
 

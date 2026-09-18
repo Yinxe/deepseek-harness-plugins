@@ -339,3 +339,43 @@ function sandboxDenied(policy: SandboxExecutionPolicy, target: string): Error {
   (error as { displayPath?: string }).displayPath = target;
   return error;
 }
+
+/**
+ * 一批目标整体预检：把**所有**越界目标一次报出来，而不是撞上第一个就停。
+ *
+ * 官方 marker 是两行（拒绝原因 + 提权提示），这里**不改那两行**，只在后面追加一行点名本批越界的
+ * 目标与它们的父目录。差别很实在：批量补丁里混进两个工作区外的文件时，模型一次重试就能同时覆盖
+ * 两个目录，而不是改一个、再撞一个、再问一次（每次都要用户点一次审批）。
+ *
+ * @param policy - 这次调用要盖的策略；undefined（未装围栏后端）时放行。
+ * @param displayPaths - 本次会写 / 会删的全部目标路径。
+ * @throws 有任何一个目标不在可写根里时，抛出与围栏同码（`FS_SANDBOX_DENIED`）的拒绝错误。
+ */
+export async function assertBatchWritable(
+  policy: SandboxExecutionPolicy | undefined,
+  displayPaths: readonly string[],
+): Promise<void> {
+  if (policy === undefined || policy.mode === 'danger-full-access') return;
+  const denied: string[] = [];
+  for (const displayPath of displayPaths) {
+    try {
+      await assertWritable(policy, displayPath);
+    } catch {
+      denied.push(displayPath);
+    }
+  }
+  if (denied.length === 0) return;
+
+  // 去重但**不排序**：保持目标在补丁里出现的顺序，模型读起来与它写的补丁对得上。
+  const dirs = Array.from(new Set(denied.map((path) => dirname(resolvePath(path)))));
+  const error = new Error(
+    `${sandboxDenialMarker(policy.mode)}\n${escalationHintMarker('operation')}\n` +
+      `[sandbox: out-of-workspace targets in this patch: ${denied.join(', ')}` +
+      (dirs.length === 0 ? '' : ` (parent directories: ${dirs.join(', ')})`) +
+      ' — one retry with sandbox_permissions + justification covers the whole patch]',
+  );
+  (error as { code?: string }).code = 'FS_SANDBOX_DENIED';
+  const first = denied[0];
+  if (first !== undefined) (error as { displayPath?: string }).displayPath = first;
+  throw error;
+}

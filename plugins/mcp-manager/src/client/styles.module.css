@@ -1,0 +1,330 @@
+/**
+ * MCP 设置页样式（CSS Modules，局部名不再需要 mc- 前缀）
+ *
+ * 只做布局（行/工具栏/间距/截断），控件全部用 @deepseek-ai/dsh-client-ui-primitives 原语
+ * （Button/Input/Switch/Tag/Menu/Modal/Pill），颜色一律 var(--dsw-alias-*) token。
+ *
+ * 由 `shared/tsup.preset.ts` 里的 esbuild 插件在构建期内联：lightningcss 把 `[hash]_[local]`
+ * 编译成真实类名，CSS 文本与类名映射一起塞进 lib/client.js，模块被求值时就地插一条
+ * `<style data-plugin>`。产物仍然只有一个 JS 文件（插件不能有第二个 HTTP 资源）。
+ *
+ * 声明值全部照抄原 `styles.ts`（迁移时删掉了唯一一条在本插件里零引用的规则 `.noticeOk`——
+ * 原文件是从旧 `lib/client.js` 整段搬过来的，那条是那时留下的死规则）。本插件没有需要运行时拼的
+ * 类名（`statusClassOf` 的四个色点变体各自是完整的局部名，不是拼出来的选择器），所以模块之外
+ * 不需要 `dshp-` 前缀的全局类名。
+ */
+
+.page {
+  max-width: 860px;
+  color: var(--dsw-alias-label-primary);
+  flex-direction: column;
+  display: flex;
+}
+
+.intro {
+  color: var(--dsw-alias-label-tertiary);
+  margin: 0 0 4px;
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.rootPath {
+  color: var(--dsw-alias-label-dimmed);
+  font-family: var(--ds-font-family-code);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* 工具栏：计数 + 搜索 + 动作（ZCode MCP 页同款布局） */
+.toolbar {
+  align-items: center;
+  gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 10px 0 12px;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+}
+
+.toolbarSpacer {
+  flex: 1;
+  min-width: 0;
+}
+
+.count {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 13px;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.searchW {
+  width: 230px;
+}
+
+/* 服务器行：图标块 + 名称/单行摘要 + 行内控件 */
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.list .row:last-child {
+  border-bottom: none;
+}
+
+.rowDisabled .title,
+.rowDisabled .line {
+  opacity: 0.55;
+}
+
+.rowText {
+  flex-direction: column;
+  flex: 1;
+  gap: 2px;
+  min-width: 200px;
+  display: flex;
+}
+
+.title {
+  color: var(--dsw-alias-label-primary);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.nameBtn {
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+.nameBtn:hover {
+  text-decoration: underline;
+}
+
+.line {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.mono {
+  font-family: var(--ds-font-family-code);
+  font-size: 13px;
+}
+
+.tile {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--dsw-alias-button-ghost-active-fill);
+  color: var(--dsw-alias-label-secondary);
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  flex: none;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  position: relative;
+}
+
+/* 状态点：绿=探活通过，红=探活失败，蓝=未知/未探活，灰=已禁用 */
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  border: 2px solid var(--dsw-alias-bg-layer-1);
+  background: var(--dsw-alias-label-dimmed);
+}
+
+.dotOk {
+  background: var(--dsw-alias-state-success-primary);
+}
+
+.dotFail {
+  background: var(--dsw-alias-state-error-primary);
+}
+
+.dotUnknown {
+  background: var(--dsw-alias-brand-primary);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-left: auto;
+  justify-content: flex-end;
+}
+
+.danger {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+/* 弹窗：原生 Modal 默认 380px，表单编辑器需要更宽（div 前缀抬高优先级压过模块类） */
+div.wideModal {
+  width: min(760px, 94vw);
+}
+
+/* 表单（原生 Modal 的内容/底部） */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldLabel {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.modeRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.modeSpacer {
+  flex: 1;
+}
+
+.textarea {
+  box-sizing: border-box;
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  background: var(--dsw-alias-bg-layer-1);
+  font: inherit;
+  color: var(--dsw-alias-label-primary);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  line-height: 20px;
+  outline: none;
+  width: 100%;
+  resize: vertical;
+  min-height: 64px;
+}
+
+.textarea:focus-visible {
+  border-color: var(--dsw-alias-brand-primary);
+}
+
+.textarea::placeholder {
+  color: var(--dsw-alias-label-dimmed);
+}
+
+.textarea:disabled {
+  opacity: 0.5;
+}
+
+.textareaMono {
+  font-family: var(--ds-font-family-code);
+  font-size: 12px;
+  line-height: 19px;
+}
+
+.bar {
+  align-items: center;
+  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.twoCol {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.twoCol > * {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* 状态与提示 */
+.notice {
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.noticeErr {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.noticeWarn {
+  color: var(--dsw-alias-state-warn-label);
+}
+
+.hint {
+  color: var(--dsw-alias-label-tertiary);
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.loading {
+  align-items: center;
+  gap: 8px;
+  display: flex;
+}
+
+.loadingText {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.empty {
+  padding: 32px 0 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.emptyTitle {
+  color: var(--dsw-alias-label-secondary);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.probeLine {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}

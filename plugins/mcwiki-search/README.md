@@ -195,9 +195,10 @@ dshp-mcwiki-search:
 src/host/           Host 半 TS：types（契约）/ http（同源小工具）/ config（默认值+schema+消毒）
                     / api（MediaWiki 客户端）/ convert（清洗管线）/ tools（3 工具注册）
                     / routes（3 同源路由）/ index（apply 装配）
-src/client/         Client 半 TS：types（协议）/ styles（mw- 前缀 CSS）/ api（fetch 封装）
-                    / components（Badge/Row）/ McWikiSection（设置节）/ index（loader 注册）
-lib/                构建产物（已提交）：host.js（后端 ESM）+ client.js（前端 IIFE）
+src/client/         Client 半 TSX：types（协议 + 槽位接缝）/ styles.module.css（CSS Modules）
+                    / api（fetch 封装）/ components.tsx（Badge/Row）/ McWikiSection.tsx（设置节）
+                    / CommandCard.tsx（/mcwiki 命令卡片）/ index.tsx（只导出 inject / apply，loader 壳由构建预设拼出）
+lib/                构建产物（已提交）：host.js（后端 ESM）+ client.js（前端 CJS，内含构建预设拼的 __ModuleLoader__ 壳）
 cordis.patch.yml    bundle 层 patch：仅 insert 挂载行
 package.json        包描述 + DSH bundle 声明（dsh.bundle.patch / dsh.client.platform）
 README.md           本文件
@@ -208,7 +209,7 @@ README.md           本文件
 - **语法自检**：
 
   ```sh
-  pnpm --filter @dshp/mcwiki-search test # node --check lib/host.js + lib/client.js
+  pnpm --filter @dshp/mcwiki-search test # node --check lib/host.js + lib/client.js + CSS Module 类名静态检查
   ```
 
 - **设置页自检**：打开 `http://127.0.0.1:3080`（或你的 `dsh web` 端口）→ 设置 → Minecraft Wiki 搜索，查看数据源、改配置保存后刷新仍保持（持久化），搜索测试能看到清洗后的摘要。
@@ -228,7 +229,7 @@ README.md           本文件
 > **Monorepo + TS 版**：本目录是 `deepseek-harness-plugins` monorepo 的标准子项目（`plugins/mcwiki-search`），由 `~/.dsh/plugins/dsh-mcwiki-search`（JS，@dshp-inx/mcwiki-search v1.0.1）等价 TS 重写移植。
 >
 > - Host：原 `lib/{index,api,convert}.js`（共约 1400 行）→ `src/host/{types,http,config,api,convert,tools,routes,index}.ts`，tsup 打包为单文件 `lib/host.js`（ESM，schemastery 内联，运行时零依赖），导出 `{ name, inject, NS, ConfigSchema, apply }` 与原版一致。
-> - Client：原手写 `client.js`（326 行）→ `src/client/{types,styles,api,components,McWikiSection,index}.ts`，tsup 打包为单文件 `lib/client.js`（IIFE，内含 `__ModuleLoader__.load`，react/primitives 运行时注入不打包）。
+> - Client：原手写 `client.js`（326 行）→ `src/client/{types,api,components,styles.module.css,McWikiSection,CommandCard,index}`（`.tsx` + JSX，不再是 `React.createElement` 工厂），构建为单文件 `lib/client.js`（CJS + 构建预设拼出的 `__ModuleLoader__.load` 壳；react / react/jsx-runtime / primitives 运行时注入不打包，CSS Modules 在构建期内联进 bundle）。官方组件的 props 类型直接来自 `@deepseek-ai/dsh-client-ui-primitives`（devDependency，见 `docs/client-basics.md`）。
 >
 > 构建：`pnpm --filter @dshp/mcwiki-search build`（tsup）→ `lib/host.js` + `lib/client.js`；包入口 `lib/host.js`，`./client` → `lib/client.js`。`lib/` 已提交（DSH 从 git 直接安装，不跑 build，必须带构建产物）。
 
