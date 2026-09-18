@@ -8,7 +8,7 @@
  * 1. 目录自洽：id 唯一、swatch ≥3 色、label/desc/colorScheme 齐备；
  * 2. client 画廊 meta（src/client/themes.ts）与目录逐项对齐（数量/字段/swatch）；
  * 3. 构建产物：client bundle 含每个 id，且未内联主题 token（静态主题独有的
- *    --dsw-font-markdown-* 不应出现在客户端）；
+ *    --dsw-font-markdown-* 不应出现在客户端）；背景效果 id 同样逐个钉在产物里；
  * 4. Host 产物：photo:custom 白名单 + 四条同源路由齐全。
  *
  * 新增主题三步：src/host/themes 加一文件 → themes/index.ts 加 import + expand →
@@ -26,7 +26,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = dirname(here);
 
 // 目录随 Host 产物导出（lib/host.js 为纯声明式 ESM，导入无副作用）。
-const { THEME_CATALOG, THEME_IDS } = await import('../lib/host.js');
+const { THEME_CATALOG, THEME_IDS, BACKGROUND_IDS } = await import('../lib/host.js');
 
 let fail = 0;
 const bad = (msg) => {
@@ -170,6 +170,20 @@ for (const id of THEME_IDS) {
 if (clientBundle.includes('--dsw-font-markdown-')) {
   bad('client bundle 内联了静态主题 token（应从 Host /themes 下发）');
 }
+
+// ── 3b. 背景效果 id：Host 白名单 ↔ client 登记表 ────────────────────────
+// 两半是两个 bundle、没有共享模块，所以白名单（src/host/config.ts）和登记表
+// （src/client/background.ts）各列一份。这条钉住「Host 认的每个 id 在 client 产物里真找得到」，
+// 漏登记、漏构建都会当场命中。
+if (!Array.isArray(BACKGROUND_IDS) || BACKGROUND_IDS.length === 0) {
+  bad('Host 未导出 BACKGROUND_IDS（背景效果白名单）');
+}
+for (const id of BACKGROUND_IDS ?? []) {
+  if (!clientBundle.includes("'" + id + "'") && !clientBundle.includes('"' + id + '"')) {
+    bad('client bundle 缺背景效果 id（登记表漏了？未重新 build？）：' + id);
+  }
+}
+console.log(`背景效果：Host 白名单 ${BACKGROUND_IDS?.length ?? 0} 个 id 均在 client 产物中`);
 
 // ── 4. Host 产物 ─────────────────────────────────────────────────────
 const hostBundle = readFileSync(join(root, 'lib', 'host.js'), 'utf8');

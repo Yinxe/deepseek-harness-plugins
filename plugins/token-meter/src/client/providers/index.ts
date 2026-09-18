@@ -22,6 +22,7 @@ export type { ProviderRenderer, ButtonRenderInput, BodyRenderInput } from './reg
 export {
   defaultRingSpec,
   failureRingSpec,
+  RAIL_ICON,
   ringSizeOf,
   toneOfPct,
   windowOfMetric,

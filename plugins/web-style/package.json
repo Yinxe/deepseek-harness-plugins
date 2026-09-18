@@ -1,7 +1,7 @@
 {
   "name": "@dshp/web-style",
   "version": "0.2.0",
-  "description": "DeepSeek Harness (DSH) web style suite: multi-theme gallery with one-click switching, persisted theme selection, global radius tuning, and Material You wallpaper color extraction — all rendered over the official light/dark token layer. 样式套件：多套主题画廊一键切换、主题选择持久化、全局圆角调节与 Material You 壁纸取色——全部叠加渲染在官方亮/暗 token 层之上。",
+  "description": "DeepSeek Harness (DSH) web style suite: multi-theme gallery with one-click switching, persisted theme selection, interactive background effects orthogonal to the theme, global radius tuning, and Material You wallpaper color extraction — all rendered over the official light/dark token layer. 样式套件：多套主题画廊一键切换、主题选择持久化、与主题正交的可交互背景效果、全局圆角调节与 Material You 壁纸取色——全部叠加渲染在官方亮/暗 token 层之上。",
   "license": "MIT",
   "author": "Yinxe",
   "type": "module",

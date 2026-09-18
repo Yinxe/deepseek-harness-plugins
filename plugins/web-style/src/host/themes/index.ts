@@ -17,6 +17,7 @@ import * as xiaohongshu from './xiaohongshu.js';
 import * as levels from './levels.js';
 import * as arc from './arc.js';
 import * as luxury from './luxury.js';
+import * as harnessOffice from './harness-office.js';
 import type { ThemeCatalogEntry, ThemeModule } from './shared.js';
 
 /**
@@ -34,7 +35,10 @@ function expand(module: ThemeModule): ThemeCatalogEntry[] {
   return entries;
 }
 
-/** 全部主题注册清单（顺序与 client 画廊展示顺序一致；Host 仅用 id 白名单 + token 下发）。 */
+/**
+ * 全部主题注册清单（顺序与 client 画廊展示顺序一致；Host 仅用 id 白名单 + token 下发）。
+ * 首项是 token 契约的基准（check-themes.mjs 拿它的键集比对其它主题），新主题一律追加在末尾。
+ */
 export const THEME_CATALOG: ThemeCatalogEntry[] = [
   ...expand(claude),
   ...expand(levels),
@@ -43,6 +47,7 @@ export const THEME_CATALOG: ThemeCatalogEntry[] = [
   ...expand(xiaohongshu),
   ...expand(supabase),
   ...expand(sakura),
+  ...expand(harnessOffice),
 ];
 
 /** 目录内全部主题 id（Host 白名单与 scripts/check-themes.mjs 共用）。 */

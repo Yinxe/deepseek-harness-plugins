@@ -13,6 +13,8 @@ import type { WallpaperTheme } from './md3.js';
 export interface ClientState {
   /** 持久化的主题选择：非空 = 有自定义覆盖层在生效 */
   desiredId: string;
+  /** 持久化的背景效果选择：空串 = 跟随主题默认（与主题正交，切主题不会重置它） */
+  desiredBackground: string;
   /** 壁纸 MD3 主题运行时；null = 尚无取色数据 */
   photoTheme: WallpaperTheme | null;
   /** 持久化的全局圆角（画廊挂载时作初值） */
@@ -25,6 +27,7 @@ export interface ClientState {
 
 export const state: ClientState = {
   desiredId: '',
+  desiredBackground: '',
   photoTheme: null,
   desiredRadius: -1,
   overrideDispose: null,

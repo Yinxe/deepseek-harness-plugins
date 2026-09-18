@@ -26,6 +26,815 @@ __export(client_exports, {
 });
 module.exports = __toCommonJS(client_exports);
 
+// src/client/background-aurora.ts
+function mountAuroraLayers(api, opts) {
+  const root = "." + opts.rootClass;
+  const style = document.createElement("style");
+  style.id = opts.styleId;
+  style.textContent = `
+${root} {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: ${opts.heightPct}%;
+  overflow: hidden;
+  --dshp-ws-aur-bright: color-mix(in srgb, var(--dsw-alias-brand-primary) 86%, black);
+  --dshp-ws-aur-mid: color-mix(in srgb, var(--dsw-alias-brand-primary) 62%, black);
+  --dshp-ws-aur-deep: color-mix(in srgb, var(--dsw-alias-brand-primary) 34%, black);
+  -webkit-mask-image: ${opts.maskImage};
+  mask-image: ${opts.maskImage};
+}
+${root} .dshp-ws-aur {
+  position: absolute;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+${root} .dshp-ws-aur-a {
+  left: 50%;
+  top: -26%;
+  width: 72vw;
+  height: 72vw;
+  margin-left: -36vw;
+  background: radial-gradient(ellipse at center, var(--dshp-ws-aur-mid) 0%, var(--dshp-ws-aur-deep) 40%, transparent 70%);
+  filter: blur(100px);
+  animation: dshp-ws-drift 32s ease-in-out infinite alternate;
+}
+${root} .dshp-ws-aur-b {
+  left: 14%;
+  top: 2%;
+  width: 38vw;
+  height: 38vw;
+  background: radial-gradient(circle, var(--dshp-ws-aur-bright) 0%, var(--dshp-ws-aur-mid) 30%, transparent 70%);
+  filter: blur(60px);
+  animation: dshp-ws-drift 24s ease-in-out infinite alternate-reverse;
+}
+${root} .dshp-ws-aur-c {
+  right: 6%;
+  top: -8%;
+  width: 46vw;
+  height: 46vw;
+  background: radial-gradient(circle, var(--dshp-ws-aur-deep) 0%, transparent 70%);
+  filter: blur(80px);
+  animation: dshp-ws-drift 40s ease-in-out infinite alternate;
+}
+@keyframes dshp-ws-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(3%, -4%, 0) scale(1.08); }
+}
+@media (prefers-reduced-motion: reduce) {
+  ${root} .dshp-ws-aur { animation: none; }
+}
+`;
+  document.head.appendChild(style);
+  const wrap = document.createElement("div");
+  wrap.className = opts.rootClass;
+  for (const layer of ["a", "b", "c"]) {
+    const blob = document.createElement("i");
+    blob.className = "dshp-ws-aur dshp-ws-aur-" + layer;
+    wrap.appendChild(blob);
+  }
+  api.stage.appendChild(wrap);
+  return () => {
+    wrap.remove();
+    style.remove();
+  };
+}
+var auroraEffect = {
+  id: "aurora",
+  label: "\u6781\u5149\u8F89\u5149",
+  hint: "\u7EAF CSS \u4E09\u5C42\u8F89\u5149\u94FA\u6EE1\u89C6\u53E3\uFF1A\u4E0D\u5EFA\u753B\u5E03\u3001\u4E0D\u8D77\u5E27\u5FAA\u73AF\uFF0C\u4EE3\u4EF7\u4E3A\u96F6\u3002",
+  kind: "dom",
+  mount(api) {
+    return mountAuroraLayers(api, {
+      styleId: "dshp-ws-aur-flat-css",
+      rootClass: "dshp-ws-aurora-flat",
+      heightPct: 100,
+      maskImage: "linear-gradient(#000 0%, #000 62%, transparent 96%)"
+    });
+  }
+};
+
+// src/client/background-flow.ts
+var N = 720;
+var K1 = 55e-4;
+var K2 = 71e-4;
+var K3 = 38e-4;
+var S1 = 0.11;
+var S2 = 0.085;
+var S3 = 0.062;
+var SPEED = 46;
+var SPEED_SPREAD = 0.85;
+var FADE = 0.042;
+var MOUSE = { radius: 190, speed: 105, decay: 0.12 };
+var LINE_W = 1.15;
+var LINE_A = 0.6;
+var BUCKETS = 6;
+var FLOW_BASE = [0.75, 0.8, 0.9];
+var WARM_STEPS = 260;
+var WARM_DT = 1 / 30;
+var xs = new Float32Array(0);
+var ys = new Float32Array(0);
+var pxs = new Float32Array(0);
+var pys = new Float32Array(0);
+var spd = new Float32Array(0);
+var order = [];
+var colorLut = [];
+var seeded = false;
+var pull = 0;
+function heading(x, y, t) {
+  return Math.sin(x * K1 + t * S1) + Math.cos(y * K2 - t * S2) + 0.5 * Math.sin((x + y) * K3 + t * S3);
+}
+function buildColorLut(brand) {
+  const lut = [];
+  for (let i = 0; i < BUCKETS; i += 1) {
+    const k = i / (BUCKETS - 1);
+    const q = (ch, base) => {
+      const v = ch + (base - ch) * k;
+      return Math.max(0, Math.min(255, Math.round(v * 255)));
+    };
+    lut.push(
+      "rgb(" + q(brand[0], FLOW_BASE[0]) + "," + q(brand[1], FLOW_BASE[1]) + "," + q(brand[2], FLOW_BASE[2]) + ")"
+    );
+  }
+  return lut;
+}
+function seed(width, height) {
+  xs = new Float32Array(N);
+  ys = new Float32Array(N);
+  pxs = new Float32Array(N);
+  pys = new Float32Array(N);
+  spd = new Float32Array(N);
+  order = [];
+  for (let b = 0; b < BUCKETS; b += 1) order.push([]);
+  for (let i = 0; i < N; i += 1) {
+    xs[i] = Math.random() * width;
+    ys[i] = Math.random() * height;
+    pxs[i] = xs[i];
+    pys[i] = ys[i];
+    const k = 1 - SPEED_SPREAD / 2 + (hash(i, 12.9898, 43758.5453) + 0.5) * SPEED_SPREAD;
+    spd[i] = SPEED * k;
+    const b = Math.max(
+      0,
+      Math.min(BUCKETS - 1, Math.floor((k - (1 - SPEED_SPREAD / 2)) / SPEED_SPREAD * BUCKETS))
+    );
+    order[b].push(i);
+  }
+  seeded = true;
+}
+function advance(ctx, width, height, t, dt, mx, my) {
+  const r = MOUSE.radius;
+  for (let b = 0; b < BUCKETS; b += 1) {
+    ctx.beginPath();
+    let open = false;
+    for (const i of order[b]) {
+      let x = xs[i];
+      let y = ys[i];
+      const a = heading(x, y, t);
+      const v = spd[i];
+      let vx = Math.cos(a) * v;
+      let vy = Math.sin(a) * v;
+      if (pull > 1e-3) {
+        const dx = x - mx;
+        const dy = y - my;
+        const d = Math.hypot(dx, dy);
+        if (d < r && d > 1) {
+          const k = (1 - d / r) ** 3 * pull * MOUSE.speed;
+          const inv = k / d;
+          vx += -dy * inv + dx * inv * 0.2;
+          vy += dx * inv + dy * inv * 0.2;
+        }
+      }
+      x += vx * dt;
+      y += vy * dt;
+      x = (x % width + width) % width;
+      y = (y % height + height) % height;
+      const prevX = pxs[i];
+      const prevY = pys[i];
+      if (Math.abs(x - prevX) > width / 2 || Math.abs(y - prevY) > height / 2) {
+        xs[i] = x;
+        ys[i] = y;
+        pxs[i] = x;
+        pys[i] = y;
+        continue;
+      }
+      ctx.moveTo(prevX, prevY);
+      ctx.lineTo(x, y);
+      open = true;
+      xs[i] = x;
+      ys[i] = y;
+      pxs[i] = x;
+      pys[i] = y;
+    }
+    if (open) {
+      ctx.strokeStyle = colorLut[b];
+      ctx.stroke();
+    }
+  }
+}
+var flowEffect = {
+  id: "flow",
+  label: "\u6D41\u573A",
+  hint: "720 \u6761\u7A0B\u5E8F\u5316\u6D41\u7EBF\u94FA\u6EE1\u89C6\u53E3\uFF0C\u8DDF\u7740\u9F20\u6807\u62E7\u6210\u6DA1\u3002",
+  kind: "canvas",
+  mount(api) {
+    colorLut = buildColorLut(hexToRgb(api.readToken("--dsw-alias-brand-primary", ""), FLOW_BASE));
+    seeded = false;
+    pull = 0;
+    return () => {
+      xs = new Float32Array(0);
+      ys = new Float32Array(0);
+      pxs = new Float32Array(0);
+      pys = new Float32Array(0);
+      spd = new Float32Array(0);
+      order = [];
+      colorLut = [];
+      seeded = false;
+      pull = 0;
+    };
+  },
+  draw(frame) {
+    const { ctx, width, height } = frame;
+    if (width <= 0 || height <= 0) return;
+    if (!seeded) seed(width, height);
+    const mx = (frame.pointer.x * 0.5 + 0.5) * width;
+    const my = (0.5 - frame.pointer.y * 0.5) * height;
+    pull += ((frame.pointer.active ? 1 : 0) - pull) * (1 - Math.pow(MOUSE.decay, frame.dt));
+    ctx.lineCap = "round";
+    ctx.lineWidth = LINE_W;
+    const stepOnce = (time, dt) => {
+      ctx.globalAlpha = 1;
+      wash(ctx, width, height);
+      ctx.globalAlpha = LINE_A;
+      advance(ctx, width, height, time, dt, mx, my);
+    };
+    if (frame.reduced) {
+      for (let s = 0; s < WARM_STEPS; s += 1) stepOnce(s * WARM_DT, WARM_DT);
+    } else {
+      stepOnce(frame.time, frame.dt);
+    }
+    ctx.globalAlpha = 1;
+  }
+};
+function wash(ctx, width, height) {
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.fillStyle = "rgba(0,0,0," + FADE + ")";
+  ctx.fillRect(0, 0, width, height);
+  ctx.globalCompositeOperation = "source-over";
+}
+
+// src/client/background-dots.ts
+var GRID = 90;
+var FIELD = 10.8;
+var STEP = FIELD / GRID;
+var DOT_RATIO = 0.7;
+var THRESHOLD = 0.2;
+var FOCAL = 18;
+var FIT = 0.86;
+var BAND_H = 0.56;
+var SPAN = 0.62;
+var LOOSE = 0.55;
+var STAGE_GAIN = 1.4;
+var MOUSE2 = { radius: 4.9, strength: 0.5, decay: 0.2, distort: 1.1 };
+var LIGHT = { x: 2, y: 5.5, z: 6, range: 16, shadeMax: 2.79, followX: 1.05, shadeMin: 0.7 };
+var ASSEMBLY_DELAY = 0.3;
+var ASSEMBLY_DURATION = 2.5;
+var REDUCED_AT = ASSEMBLY_DELAY + ASSEMBLY_DURATION + 1;
+var GLOW_TINT = [0.2, 0.3, 0.5];
+var WARM_TINT = [1.07, 1.02, 0.94];
+var DOT_BASE = [0.75, 0.8, 0.9];
+var DOT_LIFT = 0.45;
+var WORDMARK = "HARNESS";
+var LIGHT_STEPS = 8;
+var GLOW_STEPS = 4;
+function sampleDots(fontStack) {
+  const off = document.createElement("canvas");
+  off.width = GRID;
+  off.height = GRID;
+  const g = off.getContext("2d");
+  if (!g) return [];
+  g.fillStyle = "#000";
+  g.fillRect(0, 0, GRID, GRID);
+  g.fillStyle = "#fff";
+  g.textAlign = "center";
+  g.textBaseline = "middle";
+  const ls = g;
+  let spaced = WORDMARK;
+  if ("letterSpacing" in g) {
+    ls.letterSpacing = "0.14em";
+  } else {
+    spaced = WORDMARK.split("").join(" ");
+  }
+  let size = GRID * 0.3;
+  g.font = "700 " + size.toFixed(2) + "px " + fontStack;
+  const measured = g.measureText(spaced).width;
+  if (measured > 0) {
+    size = Math.max(4, size * (GRID * FIT) / measured);
+    g.font = "700 " + size.toFixed(2) + "px " + fontStack;
+  }
+  g.fillText(spaced, GRID / 2, GRID / 2);
+  const data = g.getImageData(0, 0, GRID, GRID).data;
+  const lum = new Float32Array(GRID * GRID);
+  for (let p = 0; p < GRID * GRID; p += 1) {
+    const o = p * 4;
+    lum[p] = (0.299 * (data[o] ?? 0) + 0.587 * (data[o + 1] ?? 0) + 0.114 * (data[o + 2] ?? 0)) / 255;
+  }
+  const at = (col, row) => col < 0 || row < 0 || col >= GRID || row >= GRID ? 0 : lum[row * GRID + col] ?? 0;
+  const isolated = (col, row) => {
+    for (let dy = -2; dy <= 2; dy += 1) {
+      for (let dx = -2; dx <= 2; dx += 1) {
+        if (dx === 0 && dy === 0) continue;
+        if (at(col + dx, row + dy) > THRESHOLD) return false;
+      }
+    }
+    return true;
+  };
+  const edgeOf = (col, row) => {
+    let s = 0;
+    for (let dy = -1; dy <= 1; dy += 1) {
+      for (let dx = -1; dx <= 1; dx += 1) {
+        if (dx === 0 && dy === 0) continue;
+        if (at(col + dx, row + dy) <= THRESHOLD) s += 1;
+      }
+    }
+    return s / 8;
+  };
+  const half = GRID / 2;
+  const dots2 = [];
+  for (let row = 0; row < GRID; row += 1) {
+    for (let col = 0; col < GRID; col += 1) {
+      const l = at(col, row);
+      if (l <= THRESHOLD || isolated(col, row)) continue;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = 3 * (0.4 + 0.6 * Math.random());
+      const i = dots2.length;
+      dots2.push({
+        x: (col - half) * STEP,
+        y: (half - row) * STEP,
+        sx: Math.sin(phi) * Math.cos(theta) * r,
+        sy: Math.sin(phi) * Math.sin(theta) * r,
+        sz: Math.cos(phi) * r * 0.5,
+        lum: l,
+        edge: edgeOf(col, row),
+        size: 0.85 + Math.random() * 0.3,
+        i,
+        jx: hash(i, 12.9898, 43758.5453),
+        jy: hash(i, 78.233, 12543.123),
+        jz: hash(i, 39.425, 26711.77)
+      });
+    }
+  }
+  return dots2;
+}
+function buildColorLut2(brand) {
+  const base = [
+    brand[0] + (1 - brand[0]) * DOT_LIFT,
+    brand[1] + (1 - brand[1]) * DOT_LIFT,
+    brand[2] + (1 - brand[2]) * DOT_LIFT
+  ];
+  const lut = [];
+  for (let gi = 0; gi < GLOW_STEPS; gi += 1) {
+    const glow = gi / (GLOW_STEPS - 1) * 0.3;
+    for (let li = 0; li < LIGHT_STEPS; li += 1) {
+      const v = LIGHT.shadeMin + (LIGHT.shadeMax - LIGHT.shadeMin) * li / (LIGHT_STEPS - 1);
+      const warm = clamp01(v - 1);
+      const shade = (ch, tint, hot) => {
+        const lit = (ch + glow * tint) * v;
+        return lit * (1 + warm * (hot - 1));
+      };
+      const q = (ch) => Math.max(0, Math.min(255, Math.round(ch * 255)));
+      lut.push(
+        "rgb(" + q(shade(base[0], GLOW_TINT[0], WARM_TINT[0])) + "," + q(shade(base[1], GLOW_TINT[1], WARM_TINT[1])) + "," + q(shade(base[2], GLOW_TINT[2], WARM_TINT[2])) + ")"
+      );
+    }
+  }
+  return lut;
+}
+var dots = [];
+var colorLut2 = [];
+var mouseWX = 0;
+var mouseWY = 0;
+var strength = 0;
+var CANVAS_MASK = "linear-gradient(#000 0%, #000 58%, transparent 100%)";
+var AURORA_MASK = "linear-gradient(#000 0%, #000 30%, transparent 78%)";
+var harnessDotsEffect = {
+  id: "harness-dots",
+  label: "\u70B9\u9635\u5B57\u6807",
+  hint: "\u5B98\u7F51\u540C\u6B3E\uFF1A\u5B57\u7B26\u70B9\u9635\u62FC\u51FA HARNESS \u5B57\u6807\uFF0C\u9F20\u6807\u7ECF\u8FC7\u4F1A\u70B9\u4EAE\u3002\u53EA\u94FA\u5B57\u6807\u5E26\uFF0C\u6B63\u6587\u533A\u4E0D\u53D7\u5F71\u54CD\u3002",
+  kind: "canvas",
+  coverage: BAND_H,
+  mount(api) {
+    const fontStack = api.readToken("--dsw-font-base-16-font-family", "system-ui, sans-serif");
+    dots = sampleDots(fontStack);
+    colorLut2 = buildColorLut2(hexToRgb(api.readToken("--dsw-alias-brand-primary", ""), DOT_BASE));
+    const disposeAurora = mountAuroraLayers(api, {
+      styleId: "dshp-ws-aur-dots-css",
+      rootClass: "dshp-ws-aurora",
+      heightPct: BAND_H * 100,
+      maskImage: AURORA_MASK
+    });
+    api.canvas.style.webkitMaskImage = CANVAS_MASK;
+    api.canvas.style.maskImage = CANVAS_MASK;
+    return () => {
+      disposeAurora();
+      dots = [];
+      colorLut2 = [];
+      mouseWX = 0;
+      mouseWY = 0;
+      strength = 0;
+    };
+  },
+  draw(frame) {
+    const { ctx, width: bandW, height: bandH } = frame;
+    ctx.clearRect(0, 0, bandW, bandH);
+    if (dots.length === 0) return;
+    const scale = bandW * SPAN / (GRID * STEP);
+    const cellPx = STEP * scale;
+    const originX = bandW / 2;
+    const originY = bandH / 2;
+    const now = frame.reduced ? REDUCED_AT : frame.time;
+    mouseWX += (frame.pointer.x * bandW / scale / 2 - mouseWX) * MOUSE2.decay;
+    mouseWY += (frame.pointer.y * bandH / scale / 2 - mouseWY) * MOUSE2.decay;
+    strength += ((frame.pointer.active ? MOUSE2.strength : 0) - strength) * (1 - Math.pow(0.05, frame.dt));
+    const lin = clamp01((now - ASSEMBLY_DELAY) / ASSEMBLY_DURATION);
+    const d = 1 - Math.pow(1 - lin, 3);
+    const a = smoothstep(0, 1, d);
+    if (a <= 0) return;
+    const rx = 0.05 * Math.sin(0.08 * now * 0.7);
+    const ry = 0.1 * Math.sin(0.08 * now);
+    const cosY = Math.cos(ry);
+    const sinY = Math.sin(ry);
+    const cosX = Math.cos(rx);
+    const sinX = Math.sin(rx);
+    const floatScatter = smoothstep(0.9, 0, a);
+    const lightX = LIGHT.x + mouseWX * LIGHT.followX;
+    const waveStrength = a > 0.95 ? (a - 0.95) * 20 : 0;
+    const baseAlpha = 0.45 + 0.3 * a;
+    ctx.globalCompositeOperation = "lighter";
+    for (let n = 0; n < dots.length; n += 1) {
+      const p = dots[n];
+      if (!p) continue;
+      let x = p.sx + (p.x - p.sx) * a;
+      let y = p.sy + (p.y - p.sy) * a;
+      let z = p.sz * (1 - a);
+      const ccx = x;
+      const ccy = y;
+      const loose = LOOSE * (0.25 + 0.75 * p.edge) * a;
+      if (loose > 1e-3) {
+        x += (p.jx * 0.05 + Math.sin(now * 0.5 + p.i * 0.53) * 0.06) * loose;
+        y += (p.jy * 0.05 + Math.cos(now * 0.42 + p.i * 0.71) * 0.06) * loose;
+        z += (p.jz * 0.05 + Math.sin(now * 0.36 + p.i * 0.91) * 0.08) * loose;
+        const tail = smoothstep(0.5, 4.5, p.x) * LOOSE * a;
+        y += Math.sin(now * 1.1 - p.x * 0.7) * 0.1 * tail;
+        z += Math.cos(now * 0.9 - p.x * 0.55) * 0.06 * tail;
+      }
+      if (waveStrength > 0) {
+        const dist = Math.hypot(ccx, ccy);
+        z += Math.sin(dist * 3 - now * 1.5) * 0.06 * waveStrength * smoothstep(0, 3, dist);
+      }
+      if (a > 0.8 && strength > 1e-4) {
+        const mdx = ccx - mouseWX;
+        const mdy = ccy - mouseWY;
+        const md = Math.hypot(mdx, mdy);
+        if (md < MOUSE2.radius && md > 1e-3) {
+          const f = Math.pow(1 - md / MOUSE2.radius, 3) * ((a - 0.8) * 5) * strength;
+          const ang = Math.sin(p.i * 0.37 + now * 0.5) * MOUSE2.distort;
+          const ux = mdx / md * Math.cos(ang) - mdy / md * Math.sin(ang);
+          const uy = mdx / md * Math.sin(ang) + mdy / md * Math.cos(ang);
+          x += ux * f * 2;
+          y += uy * f * 2;
+          z += Math.sin(p.i * 1.7 + now) * f * 0.8;
+        }
+      }
+      if (floatScatter > 0) {
+        x += Math.sin(now * 0.5 + p.i * 0.1) * 0.2 * floatScatter;
+        y += Math.cos(now * 0.4 + p.i * 0.07) * 0.2 * floatScatter;
+        z += Math.sin(now * 0.3 + p.i * 0.13) * 0.15 * floatScatter;
+      }
+      y += 0.15 * Math.sin(0.4 * now);
+      const wx = x * cosY + z * sinY;
+      const wz0 = -x * sinY + z * cosY;
+      const wy = y * cosX - wz0 * sinX;
+      const wz = y * sinX + wz0 * cosX;
+      const lit = clamp01(1 - Math.hypot(wx - lightX, wy - LIGHT.y, wz - LIGHT.z) / LIGHT.range);
+      const vLight = LIGHT.shadeMin + (LIGHT.shadeMax - LIGHT.shadeMin) * lit * lit;
+      const glow = smoothstep(8, 0, Math.hypot(ccx, ccy)) * 0.3 * a;
+      const shimmer = Math.sin(now * 1.5 + ccx * 5 + ccy * 3) * 0.1 + 0.9;
+      const alpha = p.lum * (baseAlpha + glow) * shimmer * d * STAGE_GAIN;
+      if (alpha <= 4e-3) continue;
+      const persp = FOCAL / Math.max(1, FOCAL - wz);
+      const side = cellPx * DOT_RATIO * p.size * persp;
+      const gi = Math.min(GLOW_STEPS - 1, Math.max(0, Math.round(glow / 0.3 * (GLOW_STEPS - 1))));
+      const li = Math.min(
+        LIGHT_STEPS - 1,
+        Math.max(
+          0,
+          Math.round((vLight - LIGHT.shadeMin) / (LIGHT.shadeMax - LIGHT.shadeMin) * (LIGHT_STEPS - 1))
+        )
+      );
+      ctx.globalAlpha = Math.min(1, alpha);
+      ctx.fillStyle = colorLut2[gi * LIGHT_STEPS + li];
+      ctx.fillRect(
+        originX + wx * scale * persp - side / 2,
+        originY - wy * scale * persp - side / 2,
+        side,
+        side
+      );
+    }
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "source-over";
+  }
+};
+
+// src/client/background.ts
+var STAGE_ID = "dshp-ws-ambient";
+var STYLE_ID = "dshp-ws-ambient-css";
+var CANVAS_PREFIX = "dshp-ws-ambient-";
+var FRAME_MS = 1e3 / 30;
+var MAX_DPR = 1.5;
+var RESIZE_MS = 180;
+var SHELL_KEEP = 0.6;
+var RAIL_PROBE = [0.02, 0.5];
+var SHELL_PROBES = [
+  [0.6, 0.5],
+  [0.5, 0.03],
+  [0.5, 0.93]
+];
+var SHELL_MIN_FILL = 0.4;
+var RAIL_MAX_WIDTH = 380;
+var RAIL_MAX_WIDTH_FILL = 0.3;
+var RAIL_EDGE_TOLERANCE = 16;
+var SHELL_SCAN_MS = 300;
+function clamp01(v) {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+function smoothstep(edge0, edge1, x) {
+  const t = clamp01((x - edge0) / (edge1 - edge0));
+  return t * t * (3 - 2 * t);
+}
+function hash(i, k, c) {
+  const s = Math.sin(i * k) * c;
+  return s - Math.floor(s) - 0.5;
+}
+function readToken(name, fallback) {
+  try {
+    const v = getComputedStyle(document.body).getPropertyValue(name).trim();
+    return v.length > 0 ? v : fallback;
+  } catch {
+    return fallback;
+  }
+}
+function hexToRgb(hex, fallback) {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m || !m[1]) return [fallback[0], fallback[1], fallback[2]];
+  const n = parseInt(m[1], 16);
+  return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255];
+}
+function parseRgbColor(value) {
+  const m = /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:[,\s/]+([\d.]+%?))?\s*\)$/.exec(value.trim());
+  if (!m) return null;
+  const raw = m[4];
+  const alpha = raw === void 0 ? 1 : raw.endsWith("%") ? parseFloat(raw) / 100 : parseFloat(raw);
+  return [Number(m[1]), Number(m[2]), Number(m[3]), alpha];
+}
+var STAGE_CSS = `
+#${STAGE_ID} {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  contain: strict;
+}
+#${STAGE_ID} > canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+}
+`;
+function mountStage(effect) {
+  const reduced = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const style = document.createElement("style");
+  style.id = STYLE_ID;
+  style.textContent = STAGE_CSS;
+  document.head.appendChild(style);
+  const stage = document.createElement("div");
+  stage.id = STAGE_ID;
+  stage.setAttribute("aria-hidden", "true");
+  document.body.appendChild(stage);
+  const root = document.getElementById("root");
+  const rootPrevPosition = root ? root.style.position : "";
+  const rootPrevZIndex = root ? root.style.zIndex : "";
+  if (root) {
+    root.style.position = "relative";
+    root.style.zIndex = "1";
+  }
+  const shellPrev = /* @__PURE__ */ new Map();
+  const isShellFace = (rect, kind) => {
+    if (kind === "rail") {
+      return rect.left <= RAIL_EDGE_TOLERANCE && rect.height >= window.innerHeight * SHELL_MIN_FILL && rect.width > 0 && rect.width <= Math.max(RAIL_MAX_WIDTH, window.innerWidth * RAIL_MAX_WIDTH_FILL);
+    }
+    return rect.width >= window.innerWidth * SHELL_MIN_FILL && rect.height >= window.innerHeight * SHELL_MIN_FILL;
+  };
+  const soften = (el) => {
+    if (shellPrev.has(el)) return;
+    const own = parseRgbColor(getComputedStyle(el).backgroundColor);
+    if (!own || own[3] <= SHELL_KEEP) return;
+    shellPrev.set(el, el.style.backgroundColor);
+    el.style.backgroundColor = "rgba(" + own[0] + "," + own[1] + "," + own[2] + "," + SHELL_KEEP + ")";
+  };
+  const softenShells = () => {
+    if (!root) return;
+    const sweep = (x, y, kind) => {
+      let el = document.elementFromPoint(x, y);
+      while (el && el !== root && root.contains(el)) {
+        if (el instanceof HTMLElement && isShellFace(el.getBoundingClientRect(), kind)) {
+          soften(el);
+        }
+        el = el.parentElement;
+      }
+    };
+    for (const [fx, fy] of SHELL_PROBES) sweep(window.innerWidth * fx, window.innerHeight * fy, "shell");
+    sweep(window.innerWidth * RAIL_PROBE[0], window.innerHeight * RAIL_PROBE[1], "rail");
+  };
+  softenShells();
+  let shellTimer = null;
+  const shellObserver = root && typeof MutationObserver === "function" ? new MutationObserver(() => {
+    if (shellTimer !== null) return;
+    shellTimer = window.setTimeout(() => {
+      shellTimer = null;
+      softenShells();
+    }, SHELL_SCAN_MS);
+  }) : null;
+  if (shellObserver && root) shellObserver.observe(root, { childList: true, subtree: true });
+  const restoreShells = () => {
+    shellObserver?.disconnect();
+    if (shellTimer !== null) window.clearTimeout(shellTimer);
+    for (const [el, prev] of shellPrev) el.style.backgroundColor = prev;
+    shellPrev.clear();
+  };
+  const cleanupDom = () => {
+    restoreShells();
+    stage.remove();
+    style.remove();
+    if (root) {
+      root.style.position = rootPrevPosition;
+      root.style.zIndex = rootPrevZIndex;
+    }
+  };
+  if (effect.kind === "dom") {
+    const disposeEffect2 = effect.mount({ stage, readToken });
+    return () => {
+      disposeEffect2();
+      cleanupDom();
+    };
+  }
+  const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+  const coverage = effect.coverage ?? 1;
+  const canvas = document.createElement("canvas");
+  canvas.id = CANVAS_PREFIX + effect.id;
+  canvas.style.height = coverage * 100 + "%";
+  const g2d = canvas.getContext("2d", { alpha: true });
+  if (!g2d) return cleanupDom;
+  const ctx = g2d;
+  const disposeEffect = effect.mount({ stage, canvas, readToken });
+  stage.appendChild(canvas);
+  let width = 0;
+  let height = 0;
+  const layout = () => {
+    width = window.innerWidth;
+    height = Math.max(1, Math.round(window.innerHeight * coverage));
+    canvas.width = Math.max(1, Math.round(width * dpr));
+    canvas.height = Math.max(1, Math.round(height * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  layout();
+  let raf = 0;
+  let disposed = false;
+  let prevStamp = 0;
+  let lastFrame = 0;
+  let t = 0;
+  let ndcX = 0;
+  let ndcY = 0;
+  let pointerActive = false;
+  let resizeTimer = 0;
+  const paint = (time, dt) => {
+    effect.draw({
+      ctx,
+      width,
+      height,
+      dpr,
+      time,
+      dt,
+      pointer: { x: ndcX, y: ndcY, active: pointerActive },
+      reduced
+    });
+  };
+  const onMove = (e) => {
+    const r = canvas.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) return;
+    ndcX = (e.clientX - r.left) / r.width * 2 - 1;
+    ndcY = -((e.clientY - r.top) / r.height * 2 - 1);
+    pointerActive = true;
+  };
+  const onLeave = () => {
+    pointerActive = false;
+  };
+  const onVisibility = () => {
+    if (document.hidden) pointerActive = false;
+  };
+  const onResize = () => {
+    if (resizeTimer !== 0) window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(() => {
+      resizeTimer = 0;
+      layout();
+      if (disposed || raf === 0) paint(t, 0);
+    }, RESIZE_MS);
+  };
+  const step = (stamp) => {
+    if (disposed) return;
+    raf = window.requestAnimationFrame(step);
+    if (stamp - lastFrame < FRAME_MS) return;
+    lastFrame = stamp - (stamp - lastFrame) % FRAME_MS;
+    if (document.visibilityState === "hidden") return;
+    const dt = prevStamp === 0 ? FRAME_MS / 1e3 : Math.min(0.1, (stamp - prevStamp) / 1e3);
+    prevStamp = stamp;
+    t += dt;
+    paint(t, dt);
+  };
+  if (reduced) {
+    paint(0, 0);
+  } else {
+    window.addEventListener("mousemove", onMove, { passive: true });
+    window.addEventListener("mouseleave", onLeave);
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("resize", onResize, { passive: true });
+    raf = window.requestAnimationFrame(step);
+  }
+  return () => {
+    disposed = true;
+    if (raf !== 0) window.cancelAnimationFrame(raf);
+    if (resizeTimer !== 0) window.clearTimeout(resizeTimer);
+    window.removeEventListener("mousemove", onMove);
+    window.removeEventListener("mouseleave", onLeave);
+    document.removeEventListener("visibilitychange", onVisibility);
+    window.removeEventListener("resize", onResize);
+    disposeEffect();
+    cleanupDom();
+  };
+}
+var BACKGROUNDS = {
+  [harnessDotsEffect.id]: harnessDotsEffect,
+  [auroraEffect.id]: auroraEffect,
+  [flowEffect.id]: flowEffect
+};
+var THEME_DEFAULT_EFFECT = {
+  "harness-office": harnessDotsEffect.id
+};
+var BACKGROUND_OPTIONS = Object.values(
+  BACKGROUNDS
+).map((effect) => ({ id: effect.id, label: effect.label, hint: effect.hint }));
+function resolveBackgroundEffectId(themeId, backgroundId) {
+  if (backgroundId.length > 0) return backgroundId;
+  return Object.hasOwn(THEME_DEFAULT_EFFECT, themeId) ? THEME_DEFAULT_EFFECT[themeId] : "";
+}
+var currentDispose = null;
+var mountedEffectId = "";
+function mountBackground(effectId) {
+  disposeBackground();
+  if (effectId.length === 0) return;
+  if (!Object.hasOwn(BACKGROUNDS, effectId)) return;
+  const effect = BACKGROUNDS[effectId];
+  try {
+    currentDispose = mountStage(effect);
+    mountedEffectId = effectId;
+  } catch (e) {
+    currentDispose = null;
+    mountedEffectId = "";
+    console.error("[dshp-web-style] \u80CC\u666F\u6548\u679C\u6302\u8F7D\u5931\u8D25\uFF1A" + String(e?.message ?? e));
+  }
+}
+function disposeBackground() {
+  mountedEffectId = "";
+  if (!currentDispose) return;
+  const dispose = currentDispose;
+  currentDispose = null;
+  try {
+    dispose();
+  } catch (e) {
+    console.error("[dshp-web-style] \u80CC\u666F\u6548\u679C\u6536\u56DE\u5931\u8D25\uFF1A" + String(e?.message ?? e));
+  }
+}
+function refreshBackground() {
+  if (mountedEffectId.length === 0) return;
+  const effect = Object.hasOwn(BACKGROUNDS, mountedEffectId) ? BACKGROUNDS[mountedEffectId] : null;
+  if (!effect || effect.kind !== "canvas") return;
+  mountBackground(mountedEffectId);
+}
+
 // src/client/md3.ts
 function hexToHsl(hex) {
   const r = parseInt(hex.slice(1, 3), 16) / 255;
@@ -115,10 +924,10 @@ function extractDominant(data) {
   return rgbToHex(best.r / best.count, best.g / best.count, best.b / best.count);
 }
 function extractPalette(data) {
-  const seed = extractDominant(data);
-  const seedHsl = hexToHsl(seed);
+  const seed2 = extractDominant(data);
+  const seedHsl = hexToHsl(seed2);
   return {
-    accent: seed,
+    accent: seed2,
     companionA: hslToHex(seedHsl.h + 60, Math.min(0.85, seedHsl.s), 0.52),
     companionB: hslToHex(seedHsl.h, Math.min(0.5, seedHsl.s * 0.45), 0.5)
   };
@@ -255,8 +1064,8 @@ function tone(pal, t) {
 function isPalettes(v) {
   return v !== null && typeof v === "object" && "primary" in v;
 }
-function buildM3Palettes(seed) {
-  const { h, s } = hexToHsl(seed);
+function buildM3Palettes(seed2) {
+  const { h, s } = hexToHsl(seed2);
   const clampS = (v) => Math.min(0.9, Math.max(0, v));
   const defs = {
     primary: { h, s: clampS(Math.max(s, 0.45)) },
@@ -267,7 +1076,7 @@ function buildM3Palettes(seed) {
     error: { h: 4, s: 0.72 }
   };
   const pal = {
-    seed,
+    seed: seed2,
     primary: {},
     secondary: {},
     tertiary: {},
@@ -286,7 +1095,7 @@ function buildM3Scheme(pal, scheme) {
   const P = pal.primary;
   const S = pal.secondary;
   const T = pal.tertiary;
-  const N = pal.neutral;
+  const N2 = pal.neutral;
   const NV = pal.neutralVariant;
   const E = pal.error;
   if (scheme === "dark") {
@@ -307,24 +1116,24 @@ function buildM3Scheme(pal, scheme) {
       onError: tone(E, 20),
       errorContainer: tone(E, 30),
       onErrorContainer: tone(E, 90),
-      background: tone(N, 6),
-      onBackground: tone(N, 90),
-      surfaceDim: tone(N, 6),
-      surface: tone(N, 6),
-      surfaceBright: tone(N, 24),
-      surfaceContainerLowest: tone(N, 4),
-      surfaceContainerLow: tone(N, 10),
-      surfaceContainer: tone(N, 12),
-      surfaceContainerHigh: tone(N, 17),
-      surfaceContainerHighest: tone(N, 22),
-      onSurface: tone(N, 90),
+      background: tone(N2, 6),
+      onBackground: tone(N2, 90),
+      surfaceDim: tone(N2, 6),
+      surface: tone(N2, 6),
+      surfaceBright: tone(N2, 24),
+      surfaceContainerLowest: tone(N2, 4),
+      surfaceContainerLow: tone(N2, 10),
+      surfaceContainer: tone(N2, 12),
+      surfaceContainerHigh: tone(N2, 17),
+      surfaceContainerHighest: tone(N2, 22),
+      onSurface: tone(N2, 90),
       onSurfaceVariant: tone(NV, 80),
       outline: tone(NV, 60),
       outlineVariant: tone(NV, 30),
       shadow: "#000000",
       scrim: "#000000",
-      inverseSurface: tone(N, 90),
-      inverseOnSurface: tone(N, 20),
+      inverseSurface: tone(N2, 90),
+      inverseOnSurface: tone(N2, 20),
       inversePrimary: tone(P, 40),
       surfaceTint: tone(P, 80)
     };
@@ -346,31 +1155,31 @@ function buildM3Scheme(pal, scheme) {
     onError: tone(E, 100),
     errorContainer: tone(E, 90),
     onErrorContainer: tone(E, 10),
-    background: tone(N, 99),
-    onBackground: tone(N, 10),
-    surfaceDim: tone(N, 87),
-    surface: tone(N, 99),
-    surfaceBright: tone(N, 100),
-    surfaceContainerLowest: tone(N, 100),
-    surfaceContainerLow: tone(N, 96),
-    surfaceContainer: tone(N, 94),
-    surfaceContainerHigh: tone(N, 92),
-    surfaceContainerHighest: tone(N, 90),
-    onSurface: tone(N, 10),
+    background: tone(N2, 99),
+    onBackground: tone(N2, 10),
+    surfaceDim: tone(N2, 87),
+    surface: tone(N2, 99),
+    surfaceBright: tone(N2, 100),
+    surfaceContainerLowest: tone(N2, 100),
+    surfaceContainerLow: tone(N2, 96),
+    surfaceContainer: tone(N2, 94),
+    surfaceContainerHigh: tone(N2, 92),
+    surfaceContainerHighest: tone(N2, 90),
+    onSurface: tone(N2, 10),
     onSurfaceVariant: tone(NV, 30),
     outline: tone(NV, 50),
     outlineVariant: tone(NV, 80),
     shadow: "#000000",
     scrim: "#000000",
-    inverseSurface: tone(N, 20),
-    inverseOnSurface: tone(N, 95),
+    inverseSurface: tone(N2, 20),
+    inverseOnSurface: tone(N2, 95),
     inversePrimary: tone(P, 80),
     surfaceTint: tone(P, 40)
   };
 }
-function buildM3ExportCss(seed) {
-  const pal = buildM3Palettes(seed);
-  const lines = [":root {", "  /* seed: " + seed + " \xB7 Material You (MD3) \xB7 exported by dshp-web-style */"];
+function buildM3ExportCss(seed2) {
+  const pal = buildM3Palettes(seed2);
+  const lines = [":root {", "  /* seed: " + seed2 + " \xB7 Material You (MD3) \xB7 exported by dshp-web-style */"];
   for (const key of M3_REF_ORDER) {
     for (const t of M3_TONES)
       lines.push("  --md-ref-palette-" + M3_REF_NAMES[key] + t + ": " + tone(pal[key], t) + ";");
@@ -514,10 +1323,10 @@ function buildPhotoTokens(input, scheme) {
     "--dsw-font-mono": '"Berkeley Mono", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace'
   };
 }
-function buildWallpaperTheme(seed) {
-  const palettes = buildM3Palettes(seed);
+function buildWallpaperTheme(seed2) {
+  const palettes = buildM3Palettes(seed2);
   return {
-    seed,
+    seed: seed2,
     palettes,
     dark: buildPhotoTokens(palettes, "dark"),
     light: buildPhotoTokens(palettes, "light")
@@ -759,10 +1568,14 @@ function applyRadius(radius) {
     document.head.appendChild(style);
   }
 }
+function disposeRadius() {
+  document.getElementById(CSS_ID)?.remove();
+}
 
 // src/client/state.ts
 var state = {
   desiredId: "",
+  desiredBackground: "",
   photoTheme: null,
   desiredRadius: -1,
   overrideDispose: null,
@@ -819,6 +1632,13 @@ var THEMES = [
     label: "Sakura \u6A31\u7C89",
     desc: "\u6A31\u767D #fff9fa + \u6A31\u7C89 #e75480",
     swatch: ["#fff9fa", "#fbeef2", "#e75480", "#432635"]
+  },
+  {
+    id: "harness-office",
+    colorScheme: "dark",
+    label: "Harness \u5B98\u7F51",
+    desc: "\u66DC\u9ED1 #0a0a0a + \u5B98\u7F51\u84DD #6799fe \xB7 \u53EF\u4EA4\u4E92\u70B9\u9635",
+    swatch: ["#0a0a0a", "#1a3870", "#6799fe", "#ffffff"]
   }
 ];
 var BUILTIN_LABELS = {
@@ -871,17 +1691,16 @@ function applyThemeChoice(theme, bridge, themeId) {
       state.overrideDispose();
       state.overrideDispose = null;
     }
+    disposeBackground();
     if (!themeId) {
+      mountBackgroundForTheme();
       renderBodyGradient(theme);
       return;
     }
     if (themeId === PHOTO_ID) {
       const pair = buildPhotoPair();
-      if (!pair) {
-        renderBodyGradient(theme);
-        return;
-      }
-      state.overrideDispose = theme.overrideTokens(OVERRIDE_SOURCE, pair);
+      if (pair) state.overrideDispose = theme.overrideTokens(OVERRIDE_SOURCE, pair);
+      mountBackgroundForTheme();
       renderBodyGradient(theme);
       return;
     }
@@ -889,6 +1708,7 @@ function applyThemeChoice(theme, bridge, themeId) {
     if (!t) {
       console.warn("[dshp-web-style] \u672A\u77E5\u4E3B\u9898 id\uFF0C\u5DF2\u56DE\u5B98\u65B9: " + themeId);
       state.desiredId = "";
+      mountBackgroundForTheme();
       renderBodyGradient(theme);
       return;
     }
@@ -907,6 +1727,7 @@ function applyThemeChoice(theme, bridge, themeId) {
         state.overrideDispose = theme.overrideTokens(OVERRIDE_SOURCE, buildPair(t, tokens));
         const pref = theme.getTheme().preference;
         if (pref !== t.colorScheme) theme.setTheme(t.colorScheme);
+        mountBackgroundForTheme();
       } catch (e) {
         console.error("[dshp-web-style] \u4E3B\u9898\u8986\u76D6\u5931\u8D25: " + String(e?.message ?? e));
       }
@@ -918,6 +1739,13 @@ function applyThemeChoice(theme, bridge, themeId) {
     console.error("[dshp-web-style] \u4E3B\u9898\u8986\u76D6\u5931\u8D25: " + String(e?.message ?? e));
   }
 }
+function mountBackgroundForTheme() {
+  mountBackground(resolveBackgroundEffectId(state.desiredId, state.desiredBackground));
+}
+function applyBackgroundChoice(backgroundId) {
+  state.desiredBackground = backgroundId;
+  mountBackgroundForTheme();
+}
 function restoreFromHost(theme, bridge) {
   bridge.state().then((reply) => {
     if (!reply || reply.ok !== true) return;
@@ -926,8 +1754,9 @@ function restoreFromHost(theme, bridge) {
     if (pal && typeof pal.accent === "string") {
       state.photoTheme = buildWallpaperTheme(pal.seed ?? pal.accent);
     }
+    state.desiredBackground = typeof reply.backgroundId === "string" ? reply.backgroundId : "";
     state.desiredId = saved;
-    if (saved.length > 0) applyThemeChoice(theme, bridge, saved);
+    applyThemeChoice(theme, bridge, saved);
     applyRadius(reply.radius);
     state.desiredRadius = reply.radius && typeof reply.radius.global === "number" ? reply.radius.global : -1;
   }).catch((e) => {
@@ -942,6 +1771,9 @@ function disposeOverride() {
     }
     state.overrideDispose = null;
   }
+  disposeBackground();
+  document.getElementById(BODY_GRADIENT_ID)?.remove();
+  disposeRadius();
 }
 
 // src/client/api.ts
@@ -1071,6 +1903,7 @@ function GallerySection({ ctx, theme, bridge }) {
   const [, setRevision] = (0, import_react.useState)(-1);
   const [notice, setNotice] = (0, import_react.useState)(null);
   const [radiusCfg, setRadiusCfg] = (0, import_react.useState)(state.desiredRadius);
+  const [backgroundCfg, setBackgroundCfg] = (0, import_react.useState)(state.desiredBackground);
   const [query, setQuery] = (0, import_react.useState)("");
   const [schemeFilter, setSchemeFilter] = (0, import_react.useState)("all");
   const [photoBusy, setPhotoBusy] = (0, import_react.useState)(false);
@@ -1079,6 +1912,7 @@ function GallerySection({ ctx, theme, bridge }) {
       const s = snap2;
       setRevision(s && typeof s.revision === "number" ? s.revision : 0);
       if (typeof state.renderBodyGradient === "function") state.renderBodyGradient();
+      refreshBackground();
     }),
     []
   );
@@ -1158,22 +1992,22 @@ function GallerySection({ ctx, theme, bridge }) {
     if (!file) return;
     setPhotoBusy(true);
     paletteFromFile(file).then(function(palette) {
-      const seed = palette.accent;
-      const wt = buildWallpaperTheme(seed);
+      const seed2 = palette.accent;
+      const wt = buildWallpaperTheme(seed2);
       state.photoTheme = wt;
       state.desiredId = PHOTO_ID;
       applyThemeChoice(theme, bridge, PHOTO_ID);
       const pal = wt.palettes;
       bridge.saveConfig({
         photoPalette: {
-          accent: seed,
+          accent: seed2,
           companionA: pal.tertiary[60],
           companionB: pal.secondary[60]
         }
       }).then(function(reply) {
         setPhotoBusy(false);
         setNotice(
-          reply && reply.ok ? { err: null, ok: "\u58C1\u7EB8 MD3 \u914D\u8272\u5DF2\u751F\u6210\uFF08seed " + seed + "\uFF09\u5E76\u4FDD\u5B58\uFF1B\u4EAE/\u6697\u8DDF\u968F\u300C\u5916\u89C2\u300D\u884C" } : { err: "\u914D\u8272\u5DF2\u751F\u6548\u4F46\u4FDD\u5B58\u5931\u8D25\uFF08\u91CD\u542F\u540E\u4F1A\u4E22\u5931\u53D6\u8272\uFF09" }
+          reply && reply.ok ? { err: null, ok: "\u58C1\u7EB8 MD3 \u914D\u8272\u5DF2\u751F\u6210\uFF08seed " + seed2 + "\uFF09\u5E76\u4FDD\u5B58\uFF1B\u4EAE/\u6697\u8DDF\u968F\u300C\u5916\u89C2\u300D\u884C" } : { err: "\u914D\u8272\u5DF2\u751F\u6548\u4F46\u4FDD\u5B58\u5931\u8D25\uFF08\u91CD\u542F\u540E\u4F1A\u4E22\u5931\u53D6\u8272\uFF09" }
         );
       }).catch(function() {
         setPhotoBusy(false);
@@ -1265,8 +2099,46 @@ function GallerySection({ ctx, theme, bridge }) {
       opt[0]
     );
   });
+  const pickBackground = function(v) {
+    state.desiredBackground = v;
+    setBackgroundCfg(v);
+    applyBackgroundChoice(v);
+    bridge.saveConfig({ backgroundId: v }).then(function(reply) {
+      if (!reply || reply.ok !== true) return;
+      const echo = typeof reply.backgroundId === "string" ? reply.backgroundId : "";
+      if (echo === v) return;
+      state.desiredBackground = echo;
+      setBackgroundCfg(echo);
+      applyBackgroundChoice(echo);
+    }).catch(function() {
+    });
+  };
+  const bgNow = typeof backgroundCfg === "string" ? backgroundCfg : "";
+  const backgroundButtons = [
+    { id: "", label: "\u8DDF\u968F\u4E3B\u9898", hint: "\u4E0D\u6307\u5B9A\uFF1Aharness-office \u7528\u70B9\u9635\u5B57\u6807\uFF0C\u5176\u4F59\u4E3B\u9898\u65E0\u80CC\u666F" },
+    ...BACKGROUND_OPTIONS
+  ].map(function(opt) {
+    const active = bgNow === opt.id;
+    return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
+      "button",
+      {
+        type: "button",
+        className: cx(styles_module_css_default.radiusBtn, active ? styles_module_css_default.active : void 0),
+        "aria-pressed": active,
+        title: opt.hint,
+        onClick: function() {
+          pickBackground(opt.id);
+        },
+        children: opt.label
+      },
+      opt.id || "default"
+    );
+  });
   const topbar = /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: styles_module_css_default.topbar, children: [
     /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: styles_module_css_default.ctl, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: styles_module_css_default.ctlLabel, children: "\u80CC\u666F" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: styles_module_css_default.radiusBtns, children: backgroundButtons }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: styles_module_css_default.ctlSep }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: styles_module_css_default.ctlLabel, children: "\u5706\u89D2" }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: styles_module_css_default.radiusBtns, children: radiusButtons }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: styles_module_css_default.ctlSep }),

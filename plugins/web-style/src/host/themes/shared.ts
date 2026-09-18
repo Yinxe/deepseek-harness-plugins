@@ -57,6 +57,15 @@ export const SANS =
   '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif';
 /** Claude 的 Anthropic Sans 栈。 */
 export const CLAUDE_SANS = '"Anthropic Sans", "Arial", system-ui, -apple-system, sans-serif';
+/**
+ * Harness 官网正文栈（`--ds-font-body` = DM Sans）。字体未安装时逐级回退到
+ * system-ui / PingFang SC，只有字形会变，度量与颜色不受影响。
+ */
+export const HARNESS_SANS =
+  '"DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", "PingFang SC", sans-serif';
+/** Harness 官网代码栈（`--ds-font-mono` = Fragment Mono）。 */
+export const HARNESS_MONO =
+  '"Fragment Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", monospace';
 
 /** UI 文本字体 token 前缀集合（base-16 / l-20 / … / xxxs-strong-11）。 */
 export const TEXT_STYLE_KEYS: string[] = [

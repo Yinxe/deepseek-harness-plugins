@@ -44,6 +44,8 @@ export interface RadiusConfig {
 export interface StateReply {
   ok?: boolean;
   themeId?: string;
+  /** 背景效果 id；空串 = 跟随主题默认 */
+  backgroundId?: string;
   /** seed 为旧数据兼容字段（新数据 seed 恒等于 accent），读取时二者取一 */
   photoPalette?: (PhotoPalette & { seed?: string }) | null;
   radius?: RadiusConfig;
@@ -67,6 +69,7 @@ export type SaveReply = StateReply;
 export interface ConfigPatch {
   radius?: RadiusConfig;
   photoPalette?: PhotoPalette | null;
+  backgroundId?: string;
 }
 
 /** 主题覆盖层 pair：每个 token 一份 {light, dark}。 */

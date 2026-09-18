@@ -491,7 +491,7 @@ assert.equal(
 assert.ok(hasText(wideTree, 'DeepSeek 官方'), '宽栏按钮上应当有供应商名');
 assert.ok(hasText(wideTree, '91%'), '宽栏按钮上应当有按钮模板算出的数值');
 
-// 窄栏（56px 轨道）：名字与数值都要收起来，只留图标 + 环
+// 窄栏（56px 轨道）：名字与数值都要收起来，只留表盘（环 + 环心里的供应商图标）
 const railTree = deepRender(sidebarReg.component({ wide: false }));
 assert.equal(hasText(railTree, 'DeepSeek 官方'), false, '窄栏里不该有供应商名（交给 tooltip）');
 assert.equal(hasText(railTree, '91%'), false, '窄栏里不该有比例文字（交给 tooltip）');
@@ -504,7 +504,7 @@ assert.equal(
   collect(railTree, (node) => node.type === 'svg' && node.props?.['data-provider-icon'] === 'deepseek')
     .length,
   1,
-  '窄栏里仍要带供应商图标（36px 圆：图标 + 环并排）',
+  '窄栏仍要带供应商图标（36px 圆：环当表盘外圈，图标居中在环心）',
 );
 const arc = collect(
   ringSvg,
@@ -770,6 +770,6 @@ assert.match(
 console.log(
   `宿主桥集成冒烟通过：${String(byOwner.length)} 张统计卡进框架注册表（0 个活动栏图标），` +
     `侧边栏按钮由 provider 模板自由渲染（图表一直在 + 数值位按开关换余额/百分比 + 图标），` +
-    `控件画在供应商自己的卡片里（Goat 的余额开关 + 5h/1w/1m）、窄栏只留图标 + 主图形、` +
+    `控件画在供应商自己的卡片里（Goat 的余额开关 + 5h/1w/1m）、窄栏是一枚表盘（环当外圈 + 图标居中环心）、` +
     `极简模式收按钮、自动刷新判据只看 refreshSec、退化路径正常`,
 );

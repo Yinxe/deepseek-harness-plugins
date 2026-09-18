@@ -21,9 +21,20 @@ export const PHOTO_THEME_ID = 'photo:custom';
 /** 本插件支持的全部主题 id：主题目录 + 虚拟 photo:custom。未知 id 视为空（回内置）。 */
 const KNOWN_THEME_IDS: Set<string> = new Set([...THEME_IDS, PHOTO_THEME_ID]);
 
+/**
+ * 背景效果 id 白名单。真源是 client 侧登记表（`src/client/background.ts` 的 BACKGROUNDS），
+ * 这里独立列一份是因为持久化校验必须在 Host 做（红线：外部输入要消毒），而两半是两个 bundle、
+ * 没有共享模块。scripts/check-themes.mjs 会钉住「每个 id 都出现在 client 产物里」，
+ * 漏登记或漏构建当场失败。
+ */
+export const BACKGROUND_IDS = ['harness-dots', 'aurora', 'flow'] as const;
+
+const KNOWN_BACKGROUND_IDS: Set<string> = new Set<string>(BACKGROUND_IDS);
+
 /** 默认值（settings base 层）。 */
 export const DEFAULT_CONFIG: StyleConfig = {
   themeId: '',
+  backgroundId: '',
   photoPalette: null,
   radius: { global: -1 },
   // 背景壁纸（wallpaper.*）与毛玻璃（glass.*）是已退役的旧特性：
@@ -36,6 +47,7 @@ export const DEFAULT_CONFIG: StyleConfig = {
 
 export const ConfigSchema: any = z.object({
   themeId: z.string().default(''),
+  backgroundId: z.string().default(''),
   photoPalette: z
     .union([
       z.object({
@@ -66,6 +78,13 @@ export function sanitizeThemeId(value: unknown): string {
   if (typeof value !== 'string') return '';
   const v = value.trim();
   return KNOWN_THEME_IDS.has(v) ? v : '';
+}
+
+/** 背景效果 id：白名单内才收，其余一律退回「跟随主题」（空串）。 */
+export function sanitizeBackgroundId(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  const v = value.trim();
+  return KNOWN_BACKGROUND_IDS.has(v) ? v : '';
 }
 
 /** 壁纸调色盘：必须三个 #rrggbb；非法与「显式 null」都返回 null（调用方需自行区分）。 */
@@ -103,6 +122,10 @@ export function sanitizePatchConfig(raw: unknown): StyleConfigPatch | null {
   let touched = false;
   if (typeof raw['themeId'] === 'string') {
     out.themeId = sanitizeThemeId(raw['themeId']);
+    touched = true;
+  }
+  if (typeof raw['backgroundId'] === 'string') {
+    out.backgroundId = sanitizeBackgroundId(raw['backgroundId']);
     touched = true;
   }
   if (Object.hasOwn(raw, 'photoPalette')) {

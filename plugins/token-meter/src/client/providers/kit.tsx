@@ -37,6 +37,7 @@ import type { PrefsApi } from '../quota-prefs.js';
 import { QuotaRing } from '../QuotaRing.js';
 import styles from '../styles.module.css';
 import type { ErrorInfo, QuotaBilling, QuotaWindow, VendorSnapshot } from '../types.js';
+import { RAIL_ICON } from './templates.js';
 import type { QuotaRingSpec, QuotaTone, ButtonVariant } from './templates.js';
 import { toneOfPct, windowPct } from './templates.js';
 
@@ -156,7 +157,7 @@ export interface ProviderUIKit {
 export interface ButtonLayoutProps {
   /** 哪一档（`wide` 显示文字，`rail`/`row` 只显示主图形）。 */
   variant: ButtonVariant;
-  /** 主图形：环 / 图标 / 迷你条 / 任意节点（窄栏与切换行只显示它）。 */
+  /** 主图形：环 / 图标 / 迷你条 / 任意节点（窄栏当表盘外圈，切换行只显示它）。 */
   leading: ReactNode;
   /** 供应商名（仅宽栏显示）。 */
   name?: string | undefined;
@@ -164,19 +165,18 @@ export interface ButtonLayoutProps {
   value?: string | undefined;
   /** 数值的色调（`bad` 变红等）；与环的档位同源。 */
   tone?: QuotaTone | undefined;
-  /** 供应商图标名（仅宽栏显示，放在主图形之前）。 */
+  /** 供应商图标名（宽栏放在主图形之前；窄栏居中在表盘环心，见 `RAIL_ICON`）。 */
   icon?: string | undefined;
   /**
-   * 窄栏（56px 轨道）专用内容；缺省 = 「供应商图标 + `leading`」并排。
+   * 窄栏（56px 轨道）专用内容；缺省 = **表盘**（`leading` 那枚环当外圈 + 供应商图标居中在环心）。
    *
-   * 之所以要它：窄栏里有些画法需要另排（例如 `balance` 指标要换成紧凑金额、
-   * 主图形尺寸更小），而宽栏那套在 36px 的圆里塞不下。
+   * 之所以要它：窄栏里有些画法需要另排（例如迷你条、余额数字），而表盘那一套放不下。
    */
   rail?: ReactNode | undefined;
   /**
    * 切换行（浮层里的供应商列表，16px 槽）专用内容；缺省用 `leading`。
    *
-   * 与 `rail` 分开是因为两者约束不同：窄栏有 36px 可以放「图标 + 环」，
+   * 与 `rail` 分开是因为两者约束不同：窄栏有 36px 可以画表盘，
    * 而切换行只有 16px —— 余额那种长内容必须在这里换成紧凑图形（环 / 图标）。
    */
   glyph?: ReactNode | undefined;
@@ -634,7 +634,8 @@ export function Chips(deps: KitDeps, props: ChipsProps): ReactNode {
  * 按钮骨架（三档位置共用的排版规则）。
  *
  * - `wide`：`[图标] 主图形 名字  …… 数值`（名字长走省略号，数值右对齐）；
- * - `rail`：只有主图形（56px 轨道里放不下文字，说明走 tooltip）；
+ * - `rail`：**表盘** —— `leading`（环 28）当外圈，供应商图标 15px 居中在环心；56px 轨道里放不下
+ *   文字，说明走 tooltip。要画别的东西（余额数字 / 迷你条）就传 `rail` 整块覆盖；
  * - `row`：只有主图形（`glyph` 优先；与浮层里其它行左对齐、同尺寸）。
  *
  * @param props - 见 {@link ButtonLayoutProps}。
@@ -642,17 +643,21 @@ export function Chips(deps: KitDeps, props: ChipsProps): ReactNode {
  */
 export function ButtonLayout(props: ButtonLayoutProps): ReactNode {
   if (props.variant === 'rail') {
-    // 窄栏：没给 `rail` 时默认「供应商图标 14 + 主图形（环 16）+ 3px 间距 = 33px」并排，塞得进 36×36 圆
+    // 窄栏 = **表盘**：`leading` 那枚环（`ringSizeOf('rail')` 给 28）当外圈，供应商图标居中在环心。
+    // 没图标（未知供应商）就只剩环。供应商要画别的东西（数字、迷你条）就显式传 `rail` 覆盖这里。
+    if (props.rail !== undefined) return <span className={styles.btnRail}>{props.rail}</span>;
+    const icon =
+      props.icon !== undefined && props.icon !== '' ? (
+        <span className={styles.btnDialCore}>
+          <ProviderIcon name={props.icon} size={RAIL_ICON} />
+        </span>
+      ) : null;
     return (
       <span className={styles.btnRail}>
-        {props.rail ?? (
-          <>
-            {props.icon !== undefined && props.icon !== '' ? (
-              <ProviderIcon name={props.icon} size={14} />
-            ) : null}
-            {props.leading}
-          </>
-        )}
+        <span className={styles.btnDial}>
+          {props.leading}
+          {icon}
+        </span>
       </span>
     );
   }
