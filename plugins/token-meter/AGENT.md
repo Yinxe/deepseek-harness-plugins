@@ -36,12 +36,16 @@
 
 ## 自检
 
-`pnpm --filter @dshp/token-meter test` = `node --check` 双 bundle + `shared/scripts/check-css-modules.mjs`（`styles.x` 拼错在类型上是合法的，这个静态检查是唯一会自动红的网）+ `scripts/check-share-tokens.mjs`（分享卡导出的 token 清单必须覆盖 `styles.module.css` 全部 `--dsw-*`——`<foreignObject>` 光栅化读不到壳层样式表，漏 token 导出图掉色）+ `scripts/check-quota-templates.mjs`（按钮模板通用语义 + 偏好袋 + 色调类护栏 9 组）+ 两个 bridge 脚本。
+`pnpm --filter @dshp/token-meter test` = `node --check` 双 bundle + `shared/scripts/check-css-modules.mjs`（`styles.x` 拼错在类型上是合法的，这个静态检查是唯一会自动红的网）+ `scripts/check-share-tokens.mjs`（分享卡导出的 token 清单必须覆盖 `styles.module.css` 全部 `--dsw-*`——`<foreignObject>` 光栅化读不到壳层样式表，漏 token 导出图掉色）+ `scripts/check-share-svg.mjs`（分享卡 SVG 组装：内联 CSS 的 XML 转义 / 往返一致）+ `scripts/check-quota-templates.mjs`（按钮模板通用语义 + 偏好袋 + 色调类护栏 9 组）+ 两个 bridge 脚本。
 
-外加三个自检（都只用 node 内建模块）：
+外加四个自检（都只用 node 内建模块）：
+
+- `scripts/check-share-svg.mjs` —— **4 组**：转义规则（裸 `<`/`&`/`>` 变实体、`&` 先换所以不会二次转义）、XML 非法字符进不了 `<style>`（范围语法 / `content:"<&>"` / 构造 `</style>` 闭合都被挡住且解码回原文逐字节相同）、**拿 `lib/client.js` 里那份真实内联 CSS 再走一遍组装**（XML 合法 + 解码逐字节还原；只「能加载」不够，`&lt;` 不解码会让容器查询整条静默失效）、组装只此一处（`SharePanel` 必须调 `shareSvgDocument`，不许把 `collectShareCss()` 原样拼进 `<style>`）。抓的是「下载 / 复制一张图都出不来」或「图出来了但样式是塌的」这两类只能在浏览器里点导出才现形的问题。
 
 - `scripts/check-quota-templates.mjs` —— **9 组**：`toneOfPct` 两条线（70 / 90）、`clampPct` 非数字返回 `null`、`worstWindowPct` 坏数据跳过、`balanceText` 币种与「上游说不可用」、`defaultRingSpec`、`failureRingSpec` 红 / 黄两档、**配色护栏**（额度渲染路径里出现任何 `#rrggbb` 字面量就红 —— 颜色一律 `var(--dsw-alias-*)`）、**供应商偏好袋**（作用域隔离：另一家读不到；同一 vendor 每次拿到同一个 scope 引用；订阅 / 退订；非法键与非法值被忽略；写空串 = 删键；`prune` 清孤儿）、**色调修饰类不许有裸规则**（只允许颜色类声明，否则报错并指出具体声明）。抓的是「小数字写错也看不出来」「换主题颜色不动」「偏好静默坏掉」「同名类把布局泄漏到进度条上」这四类问题。
 - `scripts/check-widget-bridge.mjs` —— 统计族宿主 id 编码（**7 组**）：**合法 / 稳定 / 不撞车**、`stats:*` 可反解、`isFloatId` 只认统计族（`peak` / `quota:*` 这类旧 id 必须为 `false`）、标题表、尺寸表 5 族且不越框架地板。不合法 → 宿主 `register()` 直接抛；不稳定 → 每次刷新布局重置；撞车 → 一张卡凭空消失。
 - `scripts/check-widget-kit-bridge.mjs` —— **集成冒烟**：把本插件真实的 `lib/client.js` 挂到 `@dshp/widget-kit` 真实的 `lib/client.js` 发布的服务上（无浏览器），断言 ① 顶层 `inject` 不含 `widgets`（写了就没装框架的机器上整个插件不激活）② 注册表里恰好 **5 张统计卡**、且**0 个带活动栏图标的描述符**、没有 popover ③ 描述符全部 `trayIcon: false` + 有 `content.render` + 尺寸逐族 ④ 侧边栏按钮真的注册进 `sidebar.footer.action`：宽栏深渲染后有**供应商图标 svg**（`data-provider-icon=deepseek`）+ 名字 + 数值 `91%`，窄栏是一枚**表盘**（环 28 当外圈 + 供应商图标 15 居中在环心；无名字 / 无比例文字），环取自 DeepSeek 的按钮模板（快照 充值 100 / 余额 9.06 → `bad` 档），详情模板产出「账户余额」块 ⑤ **偏好控件在供应商自己的卡片里**：详情里恰好 1 个 `role="radiogroup"`（含 `5h/1w/1m` 三项）与 1 个 `input[type=checkbox]`；先写 `localStorage` 的 `tm-quota-prefs` 再启动 bundle，`prefs.window=5h|weekly|monthly` → 按钮分别显示 `20%|55%|92%`，勾上开关 → 数值位变 `$12.34` 且**环仍在**（百分比消失）；点选项 / 勾开关都写进 `localStorage`，重开一份 bundle（≈刷新页面）仍读得到 ⑥ `open`/`close` 通 ⑦ 卸载不留注册 ⑧ 没有服务时侧边栏按钮仍注册。产物缺失会提示先 `pnpm -r build`。
 
 **分享卡的内联样式来自「已注入的那条 `<style>`」**：CSS Module 化之后样式表文本不再是一个导出（类名也被哈希了），而分享卡是把**真实 DOM** 序列化进 `<foreignObject>`——里面元素的 class 是哈希名，所以内联的样式表也必须是哈希后的那一份。`SharePanel.collectShareCss()` 因此从 `document.querySelector('style[data-plugin-css^="@dshp/token-meter/"]')` 取文本（取不到退化成空串），**不要**改回「import 一份 CSS 字符串」。
+
+**取到的是 CSS 原文，拼进 `<style>` 前必须 XML 转义**（`share-svg.ts` 的 `shareSvgDocument()` / `xmlEscapeText()`）：SVG 是 XML 文档，而压缩后的样式表里带着容器查询的**范围语法**（`@container i1tZMq_tmc (width<=1320px)`，产物里 16 处）——一个裸 `<` 就让整份文档解析失败，下载与复制**同时**报「SVG 渲染失败」（0.13.1 修的就是这个：CSS Module 迁移前内联的是未压缩文本，所以那时踩不到）。转义必须是 XML 实体转义，不是删字符 / 不去转义：`<style>` 在 XML 里是普通元素，实体会被解码回同一个字符，CSS 文本内容与原文逐字节一致，容器查询照常生效。

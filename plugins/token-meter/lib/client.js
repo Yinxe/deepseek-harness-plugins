@@ -37,7 +37,7 @@ __export(client_exports, {
 module.exports = __toCommonJS(client_exports);
 
 // <define:__DSHP_TOKEN_METER_PKG__>
-var define_DSHP_TOKEN_METER_PKG_default = { name: "@dshp/token-meter", version: "0.13.0", repo: "github.com/Yinxe/deepseek-harness-plugins/tree/main/plugins/token-meter" };
+var define_DSHP_TOKEN_METER_PKG_default = { name: "@dshp/token-meter", version: "0.13.1", repo: "github.com/Yinxe/deepseek-harness-plugins/tree/main/plugins/token-meter" };
 
 // src/client/CenterView.tsx
 var import_react = require("react");
@@ -412,6 +412,16 @@ var import_react4 = require("react");
 
 // src/client/SharePanel.tsx
 var import_react3 = require("react");
+
+// src/client/share-svg.ts
+function xmlEscapeText(text) {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function shareSvgDocument(spec) {
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="' + spec.pw + '" height="' + spec.ph + '" viewBox="0 0 ' + spec.w + " " + spec.h + '"><foreignObject x="0" y="0" width="' + spec.w + '" height="' + spec.h + '"><div xmlns="http://www.w3.org/1999/xhtml"><style>' + xmlEscapeText(spec.css) + "</style>" + spec.inner + "</div></foreignObject></svg>";
+}
+
+// src/client/SharePanel.tsx
 var import_jsx_runtime4 = require("react/jsx-runtime");
 var PKG = typeof define_DSHP_TOKEN_METER_PKG_default === "object" && define_DSHP_TOKEN_METER_PKG_default !== null ? define_DSHP_TOKEN_METER_PKG_default : { name: "@dshp/token-meter", version: "", repo: "" };
 var SHARE_TOKENS = [
@@ -519,21 +529,28 @@ function collectShareCss() {
 async function boardToPngBlob(node, w, h, scale = 2) {
   const pw = Math.max(1, Math.round(w * scale));
   const ph = Math.max(1, Math.round(h * scale));
-  const rw = pw;
-  const rh = ph;
   const clone = node.cloneNode(true);
   clone.style.transform = "none";
   clone.style.transformOrigin = "0 0";
   clone.style.left = "0";
   clone.style.position = "static";
   const inner = new XMLSerializer().serializeToString(clone);
-  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + rw + '" height="' + rh + '" viewBox="0 0 ' + w + " " + h + '"><foreignObject x="0" y="0" width="' + w + '" height="' + h + '"><div xmlns="http://www.w3.org/1999/xhtml"><style>' + collectShareCss() + "</style>" + inner + "</div></foreignObject></svg>";
+  const svg = shareSvgDocument({ inner, css: collectShareCss(), w, h, pw, ph });
   const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
   const img = new Image();
   img.decoding = "sync";
   await new Promise((resolve, reject) => {
     img.addEventListener("load", () => resolve(), { once: true });
-    img.addEventListener("error", () => reject(new Error("SVG \u6E32\u67D3\u5931\u8D25")), { once: true });
+    img.addEventListener(
+      "error",
+      () => {
+        console.error(
+          "[dshp-token-meter] \u5206\u4EAB\u5361 SVG \u5149\u6805\u5316\u5931\u8D25\uFF1A\u6587\u6863 " + svg.length + " \u5B57\u7B26 / " + pw + "\xD7" + ph
+        );
+        reject(new Error("SVG \u6E32\u67D3\u5931\u8D25"));
+      },
+      { once: true }
+    );
     img.src = url;
   });
   const canvas = document.createElement("canvas");
@@ -547,7 +564,7 @@ async function boardToPngBlob(node, w, h, scale = 2) {
     ctx.fillStyle = "#0d1015";
   }
   ctx.fillRect(0, 0, pw, ph);
-  ctx.drawImage(img, Math.round((pw - rw) / 2), Math.round((ph - rh) / 2), rw, rh);
+  ctx.drawImage(img, 0, 0, pw, ph);
   return await new Promise((resolve, reject) => {
     canvas.toBlob((b) => b === null ? reject(new Error("PNG \u7F16\u7801\u5931\u8D25")) : resolve(b), "image/png");
   });

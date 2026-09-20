@@ -17,12 +17,19 @@
  * ── 导出为什么要内联 CSS ──────────────────────────────────────────────
  * `<foreignObject>` 里的内容在一个独立的文档上下文里，读不到 DSH 壳层的样式表，
  * 所以必须把插件自己的 CSS 与用到的设计 token 的**计算值**一起内联进去。
+ *
+ * ── 内联 CSS 必须走 XML 转义 ───────────────────────────────────────────
+ * SVG 是 XML 文档，样式文本里一个裸 `<` 就让整份文档解析失败（表现：下载与复制都报
+ * 「SVG 渲染失败」）。压缩后的 CSS 真的会带 `<`（容器查询范围语法 `(width<=300px)`），
+ * 所以组装统一走 `share-svg.ts` 的 `shareSvgDocument()` —— 见那个文件的头注释与
+ * `scripts/check-share-svg.mjs`。
  */
 import { forwardRef, useMemo, type ReactNode } from 'react';
 import styles from './styles.module.css';
 import { DISPLAY_NAME } from '../name.js';
 import { Glyph } from './glyphs.js';
 import { aggregate, rangeText, type Agg } from './StatsSection.js';
+import { shareSvgDocument } from './share-svg.js';
 import type { StatsSnapshot } from './types.js';
 
 /**
@@ -237,6 +244,9 @@ function readPluginCss(): string {
 /**
  * 导出用的样式：插件自身 CSS + 用到的 token 计算值。
  * token 必须在**导出那一刻**从 body 上读一次（主题可能刚被切换）。
+ *
+ * 返回值是**未转义的 CSS 原文**：它要进 `<style>`（XML 文本节点），必须交给
+ * `shareSvgDocument()` / `xmlEscapeText()` 转义后再拼进 SVG —— 别拿它直接字符串拼接。
  */
 export function collectShareCss(): string {
   const vars: string[] = [];
@@ -282,8 +292,6 @@ export function collectShareCss(): string {
 export async function boardToPngBlob(node: HTMLElement, w: number, h: number, scale = 2): Promise<Blob> {
   const pw = Math.max(1, Math.round(w * scale));
   const ph = Math.max(1, Math.round(h * scale));
-  const rw = pw;
-  const rh = ph;
   const clone = node.cloneNode(true) as HTMLElement;
   // 预览用的 transform 缩放 / left 定位都不能带进导出：板子按逻辑尺寸一次性光栅化
   clone.style.transform = 'none';
@@ -291,32 +299,25 @@ export async function boardToPngBlob(node: HTMLElement, w: number, h: number, sc
   clone.style.left = '0';
   clone.style.position = 'static';
   const inner = new XMLSerializer().serializeToString(clone);
-  const svg =
-    '<svg xmlns="http://www.w3.org/2000/svg" width="' +
-    rw +
-    '" height="' +
-    rh +
-    '" viewBox="0 0 ' +
-    w +
-    ' ' +
-    h +
-    '">' +
-    '<foreignObject x="0" y="0" width="' +
-    w +
-    '" height="' +
-    h +
-    '">' +
-    '<div xmlns="http://www.w3.org/1999/xhtml"><style>' +
-    collectShareCss() +
-    '</style>' +
-    inner +
-    '</div></foreignObject></svg>';
+  // 组装必须走 share-svg.ts：样式表**原文**要 XML 转义后才能进 `<style>`，压缩后的
+  // 容器查询范围语法（`(width<=300px)`）里就有裸 `<`，不转义会让整个 SVG 解析失败。
+  const svg = shareSvgDocument({ inner, css: collectShareCss(), w, h, pw, ph });
   const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   const img = new Image();
   img.decoding = 'sync';
   await new Promise<void>((resolve, reject) => {
     img.addEventListener('load', () => resolve(), { once: true });
-    img.addEventListener('error', () => reject(new Error('SVG 渲染失败')), { once: true });
+    img.addEventListener(
+      'error',
+      () => {
+        // 只记长度与尺寸（文档内容含用户数据，不进日志）：复现这份报错时先看这两个数。
+        console.error(
+          '[dshp-token-meter] 分享卡 SVG 光栅化失败：文档 ' + svg.length + ' 字符 / ' + pw + '×' + ph,
+        );
+        reject(new Error('SVG 渲染失败'));
+      },
+      { once: true },
+    );
     img.src = url;
   });
   const canvas = document.createElement('canvas');
@@ -332,8 +333,8 @@ export async function boardToPngBlob(node: HTMLElement, w: number, h: number, sc
     ctx.fillStyle = '#0d1015';
   }
   ctx.fillRect(0, 0, pw, ph);
-  // 居中贴上去：内容比 16:9 高时，左右各留一条底色（与预览一致）
-  ctx.drawImage(img, Math.round((pw - rw) / 2), Math.round((ph - rh) / 2), rw, rh);
+  // 1:1 贴上去：SVG 的固有尺寸就是画布尺寸（raster 已在 2× 上重排），偏移恒为 0
+  ctx.drawImage(img, 0, 0, pw, ph);
   return await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((b) => (b === null ? reject(new Error('PNG 编码失败')) : resolve(b)), 'image/png');
   });
