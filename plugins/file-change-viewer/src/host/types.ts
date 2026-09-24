@@ -5,6 +5,7 @@
  * （配置与补丁）严格建模。客户端的渲染模型（`FileDiff` / `FileChangeModel`）在
  * `src/client/types.ts`。
  */
+import type { Volatile } from '@deepseek-ai/cosmokit';
 
 export type AnyCtx = any;
 
@@ -15,11 +16,11 @@ export type DiffView = 'highlight' | 'diff';
 export type ContextLines = 0 | 3 | 5 | 8;
 
 /**
- * 本插件在 `settings.yaml` 里的命名空间内容。
+ * 本插件在 profile 条目 `config:`（0.1.7 起替代 settings.yaml 分节）里的内容。
  *
  * 两项**显示偏好** + 一个**工具开关**，但它们是全插件唯一的权威值：设置节的「File Change View」页与
  * 每个工具行的文件块都读同一份（Client 侧经 `/ext/dshp-file-change-viewer/state` 拉取并本地缓存）。
- * 偏好落 `settings.yaml` 的 NS 分节，跨浏览器、跨会话都在，也吃 schema 校验与 base 层补丁。
+ * 偏好落条目 config NS，跨浏览器、跨会话都在，也吃 schema 校验。
  */
 export interface PluginConfig {
   /** 差异展示方式：`highlight` = 单代码块统一 diff；`diff` = 逐行 ± 视图。 */
@@ -43,16 +44,16 @@ export interface PluginConfig {
    * 是否注册 **`patch` 工具**（批量 / 零散修改那一个）。
    *
    * **默认关**：它是本插件的测试版能力，注册与否由这一项动态决定——改完立即生效（Host 半在
-   * settings 的 `onChange` 里重新判定：需要就注册、取消就反注册），不必重启 `dsh web`。
+   * `loader/volatile-update` 里重新判定：需要就注册、取消就反注册），不必重启 `dsh web`。
    * 关着的时候模型看不到 `patch`，只会用官方的 `read` / `write` / `edit`。
    */
   patchTool: boolean;
 }
 
-/** 外部来的配置补丁（composition 的 `config:` 层）。 */
-export interface PluginConfigPatch {
-  view?: DiffView | undefined;
-  sectionsOpen?: boolean | undefined;
-  patchTool?: boolean | undefined;
-  contextLines?: ContextLines | undefined;
+/** `apply(ctx, config)` 实参：ConfigSchema 全字段 volatile，`.get()` 读当前深只读快照。 */
+export interface VolatileConfig {
+  view: Volatile<DiffView>;
+  sectionsOpen: Volatile<boolean>;
+  contextLines: Volatile<ContextLines>;
+  patchTool: Volatile<boolean>;
 }

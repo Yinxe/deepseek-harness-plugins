@@ -1,8 +1,8 @@
 /**
  * 显示偏好：一份进程内权威缓存 + 与 Host 的读写往返
  *
- * 偏好真正的家在 **`settings.yaml` 的 `dshp-file-change-viewer` 分节**（Host 半 `installSection`
- * 注册的 settings 命名空间）。客户端不自己造第二事实源：
+ * 偏好真正的家在 **profile 条目 `config:` 的 `dshp-file-change-viewer` 分节**（0.1.7 起替代
+ * settings.yaml；Host 半导出的 `Config` schema 校验并全字段 volatile）。客户端不自己造第二事实源：
  *
  * | 操作     | 路径                                                              |
  * | -------- | ----------------------------------------------------------------- |
@@ -27,7 +27,7 @@ import { useEffect, useState } from 'react';
 import { fetchState, saveConfig } from './api.js';
 import type { ConfigPatch, PrefField, SavePhase, ViewerPrefs } from './types.js';
 
-/** 默认值（与 Host 的 `DEFAULT_CONFIG` 同值；Host 读不到时的兜底）。 */
+/** 默认值（与 Host `ConfigSchema` 的出厂默认同值；Host 读不到时的兜底）。 */
 export const DEFAULT_PREFS: ViewerPrefs = {
   view: 'highlight',
   sectionsOpen: false,

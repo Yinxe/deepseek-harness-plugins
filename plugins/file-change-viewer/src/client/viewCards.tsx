@@ -58,13 +58,15 @@ const SAMPLE_HIGHLIGHT = buildHighlight({
 
 /** 样张里 DiffBlock 的文案。设置页是中文界面，且槽位没有 `locale` seat，所以用字面量。 */
 const PREVIEW_LABELS: DiffBlockLabels = {
+  codeLabel: '代码块',
+  wrapLabel: '自动换行',
+  unwrapLabel: '取消自动换行',
   copy: '复制',
   copied: '已复制',
   collapseAria: '折叠差异',
   expandAria: (hidden: number) => '展开其余 ' + hidden + ' 行',
   collapse: '折叠',
   expand: (hidden: number) => '展开其余 ' + hidden + ' 行',
-  files: (count: number) => String(count) + ' 个文件',
 };
 
 const COPY_LABEL = '复制';

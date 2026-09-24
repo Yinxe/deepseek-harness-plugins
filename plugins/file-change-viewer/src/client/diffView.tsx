@@ -37,9 +37,11 @@ function countLines(text: string): number {
 /**
  * 给 ± 差异视图的官方 `DiffBlock` 生成「改动行行号」的动态 CSS。
  *
- * 官方块内部没有编号机制，行是 `body > div.del / div.add`（类名是官方 CSS Module 的哈希名，
- * 跨包不可 import），但块根挂了 `data-diff`、body 是它第一个 div、行序固定为
- * `path 行(1 个，已由样式隐藏) → del 行 × D → add 行 × A`——这些结构事实足够：
+ * 官方块内部没有编号机制，body 是块根的**第二个 div**（0.1.7 起第一个子 div 是 CodeToolbar）。
+ * 行序按官方 buildRows 为 `path 行(1 个，已由样式隐藏) → 若干 hunk 行`；本插件喂的是**语义
+ * 变更**（只含删除行与新增行），绝大多数 hunk 就是 `del × D → add × A`（折叠按钮是 button，
+ * 不参与 div 计数）。万一 ± 片段里存在共同行，官方会算出内部 context 行、令区间错位——后果只是
+ * 那几行的符号/留号不准，不报错。这些结构事实足够：
  * 用**本 hunk 独有的类名**（调用方拼在 DiffBlock 的 className 上）限定，按 `div:nth-of-type`
  * 区间给 del / add 行各叠一个 CSS 计数器，行号画在 `::after`（绝对定位到行盒左缘，与
  * 上下文行号同一列）。
@@ -54,7 +56,7 @@ function countLines(text: string): number {
  */
 export function diffSignRules(blockClass: string, delCount: number, addCount: number): string {
   if (delCount <= 0 && addCount <= 0) return '';
-  const rows = '.' + blockClass + '[data-diff]>div:first-of-type';
+  const rows = '.' + blockClass + '[data-diff]>div:nth-of-type(2)';
   // path 行之后的 div 依次是 del × D、add × A；div:nth-of-type 从 1 数，path 占第 1 位。
   const delFrom = 2;
   const delTo = 1 + delCount;

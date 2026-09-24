@@ -260,21 +260,17 @@
   margin: 0;
   border-radius: 0;
 }
-/* ± 视图清掉官方 DiffBlock 的三样冗余（卡头已有文件名与统计，这里全是重复）：
-   ① body 首行那条**完整路径**——官方 buildRows 无条件把 path 行插进 body 第一行，
-     且带 padding-right:56px 与 600 字重，读起来像正文里突然冒出一段标题；
-   ② 右上角**复制按钮**——卡头视图切换旁边再浮一个「复制」，两个按钮挤在一起；
-   ③ 块底**footer（└ +A -B · N 个文件）**——与卡头统计同口径，重复报数。
-   选择器全走官方块自带的 data-diff 根 + 子元素结构（button 首子 / body 第一个 div /
-   footer 最后一个 div / path 是 body 里带官方 padding-right 的首个 div），不引裸类名。
+/* ± 视图清掉官方 DiffBlock 的两样冗余（卡头已有文件名与统计，这里全是重复）：
+   ① body 首行那条**完整路径**——官方 buildRows 无条件把 path 行插进 body 第一行；
+   ② 块顶的 **CodeToolbar**（语言标签 + 换行 + 复制）——卡头视图切换旁边再浮一条工具栏。
+   0.1.7 起块根子元素是 [CodeToolbar div, body div]，旧 footer（└ +A -B · N 个文件）已删，
+   统计本来就画在卡头。选择器全走官方块自带的 data-diff 根 + 子元素结构（toolbar 是第一个
+   div / body 是第二个 / path 是 body 里首个 div），不引裸类名。
    上游若调结构，这里只是退回「冗余重现」，不报错。 */
-.card .diff[data-diff] > button {
+.card .diff[data-diff] > div:first-of-type {
   display: none;
 }
-.card .diff[data-diff] > div:last-of-type {
-  display: none;
-}
-.card .diff[data-diff] > div:first-of-type > div:first-child {
+.card .diff[data-diff] > div:nth-of-type(2) > div:first-child {
   display: none;
 }
 /* ± 视图的上下文行：官方 DiffBlock 只画得出 del / add 两种行（见 FileChangeRow.renderDiff），
@@ -308,14 +304,14 @@
    几何——与上下文行的行号同宽（3ch）、同右对齐、同淡化；让位用的 `padding-inline-start`、
    `content` 与 `::before{content:none}`（压掉官方行内的 `- `/`+ ` 前缀）都由 diffView 的
    `diffSignRules` 动态喂。两者共用同一列，所以「上下文行号 / 改动符号 / 正文」严格对齐。 */
-.card .diff[data-diff] > div > div {
+.card .diff[data-diff] > div:nth-of-type(2) > div {
   /* 改动行自己就是 ::after（那个 `+` / `-`）的包含块：官方行是 static，不定位的话
      `inset-inline-start:0` 会落到官方块根（整张卡）的左缘——符号比上下文行号多让出一档
      左内边距、还紧贴卡片边框。行盒定位后 `0` = 行盒内边距盒左缘 = 正文区最左（已含官方
      `.body` 的 14px），`3ch` 的行号格与上下文行号严格同列。 */
   position: relative;
 }
-.card .diff[data-diff] > div > div::after {
+.card .diff[data-diff] > div:nth-of-type(2) > div::after {
   position: absolute;
   inset-inline-start: 0;
   width: 3ch;
@@ -356,24 +352,22 @@
 /* 官方 DiffBlock 摊平进这张卡：把它 .body 的滚动关掉（滚动能力上移到 .diffWrap，见上面
    .diffWrap 的注释）。两个轴必须一起 visible——只写 overflow-x:visible 时，另一个轴的
    hidden 会按 CSS 规范把它升回 auto（visible 遇上非 visible 的另一轴，按 auto 计算），
-   滚动条就还在。选择器走官方块自带的 data-diff 根：body 是它子元素里的**第一个 div**
-   （前面还有个 button 是复制按钮，所以不能写 div:first-child），footer 是最后一个 div。
+   滚动条就还在。选择器走官方块自带的 data-diff 根：0.1.7 起 body 是子元素里的**第二个 div**
+   （第一个是 CodeToolbar，display:none 也占 nth-of-type 的位），footer 已不存在。
    行内容按自然宽度撑开（超宽部分交给 wrap 滚），不再被官方 .body 裁掉。
-   代价：复制按钮随内容一起横滚（它 position:absolute 挂在块根上），滚到最右时会移出
-   视野——回到最左即可；换来的是整份 diff 单轴滚动。上游若调整子元素顺序，这里只是
-   退回「两根滚动条」的旧观感，不报错。 */
-.card .diff[data-diff] > div:first-of-type {
+   上游若调整子元素顺序，这里只是退回「两根滚动条」的旧观感，不报错。 */
+.card .diff[data-diff] > div:nth-of-type(2) {
   overflow: visible;
 }
-/* 衔接处零缝隙：有上文时，改动区自己的顶部内边距（官方 12px）归零，上下文行与 ± 行
+/* 衔接处零缝隙：有上文时，改动区自己的顶部内边距（官方 6px）归零，上下文行与 ± 行
    逐像素相接（两者行高都已对齐 22px），读起来就是同一块代码。没有上文时保留它，
    作为卡片顶缘的呼吸空间。 */
-.diffWrap > .ctx + .diff[data-diff] > div:first-of-type {
+.diffWrap > .ctx + .diff[data-diff] > div:nth-of-type(2) {
   padding-top: 0;
 }
-/* 有下文时同样把底部缝隙归零：DiffBlock 的 footer（└ +A -B · N 文件）是块根的最后一个
-   div，它的 padding-bottom 是改动区与下文之间的缝。 */
-.diffWrap > .diff[data-diff]:has(+ .ctx) > div:last-of-type {
+/* 有下文时同样把底部缝隙归零：0.1.7 起 footer 没了，改动区与下文之间的缝是 body 自己的
+   padding-bottom（官方 20px）。 */
+.diffWrap > .diff[data-diff]:has(+ .ctx) > div:nth-of-type(2) {
   padding-bottom: 0;
 }
 .card .diff {
@@ -698,7 +692,7 @@
   padding: 0 14px;
   white-space: pre;
 }
-.pvDiff[data-diff] > div:first-of-type {
+.pvDiff[data-diff] > div:nth-of-type(2) {
   overflow: visible;
 }
 .pvCtxLine {

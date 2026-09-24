@@ -125,17 +125,17 @@ const PRIMITIVES = {
   DiffBlock: function DiffBlock() {},
   DisclosureRow: function DisclosureRow() {},
   StateDot: function StateDot() {},
-  IconEditOutline16: function IconEditOutline16() {},
+  IconEditOutlineRegular: function IconEditOutlineRegular() {},
   JsonBlock: function JsonBlock() {},
   Menu: function Menu() {},
   Pill: function Pill() {},
   Button: function Button() {},
-  IconChevronDownOutline14: function IconChevronDownOutline14() {},
+  IconChevronDownOutlineRegular: function IconChevronDownOutlineRegular() {},
   FileTypeIcon: function FileTypeIcon() {},
-  IconPlusOutline16: function IconPlusOutline16() {},
-  IconCodeOutline16: function IconCodeOutline16() {},
-  IconBranchOutline16: function IconBranchOutline16() {},
-  IconRefreshOutline14: function IconRefreshOutline14() {},
+  IconPlusOutlineRegular: function IconPlusOutlineRegular() {},
+  IconCodeOutlineRegular: function IconCodeOutlineRegular() {},
+  IconBranchOutlineRegular: function IconBranchOutlineRegular() {},
+  IconRefreshOutlineRegular: function IconRefreshOutlineRegular() {},
   diffTotals: (diffs) => {
     let added = 0;
     let removed = 0;
@@ -571,14 +571,14 @@ ok(
   css.includes('--dsl-code-block-line-white-space:pre') && css.includes('!important'),
 );
 ok('卡头用官方 banner 底色', css.includes('background:var(--dsw-alias-markdown-code-block-banner)'));
-// ± 视图里官方 DiffBlock 的三样冗余（path 行 / 复制按钮 / footer）被结构选择器清掉：
-// 卡头已有文件名与统计，重复信息只会在上下文与改动之间横插一段。
-// lightningcss 会把同声明的三条选择器并成一条，所以断言按「选择器片段存在」查。
+// ± 视图里官方 DiffBlock 的两样冗余（块顶 CodeToolbar / body 首行 path）被结构选择器清掉：
+// 卡头已有文件名与统计，重复信息只会在上下文与改动之间横插一段。0.1.7 起块根是
+// [CodeToolbar div, body div]（footer 已删），选择器 accordingly 改写。
+// lightningcss 会把同声明的选择器并成一条，所以断言按「选择器片段存在」查。
 ok(
-  '± 视图清掉官方 path 行 / 复制按钮 / footer（卡头已有，全是冗余）',
-  css.includes('[data-diff]>button') &&
-    css.includes('[data-diff]>div:last-of-type') &&
-    css.includes('[data-diff]>div:first-of-type>div:first-child') &&
+  '± 视图清掉官方 CodeToolbar 与 path 行（卡头已有，全是冗余）',
+  css.includes('[data-diff]>div:first-of-type') &&
+    css.includes('[data-diff]>div:nth-of-type(2)>div:first-child') &&
     css.includes('{display:none}'),
 );
 // 高亮视图行底色铺满整条被滚动的宽度：官方 .line 是普通块盒（宽只到可视宽度），超长文字以
@@ -604,7 +604,8 @@ ok(
 // 还紧贴卡片边框（与 README 里「三列严格对齐」的验收口径不符）。
 ok(
   '± 视图的改动行是 ::after 的包含块（+ / - 与上下文行号同列，不贴卡片边框）',
-  css.includes('[data-diff]>div>div{position:relative}') && css.includes('inset-inline-start:0'),
+  css.includes('[data-diff]>div:nth-of-type(2)>div{position:relative}') &&
+    css.includes('inset-inline-start:0'),
 );
 ok(
   '设置节用官方设置行版式（720px 页宽 + 行间 .5px 细线）',
@@ -781,7 +782,10 @@ ok(
   findByType(settledCards[0], PStub.FileTypeIcon) !== null &&
     findByType(settledCards[0], PStub.FileTypeIcon).props.path === '/w/src/a.ts',
 );
-ok('增删统计里 + 用官方 IconPlusOutline16', findByType(settledCards[0], PStub.IconPlusOutline16) !== null);
+ok(
+  '增删统计里 + 用官方 IconPlusOutlineRegular',
+  findByType(settledCards[0], PStub.IconPlusOutlineRegular) !== null,
+);
 ok(
   '官方没有减号图标，用一个内联 svg 补（同 16px 网格）',
   findByType(settledCards[0], 'svg') !== null &&
@@ -789,8 +793,8 @@ ok(
 );
 ok(
   '两个视图 Pill 各带一个图标',
-  findByType(settledCards[0], PStub.IconCodeOutline16) !== null &&
-    findByType(settledCards[0], PStub.IconBranchOutline16) !== null,
+  findByType(settledCards[0], PStub.IconCodeOutlineRegular) !== null &&
+    findByType(settledCards[0], PStub.IconBranchOutlineRegular) !== null,
 );
 
 // 高亮视图（默认偏好）：单代码块 + 行底色
@@ -1154,9 +1158,9 @@ const CONTEXT_EDIT_FILES = [
   '  Menu: function Menu() {},',
   '  Pill: function Pill() {},',
   '  Switch: function Switch() {},',
-  '  IconChevronDownOutline14: function IconChevronDownOutline14() {},',
+  '  IconChevronDownOutlineRegular: function IconChevronDownOutlineRegular() {},',
   '  FileTypeIcon: function FileTypeIcon() {},',
-  '  IconPlusOutline16: function IconPlusOutline16() {},',
+  '  IconPlusOutlineRegular: function IconPlusOutlineRegular() {},',
 ];
 const CONTEXT_OLD = CONTEXT_EDIT_FILES.join('\n');
 const CONTEXT_NEW = CONTEXT_OLD.replace('Switch: function Switch() {},', 'Button: function Button() {},');

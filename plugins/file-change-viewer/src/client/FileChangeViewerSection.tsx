@@ -20,7 +20,7 @@
  * @module @dshp/file-change-viewer/client/FileChangeViewerSection
  */
 import { useState, type ReactNode } from 'react';
-import { Button, IconChevronDownOutline14, Menu } from '@deepseek-ai/dsh-client-ui-primitives';
+import { Button, IconChevronDownOutlineRegular, Menu } from '@deepseek-ai/dsh-client-ui-primitives';
 import { reload, setPref, usePrefs, useSaveState } from './prefs.js';
 import type { SavePhase } from './types.js';
 import { ViewCards } from './viewCards.js';
@@ -141,7 +141,7 @@ function Select(props: {
       onClick={() => setOpen((prev) => !prev)}
     >
       <span className={styles.selectorLabel}>{props.selectedLabel}</span>
-      <IconChevronDownOutline14 className={styles.chevron} />
+      <IconChevronDownOutlineRegular className={styles.chevron} />
     </button>
   );
   return (

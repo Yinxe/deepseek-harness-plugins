@@ -2,7 +2,7 @@
 
 DeepSeek Harness（DSH）**文件修改查看器**：接管对话流里的 `edit` / `write` 行——**行的外壳与折叠行为完全沿用官方原生行**（和「思考 / 读取」行同一套样式，默认同样折叠，也可在设置里改成默认展开），展开后每个文件块是一张**代码卡片**：卡头是「文件类型图标 + 文件名 + 增删统计（图标 + 绿增红删）」并带**该块自己的**折叠箭头与「高亮 / ± 差异」切换（各带图标），卡内是**带语法高亮的统一 diff**（新增行绿底、删除行红底、**行号是文件里的真实行号**，删除行不占号）。每张卡片还会在改动两侧**多显示几行没受影响的上下文**（默认 3 行，设置里可调 0 / 3 / 5 / 8）——这几行取自文件当前内容，模型只圈 1 行上下文时也看得清改动落在哪。另外它还带一个 **`patch` 工具（测试版，默认关，设置里可开）**：一次调用把**多处零散修改 / 多个文件**的补丁应用下去（`*** Begin Patch` 信封，全有或全无），批量改文件从此不必退化成 `bash` + `sed`/`python`——那种改法在界面上只留一行 Bash，看不见任何 diff，还得整份重写或逐个替换。
 
-全局默认值在**设置 → 左侧导航「File Change View」**（本插件自己的设置节）里配置——展示方式是**两张并排的单选卡，卡里直接画出两种视图的真实效果**，另有上下文行数与默认展开开关；这些值持久化在 `settings.yaml` 的本插件命名空间。会话页头右侧还多了**两个只作用于当前会话**的快捷开关（一键展开 / 收起本会话的所有文件改动、切换差异视图），它们**不改上面的全局默认**，也不写 `settings.yaml`。
+全局默认值在**设置 → 左侧导航「File Change View」**（本插件自己的设置节）里配置——展示方式是**两张并排的单选卡，卡里直接画出两种视图的真实效果**，另有上下文行数与默认展开开关；这些值持久化在 profile 条目 `dshp-file-change-viewer` 的 `config:`（0.1.7 契约：条目导出 `Config` schema + volatile 字段，设置页经 `settings.update` 写入即热更新）。会话页头右侧还多了**两个只作用于当前会话**的快捷开关（一键展开 / 收起本会话的所有文件改动、切换差异视图），它们**不改上面的全局默认**，也不写持久化配置。
 
 内置的文件修改行是**默认折叠**且只有 `-`/`+` 行色的：DSH 用 `DisclosureRow` 承载折叠语义，折叠态下 `DiffBlock` 根本不挂载，所以「用 CSS 把行撑开」走不通。本插件按官方扩展点注册 `tool.call.toolview` 的同名 key（官方文档：_a key the shipped composition already covers is replaced, not shared_），用**同一批官方 primitives** 重新组装这一行。
 
@@ -31,9 +31,9 @@ DeepSeek Harness（DSH）**文件修改查看器**：接管对话流里的 `edit
 ## `patch` 工具（批量 / 零散修改，**测试版 · 默认关**）
 
 > **它是测试版能力，默认不注册。** 到 **设置 → File Change View → 工具** 打开「启用 patch 工具（测试版）」，
-> 模型才会看到这个工具；关掉即刻消失（正在进行的那次调用不受影响）。开关值就存在 `settings.yaml` 的
-> `patchTool` 字段里，也可以直接用 composition 的 `config: { patchTool: true }` 在部署层打开——
-> Host 在 settings 的 `onChange` 里重新判定，**不需要重启 `dsh web`**。
+> 模型才会看到这个工具；关掉即刻消失（正在进行的那次调用不受影响）。开关值是条目 `config:` 里的
+> `patchTool` 字段（volatile），也可以直接用 composition 的 `config: { patchTool: true }` 在部署层打开——
+> 设置页一开一关走 `settings.update` → `loader/volatile-update`，**不需要重启 `dsh web`**；手工编辑条目 config 则重启生效。
 
 官方的文件工具是 `read` / `write` / `edit`：`write` 要重发整份文件，`edit` 一次只能替换一处。所以「一个文件里改 8 处、顺带再改 3 个文件」这种活儿，agent 往往会退化成 `bash` + `sed`/`python` 一把梭——改动藏在命令里：界面上只留一行 Bash，没有 diff、也没法整体回滚。本插件补上这个缺口：**一次调用改多处 / 多文件，而不用重写任何一份文件**（省 token、不会误覆盖整份文件、每一段改动都进差异卡片可审查）。
 
@@ -135,14 +135,14 @@ patch 只做「新建 / 修改」，不执行删除与改名，这份补丁里�
 
 四项设置（展示方式、上下文行数、编辑 / 写入是否默认展开、patch 工具开关）里，前三项都有**两个入口**，第四项只有一个：
 
-| 层                 | 入口                                            | 落盘            | 作用范围                   |
-| ------------------ | ----------------------------------------------- | --------------- | -------------------------- |
-| 单块自己的临时点击 | 卡片头上的折叠箭头 / 「高亮 · ± 差异」两个药丸  | 不落盘          | 那一个文件块               |
-| **会话级覆盖**     | **会话页头右侧的两个快捷开关**                  | **不落盘**      | **当前会话的所有文件改动** |
-| 全局偏好           | 设置 → File Change View（单选卡 / 下拉 / 开关） | `settings.yaml` | 所有会话的默认值           |
+| 层                 | 入口                                            | 落盘           | 作用范围                   |
+| ------------------ | ----------------------------------------------- | -------------- | -------------------------- |
+| 单块自己的临时点击 | 卡片头上的折叠箭头 / 「高亮 · ± 差异」两个药丸  | 不落盘         | 那一个文件块               |
+| **会话级覆盖**     | **会话页头右侧的两个快捷开关**                  | **不落盘**     | **当前会话的所有文件改动** |
+| 全局偏好           | 设置 → File Change View（单选卡 / 下拉 / 开关） | 条目 `config:` | 所有会话的默认值           |
 
 - 「patch 工具开关」不参与这套优先级：它不是渲染偏好，而是 Host 半**注不注册那个工具**的开关，改完立即生效。
-- 全局偏好改动**立即经 `/ext/dshp-file-change-viewer/config` 写进 `settings.yaml` 的 `dshp-file-change-viewer` 分节**（Host 调 `settings.update`），保存成功 / 失败都在设置节里如实反馈。
+- 全局偏好改动**立即经 `/ext/dshp-file-change-viewer/config` 写进 profile 条目 `dshp-file-change-viewer` 的 `config:`**（Host 调 `settings.update`），保存成功 / 失败都在设置节里如实反馈。
 
 ### 会话页头的两个快捷开关（只影响当前会话）
 
@@ -154,7 +154,7 @@ patch 只做「新建 / 修改」，不执行删除与改名，这份补丁里�
 ```
 
 - 左边那个一键**展开 / 收起本会话的所有文件改动**（行与行内文件块一起），右边那个**切换本会话的差异视图**；
-- 它们改的是**内存里的会话级覆盖**（`src/client/session.ts`）：**一个 `/config` 请求都不发**，`settings.yaml` 纹丝不动，**换一个会话立刻回到全局默认**；
+- 它们改的是**内存里的会话级覆盖**（`src/client/session.ts`）：**一个 `/config` 请求都不发**，持久化配置纹丝不动，**换一个会话立刻回到全局默认**；
 - 覆盖生效时胶囊边框变品牌色并多出一个「恢复跟随偏好」的小按钮，点它即回到默认；
 - 点页头那一下是**真正的一键全改**：连你之前手动折叠过的行也会翻过去（覆盖带一个版本号 `rev`，行组件发现覆盖换版就作废自己那份临时状态）。改完之后你再单独点某一行 / 某一块，仍然由你说了算。
 
@@ -183,7 +183,7 @@ dsh web
 
 **改源码后**：`src/client` 改完跑 `pnpm --filter @dshp/file-change-viewer build` 重新打出 `lib/host.js + lib/client.js`，然后 `dsh web` 重启（client 半强刷页面即可）。
 
-**验证**：`pnpm --filter @dshp/file-change-viewer test` 会跑 `node --check` 两份产物 + Host 冒烟（`scripts/check-host.mjs`，158 项：命名空间、补丁消毒、`/ext` 三条路由、非法补丁不落库、`patch` 工具注册契约与**动态开关**（默认关 / 开了就注册 / 关了立刻反注册）、全有或全无、写前预检、删除 / 改名拒绝、BOM 与沙箱提权、locate 回行号 + 两侧上下文且同一文件只读一次、**动态开关在 attach/detach 时不误反注册**）+ `patch` 纯函数（`scripts/check-patch.mjs`，74 项：多文件 / 多片段 / 五级模糊定位（含唯一性安全阀）/ `End of File` 锚点 / 行尾与 BOM / **现场回归**（`@@` 当标签用、行内空白差异、多处删除不相邻）/ 信封诊断（空补丁 / 缺收尾 / 写成 unified diff）/ 失败诊断（最近的真实行 + 差异原因 + 已应用提示））+ Client 无头渲染断言（`scripts/check-client.mjs`，207 项，含一层迷你 React，能验证「偏好实时作用于行 / 换调用复用实例 / 会话页头开关只改当前会话」这类带生命周期的行为）；界面上让 AI 改任意一个文件，展开「编辑」行后每个文件块应是带语法高亮的卡片、`+A -B` 与路径链接正常，且统计与 ± 视图只报真正变化的行数；在设置 → 「File Change View」里改一次偏好，`settings.yaml` 应立即出现本插件分节，页头那两个开关则**不该**在 `settings.yaml` 里留下任何东西。
+**验证**：`pnpm --filter @dshp/file-change-viewer test` 会跑 `node --check` 两份产物 + Host 冒烟（`scripts/check-host.mjs`，152 项：命名空间与 `Config` 导出契约、`configure({ auto: false })`、补丁消毒、`/ext` 三条路由、非法补丁不落库、`patch` 工具注册契约与**动态开关**（默认关 / 开了就注册 / 关了立刻反注册，由 `loader/volatile-update` 驱动）、全有或全无、写前预检、删除 / 改名拒绝、BOM 与沙箱提权、locate 回行号 + 两侧上下文且同一文件只读一次）+ `patch` 纯函数（`scripts/check-patch.mjs`，74 项：多文件 / 多片段 / 五级模糊定位（含唯一性安全阀）/ `End of File` 锚点 / 行尾与 BOM / **现场回归**（`@@` 当标签用、行内空白差异、多处删除不相邻）/ 信封诊断（空补丁 / 缺收尾 / 写成 unified diff）/ 失败诊断（最近的真实行 + 差异原因 + 已应用提示））+ Client 无头渲染断言（`scripts/check-client.mjs`，207 项，含一层迷你 React，能验证「偏好实时作用于行 / 换调用复用实例 / 会话页头开关只改当前会话」这类带生命周期的行为）；界面上让 AI 改任意一个文件，展开「编辑」行后每个文件块应是带语法高亮的卡片、`+A -B` 与路径链接正常，且统计与 ± 视图只报真正变化的行数；在设置 → 「File Change View」里改一次偏好，profile 条目 `dshp-file-change-viewer` 的 `config:` 应立即出现对应字段，页头那两个开关则**不该**在配置里留下任何东西。
 
 **一键 AI 安装**：把下面这段发给你的 DSH AI 即可：
 
@@ -231,7 +231,7 @@ dsh web   # 重启生效
 
 | 部分                                          | 内容                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Host（`src/host/` → `lib/host.js`）**       | `name` / `inject: ['webServer']` / `apply`：① `installSection` 本插件的 settings 命名空间（三项的权威存储 + schema 校验 + base 层补丁）；② 三条同源路由 `/ext/dshp-file-change-viewer/{state,config,locate}` 供设置节读写与行号定位；③ `patch` 工具（**测试版，默认关**：`patchTool` 一开一关就注册 / 反注册，注册面在 `ctx.inject(['tools','fs'])` 的注入作用域里）。没有事件；这一行同时是 DSH **从 Host Loader 的条目里扫描 `dsh.client` 声明**来发现并下发客户端 bundle 的入口——没有它，`lib/client.js` 不会被加载（详见 `src/host/index.ts` 头注释）。                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| **Host（`src/host/` → `lib/host.js`）**       | `name` / `inject: ['webServer']` / `Config` 导出 / `apply`：① 上交条目 `Config` schema（三项偏好全是 volatile 字段，权威存储在 profile 条目 `config:`）+ `settings.configure({ auto: false })` 关掉自动设置页；② 三条同源路由 `/ext/dshp-file-change-viewer/{state,config,locate}` 供设置节读写与行号定位；③ `patch` 工具（**测试版，默认关**：`patchTool` 一开一关就注册 / 反注册，热更新走 `loader/volatile-update`，注册面在 `ctx.inject(['tools','fs'])` 的注入作用域里）。没有事件；这一行同时是 DSH **从 Host Loader 的条目里扫描 `dsh.client` 声明**来发现并下发客户端 bundle 的入口——没有它，`lib/client.js` 不会被加载（详见 `src/host/index.ts` 头注释）。                                                                                                                                                                                                                                                                                                                          |
 | **Client（`src/client/` → `lib/client.js`）** | 用 `priority: -1` 注册 `tool.call.toolview` 的 `edit` / `write` / `str_replace_editor` 三个 key（影子化官方内置行；同 key 同 priority 会抛错，所以必须比内置的 `0` 更小），带 `locale: 'conversation'` 取文案；行外壳用官方 `DisclosureRow` **默认样式**（不自造卡片），展开后每个 hunk 一个自己的折叠块，块内是**纯高亮代码**（官方 `CodeBlock` 去掉语言栏/复制/外壳）；`diff.ts` 推导模型与 LCS 统一 diff，`lang.ts` 映射 26 个官方语法 id，行内没内容时给等待 / 截断兜底文案；`diff.ts` 把每个 hunk 跑一次 LCS（`raw` / `rows` / `changed` 三种口径），统计与 ± 视图都用语义变更；`prefs.ts` 管全局偏好的读写往返与订阅（设置节与工具行共用同一个 store），`FileChangeViewerSection.ts` 是设置 → 「File Change View」这一节的内容（展示方式两张样张单选卡走 `viewCards.ts`），`api.ts` 封装两条 `/ext` 路由；`diffView.ts` 把「高亮 / ± 差异」两种视图的渲染收口（工具行与设置页样张共用同一份代码），`SessionControls.ts` + `session.ts` 是会话页头那两个快捷开关与它们的内存级会话覆盖。 |
 | **同源路由**                                  | `GET /ext/dshp-file-change-viewer/state`（当前生效偏好）/ `POST …/config`（保存补丁 → `settings.update`）/ `POST …/locate`（真实行号定位，只回整数、不回文件内容）。业务错误一律 200 + `ok:false`，跨站 / 方法错误 4xx。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | **工具**                                      | 注册一个 `patch` 工具（`*** Begin Patch` 信封，一次可改多处 / 多文件，全有或全无）：经 `ctx.fs` 读写，吃沙箱模式与观察策略，结果元数据带 `diffs` 交给卡片渲染；删除 / 改名明确拒绝并指路 `bash`。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
@@ -268,7 +268,7 @@ dsh web   # 重启生效
 
 ## 配置项
 
-三项**显示偏好** + 一个**工具开关**，落 `settings.yaml` 的 `dshp-file-change-viewer` 分节，界面入口是
+三项**显示偏好** + 一个**工具开关**，落 profile 条目 `dshp-file-change-viewer` 的 `config:`，界面入口是
 **设置 → 左侧导航「File Change View」**（`settings.section`，id = 该命名空间）：
 
 | 偏好           | 控件           | 默认        | 说明                                                                                                                                                                                                                                                                                                                                                                     |
@@ -279,7 +279,7 @@ dsh web   # 重启生效
 | `patchTool`    | 开关           | `false`     | **是否注册 `patch` 工具**（测试版）。关 = 模型只用官方 `read` / `write` / `edit`；开 = 多出本插件的批量补丁工具。**动态生效**：Host 在 settings 的 `onChange` 里重新判定，注册 / 反注册即时完成，不必重启 `dsh web`                                                                                                                                                      |
 
 ```yaml
-# settings.yaml（只认这一个 NS；改完热重载，无需重启）
+# profile cordis.patch.yml → dshp-file-change-viewer 条目 config:（只认这一个 NS；设置页写入即热更，手工编辑重启生效）
 dshp-file-change-viewer:
   view: highlight # highlight | diff
   contextLines: 3 # 改动两侧多显示几行上下文：0 | 3 | 5 | 8
@@ -295,11 +295,11 @@ dshp-file-change-viewer:
 
 > **设置节的读写为什么不走客户端 `settingsScope`**：官方 `settingsScope.bind({ namespace })` 也能读写同一分节，
 > 但它要求 Host 已注册命名空间、浏览器侧服务已挂载、写操作按 revision 设栅；任一环时序不对（服务晚挂载、
-> 页面非 loopback）就会**静默退化成只读默认值**——症状正是「下拉和开关点了没反应、`settings.yaml` 里也没有分节」。
+> 页面非 loopback）就会**静默退化成只读默认值**——症状正是「下拉和开关点了没反应、profile 条目 `config:` 里也没有键值」。
 > 本仓既有插件（mcwiki-search / vision-bridge / token-meter）统一走「自有 `/ext` 路由 → Host `settings.update`」：
 > 写的是同一份文件，但少一层时序依赖。设置节与工具行共用同一个客户端 store（`src/client/prefs.ts`），
 > 读走 `state`、写走 `config`；写是乐观的，失败一定回滚并报错，绝不假装保存成功。
-> `scripts/check-host.mjs` 守着「NS = cordis 行 id + 真的 installSection + 非法补丁不落库」，
+> `scripts/check-host.mjs` 守着「NS = cordis 行 id + `Config` 导出与 `configure({ auto: false })` 契约 + 非法补丁不落库」，
 > `scripts/check-client.mjs` 守着「注册了 `settings.section` 且 id / order 正确 + 点控件真的 POST 出去 + 失败会回滚」。
 
 几个刻意的内置常量（UI 几何常量，不是部署配置，改完需要重新 build）：
@@ -315,7 +315,7 @@ dshp-file-change-viewer:
 | 图标                            | primitives                    | `FileTypeIcon` / `IconPlusOutline16` …        | 文件类型、增删、视图切换各用官方图标；官方图标集没有减号，减号用一图元内联 SVG           |
 | `TOOL_KEYS` / `SHADOW_PRIORITY` | `src/client/index.ts`         | `edit` / `write` / `str_replace_editor`，`-1` | 接管哪些工具行、影子化优先级                                                             |
 
-不建自有配置文件、不碰任何用户数据；**唯一的写入是 `settings.yaml` 的 `dshp-file-change-viewer` 分节**（经官方 `settings.update`，docs/settings.md 与 docs/security.md）。
+不建自有配置文件、不碰任何用户数据；**唯一的写入是 profile 条目 `dshp-file-change-viewer` 的 `config:`**（经官方 `settings.update`，docs/settings.md 与 docs/security.md）。
 
 ## 代码结构
 
@@ -344,7 +344,7 @@ plugins/file-change-viewer/
 ├── src/client/lang.ts           # 扩展名 → 官方语法 id（镜像 DSH 高亮别名表，26 个语言）
 ├── src/client/styles.ts         # 样式（前缀 fcv-：官方行内样式 + 差异底色 + 设置节版式 + 页头开关）
 ├── src/client/types.ts          # Client 半类型（与官方 RunningToolCall / ToolResultNode / CodeBlock 契约对齐）
-├── scripts/check-host.mjs       # Host 冒烟测试：installSection + /ext 两条路由 + patch 工具落盘
+├── scripts/check-host.mjs       # Host 冒烟测试：Config/configure 契约 + /ext 三条路由 + patch 工具落盘
 ├── scripts/check-patch.mjs      # patch 纯函数测试：解析 / 应用 / 各种失败姿势
 ├── scripts/check-client.mjs     # Client 冒烟测试：加载 lib/client.js，断言注册结果与渲染树
 └── lib/{host,client}.js         # 单文件构建产物（已提交，DSH git 安装必需）
@@ -354,9 +354,9 @@ plugins/file-change-viewer/
 
 - **装完了但行没变化**：先硬刷新浏览器（client 半是页面脚本）；再确认 profile 的 `dsh.profile.bundles` 里有 `@dshp/file-change-viewer`；最后看 `dsh web` 日志有没有 `[dshp-file-change-viewer]` 的报错行。
 - **编辑行默认是折叠的，我要一眼看到**：只想**现在这个会话**立刻摊开，点**会话页头右侧的「展开改动」**（不改任何设置，换会话就回到默认）；想以后都默认展开，到 **设置 → File Change View** 打开「编辑 / 写入默认展开」——全局开关只作用于之后新渲染的编辑 / 写入行。
-- **偏好设置在哪**：**设置 → 左侧导航「File Change View」**（本插件自己的一节，分「显示」与「工具」两组：展示方式是两张并排的单选卡、卡里直接画出两种效果，上下文行数是下拉，编辑 / 写入默认展开与启用 patch 工具是开关；改完立即写入 `settings.yaml` 的 `dshp-file-change-viewer` 分节）。
+- **偏好设置在哪**：**设置 → 左侧导航「File Change View」**（本插件自己的一节，分「显示」与「工具」两组：展示方式是两张并排的单选卡、卡里直接画出两种效果，上下文行数是下拉，编辑 / 写入默认展开与启用 patch 工具是开关；改完立即写入 profile 条目 `dshp-file-change-viewer` 的 `config:`）。
 - **模型看不到 `patch` 工具**：它是测试版，**默认关**。到 **设置 → File Change View → 工具**打开「启用 patch 工具（测试版）」即可；也可以在 composition 的 `config:` 里写 `patchTool: true` 让整个部署默认打开。改完**不需要重启** `dsh web`（Host 在 settings 的 `onChange` 里重新判定并即时注册 / 反注册）。反过来，如果开关是开着的、模型却还是说没有这个工具，先确认 `dsh web` 起得来（`lib/host.js` 有没有 `patchTool` 这个字段：`curl -s http://127.0.0.1:3080/ext/dshp-file-change-viewer/state`）。
-- **设置里看不到「File Change View」这一节 / 会话页头看不到那两个开关**：两者都由客户端半注册（`settings.section` 与 `conversation.session.header.utilities`），先**硬刷新页面**（client 半是页面脚本）。若节在、但一改就显示「未保存」+ 红字，那是 Host 半没挂载：`dsh web` 没重启时 `lib/host.js` 还是旧的、没有 `/ext` 路由（探一下就知道：`curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3080/ext/dshp-file-change-viewer/state`，404 = 没重启）。改完 Host 半**必须重启** `dsh web`（只改 client 半强刷即可）。三条护栏：`scripts/check-host.mjs`（NS = 行 id + 真的 installSection + 路由真的写库 + 非法补丁不落库）、`scripts/check-client.mjs`（设置节与会话页头的注册契约 / 点控件真的 POST / 保存失败会回滚 / 页头开关一个 `/config` 都不发）。
+- **设置里看不到「File Change View」这一节 / 会话页头看不到那两个开关**：两者都由客户端半注册（`settings.section` 与 `conversation.session.header.utilities`），先**硬刷新页面**（client 半是页面脚本）。若节在、但一改就显示「未保存」+ 红字，那是 Host 半没挂载：`dsh web` 没重启时 `lib/host.js` 还是旧的、没有 `/ext` 路由（探一下就知道：`curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3080/ext/dshp-file-change-viewer/state`，404 = 没重启）。改完 Host 半**必须重启** `dsh web`（只改 client 半强刷即可）。三条护栏：`scripts/check-host.mjs`（NS = 行 id + `Config`/`configure` 契约 + 路由真的写库 + 非法补丁不落库）、`scripts/check-client.mjs`（设置节与会话页头的注册契约 / 点控件真的 POST / 保存失败会回滚 / 页头开关一个 `/config` 都不发）。
 - **点页头的「展开改动 / 收起改动」之后，我在某一行上手动点的折叠还在吗**：页头那一下会**先把该会话里所有行与文件块的临时状态作废**（这样它才是真正的「一键全改」），之后你在单行 / 单块上的点击照常由你说了算；点右侧的「↺ 恢复跟随偏好」则整个会话回到设置页里的全局默认。
 - **为什么统计不是内置行那种 `+7 -7`（只改了一行却报 7 行）**：`edit` 写进 `meta.diffs` 的 `oldText` / `newText` 是模型这次给的 `old_string` / `new_string` **原文**——为了让 `old_string` 在文件里唯一，模型通常会把上下几行一起圈进来。官方 `diffTotals` 与官方 `DiffBlock` 都按这份原文算，于是「只改一行」被报成 `+7 -7`，± 视图里看起来像整段删、整段加。本插件对每个 hunk 跑一次 LCS，然后**三个地方统一用它的结果**：行头 / 卡头统计、高亮视图、± 差异视图（喂给 `DiffBlock` 的也是只含变化行的 hunk），所以三处永远说同一件事。想要原文口径的话，切到内置行即可（`dsh plugin --profile web remove`）。
 - **打开「编辑 / 写入默认展开」后，老的行还是折叠的？**：这是**有意的**——这项偏好只决定「**新渲染**的编辑 / 写入操作长什么样」，不会回头去改已经渲染出来的行（否则你正在读的 diff 会被开关抽走）。新调用、或列表滚动重挂后采用新值。
@@ -374,7 +374,7 @@ plugins/file-change-viewer/
 - **为什么要 `priority: -1`（改代码的人必读）**：keyed 槽位派发是「按 priority 升序取每个 key 的第一条」，官方内置行占着 `0`，所以接管必须用**比 0 更小**的值；同 key 同 priority 不是覆盖而是抛错。这条有断言守着。
 - **只有 `edit` / `write` 变了，`bash` 里的文件改动没变**：本插件只接管这两个（以及兼容项 `str_replace_editor`）。用 shell 重定向改文件属于 `bash` 行，不在范围内。**读取（`read`）/ `read_image` / 其它工具行完全没被注册、也没被改样式**（可用 `Slots.listSubTree` 查 `tool.call.toolview` 的占用者核对）。
 - **某个工具的行突然显示「原始参数」/「参数不可用」**：说明这次调用的 `meta.diffs` 为空且参数推导不出变更（例如窗口截断把调用头切掉了）。这是兜底路径：能解析成对象就交给官方 `JsonBlock`，否则原样打印并截断。
-- **想回到内置行**：`dsh plugin --profile web remove "@dshp/file-change-viewer"` + `dsh web`；偏好存在 `settings.yaml` 的 `dshp-file-change-viewer` 分节，删掉该分节即回默认值。
+- **想回到内置行**：`dsh plugin --profile web remove "@dshp/file-change-viewer"` + `dsh web`；偏好存在 profile 条目 `dshp-file-change-viewer` 的 `config:`，删掉该分节即回默认值。
 
 ## 卸载
 
@@ -383,7 +383,7 @@ dsh plugin --profile web remove "@dshp/file-change-viewer"
 dsh web
 ```
 
-`remove` 会自动从 `dsh.profile.bundles` 撤下挂载（monorepo 本体不用删）。本插件不建自有文件、不缓存任何数据；唯一的落盘是 `settings.yaml` 的 `dshp-file-change-viewer` 分节，卸载后该分节可自行删除。
+`remove` 会自动从 `dsh.profile.bundles` 撤下挂载（monorepo 本体不用删）。本插件不建自有文件、不缓存任何数据；唯一的落盘是 profile 条目 `dshp-file-change-viewer` 的 `config:`，卸载后该分节可自行删除。
 
 ## 移植说明
 
@@ -404,5 +404,5 @@ dsh web
 ## 免责声明
 
 - 本插件只改变工具调用在**界面上的渲染方式**，不修改任何文件内容、不干预模型行为；文件改动的正确性仍由官方 `edit` / `write` 工具与你的沙箱策略负责。
-- 不联网、不上传；唯一的落盘是 `settings.yaml` 的 `dshp-file-change-viewer` 分节（经官方 settings 服务写入）。
+- 不联网、不上传；唯一的落盘是 profile 条目 `dshp-file-change-viewer` 的 `config:`（经官方 settings 服务写入）。
 - 它接管了官方内置卡片的渲染。如果 DSH 上游改了 `DiffBlock` / `DisclosureRow` / `CodeBlock` 的 props 契约、或高亮别名表（`lang.ts` 镜像的那张），卡片可能渲染异常或高亮失效；如果改了代码块 `code > .line` 的结构，删/增行的整行底色会消失（其余照常）。以上情况卸载本插件即恢复内置卡片。

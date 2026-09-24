@@ -5,30 +5,56 @@
  *
  *   1. 导出契约：`name` / `inject` / `apply`，以及 `NS` 必须等于 cordis 行 id
  *      （NS 四处同名：settings 命名空间 / `/ext` 路由前缀 / patch id / settings.section id）；
- *   2. 必须真的 `installSection` 一个命名空间，并把 `setSource` 交给 settings 服务（热重载靠它）；
+ *   2. 必须真的调 `settings.configure({ auto: false })`（0.1.7 契约：自带设置页时关掉自动页），
+ *      并把条目 config 的 volatile 引用读进 `getConfig`（热更新靠 loader/volatile-update）；
  *   3. `/ext` 两条路由（state / config）必须**真的把补丁写进 settings**——设置节点了没反应、
- *      settings.yaml 里没有分节，就是这一段断了。
+ *      profile 条目 config 里没有键值，就是这一段断了。
  *
  * 只用 node 内建模块，零依赖。
  */
 
 import assert from 'node:assert/strict';
 
+/** 出厂默认（与 ConfigSchema 的 .default() 同值）。 */
+const DEFAULTS = { view: 'highlight', sectionsOpen: false, contextLines: 3, patchTool: false };
+
+/** 造一份 apply 的 config 入参：每个字段是一个 Volatile 引用（.get() 读共享 values）。 */
+function volatileConfig(overrides = {}) {
+  const values = { ...DEFAULTS, ...overrides };
+  const ref = (key) => ({ get: () => values[key] });
+  return {
+    values,
+    config: {
+      view: ref('view'),
+      sectionsOpen: ref('sectionsOpen'),
+      contextLines: ref('contextLines'),
+      patchTool: ref('patchTool'),
+    },
+  };
+}
+
+/** 只要 config 本体的简写（静态断言用；需要观察 update 写回的地方另建 values 接线）。 */
+function cfg(overrides = {}) {
+  return volatileConfig(overrides).config;
+}
+
 /** 最近一次 fake ctx 的可观测面。 */
 let last = null;
 
-/** 记录一次 installSection 调用。 */
-let installed = null;
-
-/** 造一个假 ctx：只认插件真正用到的那几件（inject / get / effect / webServer / tools / fs）。 */
+/** 造一个假 ctx：只认插件真正用到的那几件（inject / get / effect / on / webServer / tools / fs）。 */
 function fakeCtx(options = {}) {
   const state = {
-    installed: null,
+    configured: null,
     routes: [],
     updates: [],
     effects: 0,
     hasSettings: options.hasSettings !== false,
     tools: [],
+    /** 条目 config 各 volatile 字段共享的可变值；settings.update 原地写它并派发 loader/volatile-update。 */
+    values: options.values,
+    /** 插件经 ctx.on 注册的 loader/volatile-update 处理器。 */
+    volatileHandlers: [],
+    fiber: { label: 'dshp-file-change-viewer@test' },
     /** 内存文件系统：displayPath → 内容。 */
     files: new Map(options.files ?? []),
     /** readText 的调用记录（验证「同一文件只读一次」）。 */
@@ -45,27 +71,28 @@ function fakeCtx(options = {}) {
     confiningReads: 0,
     /** 假后端的 readText 是否把 BOM 留在文本里（官方后端不会；用来验证「不会补出第二个 BOM」）。 */
     hasBom: options.hasBom === true,
-    /** 当前「base 层 + settings.yaml 用户层」合并后的值（installSection / update 都维护它）。 */
-    config: {},
   };
   last = state;
   const settings = {
-    installSection: (ctxArg, ns, schema, entry, hooks) => {
-      state.installed = { ctxArg, ns, schema, entry, options: hooks };
-      installed = state.installed;
-      // 与真实 settings 服务同序：先交付 setSource（当前权威值），再 onChange 重新判定。
-      state.config = { ...state.config, ...entry };
-      if (typeof hooks.setSource === 'function') hooks.setSource(() => state.config);
-      if (typeof hooks.onChange === 'function') hooks.onChange();
+    /** 0.1.7 页面策略：auto:false = 用插件自带的 settings.section 页。 */
+    configure: (policy, fiber) => {
+      state.configured = { policy, fiber };
+      return () => {};
     },
-    /** 读一个命名空间的权威值（schema 默认 + base 层 + 用户层合并后的结果）。 */
-    get: (ns) => (ns === host.NS ? { ...state.config } : undefined),
     update: async (ns, patch) => {
       state.updates.push({ ns, patch });
-      // 真实服务：合并用户层 → 校验 → 提交并 emit；emit 就是 onChange 的来源。
-      state.config = { ...state.config, ...patch };
-      const hooks = state.installed && state.installed.options;
-      if (hooks && typeof hooks.onChange === 'function') hooks.onChange();
+      // 真实 loader 的提交语义：配置-only 变更把新值**原地**写进 volatile 引用，
+      // 然后在本 fiber 上派发 loader/volatile-update（changed paths）。
+      if (state.values !== undefined) {
+        const paths = [];
+        for (const [key, value] of Object.entries(patch)) {
+          if (key in state.values) {
+            state.values[key] = value;
+            paths.push([key]);
+          }
+        }
+        for (const handler of state.volatileHandlers) handler({ paths });
+      }
     },
   };
   state.settings = settings;
@@ -146,6 +173,18 @@ function fakeCtx(options = {}) {
       };
     },
     emit: () => {},
+    /** 0.1.7 热更新事件面：插件在这里收 loader/volatile-update。 */
+    on: (event, handler) => {
+      if (event === 'loader/volatile-update') {
+        state.volatileHandlers.push(handler);
+        return () => {
+          const at = state.volatileHandlers.indexOf(handler);
+          if (at >= 0) state.volatileHandlers.splice(at, 1);
+        };
+      }
+      return () => {};
+    },
+    fiber: state.fiber,
     waterfall: (...args) => {
       const fallback = args[args.length - 1];
       return typeof fallback === 'function' ? fallback() : undefined;
@@ -230,95 +269,97 @@ ok(
   Array.isArray(host.inject) && host.inject.includes('webServer'),
 );
 ok('必须导出 apply', typeof host.apply === 'function');
-ok('必须导出 NS 与 ConfigSchema（settings 契约四件套）', typeof host.NS === 'string' && host.ConfigSchema);
+ok(
+  '必须导出 NS / ConfigSchema / Config（0.1.7 条目契约）',
+  typeof host.NS === 'string' && !!host.ConfigSchema && !!host.Config,
+);
 ok('NS 必须等于 cordis 行 id（NS 四处同名）', host.NS === 'dshp-file-change-viewer');
 
-// ── 默认值 + 补丁 + 命名空间 ────────────────────────────────────────────────
-host.apply(fakeCtx(), undefined);
-ok('必须注册 settings 命名空间', installed !== null);
-ok('注册的命名空间就是 NS', installed.ns === 'dshp-file-change-viewer');
-ok(
-  '没传补丁时用出厂默认（高亮 + 不默认展开 = 保持原生折叠）',
-  installed.entry.view === 'highlight' && installed.entry.sectionsOpen === false,
-);
-ok(
-  '必须把 setSource 回调交给 settings 服务（热重载靠它）',
-  typeof installed.options.setSource === 'function',
-);
-ok(
-  '必须把 onChange 交给 settings 服务（patch 工具的动态开关靠它）',
-  typeof installed.options.onChange === 'function',
-);
-ok('patchTool 出厂默认关（测试版能力）', installed.entry.patchTool === false);
-ok('contextLines 出厂默认 3 行（git diff 同款默认）', installed.entry.contextLines === 3);
-ok(
-  '默认关着时**不注册** patch 工具',
-  last.tools.every((tool) => tool.name !== 'patch'),
-);
+// ── 默认值 + 条目 config + 页面策略 ─────────────────────────────────────────
+{
+  const setup = volatileConfig();
+  const ctx = fakeCtx({ values: setup.values });
+  host.apply(ctx, setup.config);
+  ok(
+    '自带设置页必须关掉自动页（configure({ auto: false }, ctx.fiber)）',
+    last.configured !== null && last.configured.policy.auto === false && last.configured.fiber === ctx.fiber,
+  );
+  const initial = (await callRoute(last.routes[0], 'GET')).json.config;
+  ok(
+    '条目没写 config 时用出厂默认（高亮 + 不默认展开 = 保持原生折叠）',
+    initial.view === 'highlight' && initial.sectionsOpen === false,
+  );
+  ok('patchTool 出厂默认关（测试版能力）', initial.patchTool === false);
+  ok('contextLines 出厂默认 3 行（git diff 同款默认）', initial.contextLines === 3);
+  ok(
+    '默认关着时**不注册** patch 工具',
+    last.tools.every((tool) => tool.name !== 'patch'),
+  );
+}
 
-host.apply(fakeCtx(), { view: 'diff', sectionsOpen: true });
-ok('composition 补丁必须生效', installed.entry.view === 'diff' && installed.entry.sectionsOpen === true);
+{
+  const setup = volatileConfig({ view: 'diff', sectionsOpen: true });
+  host.apply(fakeCtx({ values: setup.values }), setup.config);
+  const shown = (await callRoute(last.routes[0], 'GET')).json.config;
+  ok('条目 config（loader 校验后的引用）原样生效', shown.view === 'diff' && shown.sectionsOpen === true);
+}
 
-host.apply(fakeCtx(), { patchTool: true });
-ok('composition 也能把 patch 工具打开', installed.entry.patchTool === true);
+host.apply(fakeCtx(), cfg({ patchTool: true }));
 ok(
   '打开后确实注册了 patch 工具',
   last.tools.some((tool) => tool.name === 'patch'),
 );
 
-host.apply(fakeCtx(), { patchTool: 'yes' });
-ok('patchTool 非布尔值被丢弃（消毒）', installed.entry.patchTool === false);
-
-host.apply(fakeCtx(), { contextLines: 8 });
-ok('composition 能把上下文行数调大', installed.entry.contextLines === 8);
-
-host.apply(fakeCtx(), { contextLines: 4 });
-ok('枚举之外的上下文行数被丢弃（消毒）', installed.entry.contextLines === 3);
-
-host.apply(fakeCtx(), { view: 'bogus', sectionsOpen: 'yes' });
-ok(
-  '非法补丁必须被丢弃（逐字段消毒）',
-  installed.entry.view === 'highlight' && installed.entry.sectionsOpen === false,
-);
-
-host.apply(fakeCtx(), 'not-an-object');
-ok('非对象补丁不抛错', installed.entry.view === 'highlight');
-
-// 动态开关的健壮性：settings 在 attach / detach 时会用「只有 base 层」的源调一次 setSource + onChange，
-// 那一刻不能把已经开着的工具反注册掉（真实会话里表现为模型收到 unknown tool "patch"）。
+// 非法值不再有插件内的逐字段回退：schema 校验不过 = 整个条目不装载（loader 侧的事），这里守住 schema 本身。
 {
-  const detach = fakeCtx();
-  host.apply(detach, undefined); // 部署层没开
-  await last.settings.update(host.NS, { patchTool: true }); // 用户在设置里开了
+  const badBool = host.ConfigSchema['~standard'].validate({ patchTool: 'yes' });
   ok(
-    '设置里开了之后注册上',
-    last.tools.some((tool) => tool.name === 'patch'),
+    '非布尔 patchTool 被 schema 拒绝（issues 非空）',
+    Array.isArray(badBool.issues) && badBool.issues.length > 0,
   );
-  // 模拟 detach：setSource 换成一个「只有 base 层、没有 patchTool」的源，再触发 onChange
-  last.installed.options.setSource(() => ({ view: 'highlight', sectionsOpen: false, contextLines: 3 }));
-  last.installed.options.onChange();
-  ok(
-    'attach/detach 不会把已开的 patch 工具反注册掉（要读 settings 服务里的权威值）',
-    last.tools.some((tool) => tool.name === 'patch'),
-  );
+  const badEnum = host.ConfigSchema['~standard'].validate({ contextLines: 4 });
+  ok('枚举之外的上下文行数被 schema 拒绝', Array.isArray(badEnum.issues) && badEnum.issues.length > 0);
+  const badView = host.ConfigSchema['~standard'].validate({ view: 'bogus' });
+  ok(' bogus view 被 schema 拒绝', Array.isArray(badView.issues) && badView.issues.length > 0);
+}
 
-  // 真的在设置里关掉（权威值变了）才反注册
+// 动态开关：settings.update 原地提交进 volatile 引用 → loader/volatile-update 驱动 syncPatchTool。
+{
+  const setup = volatileConfig();
+  host.apply(fakeCtx({ values: setup.values }), setup.config);
+  await last.settings.update(host.NS, { patchTool: true });
+  ok(
+    '设置里开了（volatile 提交）就把工具注册上',
+    last.tools.some((tool) => tool.name === 'patch'),
+  );
+  await last.settings.update(host.NS, { view: 'diff' });
+  ok(
+    '改别的字段不动已注册的工具',
+    last.tools.some((tool) => tool.name === 'patch'),
+  );
   await last.settings.update(host.NS, { patchTool: false });
-  ok('权威值真的关了才反注册', !last.tools.some((tool) => tool.name === 'patch'));
+  ok('真的关了才反注册', !last.tools.some((tool) => tool.name === 'patch'));
 }
 
 // ── schema ─────────────────────────────────────────────────────────────────
-const parsed = installed.schema({});
-ok('schema 默认 view=highlight', parsed.view === 'highlight');
-ok('schema 默认 sectionsOpen=false（新渲染的行保持原生折叠）', parsed.sectionsOpen === false);
-ok('schema 默认 patchTool=false（工具默认关闭）', parsed.patchTool === false);
-ok('schema 默认 contextLines=3', parsed.contextLines === 3);
+const parsed = host.ConfigSchema({});
+ok('schema 默认 view=highlight', parsed.view.get() === 'highlight');
+ok('schema 默认 sectionsOpen=false（新渲染的行保持原生折叠）', parsed.sectionsOpen.get() === false);
+ok('schema 默认 patchTool=false（工具默认关闭）', parsed.patchTool.get() === false);
+ok('schema 默认 contextLines=3', parsed.contextLines.get() === 3);
 ok('schema 里不再有 rowsOpen 这种多余属性', parsed.rowsOpen === undefined);
-const narrowed = installed.schema({ view: 'diff', sectionsOpen: false });
-ok('schema 接受合法值', narrowed.view === 'diff' && narrowed.sectionsOpen === false);
+const narrowed = host.ConfigSchema({ view: 'diff', sectionsOpen: false });
+ok(
+  'schema 接受合法值（volatile 字段的输出是引用，.get() 读值）',
+  narrowed.view.get() === 'diff' && narrowed.sectionsOpen.get() === false,
+);
 
 // ── /ext 路由 ──────────────────────────────────────────────────────────────
-host.apply(fakeCtx({ hasSettings: true }), { view: 'diff', sectionsOpen: true });
+{
+  // 这段要观察「POST 写回后 GET 读到新值」，所以 values 与 fake settings.update 接在同一个对象上。
+  const setup = volatileConfig({ view: 'diff', sectionsOpen: true });
+  host.apply(fakeCtx({ hasSettings: true, values: setup.values }), setup.config);
+}
 const state = last;
 const paths = state.routes.map((route) => route.path);
 ok('必须注册三条 exact 路由', paths.length === 3 && state.routes.every((route) => route.kind === 'exact'));
@@ -334,7 +375,7 @@ const configRoute = state.routes[1];
   const located = fakeCtx({
     files: [['src/l.ts', 'one\ntwo\nthree\nfour\nfive\nsix\nseven\neight\nnine\nten\neleven\n']],
   });
-  host.apply(located, undefined);
+  host.apply(located, cfg());
   const route = last.routes[2];
   const answer = await callRoute(
     route,
@@ -419,7 +460,7 @@ ok(
 const badContext = await callRoute(configRoute, 'POST', JSON.stringify({ contextLines: 4 }));
 ok('非法 contextLines 必须回 ok:false 且不落库', badContext.json.ok === false && state.updates.length === 4);
 ok(
-  'patchTool 一开，settings 的 onChange 就把工具注册上（不必重启）',
+  'patchTool 一开，volatile 提交（loader/volatile-update）就把工具注册上（不必重启）',
   state.tools.some((tool) => tool.name === 'patch'),
 );
 const closedTool = await callRoute(configRoute, 'POST', JSON.stringify({ patchTool: false }));
@@ -442,7 +483,7 @@ ok('config 路由只收 POST', wrongMethod.status === 405);
 const crossSite = await callRoute(stateRoute, 'GET', undefined, { origin: 'http://evil.example', host: 'x' });
 ok('跨站调用必须 403', crossSite.status === 403);
 
-host.apply(fakeCtx({ hasSettings: false }), undefined);
+host.apply(fakeCtx({ hasSettings: false }), cfg());
 const noSettings = await callRoute(last.routes[1], 'POST', JSON.stringify({ sectionsOpen: true }));
 ok(
   'settings 服务缺失时必须回 ok:false（不能假装保存成功）',
@@ -457,7 +498,7 @@ const withFiles = fakeCtx({
     ['src/b.ts', 'const b = 2;\n'],
   ],
 });
-host.apply(withFiles, { patchTool: true });
+host.apply(withFiles, cfg({ patchTool: true }));
 const patchTool = last.tools.filter((tool) => tool.name === 'patch')[0];
 ok('必须注册 patch 工具', patchTool !== undefined);
 ok('patch 工具要求必须带 patch 文本', patchTool.parameters.required.includes('patch'));
@@ -534,7 +575,7 @@ ok('render 只回小结、不回显整份 patch', typeof patchTool.output.render
 
 // 全有或全无：第二个文件的上下文对不上时，第一个文件也不能被写
 const broken = fakeCtx({ files: [['src/a.ts', 'const a = 1;\n']] });
-host.apply(broken, { patchTool: true });
+host.apply(broken, cfg({ patchTool: true }));
 const brokenTool = last.tools.filter((tool) => tool.name === 'patch')[0];
 const halfPatch = [
   '*** Begin Patch',
@@ -569,7 +610,7 @@ ok('「已有文件却不存在」的消息教了怎么新建', String(allOrNoth
       ['src/old.ts', 'old content\n'],
     ],
   });
-  host.apply(refuse, { patchTool: true });
+  host.apply(refuse, cfg({ patchTool: true }));
   const tool = last.tools.filter((item) => item.name === 'patch')[0];
 
   let deleted = null;
@@ -641,7 +682,7 @@ ok('「已有文件却不存在」的消息教了怎么新建', String(allOrNoth
     hasBom: true,
     files: [['src/bom.cs', utf8Bom + 'using System;\n\nclass Test {}\n']],
   });
-  host.apply(kept, { patchTool: true });
+  host.apply(kept, cfg({ patchTool: true }));
   const tool = last.tools.filter((item) => item.name === 'patch')[0];
   const written = await tool.execute(
     {
@@ -657,7 +698,7 @@ ok('「已有文件却不存在」的消息教了怎么新建', String(allOrNoth
   ok('BOM 不进入差异文本（卡片不会显示一个不可见字符）', written.diffs[0].newText.includes('class Next {}'));
 
   const stripped = fakeCtx({ hasBom: true, files: [['src/bom2.cs', 'using System;\n']] });
-  host.apply(stripped, { patchTool: true });
+  host.apply(stripped, cfg({ patchTool: true }));
   const tool2 = last.tools.filter((item) => item.name === 'patch')[0];
   await tool2.execute(
     {
@@ -687,7 +728,7 @@ const sandboxed = fakeCtx({
     ['src/b.ts', 'const b = 2;\n'],
   ],
 });
-host.apply(sandboxed, { patchTool: true });
+host.apply(sandboxed, cfg({ patchTool: true }));
 const sandboxTool = last.tools.filter((tool) => tool.name === 'patch')[0];
 const sandboxParams = sandboxTool.parameters.properties;
 ok('有沙箱后端时广告 sandbox_permissions', sandboxParams.sandbox_permissions !== undefined);
@@ -722,7 +763,7 @@ const refused = fakeCtx({
     ['src/b.ts', 'const b = 2;\n'],
   ],
 });
-host.apply(refused, { patchTool: true });
+host.apply(refused, cfg({ patchTool: true }));
 const refusedTool = last.tools.filter((tool) => tool.name === 'patch')[0];
 let refusal = null;
 try {
@@ -744,7 +785,7 @@ const noWider = fakeCtx({
   standingMode: 'danger-full-access',
   approvalOutcome: 'allowed-once',
 });
-host.apply(noWider, { patchTool: true });
+host.apply(noWider, cfg({ patchTool: true }));
 const noWiderTool = last.tools.filter((tool) => tool.name === 'patch')[0];
 let notWider = null;
 try {
@@ -776,7 +817,7 @@ ok('只给 justification 时拒绝', pairing !== null && String(pairing.message)
       ['src/b.ts', 'const b = 2;\n'],
     ],
   });
-  host.apply(late, { patchTool: true });
+  host.apply(late, cfg({ patchTool: true }));
   const lateTool = last.tools.filter((tool) => tool.name === 'patch')[0];
 
   // 策略服务仍然没挂上：宁可拒绝，也不能用「无策略」去写（那会让围栏退回兜底根）
@@ -810,7 +851,7 @@ const denied = fakeCtx({
     ['src/b.ts', 'const b = 2;\n'],
   ],
 });
-host.apply(denied, { patchTool: true });
+host.apply(denied, cfg({ patchTool: true }));
 const deniedTool = last.tools.filter((tool) => tool.name === 'patch')[0];
 last.fsWriteDenied = true;
 let blocked = null;
@@ -904,7 +945,7 @@ for (const [label, policy, target] of [
       ['/w/src/b.ts', 'const b = 2;\n'],
     ],
   });
-  host.apply(mixed, { patchTool: true });
+  host.apply(mixed, cfg({ patchTool: true }));
   const mixedTool = last.tools.filter((tool) => tool.name === 'patch')[0];
   // 一个在工作区内，两个是绝对路径的工作区外目标
   const outsidePatch = [

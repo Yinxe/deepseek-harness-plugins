@@ -43,10 +43,10 @@ import { useState, type ReactNode } from 'react';
 import {
   DisclosureRow,
   FileTypeIcon,
-  IconBranchOutline16,
-  IconCodeOutline16,
-  IconEditOutline16,
-  IconPlusOutline16,
+  IconBranchOutlineRegular,
+  IconCodeOutlineRegular,
+  IconEditOutlineRegular,
+  IconPlusOutlineRegular,
   JsonBlock,
   Pill,
   StateDot,
@@ -144,16 +144,18 @@ function nodeTitle(node: ReactNode): string {
   return node as unknown as string;
 }
 
-/** DiffBlock 的本地化文案（字段名与官方 `diffBlockLabels(t)` 一致）。 */
+/** DiffBlock 的本地化文案（字段名与官方 `diffBlockLabels(t)` 一致：0.1.7 起继承 `codeToolbarLabels`，不再有 `files`）。 */
 function diffLabels(t: (key: string, params?: Record<string, unknown>) => string) {
   return {
+    codeLabel: t('codeBlock.title'),
+    wrapLabel: t('codeBlock.wrap'),
+    unwrapLabel: t('codeBlock.unwrap'),
     copy: t('copy'),
     copied: t('copied'),
     collapseAria: t('diff.collapseAria'),
     expandAria: (hidden: number) => t('diff.expandAria', { count: hidden }),
     collapse: t('collapse'),
     expand: (hidden: number) => t('diff.expandRest', { count: hidden }),
-    files: (count: number) => t(count === 1 ? 'diff.files.one' : 'diff.files.other', { count }),
   };
 }
 
@@ -301,13 +303,13 @@ export function FileChangeRow(props: ToolViewProps): ReactNode {
   /**
    * 绿增红删的统计：每侧一个图标 + 数字。
    *
-   * `+` 用官方 `IconPlusOutline16`。官方图标集里**没有减号**，所以减号用一个同 16px 网格、
+   * `+` 用官方 `IconPlusOutlineRegular`。官方图标集里**没有减号**，所以减号用一个同 16px 网格、
    * `currentColor` 的一图元内联 SVG（一条圆角横杠），颜色仍由父级的 token 决定。
    */
   const renderStat = (added: number, removed: number): ReactNode => (
     <span className={styles.stat}>
       <span className={styles.statPart + ' ' + styles.add}>
-        <IconPlusOutline16 size={ICON_SIZE} />
+        <IconPlusOutlineRegular size={ICON_SIZE} />
         {String(added)}
       </span>
       <span className={styles.statPart + ' ' + styles.del}>
@@ -339,8 +341,8 @@ export function FileChangeRow(props: ToolViewProps): ReactNode {
     );
     return (
       <span className={styles.viewGroup} role="group" aria-label={VIEW_GROUP_LABEL}>
-        {pill('highlight', VIEW_HIGHLIGHT_LABEL, <IconCodeOutline16 size={ICON_SIZE} />)}
-        {pill('diff', VIEW_DIFF_LABEL, <IconBranchOutline16 size={ICON_SIZE} />)}
+        {pill('highlight', VIEW_HIGHLIGHT_LABEL, <IconCodeOutlineRegular size={ICON_SIZE} />)}
+        {pill('diff', VIEW_DIFF_LABEL, <IconBranchOutlineRegular size={ICON_SIZE} />)}
       </span>
     );
   };
@@ -433,9 +435,10 @@ export function FileChangeRow(props: ToolViewProps): ReactNode {
    * 官方自己的做法是把原文整段列成 `-`、整段列成 `+`（一次单行替换看起来像整段重写）。
    * 每张卡只喂自己那一个 hunk——官方 DiffBlock 会把 `diffs` 里所有文件都渲染出来。
    *
-   * 上下文单独渲染成中性行贴在它上下：官方 DiffBlock 的行 kind 只有 `path | del | add | gap`
-   * （另外的那个 kind 直接 throw），**画不了中性的上下文行**，所以上下文不能塞进 `diffs`——
-   * 塞进去只会变成绿色的 `+` 或红色的 `-`，把没改的行说成改了。
+   * 上下文单独渲染成中性行贴在它上下：官方块虽然从 0.1.7 起也认 `context` 行 kind，但它喂的是
+   * **语义变更**（无前后文），自算的 hunk 里一般不会出现上下文行；上下文塞进 `diffs` 反而会被
+   * 说成改了，所以仍由本插件渲染（万一官方内部真算出上下文行，插件的行号选择器对不上时只是
+   * 那几行留空号位，不报错）。
    *
    * `beforeLine` 把「上文首行的真实行号」带进去，上下文行由此带上行号（见 diffView 的
    * `context`）；`startOf(index)` 与高亮视图同源，两个视图的行号说的是同一件事。
@@ -562,7 +565,7 @@ export function FileChangeRow(props: ToolViewProps): ReactNode {
       // 刻意**不传** rowClassName：行的几何（高度、图标位、标题字号、hover 折叠箭头）全部来自官方
       // DisclosureRow 的默认 CSS。以前这里挂过一个无样式的 `fcv-toolRow` 标记类，纯属摆设——
       // 不传才是「与思考 / 读取行长得一样」这件事的真实断言（冒烟测试断言它是 undefined）。
-      icon={model.state === 'error' ? <StateDot state="error" /> : <IconEditOutline16 size={14} />}
+      icon={model.state === 'error' ? <StateDot state="error" /> : <IconEditOutlineRegular size={14} />}
       title={
         props.toolName === 'patch'
           ? PATCH_TITLE

@@ -20,10 +20,10 @@
  */
 import type { ReactNode } from 'react';
 import {
-  IconBranchOutline16,
-  IconChevronDownOutline14,
-  IconCodeOutline16,
-  IconRefreshOutline14,
+  IconBranchOutlineRegular,
+  IconChevronDownOutlineRegular,
+  IconCodeOutlineRegular,
+  IconRefreshOutlineRegular,
 } from '@deepseek-ai/dsh-client-ui-primitives';
 import { usePrefs } from './prefs.js';
 import { resetOverride, setExpanded, setView, useOverride } from './session.js';
@@ -74,7 +74,7 @@ export function SessionControls(props: { sessionId?: string | undefined }): Reac
       aria-label={expandTitle}
       onClick={() => setExpanded(props.sessionId, !expanded)}
     >
-      <IconChevronDownOutline14
+      <IconChevronDownOutlineRegular
         size={ICON_SIZE}
         className={styles.headChevron + (expanded ? '' : ' ' + styles.headChevronShut)}
       />
@@ -90,9 +90,9 @@ export function SessionControls(props: { sessionId?: string | undefined }): Reac
       onClick={() => setView(props.sessionId, view === 'highlight' ? 'diff' : 'highlight')}
     >
       {view === 'highlight' ? (
-        <IconCodeOutline16 size={ICON_SIZE} />
+        <IconCodeOutlineRegular size={ICON_SIZE} />
       ) : (
-        <IconBranchOutline16 size={ICON_SIZE} />
+        <IconBranchOutlineRegular size={ICON_SIZE} />
       )}
       <span className={styles.headLabel}>{viewTitle}</span>
     </button>,
@@ -109,7 +109,7 @@ export function SessionControls(props: { sessionId?: string | undefined }): Reac
         aria-label={RESET_TEXT}
         onClick={() => resetOverride(props.sessionId)}
       >
-        <IconRefreshOutline14 size={ICON_SIZE} />
+        <IconRefreshOutlineRegular size={ICON_SIZE} />
       </button>,
     );
   }
