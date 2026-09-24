@@ -1,4 +1,4 @@
-// ../../node_modules/.pnpm/@deepseek-ai+cosmokit@1.8.3/node_modules/@deepseek-ai/cosmokit/lib/index.js
+// ../../node_modules/.pnpm/@deepseek-ai+cosmokit@1.8.5/node_modules/@deepseek-ai/cosmokit/lib/index.js
 function isNullable(value) {
   return value === null || value === void 0;
 }
@@ -16,6 +16,32 @@ function pick(source, keys, forced) {
   const result = {};
   for (const key of keys) if (source[key] !== void 0) result[key] = source[key];
   return result;
+}
+var write = /* @__PURE__ */ Symbol.for("cosmokit.volatile.write");
+function snapshot(value, ancestors = /* @__PURE__ */ new Set()) {
+  if (typeof value === "function") throw new TypeError("volatile config cannot contain functions");
+  if (value === null || typeof value !== "object") return value;
+  if (ancestors.has(value)) throw new TypeError("volatile config cannot contain cycles");
+  ancestors.add(value);
+  try {
+    if (Array.isArray(value)) return Object.freeze(value.map((item) => snapshot(item, ancestors)));
+    if (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null) throw new TypeError("volatile config objects must be plain objects or arrays");
+    return Object.freeze(Object.fromEntries(Object.entries(value).map(([key, item]) => [key, snapshot(item, ancestors)])));
+  } finally {
+    ancestors.delete(value);
+  }
+}
+function createVolatile(value) {
+  let current = snapshot(value);
+  return Object.freeze({
+    get: () => current,
+    [write]: (value2) => {
+      current = value2;
+    }
+  });
+}
+function isVolatile(value) {
+  return typeof value === "object" && value !== null && write in value;
 }
 function is(type, value) {
   if (arguments.length === 1) return (value2) => is(type, value2);
@@ -95,24 +121,37 @@ function clone(source, refs = /* @__PURE__ */ new Map()) {
   return result;
 }
 function deepEqual(a, b, strict) {
-  if (a === b) return true;
-  if (!strict && isNullable(a) && isNullable(b)) return true;
-  if (typeof a !== typeof b) return false;
-  if (typeof a !== "object") return false;
-  if (!a || !b) return false;
-  function check(test, then) {
-    return test(a) ? test(b) ? then(a, b) : false : test(b) ? false : void 0;
+  const ancestors = /* @__PURE__ */ new Set();
+  function compare(a2, b2) {
+    if (a2 === b2) return true;
+    if (isVolatile(a2) || isVolatile(b2)) return isVolatile(a2) && isVolatile(b2);
+    if (!strict && isNullable(a2) && isNullable(b2)) return true;
+    if (typeof a2 !== typeof b2 || typeof a2 !== "object" || !a2 || !b2) return false;
+    if (ancestors.has(a2)) return false;
+    function check(test, then) {
+      return test(a2) ? test(b2) ? then(a2, b2) : false : test(b2) ? false : void 0;
+    }
+    ancestors.add(a2);
+    try {
+      return check(Array.isArray, (a3, b3) => {
+        if (a3.length !== b3.length) return false;
+        for (let index = 0; index < a3.length; index++) if (!compare(a3[index], b3[index])) return false;
+        return true;
+      }) ?? check(is("Date"), (a3, b3) => a3.valueOf() === b3.valueOf()) ?? check(is("URL"), (a3, b3) => a3.href === b3.href) ?? check(is("RegExp"), (a3, b3) => a3.source === b3.source && a3.flags === b3.flags) ?? check(isArrayBufferLike, (a3, b3) => {
+        if (a3.byteLength !== b3.byteLength) return false;
+        const viewA = new Uint8Array(a3);
+        const viewB = new Uint8Array(b3);
+        for (let i = 0; i < viewA.length; i++) if (viewA[i] !== viewB[i]) return false;
+        return true;
+      }) ?? ((!strict || [a2, b2].every((value) => Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null)) && Object.keys({
+        ...a2,
+        ...b2
+      }).every((key) => compare(a2[key], b2[key])));
+    } finally {
+      ancestors.delete(a2);
+    }
   }
-  return check(Array.isArray, (a2, b2) => a2.length === b2.length && a2.every((item, index) => deepEqual(item, b2[index]))) ?? check(is("Date"), (a2, b2) => a2.valueOf() === b2.valueOf()) ?? check(is("RegExp"), (a2, b2) => a2.source === b2.source && a2.flags === b2.flags) ?? check(isArrayBufferLike, (a2, b2) => {
-    if (a2.byteLength !== b2.byteLength) return false;
-    const viewA = new Uint8Array(a2);
-    const viewB = new Uint8Array(b2);
-    for (let i = 0; i < viewA.length; i++) if (viewA[i] !== viewB[i]) return false;
-    return true;
-  }) ?? Object.keys({
-    ...a,
-    ...b
-  }).every((key) => deepEqual(a[key], b[key], strict));
+  return compare(a, b);
 }
 var Time;
 (function(Time2) {
@@ -184,7 +223,7 @@ var Time;
   Time2.template = template;
 })(Time || (Time = {}));
 
-// ../../node_modules/.pnpm/@deepseek-ai+schemastery@3.18.2/node_modules/@deepseek-ai/schemastery/lib/index.mjs
+// ../../node_modules/.pnpm/@deepseek-ai+schemastery@3.18.4/node_modules/@deepseek-ai/schemastery/lib/index.mjs
 var kSchema = /* @__PURE__ */ Symbol.for("schemastery");
 var kValidationError = /* @__PURE__ */ Symbol.for("ValidationError");
 globalThis.__schemastery_index__ ??= 0;
@@ -361,6 +400,7 @@ Schema.prototype.pattern = function pattern(regexp) {
   return schema;
 };
 Schema.prototype.simplify = function simplify(value) {
+  if (isVolatile(value)) value = value.get();
   if (deepEqual(value, this.meta.default, this.type === "dict")) return null;
   if (isNullable(value)) return value;
   if (this.type === "object" || this.type === "dict") {
@@ -418,12 +458,49 @@ for (const key of [
   };
   return schema;
 } });
+Schema.prototype.volatile = function volatile() {
+  if (this.meta.volatile) throw new TypeError("volatile schema is already wrapped");
+  return this.extra("volatile", true);
+};
 var resolvers = {};
+var checkedVolatile = /* @__PURE__ */ Symbol("checked-volatile-schema");
+function validateVolatileSchema(schema, path = [], blocked = false, seen = /* @__PURE__ */ new Map()) {
+  const states = seen.get(schema) ?? /* @__PURE__ */ new Set();
+  if (states.has(blocked)) return;
+  states.add(blocked);
+  seen.set(schema, states);
+  if (schema.meta?.volatile && blocked) throw new ValidationError("volatile fields require a fixed object path without an enclosing volatile field", { path });
+  const nested = blocked || !!schema.meta?.volatile;
+  if (schema.dict) for (const [key, child] of Object.entries(schema.dict)) validateVolatileSchema(child, [...path, key], nested, seen);
+  if (schema.sKey) validateVolatileSchema(schema.sKey, [...path, "<key>"], true, seen);
+  if (schema.inner && (schema.type !== "lazy" || schema.inner[kSchema])) validateVolatileSchema(schema.inner, [...path, "*"], true, seen);
+  if (schema.list) for (let index = 0; index < schema.list.length; index++) validateVolatileSchema(schema.list[index], [...path, String(index)], true, seen);
+}
 Schema.extend = function extend(type, resolve2) {
   resolvers[type] = resolve2;
 };
 Schema.resolve = function resolve(data, schema, options = {}, strict = false) {
   if (!schema) return [data];
+  if (!options[checkedVolatile]) {
+    validateVolatileSchema(schema, options.path);
+    options = {
+      ...options,
+      [checkedVolatile]: true
+    };
+  }
+  if (schema.meta?.volatile) {
+    const inner = Schema(schema);
+    inner.meta = {
+      ...schema.meta,
+      volatile: false
+    };
+    const [value, adapted] = Schema.resolve(data, inner, options, strict);
+    try {
+      return [createVolatile(value), adapted];
+    } catch (error) {
+      throw new ValidationError(error instanceof Error ? error.message : String(error), options);
+    }
+  }
   if (options.ignore?.(data, schema)) return [data];
   if (isNullable(data) && schema.type !== "lazy") {
     if (schema.meta.required) throw new ValidationError(`missing required value`, options);
@@ -531,6 +608,7 @@ Schema.extend("lazy", (data, schema, options, strict) => {
       ...schema.meta,
       ...schema.inner.meta
     };
+    validateVolatileSchema(schema.inner, options.path, true);
   }
   return Schema.resolve(data, schema.inner, options, strict);
 });
@@ -630,7 +708,7 @@ function property(data, key, schema, options) {
   } catch (e) {
     if (!options?.autofix) throw e;
     delete data[key];
-    return schema.meta.default;
+    return schema.meta.volatile ? createVolatile(schema.meta.default) : schema.meta.default;
   }
 }
 Schema.extend("array", (data, { inner, meta }, options) => {
@@ -829,7 +907,7 @@ function readBody(req, limit = 1024 * 1024) {
 
 // src/host/config.ts
 var NS = settingsNamespace("dshp-widget-kit");
-var FRAMEWORK_VERSION = "0.11.0";
+var FRAMEWORK_VERSION = "0.12.0";
 var SPEC_VERSION = 1;
 var DEFAULT_CONFIG = {
   trayEnabled: true,
@@ -846,15 +924,15 @@ var DEFAULT_CONFIG = {
   motionMs: 300
 };
 var ConfigSchema = Schema.object({
-  trayEnabled: Schema.boolean().default(true),
-  maxVisibleIcons: Schema.number().step(1).min(1).max(8).default(4),
-  badgeIntervalMs: Schema.number().step(1).min(5e3).max(6e5).default(3e4),
-  hoverPreview: Schema.boolean().default(true),
-  referenceWidgets: Schema.boolean().default(true),
-  cardOpacity: Schema.number().min(0.2).max(1).default(1),
-  cardBlur: Schema.number().step(1).min(0).max(32).default(0),
-  cardBorder: Schema.union(["auto", "on", "off"]).default("auto"),
-  cardRadius: Schema.union(["auto", "round", "square"]).default("auto")
+  trayEnabled: Schema.boolean().default(true).volatile(),
+  maxVisibleIcons: Schema.number().step(1).min(1).max(8).default(4).volatile(),
+  badgeIntervalMs: Schema.number().step(1).min(5e3).max(6e5).default(3e4).volatile(),
+  hoverPreview: Schema.boolean().default(true).volatile(),
+  referenceWidgets: Schema.boolean().default(true).volatile(),
+  cardOpacity: Schema.number().min(0.2).max(1).default(1).volatile(),
+  cardBlur: Schema.number().step(1).min(0).max(32).default(0).volatile(),
+  cardBorder: Schema.union(["auto", "on", "off"]).default("auto").volatile(),
+  cardRadius: Schema.union(["auto", "round", "square"]).default("auto").volatile()
 });
 function isRecord(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
@@ -968,23 +1046,18 @@ function registerRoutes(ctx, deps) {
 // src/host/index.ts
 var name = "@dshp/widget-kit";
 var inject = ["webServer"];
-function apply(ctx, rawConfig) {
-  const patchFromLoader = sanitizePatchConfig(rawConfig);
-  const entry = { ...DEFAULT_CONFIG, ...patchFromLoader };
-  let current = () => entry;
+var Config = ConfigSchema;
+function apply(ctx, config) {
   try {
     ctx.inject(["settings"], (sctx) => {
       try {
-        sctx.settings.installSection(ctx, NS, ConfigSchema, entry, {
-          setSource: (src) => {
-            current = src;
-          },
-          onChange: () => {
-          }
-        });
+        sctx.effect(
+          () => sctx.settings.configure({ auto: false }, ctx.fiber),
+          "dshp-widget-kit: settings-page"
+        );
       } catch (error) {
         console.error(
-          "[dshp-widget-kit] \u6CE8\u518C settings \u5206\u8282\u5931\u8D25\uFF0C\u504F\u597D\u5C06\u4F7F\u7528\u9ED8\u8BA4\u503C\uFF1A" + String(error?.message ?? error)
+          "[dshp-widget-kit] \u6CE8\u518C settings \u9875\u9762\u7B56\u7565\u5931\u8D25\uFF0C\u504F\u597D\u5C06\u4F7F\u7528\u9ED8\u8BA4\u503C\uFF1A" + String(error?.message ?? error)
         );
       }
     });
@@ -992,17 +1065,20 @@ function apply(ctx, rawConfig) {
     console.error("[dshp-widget-kit] settings \u670D\u52A1\u6CE8\u5165\u5931\u8D25\uFF1A" + String(error?.message ?? error));
   }
   function getConfig() {
-    try {
-      const value = current();
-      if (value !== null && typeof value === "object") return value;
-    } catch {
-    }
-    return entry;
+    return { ...DEFAULT_CONFIG, ...configSnapshot() };
   }
-  function snapshot() {
-    const config = getConfig();
-    const patch = sanitizePatchConfig(config) ?? {};
-    return { ...DEFAULT_CONFIG, ...patch };
+  function configSnapshot() {
+    return {
+      trayEnabled: config.trayEnabled.get() === true,
+      maxVisibleIcons: config.maxVisibleIcons.get(),
+      badgeIntervalMs: config.badgeIntervalMs.get(),
+      hoverPreview: config.hoverPreview.get() === true,
+      referenceWidgets: config.referenceWidgets.get() === true,
+      cardOpacity: config.cardOpacity.get(),
+      cardBlur: config.cardBlur.get(),
+      cardBorder: config.cardBorder.get(),
+      cardRadius: config.cardRadius.get()
+    };
   }
   async function update(patchObj) {
     let settings = null;
@@ -1012,14 +1088,12 @@ function apply(ctx, rawConfig) {
       settings = null;
     }
     if (!settings) {
-      throw new Error(
-        "settings \u670D\u52A1\u4E0D\u53EF\u7528\uFF0C\u65E0\u6CD5\u6301\u4E45\u5316\u5C0F\u7EC4\u4EF6\u504F\u597D\uFF08\u8BF7\u91CD\u542F DSH \u6216\u68C0\u67E5 FileSettingsProvider \u662F\u5426\u6302\u8F7D\uFF09"
-      );
+      throw new Error("settings \u670D\u52A1\u4E0D\u53EF\u7528\uFF0C\u65E0\u6CD5\u6301\u4E45\u5316\u5C0F\u7EC4\u4EF6\u504F\u597D\uFF08\u8BF7\u91CD\u542F DSH \u786E\u8BA4\u8BBE\u7F6E\u670D\u52A1\u5DF2\u6302\u8F7D\uFF09");
     }
     await settings.update(NS, patchObj);
   }
   try {
-    registerRoutes(ctx, { snapshot, update });
+    registerRoutes(ctx, { snapshot: getConfig, update });
   } catch (error) {
     console.error(
       "[dshp-widget-kit] \u6CE8\u518C /ext \u8DEF\u7531\u5931\u8D25\uFF0C\u8BBE\u7F6E\u9875\u5C06\u770B\u4E0D\u5230\u914D\u7F6E\uFF1A" + String(error?.message ?? error)
@@ -1028,4 +1102,4 @@ function apply(ctx, rawConfig) {
   console.info(`[dshp-widget-kit] \u5C0F\u7EC4\u4EF6\u5BBF\u4E3B\u5DF2\u5C31\u7EEA\uFF08NS=${NS}\uFF09`);
 }
 
-export { ConfigSchema, NS, apply, inject, name };
+export { Config, ConfigSchema, NS, apply, inject, name };

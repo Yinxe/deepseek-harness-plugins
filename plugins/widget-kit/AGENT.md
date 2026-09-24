@@ -61,7 +61,7 @@
    早先版本在这里删记录，于是「开发时每改一次代码组件状态就被重置」。残留只由设置页的
    `pruneOrphans()` 显式清理。**不在册的记录不能参与任何运行时判定**：渲染、吸附对象（`othersOf`）、
    同屏上限与层叠序号（`visibleCardCount` / `trackedCardCount`）都要先 `registry.has(id)`。
-4. **本机布局 vs 用户配置**：布局进 localStorage（`dshp-widget-kit:v1`），配置进 settings.yaml NS。
+4. **本机布局 vs 用户配置**：布局进 localStorage（`dshp-widget-kit:v1`），配置进 profile 条目 config NS。
    任何新状态都要先归到这两边之一，不许开第三个坑（见 `docs/widget-spec.md` §7）。
    存储结构只允许**向后兼容地追加字段**（老记录缺字段 = 用默认值），破坏性改动才 bump `STORE_VERSION`。
    凡是「用户看得见的状态」（开着的卡片、展开的面板、层叠顺序、锁定、禁用）都必须进本机布局 ——

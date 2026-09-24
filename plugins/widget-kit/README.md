@@ -166,7 +166,7 @@ export function apply(ctx: ClientContext): void {
 
 ## 配置项
 
-存 `settings.yaml` 的 `dshp-widget-kit` 分节（改动即时生效，无需重启）：
+存 profile 条目 `dshp-widget-kit` 的 `config:`（改动即时生效，无需重启）：
 
 | 字段               | 类型    | 默认    | 说明                                                       |
 | ------------------ | ------- | ------- | ---------------------------------------------------------- |
@@ -182,7 +182,7 @@ export function apply(ctx: ClientContext): void {
 | `motionMs`         | number  | `300`   | 动效时长 0–500 ms（0 = 关闭过渡）                          |
 
 **本机布局**（托盘顺序、隐藏与禁用集合、卡片位置/尺寸/最小化/锁定、卡片层叠顺序、当前展开的常驻面板）
-**不在** settings.yaml：它存在浏览器 `localStorage` 的 `dshp-widget-kit:v1`，只属于这台浏览器；
+**不在**持久化配置：它存在浏览器 `localStorage` 的 `dshp-widget-kit:v1`，只属于这台浏览器；
 刷新后**原地恢复**。**卸载 / 热重载插件不会动它**（记录按 id 留着，插件回来即原地恢复）——
 插件开发时改代码不再重置布局；真卸载掉的插件留下的残留，用 设置 → 小组件 → 「清理已卸载组件的残留」
 显式清理（只清不在册的 id），要全部重来就用「清空本机布局」。
@@ -233,7 +233,7 @@ dsh plugin --profile web remove "@dshp/widget-kit"
 dsh web
 ```
 
-再删掉 `settings.yaml` 里的 `dshp-widget-kit` 段（可选），并清掉浏览器里 `dshp-widget-kit:v1`
+再删掉 profile 条目`dshp-widget-kit` 段（可选），并清掉浏览器里 `dshp-widget-kit:v1`
 这条 localStorage（可选，不删也无害）。依赖它的插件会停在 waiting（不会报错），
 要么重新装框架，要么去掉自己 client 半的 `inject: ['widgets']`。
 
@@ -254,4 +254,4 @@ dsh web
 ## 免责声明
 
 本插件按 MIT 许可发布，为个人维护的社区插件，与 DeepSeek 官方无关。使用前请自行评估风险并做好备份
-（尤其是 `settings.yaml`）。小组件框架是**基础设施**：它不采集、不上传任何数据；本机布局只存在你自己的浏览器里。
+（尤其是 profile 条目 config）。小组件框架是**基础设施**：它不采集、不上传任何数据；本机布局只存在你自己的浏览器里。

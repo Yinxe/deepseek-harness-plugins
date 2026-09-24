@@ -1,7 +1,8 @@
 /**
- * 配置：默认值 / schemastery schema / 补丁消毒
+ * 配置：默认值 / schemastery schema（volatile）/ 路由补丁消毒
  *
- * 这里存的是**用户配置**（进 settings.yaml 的 `dshp-widget-kit` 分节）；
+ * 这里存的是**用户配置**（0.1.7 起落 profile `cordis.patch.yml` 条目 `config:` 分节；
+ * 旧 settings.yaml 由 dsh 一次性自动导入）；
  * **本机布局**（托盘顺序、卡片位置尺寸、隐藏集合）在浏览器 localStorage，不经 Host。
  * 只认 NS，不做历史 key / 旧文件迁移。
  *
@@ -15,11 +16,12 @@ import type { FrameworkConfig, FrameworkConfigPatch } from './types.js';
 export const NS: string = settingsNamespace('dshp-widget-kit');
 
 /** 框架版本。必须等于 package.json 的 version（scripts/check-spec-drift.mjs 比对）。 */
-export const FRAMEWORK_VERSION = '0.11.0';
+export const FRAMEWORK_VERSION = '0.12.0';
 
 /** 契约版本（与 client 侧 spec.ts 的 SPEC_VERSION 同步）。 */
 export const SPEC_VERSION = 1;
 
+/** 兜底默认值（motionMs 不进 schema，见 types.ts）。 */
 export const DEFAULT_CONFIG: FrameworkConfig = {
   trayEnabled: true,
   maxVisibleIcons: 4,
@@ -43,15 +45,15 @@ export const CARD_RADII: readonly FrameworkConfig['cardRadius'][] = ['auto', 'ro
 export const MOTION_CHOICES: readonly number[] = [0, 100, 200, 300, 400, 500];
 
 export const ConfigSchema: any = z.object({
-  trayEnabled: z.boolean().default(true),
-  maxVisibleIcons: z.number().step(1).min(1).max(8).default(4),
-  badgeIntervalMs: z.number().step(1).min(5000).max(600000).default(30000),
-  hoverPreview: z.boolean().default(true),
-  referenceWidgets: z.boolean().default(true),
-  cardOpacity: z.number().min(0.2).max(1).default(1),
-  cardBlur: z.number().step(1).min(0).max(32).default(0),
-  cardBorder: z.union(['auto', 'on', 'off']).default('auto'),
-  cardRadius: z.union(['auto', 'round', 'square']).default('auto'),
+  trayEnabled: z.boolean().default(true).volatile(),
+  maxVisibleIcons: z.number().step(1).min(1).max(8).default(4).volatile(),
+  badgeIntervalMs: z.number().step(1).min(5000).max(600000).default(30000).volatile(),
+  hoverPreview: z.boolean().default(true).volatile(),
+  referenceWidgets: z.boolean().default(true).volatile(),
+  cardOpacity: z.number().min(0.2).max(1).default(1).volatile(),
+  cardBlur: z.number().step(1).min(0).max(32).default(0).volatile(),
+  cardBorder: z.union(['auto', 'on', 'off']).default('auto').volatile(),
+  cardRadius: z.union(['auto', 'round', 'square']).default('auto').volatile(),
 });
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -59,7 +61,8 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 }
 
 /**
- * 消毒 `cordis.patch.yml` 的 base 层与 `/ext` 路由 body（只收合法字段，非法静默丢弃）。
+ * 消毒 `/ext` 路由 body（只收合法字段，非法静默丢弃）。
+ * 条目 `config:` 层的校验由 cordis 在装载期用 ConfigSchema 完成。
  *
  * @param raw - 未信任的输入。
  * @returns 合法字段的补丁；一个字段都没有时返回 `null`。
