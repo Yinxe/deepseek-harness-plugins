@@ -1,7 +1,10 @@
 /**
- * 配置：默认值 / schemastery schema 组合 / 补丁消毒
+ * 配置：schemastery schema 组合（volatile 声明）/ 路由与快照消毒
  *
  * - 官方 settings 命名空间 `dshp-search-provider`（与包名/路由前缀/cordis id 一致）
+ * - 0.1.7 起持久化在 profile `cordis.patch.yml` 条目 `config:`（旧 settings.yaml 一次性自动导入）；
+ *   全字段 `.volatile()`（供应商分节整块 volatile），`settings.update` 写入原地生效，
+ *   provider 切换由 `loader/volatile-update` 驱动即时重注册，无需重启。
  * - 供应商分节：本命名空间内的子键 = 各供应商配置（键名即 provider id），
  *   schema 由各供应商模块自述，本文件按清单动态组合（新增供应商不改这里）。
  * - 只认 NS：不读旧插件命名空间、不做任何配置采用/迁移。
@@ -48,28 +51,21 @@ export function defaultProviderId(modules: readonly SearchProviderModule[]): str
   return modules[0]?.id ?? 'tavily';
 }
 
-/** 组装默认配置（settings base 层；用户层缺省即继承此处） */
-export function buildDefaultConfig(modules: readonly SearchProviderModule[]): PluginConfig {
-  const config: PluginConfig = {
-    provider: defaultProviderId(modules),
-    maxResults: DEFAULT_MAX_RESULTS,
-  };
-  for (const m of modules) config[m.id] = { ...m.defaultConfig };
-  return config;
-}
-
-/** 组装 schemastery schema：通用字段 + 各供应商自述分节 schema（provider 限已知 id） */
+/** 组装 schemastery schema：通用字段 + 各供应商自述分节 schema（provider 限已知 id；全字段 volatile） */
 export function buildConfigSchema(modules: readonly SearchProviderModule[]): unknown {
   const defaults = defaultProviderId(modules);
   const shape: Record<string, unknown> = {
-    provider: z.union(modules.map((m) => z.const(m.id))).default(defaults),
-    maxResults: z.number().step(1).min(1).max(MAX_RESULTS).default(DEFAULT_MAX_RESULTS),
+    provider: z
+      .union(modules.map((m) => z.const(m.id)))
+      .default(defaults)
+      .volatile(),
+    maxResults: z.number().step(1).min(1).max(MAX_RESULTS).default(DEFAULT_MAX_RESULTS).volatile(),
   };
-  for (const m of modules) shape[m.id] = m.configSchema;
+  for (const m of modules) shape[m.id] = (m.configSchema as { volatile(): unknown }).volatile();
   return z.object(shape);
 }
 
-// ── 补丁消毒 ────────────────────────────────────────────────────────────────
+// ── 消毒与快照 ──────────────────────────────────────────────────────────────
 
 function isKnownProvider(id: unknown, modules: readonly SearchProviderModule[]): id is string {
   return typeof id === 'string' && modules.some((m) => m.id === id);
@@ -77,34 +73,6 @@ function isKnownProvider(id: unknown, modules: readonly SearchProviderModule[]):
 
 function providerIds(modules: readonly SearchProviderModule[]): string {
   return modules.map((m) => m.id).join(' / ');
-}
-
-/**
- * composition entry（cordis.patch.yml / settings base 层）部分覆盖：非法值静默丢弃。
- */
-export function sanitizeEntryConfig(
-  raw: unknown,
-  modules: readonly SearchProviderModule[],
-): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  if (!isRecord(raw)) return out;
-  if (Object.hasOwn(raw, 'provider') && isKnownProvider(raw['provider'], modules)) {
-    out['provider'] = raw['provider'];
-  }
-  if (Object.hasOwn(raw, 'maxResults')) {
-    const n = clampInt(raw['maxResults'], 1, MAX_RESULTS);
-    if (n !== undefined) out['maxResults'] = n;
-  }
-  for (const m of modules) {
-    if (!Object.hasOwn(raw, m.id)) continue;
-    try {
-      const block = m.sanitizePatch(raw[m.id]);
-      if (block !== null) out[m.id] = block;
-    } catch {
-      /* 静默丢弃非法分节：base 层容错优先 */
-    }
-  }
-  return out;
 }
 
 /**

@@ -21,7 +21,7 @@
  * @module @dshp/search-provider/client
  */
 import { useCallback, useEffect, useState } from 'react';
-import { Button, IconSearchOutline16, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives';
+import { Button, IconSearchOutlineRegular, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives';
 import type { ReactNode } from 'react';
 import { components as C, type Components } from './components.js';
 import { createProviderExtras } from './providers/index.js';
@@ -290,7 +290,7 @@ export function createSearchSection(bridge: Bridge): () => ReactNode {
     if (focused !== null) {
       const keyInput = (
         <div className={styles.inputWrap}>
-          <IconSearchOutline16 />
+          <IconSearchOutlineRegular />
           <input
             className={styles.input}
             type={keyShown ? 'text' : 'password'}

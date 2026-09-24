@@ -1,4 +1,4 @@
-// ../../node_modules/.pnpm/@deepseek-ai+cosmokit@1.8.3/node_modules/@deepseek-ai/cosmokit/lib/index.js
+// ../../node_modules/.pnpm/@deepseek-ai+cosmokit@1.8.5/node_modules/@deepseek-ai/cosmokit/lib/index.js
 function isNullable(value) {
   return value === null || value === void 0;
 }
@@ -16,6 +16,32 @@ function pick(source, keys, forced) {
   const result = {};
   for (const key of keys) if (source[key] !== void 0) result[key] = source[key];
   return result;
+}
+var write = /* @__PURE__ */ Symbol.for("cosmokit.volatile.write");
+function snapshot(value, ancestors = /* @__PURE__ */ new Set()) {
+  if (typeof value === "function") throw new TypeError("volatile config cannot contain functions");
+  if (value === null || typeof value !== "object") return value;
+  if (ancestors.has(value)) throw new TypeError("volatile config cannot contain cycles");
+  ancestors.add(value);
+  try {
+    if (Array.isArray(value)) return Object.freeze(value.map((item) => snapshot(item, ancestors)));
+    if (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null) throw new TypeError("volatile config objects must be plain objects or arrays");
+    return Object.freeze(Object.fromEntries(Object.entries(value).map(([key, item]) => [key, snapshot(item, ancestors)])));
+  } finally {
+    ancestors.delete(value);
+  }
+}
+function createVolatile(value) {
+  let current = snapshot(value);
+  return Object.freeze({
+    get: () => current,
+    [write]: (value2) => {
+      current = value2;
+    }
+  });
+}
+function isVolatile(value) {
+  return typeof value === "object" && value !== null && write in value;
 }
 function is(type, value) {
   if (arguments.length === 1) return (value2) => is(type, value2);
@@ -95,24 +121,37 @@ function clone(source, refs = /* @__PURE__ */ new Map()) {
   return result;
 }
 function deepEqual(a, b, strict) {
-  if (a === b) return true;
-  if (!strict && isNullable(a) && isNullable(b)) return true;
-  if (typeof a !== typeof b) return false;
-  if (typeof a !== "object") return false;
-  if (!a || !b) return false;
-  function check(test, then) {
-    return test(a) ? test(b) ? then(a, b) : false : test(b) ? false : void 0;
+  const ancestors = /* @__PURE__ */ new Set();
+  function compare(a2, b2) {
+    if (a2 === b2) return true;
+    if (isVolatile(a2) || isVolatile(b2)) return isVolatile(a2) && isVolatile(b2);
+    if (!strict && isNullable(a2) && isNullable(b2)) return true;
+    if (typeof a2 !== typeof b2 || typeof a2 !== "object" || !a2 || !b2) return false;
+    if (ancestors.has(a2)) return false;
+    function check(test, then) {
+      return test(a2) ? test(b2) ? then(a2, b2) : false : test(b2) ? false : void 0;
+    }
+    ancestors.add(a2);
+    try {
+      return check(Array.isArray, (a3, b3) => {
+        if (a3.length !== b3.length) return false;
+        for (let index = 0; index < a3.length; index++) if (!compare(a3[index], b3[index])) return false;
+        return true;
+      }) ?? check(is("Date"), (a3, b3) => a3.valueOf() === b3.valueOf()) ?? check(is("URL"), (a3, b3) => a3.href === b3.href) ?? check(is("RegExp"), (a3, b3) => a3.source === b3.source && a3.flags === b3.flags) ?? check(isArrayBufferLike, (a3, b3) => {
+        if (a3.byteLength !== b3.byteLength) return false;
+        const viewA = new Uint8Array(a3);
+        const viewB = new Uint8Array(b3);
+        for (let i = 0; i < viewA.length; i++) if (viewA[i] !== viewB[i]) return false;
+        return true;
+      }) ?? ((!strict || [a2, b2].every((value) => Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null)) && Object.keys({
+        ...a2,
+        ...b2
+      }).every((key) => compare(a2[key], b2[key])));
+    } finally {
+      ancestors.delete(a2);
+    }
   }
-  return check(Array.isArray, (a2, b2) => a2.length === b2.length && a2.every((item, index) => deepEqual(item, b2[index]))) ?? check(is("Date"), (a2, b2) => a2.valueOf() === b2.valueOf()) ?? check(is("RegExp"), (a2, b2) => a2.source === b2.source && a2.flags === b2.flags) ?? check(isArrayBufferLike, (a2, b2) => {
-    if (a2.byteLength !== b2.byteLength) return false;
-    const viewA = new Uint8Array(a2);
-    const viewB = new Uint8Array(b2);
-    for (let i = 0; i < viewA.length; i++) if (viewA[i] !== viewB[i]) return false;
-    return true;
-  }) ?? Object.keys({
-    ...a,
-    ...b
-  }).every((key) => deepEqual(a[key], b[key], strict));
+  return compare(a, b);
 }
 var Time;
 (function(Time2) {
@@ -184,7 +223,7 @@ var Time;
   Time2.template = template;
 })(Time || (Time = {}));
 
-// ../../node_modules/.pnpm/@deepseek-ai+schemastery@3.18.2/node_modules/@deepseek-ai/schemastery/lib/index.mjs
+// ../../node_modules/.pnpm/@deepseek-ai+schemastery@3.18.4/node_modules/@deepseek-ai/schemastery/lib/index.mjs
 var kSchema = /* @__PURE__ */ Symbol.for("schemastery");
 var kValidationError = /* @__PURE__ */ Symbol.for("ValidationError");
 globalThis.__schemastery_index__ ??= 0;
@@ -361,6 +400,7 @@ Schema.prototype.pattern = function pattern(regexp) {
   return schema;
 };
 Schema.prototype.simplify = function simplify(value) {
+  if (isVolatile(value)) value = value.get();
   if (deepEqual(value, this.meta.default, this.type === "dict")) return null;
   if (isNullable(value)) return value;
   if (this.type === "object" || this.type === "dict") {
@@ -418,12 +458,49 @@ for (const key of [
   };
   return schema;
 } });
+Schema.prototype.volatile = function volatile() {
+  if (this.meta.volatile) throw new TypeError("volatile schema is already wrapped");
+  return this.extra("volatile", true);
+};
 var resolvers = {};
+var checkedVolatile = /* @__PURE__ */ Symbol("checked-volatile-schema");
+function validateVolatileSchema(schema, path = [], blocked = false, seen = /* @__PURE__ */ new Map()) {
+  const states = seen.get(schema) ?? /* @__PURE__ */ new Set();
+  if (states.has(blocked)) return;
+  states.add(blocked);
+  seen.set(schema, states);
+  if (schema.meta?.volatile && blocked) throw new ValidationError("volatile fields require a fixed object path without an enclosing volatile field", { path });
+  const nested = blocked || !!schema.meta?.volatile;
+  if (schema.dict) for (const [key, child] of Object.entries(schema.dict)) validateVolatileSchema(child, [...path, key], nested, seen);
+  if (schema.sKey) validateVolatileSchema(schema.sKey, [...path, "<key>"], true, seen);
+  if (schema.inner && (schema.type !== "lazy" || schema.inner[kSchema])) validateVolatileSchema(schema.inner, [...path, "*"], true, seen);
+  if (schema.list) for (let index = 0; index < schema.list.length; index++) validateVolatileSchema(schema.list[index], [...path, String(index)], true, seen);
+}
 Schema.extend = function extend(type, resolve2) {
   resolvers[type] = resolve2;
 };
 Schema.resolve = function resolve(data, schema, options = {}, strict = false) {
   if (!schema) return [data];
+  if (!options[checkedVolatile]) {
+    validateVolatileSchema(schema, options.path);
+    options = {
+      ...options,
+      [checkedVolatile]: true
+    };
+  }
+  if (schema.meta?.volatile) {
+    const inner = Schema(schema);
+    inner.meta = {
+      ...schema.meta,
+      volatile: false
+    };
+    const [value, adapted] = Schema.resolve(data, inner, options, strict);
+    try {
+      return [createVolatile(value), adapted];
+    } catch (error) {
+      throw new ValidationError(error instanceof Error ? error.message : String(error), options);
+    }
+  }
   if (options.ignore?.(data, schema)) return [data];
   if (isNullable(data) && schema.type !== "lazy") {
     if (schema.meta.required) throw new ValidationError(`missing required value`, options);
@@ -531,6 +608,7 @@ Schema.extend("lazy", (data, schema, options, strict) => {
       ...schema.meta,
       ...schema.inner.meta
     };
+    validateVolatileSchema(schema.inner, options.path, true);
   }
   return Schema.resolve(data, schema.inner, options, strict);
 });
@@ -630,7 +708,7 @@ function property(data, key, schema, options) {
   } catch (e) {
     if (!options?.autofix) throw e;
     delete data[key];
-    return schema.meta.default;
+    return schema.meta.volatile ? createVolatile(schema.meta.default) : schema.meta.default;
   }
 }
 Schema.extend("array", (data, { inner, meta }, options) => {
@@ -844,21 +922,13 @@ function clampInt(v, min, max) {
 function defaultProviderId(modules) {
   return modules[0]?.id ?? "tavily";
 }
-function buildDefaultConfig(modules) {
-  const config = {
-    provider: defaultProviderId(modules),
-    maxResults: DEFAULT_MAX_RESULTS
-  };
-  for (const m of modules) config[m.id] = { ...m.defaultConfig };
-  return config;
-}
 function buildConfigSchema(modules) {
   const defaults = defaultProviderId(modules);
   const shape = {
-    provider: Schema.union(modules.map((m) => Schema.const(m.id))).default(defaults),
-    maxResults: Schema.number().step(1).min(1).max(MAX_RESULTS).default(DEFAULT_MAX_RESULTS)
+    provider: Schema.union(modules.map((m) => Schema.const(m.id))).default(defaults).volatile(),
+    maxResults: Schema.number().step(1).min(1).max(MAX_RESULTS).default(DEFAULT_MAX_RESULTS).volatile()
   };
-  for (const m of modules) shape[m.id] = m.configSchema;
+  for (const m of modules) shape[m.id] = m.configSchema.volatile();
   return Schema.object(shape);
 }
 function isKnownProvider(id, modules) {
@@ -866,26 +936,6 @@ function isKnownProvider(id, modules) {
 }
 function providerIds(modules) {
   return modules.map((m) => m.id).join(" / ");
-}
-function sanitizeEntryConfig(raw, modules) {
-  const out = {};
-  if (!isRecord(raw)) return out;
-  if (Object.hasOwn(raw, "provider") && isKnownProvider(raw["provider"], modules)) {
-    out["provider"] = raw["provider"];
-  }
-  if (Object.hasOwn(raw, "maxResults")) {
-    const n = clampInt(raw["maxResults"], 1, MAX_RESULTS);
-    if (n !== void 0) out["maxResults"] = n;
-  }
-  for (const m of modules) {
-    if (!Object.hasOwn(raw, m.id)) continue;
-    try {
-      const block = m.sanitizePatch(raw[m.id]);
-      if (block !== null) out[m.id] = block;
-    } catch {
-    }
-  }
-  return out;
 }
 function sanitizeRoutePatch(raw, modules) {
   if (!isRecord(raw)) throw new Error("\u8BF7\u6C42\u4F53\u4E0D\u662F\u5408\u6CD5 JSON \u5BF9\u8C61");
@@ -1409,35 +1459,28 @@ function register(ctx, path, label, handler) {
 var name = "@dshp/search-provider";
 var inject = ["web", "webServer"];
 var ConfigSchema = buildConfigSchema(createProviderModules());
+var Config = ConfigSchema;
 function isRecord3(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
-function apply(ctx, rawConfig) {
+function apply(ctx, config) {
   const modules = createProviderModules();
-  const configSchema = buildConfigSchema(modules);
-  const entry = buildDefaultConfig(modules);
-  const patch = sanitizeEntryConfig(rawConfig, modules);
-  if (Object.hasOwn(patch, "provider")) entry.provider = patch["provider"];
-  if (Object.hasOwn(patch, "maxResults")) entry.maxResults = patch["maxResults"];
-  for (const m of modules) {
-    if (!Object.hasOwn(patch, m.id)) continue;
-    const block = patch[m.id];
-    entry[m.id] = { ...m.defaultConfig, ...isRecord3(block) ? block : {} };
-  }
-  let current = () => entry;
   function getConfig() {
-    try {
-      const v = current();
-      if (v && typeof v === "object") return v;
-    } catch {
+    const out = {
+      provider: config.provider.get(),
+      maxResults: config.maxResults.get()
+    };
+    for (const m of modules) {
+      const block = config[m.id]?.get();
+      out[m.id] = isRecord3(block) ? { ...m.defaultConfig, ...block } : { ...m.defaultConfig };
     }
-    return entry;
+    return out;
   }
   async function updateConfig(configPatch) {
     const settings = ctx.get("settings");
     if (!settings) {
       throw new Error(
-        "settings \u670D\u52A1\u4E0D\u53EF\u7528\uFF0C\u65E0\u6CD5\u6301\u4E45\u5316\u5230 settings.yaml\uFF08\u8BF7\u91CD\u542F DSH \u6216\u68C0\u67E5 FileSettingsProvider \u662F\u5426\u6302\u8F7D\uFF09"
+        "settings \u670D\u52A1\u4E0D\u53EF\u7528\uFF0C\u65E0\u6CD5\u6301\u4E45\u5316\u5230 profile \u6761\u76EE config\uFF08\u8BF7\u91CD\u542F DSH \u786E\u8BA4\u8BBE\u7F6E\u670D\u52A1\u5DF2\u6302\u8F7D\uFF09"
       );
     }
     await settings.update(NS, configPatch);
@@ -1508,18 +1551,19 @@ function apply(ctx, rawConfig) {
   }
   try {
     ctx.inject(["settings"], (sctx) => {
-      sctx.settings.installSection(ctx, NS, configSchema, entry, {
-        setSource: (src) => {
-          current = src;
-        },
-        // 每次 settings 提交都回调：驱动「动态选型」——切换 provider 即时解绑旧提供方并注册新提供方
-        onChange: () => {
-          try {
-            registerActiveProvider();
-          } catch {
-          }
+      try {
+        sctx.effect(
+          () => sctx.settings.configure({ auto: false }, ctx.fiber),
+          "dshp-search-provider: settings-page"
+        );
+      } catch (error) {
+        try {
+          console.warn(
+            `[dshp-search-provider] settings \u9875\u9762\u7B56\u7565\u6CE8\u518C\u5931\u8D25\uFF1A${String(error?.message ?? error)}`
+          );
+        } catch {
         }
-      });
+      }
     });
   } catch (error) {
     try {
@@ -1529,6 +1573,15 @@ function apply(ctx, rawConfig) {
     } catch {
     }
   }
+  ctx.effect(
+    () => ctx.on("loader/volatile-update", () => {
+      try {
+        registerActiveProvider();
+      } catch {
+      }
+    }),
+    "dshp-search-provider: provider switch on volatile update"
+  );
   for (const m of modules) {
     if (typeof m.registerRoutes === "function") {
       try {
@@ -1577,4 +1630,4 @@ function apply(ctx, rawConfig) {
   }
 }
 
-export { ConfigSchema, NS, apply, inject, name };
+export { Config, ConfigSchema, NS, apply, inject, name };

@@ -32,7 +32,7 @@
 
 ## 本插件的局部规则
 
-1. **密钥经 credentials 服务实时解析**（如 `TAVILY_API_KEY`），每次操作现取，不在 provider 上滞留、不进 settings.yaml（见 [docs/security.md](../../docs/security.md)）。
+1. **密钥经 credentials 服务实时解析**（如 `TAVILY_API_KEY`），每次操作现取，不在 provider 上滞留、不进条目 config（见 [docs/security.md](../../docs/security.md)）。
 2. **API 字段消毒**：非有限数字一律 `null`（`numOrNull`），不透传 NaN/字符串；字符串走 `strOrEmpty`。
 3. **扩展新供应商**：`host/providers/<id>.ts` 实现 `SearchProviderModule`（含 `fields[]` 表单元数据）+ `providers/index.ts` 注册 + `client/providers/<id>.tsx` 可选专属 UI（导出 `create<X>Extras(C, bridge)`，在 `client/providers/index.ts` 的注册表里加一行）；表单字段一律来自 `fields[]`，禁止 client 按 type 硬编码（见 [docs/provider-ui.md](../../docs/provider-ui.md)）。
 4. **不做旧插件配置迁移**：不读 `dshp-inx-tavily-search` 的任何配置；从 dsh-tavily-search 迁移是手工步骤（README「迁移」节）。

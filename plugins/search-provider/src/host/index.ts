@@ -10,11 +10,11 @@
  * API Key 每次操作经 credentials 服务实时解析（如 TAVILY_API_KEY），不在提供方上滞留。
  *
  * 持久化（标准 settings 存储，对齐 vision-bridge / mcwiki-search）：
- *  - settings.yaml 顶层 `dshp-search-provider` 命名空间：provider / maxResults +
- *    各供应商分节（键名 = provider id，如 tavily: { searchDepth }）；
- *  - schema 默认值 → composition base（patch 覆盖）→ 用户文档层，FileSettingsProvider
- *    以 leaf-level diff 保留注释与格式，外部编辑热重载；
- *  - 密钥仍走 credentials 服务，不进 settings.yaml；
+ *  - profile `cordis.patch.yml` 条目 `config:`（NS `dshp-search-provider` = 条目 id）：
+ *    provider / maxResults + 各供应商分节（键名 = provider id，如 tavily: { searchDepth }）；
+ *  - 全字段 `.volatile()`：设置页/路由经 `settings.update` 写入后原地生效，
+ *    provider 切换由 `loader/volatile-update` 驱动即时重注册，无需重启；
+ *  - 密钥仍走 credentials 服务，不进配置；
  *  - 配置只认 `dshp-search-provider`：不读旧插件命名空间、不做采用/迁移。
  *
  * 原实现：~/.dsh/plugins/dsh-tavily-search（JS，@dshp-inx/tavily-search v2.0.3）
@@ -24,11 +24,11 @@
  *
  * @module @dshp/search-provider
  */
-import { NS, buildConfigSchema, buildDefaultConfig, readBlock, sanitizeEntryConfig } from './config.js';
+import { NS, buildConfigSchema, readBlock } from './config.js';
 import { createProviderModules } from './providers/index.js';
 import { createWebSearchProvider } from './providers/base.js';
 import { registerRoutes } from './routes.js';
-import type { AnyCtx, PluginConfig, ProviderDeps, SearchProviderModule } from './types.js';
+import type { AnyCtx, PluginConfig, ProviderDeps, SearchProviderModule, VolatileConfig } from './types.js';
 
 export const name = '@dshp/search-provider';
 export const inject: string[] = ['web', 'webServer'];
@@ -39,44 +39,33 @@ export { NS } from './config.js';
  * 模块级静态构建一次（纯 schema 构建，无 ctx 副作用）；apply 内另建 apply 级实例。
  */
 export const ConfigSchema: unknown = buildConfigSchema(createProviderModules());
+/** Cordis 用它校验条目 config 并派生设置表单（全字段 volatile，原地热更新）。 */
+export const Config: unknown = ConfigSchema;
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === 'object' && !Array.isArray(v);
 }
 
-export function apply(ctx: AnyCtx, rawConfig: unknown): void {
+export function apply(ctx: AnyCtx, config: VolatileConfig): void {
   const modules: SearchProviderModule[] = createProviderModules();
-  const configSchema: unknown = buildConfigSchema(modules);
-
-  // composition entry：默认值 ← patch 覆盖（settings 的 base 层；供应商分节深合并）
-  const entry: PluginConfig = buildDefaultConfig(modules);
-  const patch = sanitizeEntryConfig(rawConfig, modules);
-  if (Object.hasOwn(patch, 'provider')) entry.provider = patch['provider'] as string;
-  if (Object.hasOwn(patch, 'maxResults')) entry.maxResults = patch['maxResults'] as number;
-  for (const m of modules) {
-    if (!Object.hasOwn(patch, m.id)) continue;
-    const block = patch[m.id];
-    entry[m.id] = { ...m.defaultConfig, ...(isRecord(block) ? block : {}) };
-  }
-
-  // 官方 settings：当前生效配置源（有 settings 时指向 scope.get()，否则指向 entry）
-  let current: () => PluginConfig = () => entry;
 
   function getConfig(): PluginConfig {
-    try {
-      const v = current() as unknown;
-      if (v && typeof v === 'object') return v as PluginConfig;
-    } catch {
-      /* ignore */
+    const out: PluginConfig = {
+      provider: config.provider.get(),
+      maxResults: config.maxResults.get(),
+    };
+    for (const m of modules) {
+      const block = config[m.id]?.get();
+      out[m.id] = isRecord(block) ? { ...m.defaultConfig, ...block } : { ...m.defaultConfig };
     }
-    return entry;
+    return out;
   }
 
   async function updateConfig(configPatch: Record<string, unknown>): Promise<void> {
     const settings = ctx.get('settings') as AnyCtx;
     if (!settings) {
       throw new Error(
-        'settings 服务不可用，无法持久化到 settings.yaml（请重启 DSH 或检查 FileSettingsProvider 是否挂载）',
+        'settings 服务不可用，无法持久化到 profile 条目 config（请重启 DSH 确认设置服务已挂载）',
       );
     }
     await settings.update(NS, configPatch);
@@ -104,7 +93,7 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
     updateConfig,
   };
 
-  // ── 动态注册状态（installSection 的 onChange 同步回调会用到 registerActiveProvider，
+  // ── 动态注册状态（loader/volatile-update 回调会用到 registerActiveProvider，
   //    故状态与函数须定义在 settings 段之前；getConfig 为函数声明可后置）──
   let registeredId: string | null = null;
   let disposeRegistered: (() => void) | null = null;
@@ -165,21 +154,24 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
     }
   }
 
+  // ── 官方 settings（0.1.7 契约）：自定义设置页 + volatile 热更新驱动动态选型 ──
   try {
     ctx.inject(['settings'], (sctx: AnyCtx) => {
-      sctx.settings.installSection(ctx, NS, configSchema, entry, {
-        setSource: (src: () => PluginConfig) => {
-          current = src;
-        },
-        // 每次 settings 提交都回调：驱动「动态选型」——切换 provider 即时解绑旧提供方并注册新提供方
-        onChange: () => {
-          try {
-            registerActiveProvider();
-          } catch {
-            /* ignore */
-          }
-        },
-      });
+      try {
+        // 本插件自带设置页（settings.section），关掉 schema 自动生成的页面。
+        sctx.effect(
+          () => sctx.settings.configure({ auto: false }, ctx.fiber),
+          'dshp-search-provider: settings-page',
+        );
+      } catch (error) {
+        try {
+          console.warn(
+            `[dshp-search-provider] settings 页面策略注册失败：${String((error as Error)?.message ?? error)}`,
+          );
+        } catch {
+          /* ignore */
+        }
+      }
     });
   } catch (error) {
     try {
@@ -190,6 +182,19 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
       /* ignore */
     }
   }
+
+  // 每次 volatile 提交都回调：驱动「动态选型」——切换 provider 即时解绑旧提供方并注册新提供方
+  ctx.effect(
+    () =>
+      ctx.on('loader/volatile-update', () => {
+        try {
+          registerActiveProvider();
+        } catch {
+          /* ignore */
+        }
+      }),
+    'dshp-search-provider: provider switch on volatile update',
+  );
 
   // ── 供应商专属路由（静态注册：所有模块的 /usage 之类路由与本插件生命周期一致）──
   for (const m of modules) {

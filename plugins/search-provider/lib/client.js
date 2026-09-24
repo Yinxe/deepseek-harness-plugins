@@ -172,7 +172,7 @@ function Select({ value, selectedLabel, options, disabled, onSelect }) {
       onClick: () => setOpen((v) => !v),
       children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: styles_module_css_default.selectorLabel, children: selectedLabel }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_dsh_client_ui_primitives.IconChevronDownOutline14, { className: styles_module_css_default.chevron })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_dsh_client_ui_primitives.IconChevronDownOutlineRegular, { className: styles_module_css_default.chevron })
       ]
     }
   );
@@ -201,7 +201,7 @@ function Hint({ text }) {
 }
 function Loading({ text }) {
   return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: styles_module_css_default.loading, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_dsh_client_ui_primitives.IconLoadingOutline16, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_dsh_client_ui_primitives.IconLoadingOutlineRegular, {}),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: styles_module_css_default.loadingText, children: text })
   ] });
 }
@@ -600,7 +600,7 @@ function createSearchSection(bridge) {
     }
     if (focused !== null) {
       const keyInput = /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: styles_module_css_default.inputWrap, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(import_dsh_client_ui_primitives3.IconSearchOutline16, {}),
+        /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(import_dsh_client_ui_primitives3.IconSearchOutlineRegular, {}),
         /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
           "input",
           {

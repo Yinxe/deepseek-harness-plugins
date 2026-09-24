@@ -14,7 +14,11 @@
  * @module @dshp/search-provider/client
  */
 import { useState } from 'react';
-import { IconChevronDownOutline14, IconLoadingOutline16, Menu } from '@deepseek-ai/dsh-client-ui-primitives';
+import {
+  IconChevronDownOutlineRegular,
+  IconLoadingOutlineRegular,
+  Menu,
+} from '@deepseek-ai/dsh-client-ui-primitives';
 import type { ReactNode } from 'react';
 import styles from './styles.module.css';
 
@@ -165,7 +169,7 @@ export function Select({ value, selectedLabel, options, disabled, onSelect }: Se
       onClick={() => setOpen((v) => !v)}
     >
       <span className={styles.selectorLabel}>{selectedLabel}</span>
-      <IconChevronDownOutline14 className={styles.chevron} />
+      <IconChevronDownOutlineRegular className={styles.chevron} />
     </button>
   );
   return (
@@ -214,7 +218,7 @@ export function Hint({ text }: HintProps): ReactNode {
 export function Loading({ text }: LoadingProps): ReactNode {
   return (
     <div className={styles.loading}>
-      <IconLoadingOutline16 />
+      <IconLoadingOutlineRegular />
       <span className={styles.loadingText}>{text}</span>
     </div>
   );

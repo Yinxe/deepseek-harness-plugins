@@ -13,6 +13,7 @@
  *
  * @module @dshp/search-provider
  */
+import type { Volatile } from '@deepseek-ai/cosmokit';
 
 /** DSH 运行时 ctx —— 暂无官方类型，透传 any */
 export type AnyCtx = any;
@@ -124,10 +125,10 @@ export interface SearchProviderModule {
   stateExtras(deps: ProviderDeps): Promise<Record<string, unknown>>;
 }
 
-// ── 插件配置（settings.yaml: dshp-search-provider）────────────────────────────
+// ── 插件配置（profile 条目 `config:`：dshp-search-provider）────────────────
 
 /**
- * settings.yaml 顶层命名空间的值：`provider` 为设置页聚焦/选型建议，`maxResults` 为
+ * 条目 config 的值：`provider` 为设置页聚焦/选型建议，`maxResults` 为
  * 跨供应商通用的默认结果数，其余键为各供应商分节（键名 = provider id）。
  */
 export interface PluginConfig {
@@ -144,6 +145,16 @@ export interface PluginConfigPatch {
   provider?: string;
   maxResults?: number;
   [providerId: string]: unknown;
+}
+
+/**
+ * `apply(ctx, config)` 实参：全字段 volatile（供应商分节整块），`.get()` 读当前深只读快照。
+ * 顶层键 = provider / maxResults + 各供应商 id。
+ */
+export interface VolatileConfig {
+  provider: Volatile<string>;
+  maxResults: Volatile<number>;
+  [providerId: string]: Volatile<unknown>;
 }
 
 // ── 同源路由协议（与 client/types.ts 对齐）────────────────────────────────────
