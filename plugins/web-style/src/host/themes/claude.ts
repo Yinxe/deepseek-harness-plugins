@@ -84,6 +84,19 @@ export const light = fillFontTokens(
     '--dsw-alias-state-warn-secondary': 'rgba(234, 179, 8, 0.10)',
     '--dsw-alias-state-warn-label': '#b8860b',
 
+    /* 0.1.7-rc.1 新增：diff 视图 / 文档预览 / 空闲态（派生规则见 themes/shared.ts 头注释） */
+    '--dsw-alias-state-idle-primary': '#bdbcb7',
+    '--dsw-alias-code-diff-added': 'rgba(23, 163, 74, 0.08)',
+    '--dsw-alias-code-diff-deleted': 'rgba(181, 51, 51, 0.08)',
+    '--dsw-alias-file-diff-added-bg': '#dfefe0',
+    '--dsw-alias-file-diff-added-gutter': '#eff5ec',
+    '--dsw-alias-file-diff-added-marker': '#17a34a',
+    '--dsw-alias-file-diff-deleted-bg': '#f2e1de',
+    '--dsw-alias-file-diff-deleted-gutter': '#f7efeb',
+    '--dsw-alias-file-diff-deleted-marker': '#b53333',
+    '--dsw-alias-bg-document-preview': '#3d3c3a',
+    '--dsw-alias-label-document-preview': '#dcdcdc',
+
     '--dsw-alias-markdown-citation': '#c96442',
     '--dsw-alias-markdown-code-block': '#f0eee6',
     '--dsw-alias-markdown-code-block-banner': '#e8e6dc',
@@ -108,7 +121,7 @@ export const light = fillFontTokens(
     '--dsw-specific-bubble-highlight': '#f0eee6',
     '--dsw-specific-input-major': '#faf9f5',
     '--dsw-specific-login-input': '#faf9f5',
-    '--dsw-specific-menu': '#faf9f5',
+    '--dsw-specific-menu': 'rgba(250, 249, 245, 0.82)',
     '--dsw-specific-selector': '#faf9f5',
     /* dock 面板（任务列表 / 目标条）是随 scheme 走的普通面，取自己的 layer-2；
        此前误填了 --dsw-alias-tooltip-bg 那种反色浮层的值，亮色下会渲染成深灰 */

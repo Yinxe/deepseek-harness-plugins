@@ -67,7 +67,7 @@ export const dark = fillFontTokens(
     '--dsw-alias-label-caption': '#9f927c',
     '--dsw-alias-label-dimmed': '#6f6350',
     '--dsw-alias-label-error': '#d85a52',
-    '--dsw-alias-label-primary-foreground': '#fff8ea',
+    '--dsw-alias-label-primary-foreground': '#080706',
     '--dsw-alias-label-primary-inverted': '#080706',
     '--dsw-alias-label-primary-bluish': '#c6a15b',
 
@@ -80,6 +80,19 @@ export const dark = fillFontTokens(
     '--dsw-alias-state-warn-primary': '#d8a94f',
     '--dsw-alias-state-warn-secondary': 'rgba(216, 169, 79, 0.15)',
     '--dsw-alias-state-warn-label': '#d8a94f',
+
+    /* 0.1.7-rc.1 新增：diff 视图 / 文档预览 / 空闲态（派生规则见 themes/shared.ts 头注释） */
+    '--dsw-alias-state-idle-primary': '#46433f',
+    '--dsw-alias-code-diff-added': 'rgba(95, 163, 106, 0.12)',
+    '--dsw-alias-code-diff-deleted': 'rgba(216, 90, 82, 0.12)',
+    '--dsw-alias-file-diff-added-bg': '#1f271d',
+    '--dsw-alias-file-diff-added-gutter': '#1a1d16',
+    '--dsw-alias-file-diff-added-marker': '#5fa36a',
+    '--dsw-alias-file-diff-deleted-bg': '#301d19',
+    '--dsw-alias-file-diff-deleted-gutter': '#231815',
+    '--dsw-alias-file-diff-deleted-marker': '#d85a52',
+    '--dsw-alias-bg-document-preview': '#080706',
+    '--dsw-alias-label-document-preview': '#d3d2d2',
 
     '--dsw-alias-markdown-citation': '#c6a15b',
     '--dsw-alias-markdown-code-block': '#151310',
@@ -106,7 +119,7 @@ export const dark = fillFontTokens(
     '--dsw-specific-bubble-highlight': '#241e14',
     '--dsw-specific-input-major': '#151310',
     '--dsw-specific-login-input': '#151310',
-    '--dsw-specific-menu': '#241e14',
+    '--dsw-specific-menu': 'rgba(36, 30, 20, 0.8)',
     '--dsw-specific-selector': '#241e14',
     '--dsw-specific-tip': '#322917',
 

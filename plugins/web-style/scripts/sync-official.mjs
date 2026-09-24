@@ -104,6 +104,16 @@ function buildBaseline(bundlePath) {
   return { light, dark: dk };
 }
 
+/** 主题包版本（写进快照，漂移时可归因到具体 DSH 版本）。 */
+function themeVersion(bundlePath) {
+  try {
+    const pkg = JSON.parse(readFileSync(join(dirname(dirname(bundlePath)), 'package.json'), 'utf8'));
+    return pkg.version ?? 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
 /* ── 取基线：优先真实安装，缺失时回退 fixture ───────────────────────── */
 const bundle = locateThemeBundle();
 let baseline;
@@ -111,6 +121,14 @@ let source;
 if (bundle) {
   baseline = buildBaseline(bundle);
   source = bundle;
+  baseline = {
+    _meta: {
+      dshVersion: themeVersion(bundle),
+      source: bundle,
+      syncedAt: new Date().toISOString().slice(0, 10),
+    },
+    ...baseline,
+  };
 } else if (existsSync(FIXTURE)) {
   baseline = JSON.parse(readFileSync(FIXTURE, 'utf8'));
   source = FIXTURE + '（未找到 DSH 安装，回退快照）';
@@ -124,12 +142,18 @@ const gen = (obj) =>
     .map(([k, v]) => `  '${k}': '${v}',`)
     .join('\n');
 
+/** 快照来源版本：漂移要能归因到具体 DSH 版本，不然「一致」可能是对着旧安装比出来的。 */
+const ver = String(baseline._meta?.dshVersion ?? '未知版本');
+
 const file = `/**
  * official.ts —— 官方样式表的原始 alias / specific token 值（无操作覆盖用）。
  *
  * ⚠️ 本文件由 scripts/sync-official.mjs 生成，请勿手改。
- *    改基线：装好目标 DSH 后跑 \`node scripts/sync-official.mjs\`。
+ *    改基线：装好目标 DSH 后跑 \`node scripts/sync-official.mjs\`
+ *           （多版本共存时用 DSH_THEME_BUNDLE=<...>/dsh-client-ui-theme/lib/client.js 指准）。
  *    校验漂移：\`pnpm test\`（check-themes.mjs 会比对 scripts/dsw-alias-baseline.json）。
+ *
+ * 来源：@deepseek-ai/dsh-client-ui-theme@${ver}
  *
  * 口径：来源为 dsh-client-ui-theme 的 body（亮色）与 body[data-ds-dark-theme]（暗色）
  * 规则；暗色块未覆写的 token 沿用亮色值。覆盖层的对侧 scheme 分支填这些原值 ——

@@ -81,6 +81,19 @@ export const light = fillFontTokens(
     '--dsw-alias-state-warn-secondary': 'rgba(217, 119, 6, 0.10)',
     '--dsw-alias-state-warn-label': '#d97706',
 
+    /* 0.1.7-rc.1 新增：diff 视图 / 文档预览 / 空闲态（派生规则见 themes/shared.ts 头注释） */
+    '--dsw-alias-state-idle-primary': '#c4c4bc',
+    '--dsw-alias-code-diff-added': 'rgba(22, 163, 74, 0.08)',
+    '--dsw-alias-code-diff-deleted': 'rgba(220, 38, 38, 0.08)',
+    '--dsw-alias-file-diff-added-bg': '#e3f4e9',
+    '--dsw-alias-file-diff-added-gutter': '#f3faf6',
+    '--dsw-alias-file-diff-added-marker': '#16a34a',
+    '--dsw-alias-file-diff-deleted-bg': '#fbe5e5',
+    '--dsw-alias-file-diff-deleted-gutter': '#fdf4f4',
+    '--dsw-alias-file-diff-deleted-marker': '#dc2626',
+    '--dsw-alias-bg-document-preview': '#474f49',
+    '--dsw-alias-label-document-preview': '#dedfde',
+
     '--dsw-alias-markdown-citation': '#2f8f46',
     '--dsw-alias-markdown-code-block': '#ffffff',
     '--dsw-alias-markdown-code-block-banner': '#eef7ed',
@@ -106,7 +119,7 @@ export const light = fillFontTokens(
     '--dsw-specific-bubble-highlight': '#eef7ed',
     '--dsw-specific-input-major': '#ffffff',
     '--dsw-specific-login-input': '#ffffff',
-    '--dsw-specific-menu': '#ffffff',
+    '--dsw-specific-menu': 'rgba(255, 255, 255, 0.82)',
     '--dsw-specific-selector': '#ffffff',
     '--dsw-specific-tip': '#eef7ed',
 

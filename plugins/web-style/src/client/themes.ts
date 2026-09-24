@@ -31,8 +31,8 @@ export const THEMES: ThemeMeta[] = [
     id: 'arc-light',
     colorScheme: 'light',
     label: 'Arc 蜜桃珊瑚',
-    desc: '蜜桃 #fdf3ec + 珊瑚 #ff5f5f',
-    swatch: ['#fdf3ec', '#ffffff', '#ff5f5f', '#1a1a1f'],
+    desc: '蜜桃 #fdf3ec + 珊瑚 #ef4a4a',
+    swatch: ['#fdf3ec', '#ffffff', '#ef4a4a', '#1a1a1f'],
   },
   {
     id: 'luxury-dark',

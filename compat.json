@@ -10,7 +10,7 @@
     {
       "dsh": "0.1.7-rc.1 及更新",
       "tag": "v0.1.7-rc.1",
-      "note": "0.1.7 settings 契约：条目导出 Config + volatile，配置落 profile 条目 config:，settings.configure({ auto: false })。"
+      "note": "0.1.7 settings 契约：条目导出 Config + volatile，配置落 profile 条目 config:，settings.configure({ auto: false })。web-style 0.4.0 起 token 契约对齐 rc.1（133 键：新增 diff 视图 / 文档预览 / 空闲态 11 个，menu 转半透明以吃到官方 blur(40px)）。"
     }
   ]
 }

@@ -2,8 +2,11 @@
  * official.ts —— 官方样式表的原始 alias / specific token 值（无操作覆盖用）。
  *
  * ⚠️ 本文件由 scripts/sync-official.mjs 生成，请勿手改。
- *    改基线：装好目标 DSH 后跑 `node scripts/sync-official.mjs`。
+ *    改基线：装好目标 DSH 后跑 `node scripts/sync-official.mjs`
+ *           （多版本共存时用 DSH_THEME_BUNDLE=<...>/dsh-client-ui-theme/lib/client.js 指准）。
  *    校验漂移：`pnpm test`（check-themes.mjs 会比对 scripts/dsw-alias-baseline.json）。
+ *
+ * 来源：@deepseek-ai/dsh-client-ui-theme@0.1.7-rc.1
  *
  * 口径：来源为 dsh-client-ui-theme 的 body（亮色）与 body[data-ds-dark-theme]（暗色）
  * 规则；暗色块未覆写的 token 沿用亮色值。覆盖层的对侧 scheme 分支填这些原值 ——
@@ -19,6 +22,7 @@ import type { TokenMap } from './types.js';
 /** 官方亮色主题的 alias / specific token 原值。 */
 export const OFFICIAL_LIGHT: TokenMap = {
   '--dsw-alias-bg-base': 'var(--dsw-static-neutral-bluish-00)',
+  '--dsw-alias-bg-document-preview': 'var(--dsw-static-neutral-bluish-750)',
   '--dsw-alias-bg-layer-1': 'var(--dsw-static-neutral-bluish-00)',
   '--dsw-alias-bg-layer-2': 'var(--dsw-static-neutral-bluish-00)',
   '--dsw-alias-bg-layer-3': 'var(--dsw-static-neutral-bluish-00)',
@@ -57,6 +61,14 @@ export const OFFICIAL_LIGHT: TokenMap = {
   '--dsw-alias-button-tool-bar-fill': '#54555780',
   '--dsw-alias-button-tool-bar-fill-invisible': '#1f1f1f5c',
   '--dsw-alias-button-tool-bar-hover': '#54555799',
+  '--dsw-alias-code-diff-added': 'var(--dsw-static-green-500-a08)',
+  '--dsw-alias-code-diff-deleted': 'var(--dsw-static-red-600-a08)',
+  '--dsw-alias-file-diff-added-bg': '#e6f4e7',
+  '--dsw-alias-file-diff-added-gutter': '#edf7ed',
+  '--dsw-alias-file-diff-added-marker': '#01a241',
+  '--dsw-alias-file-diff-deleted-bg': '#fce6e2',
+  '--dsw-alias-file-diff-deleted-gutter': '#fdece9',
+  '--dsw-alias-file-diff-deleted-marker': '#ba2723',
   '--dsw-alias-interactive-bg-active': '#2631481a',
   '--dsw-alias-interactive-bg-hover': '#2631480f',
   '--dsw-alias-interactive-bg-hover-accent': '#26314824',
@@ -64,6 +76,7 @@ export const OFFICIAL_LIGHT: TokenMap = {
   '--dsw-alias-interactive-bg-hover-solid': 'var(--dsw-static-neutral-bluish-75)',
   '--dsw-alias-label-caption': 'var(--dsw-static-neutral-bluish-400)',
   '--dsw-alias-label-dimmed': 'var(--dsw-static-neutral-bluish-200)',
+  '--dsw-alias-label-document-preview': 'var(--dsw-static-neutral-bluish-200)',
   '--dsw-alias-label-primary': 'var(--dsw-static-neutral-bluish-1000)',
   '--dsw-alias-label-primary-bluish': 'var(--dsw-static-blue-900)',
   '--dsw-alias-label-primary-dimmed': 'var(--dsw-static-neutral-bluish-950)',
@@ -88,6 +101,7 @@ export const OFFICIAL_LIGHT: TokenMap = {
   '--dsw-alias-state-business-tertiary': 'var(--dsw-static-deepseek-100)',
   '--dsw-alias-state-error-primary': 'var(--dsw-static-red-600)',
   '--dsw-alias-state-error-secondary': 'var(--dsw-static-red-400)',
+  '--dsw-alias-state-idle-primary': 'var(--dsw-static-neutral-300)',
   '--dsw-alias-state-success-primary': 'var(--dsw-static-green-500)',
   '--dsw-alias-state-success-secondary': 'var(--dsw-static-green-400)',
   '--dsw-alias-state-success-tertiary': 'var(--dsw-static-green-100)',
@@ -101,7 +115,7 @@ export const OFFICIAL_LIGHT: TokenMap = {
   '--dsw-specific-bubble-highlight': 'var(--dsw-static-deepseek-200)',
   '--dsw-specific-input-major': 'var(--dsw-static-neutral-bluish-00)',
   '--dsw-specific-login-input': 'var(--dsw-static-neutral-bluish-50)',
-  '--dsw-specific-menu': 'var(--dsw-alias-bg-layer-3)',
+  '--dsw-specific-menu': '#f8f9fa94',
   '--dsw-specific-selector': 'var(--dsw-static-neutral-bluish-60)',
   '--dsw-specific-sidebar-fill': 'var(--dsw-static-neutral-bluish-50)',
   '--dsw-specific-sidebar-nav-item-active': 'var(--dsw-static-neutral-bluish-100)',
@@ -113,6 +127,7 @@ export const OFFICIAL_LIGHT: TokenMap = {
 /** 官方暗色主题的 alias / specific token 原值。 */
 export const OFFICIAL_DARK: TokenMap = {
   '--dsw-alias-bg-base': 'var(--dsw-static-neutral-bluish-950)',
+  '--dsw-alias-bg-document-preview': 'var(--dsw-static-neutral-bluish-950)',
   '--dsw-alias-bg-layer-1': 'var(--dsw-static-neutral-bluish-875)',
   '--dsw-alias-bg-layer-2': 'var(--dsw-static-neutral-bluish-850)',
   '--dsw-alias-bg-layer-3': 'var(--dsw-static-neutral-bluish-800)',
@@ -151,6 +166,14 @@ export const OFFICIAL_DARK: TokenMap = {
   '--dsw-alias-button-tool-bar-fill': '#54555780',
   '--dsw-alias-button-tool-bar-fill-invisible': '#1f1f1f5c',
   '--dsw-alias-button-tool-bar-hover': '#54555799',
+  '--dsw-alias-code-diff-added': 'var(--dsw-static-green-500-a12)',
+  '--dsw-alias-code-diff-deleted': 'var(--dsw-static-red-400-a12)',
+  '--dsw-alias-file-diff-added-bg': '#1f3124',
+  '--dsw-alias-file-diff-added-gutter': '#132016',
+  '--dsw-alias-file-diff-added-marker': '#41c977',
+  '--dsw-alias-file-diff-deleted-bg': '#3c1f1b',
+  '--dsw-alias-file-diff-deleted-gutter': '#28130e',
+  '--dsw-alias-file-diff-deleted-marker': '#fa423e',
   '--dsw-alias-interactive-bg-active': '#ffffff24',
   '--dsw-alias-interactive-bg-hover': '#ffffff14',
   '--dsw-alias-interactive-bg-hover-accent': '#ffffff3d',
@@ -158,6 +181,7 @@ export const OFFICIAL_DARK: TokenMap = {
   '--dsw-alias-interactive-bg-hover-solid': 'var(--dsw-static-neutral-bluish-800)',
   '--dsw-alias-label-caption': 'var(--dsw-static-neutral-bluish-600)',
   '--dsw-alias-label-dimmed': 'var(--dsw-static-neutral-bluish-750)',
+  '--dsw-alias-label-document-preview': 'var(--dsw-static-neutral-bluish-300)',
   '--dsw-alias-label-primary': 'var(--dsw-static-neutral-bluish-50)',
   '--dsw-alias-label-primary-bluish': 'var(--dsw-static-neutral-bluish-50)',
   '--dsw-alias-label-primary-dimmed': 'var(--dsw-static-neutral-bluish-100)',
@@ -182,6 +206,7 @@ export const OFFICIAL_DARK: TokenMap = {
   '--dsw-alias-state-business-tertiary': 'var(--dsw-static-deepseek-800)',
   '--dsw-alias-state-error-primary': 'var(--dsw-static-red-400)',
   '--dsw-alias-state-error-secondary': 'var(--dsw-static-red-400)',
+  '--dsw-alias-state-idle-primary': 'var(--dsw-static-neutral-600)',
   '--dsw-alias-state-success-primary': 'var(--dsw-static-green-500)',
   '--dsw-alias-state-success-secondary': 'var(--dsw-static-green-400)',
   '--dsw-alias-state-success-tertiary': 'var(--dsw-static-green-900)',
@@ -195,7 +220,7 @@ export const OFFICIAL_DARK: TokenMap = {
   '--dsw-specific-bubble-highlight': 'var(--dsw-static-neutral-bluish-750)',
   '--dsw-specific-input-major': 'var(--dsw-static-neutral-bluish-850)',
   '--dsw-specific-login-input': 'var(--dsw-static-neutral-bluish-900)',
-  '--dsw-specific-menu': 'var(--dsw-alias-bg-layer-3)',
+  '--dsw-specific-menu': '#30313680',
   '--dsw-specific-selector': 'var(--dsw-static-neutral-bluish-800)',
   '--dsw-specific-sidebar-fill': 'var(--dsw-static-neutral-bluish-900)',
   '--dsw-specific-sidebar-nav-item-active': 'var(--dsw-static-neutral-bluish-750)',

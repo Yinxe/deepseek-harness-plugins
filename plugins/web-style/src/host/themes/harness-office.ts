@@ -5,12 +5,14 @@
  *   - 曜黑 #0a0a0a 画布 + 冷调分层表面，三层极光辉光 #1A3870 / #2D5F9E / #4A8AC4
  *   - 官网蓝作品牌信号（链接 / 焦点 / 激活）：深色档取 [data-theme=dark] 的 #6799fe
  *     （在 #0a0a0a 上 7.1:1；浅色档的 #4d6bfe 只有 4.6:1），主 CTA 保留官网的白底黑字
+ *     —— 黑字落点是 `--dsw-alias-label-primary-foreground`（on-primary 墨，与白底同处
+ *     `#0a0a0a`；曾误填成 #ffffff，于是白底白字，设置页按钮变成一块无字白胶囊）
  *   - 表面大量使用 hsla(0,0%,100%,α) 叠加而非实色，配合背景层（src/client/background.ts）
  *     透出背景——这是官网玻璃拟态的来路，不是随手写的半透明
  *   - DM Sans 正文 + Fragment Mono 代码，等宽栈与官网代码面板同源
  *
  * 动效（可交互点阵背景 + 极光辉光）不在 token 层：token 契约要求 8 套主题覆盖
- * 同一套 122 个键，多写一个键 check-themes.mjs 就红。背景效果住在 client 的
+ * 同一套 133 个键，多写一个键 check-themes.mjs 就红。背景效果住在 client 的
  * src/client/background-dots.ts，本主题只通过 background.ts 的 THEME_DEFAULT_EFFECT
  * 声明「用户没选时默认挂它」。
  */
@@ -74,7 +76,7 @@ export const dark = fillFontTokens(
     '--dsw-alias-label-caption': 'rgba(255, 255, 255, 0.5)',
     '--dsw-alias-label-dimmed': 'rgba(255, 255, 255, 0.3)',
     '--dsw-alias-label-error': '#f87171',
-    '--dsw-alias-label-primary-foreground': '#ffffff',
+    '--dsw-alias-label-primary-foreground': '#0a0a0a',
     '--dsw-alias-label-primary-inverted': '#0a0a0a',
     '--dsw-alias-label-primary-bluish': '#ffffff',
 
@@ -87,6 +89,19 @@ export const dark = fillFontTokens(
     '--dsw-alias-state-warn-primary': '#e8b33f',
     '--dsw-alias-state-warn-secondary': 'rgba(232, 179, 63, 0.15)',
     '--dsw-alias-state-warn-label': '#e8b33f',
+
+    /* 0.1.7-rc.1 新增：diff 视图 / 文档预览 / 空闲态（派生规则见 themes/shared.ts 头注释） */
+    '--dsw-alias-state-idle-primary': '#474747',
+    '--dsw-alias-code-diff-added': 'rgba(70, 208, 160, 0.12)',
+    '--dsw-alias-code-diff-deleted': 'rgba(248, 113, 113, 0.12)',
+    '--dsw-alias-file-diff-added-bg': '#192e2d',
+    '--dsw-alias-file-diff-added-gutter': '#162123',
+    '--dsw-alias-file-diff-added-marker': '#46d0a0',
+    '--dsw-alias-file-diff-deleted-bg': '#322126',
+    '--dsw-alias-file-diff-deleted-gutter': '#221b20',
+    '--dsw-alias-file-diff-deleted-marker': '#f87171',
+    '--dsw-alias-bg-document-preview': '#0a0a0a',
+    '--dsw-alias-label-document-preview': '#d3d3d3',
 
     '--dsw-alias-markdown-citation': '#6799fe',
     '--dsw-alias-markdown-code-block': '#0f1218',
@@ -114,7 +129,7 @@ export const dark = fillFontTokens(
     '--dsw-specific-bubble-highlight': '#191d26',
     '--dsw-specific-input-major': 'rgba(18, 20, 26, 0.86)',
     '--dsw-specific-login-input': '#12141a',
-    '--dsw-specific-menu': '#191d26',
+    '--dsw-specific-menu': 'rgba(25, 29, 38, 0.8)',
     '--dsw-specific-selector': '#191d26',
     '--dsw-specific-tip': '#232836',
 

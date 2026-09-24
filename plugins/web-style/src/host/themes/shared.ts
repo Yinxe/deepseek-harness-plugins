@@ -6,10 +6,27 @@
  *   - dark / light：`--dsw-*` token → CSS 值 的映射（不含字体批量 token，注册前填充）
  *   - meta：画廊展示元数据（id / label / desc / swatch）
  *
- * 有意不覆盖的 token（全部 23 套主题一律不定义，由官方亮/暗值直接生效）：
+ * 有意不覆盖的 token（全部主题一律不定义，由官方亮/暗值直接生效）：
  *   - `--dsw-alias-markdown-tag`：DSH 里它是「活动标签页底色」（index-*.css 的
  *     `._tabActive_* { background: var(--dsw-alias-markdown-tag) }`），是面不是前景。
  *     主题若按前景语义填中灰实色，会把活动标签页压成一块灰块；故交给官方默认。
+ *
+ * 全局约定（新增 token 按同一口径派生，值一律写字面 hex / rgba —— 校验脚本只解析这两种）：
+ *   - `--dsw-alias-label-primary-foreground` 是「画在品牌底上的墨」，不是正文色：
+ *     primary 按钮文字、Switch 滑块底色、Checkbox 勾三处消费它。深色档必须相对
+ *     `label-primary` 反转（官方 #f9fafb ↔ #0f1115），照抄浅色值会得到白底白字。
+ *     `check-themes.mjs` 以 ≥3:1 / ≥4.5:1 双阈值把这条钉住。
+ *   - 0.1.7-rc.1 新增的 11 个键（S=state-success-primary、E=state-error-primary、
+ *     L1=bg-layer-1、BASE=bg-base、LBL=label-primary；tint = 朝目标线性混合）：
+ *       state-idle-primary       tint(LBL → BASE, 0.75)   StateDot 的「空闲」中性点
+ *       code-diff-added/-deleted rgba(S|E, 暗 0.12 / 亮 0.08)
+ *       file-diff-*-bg/-gutter   tint(L1 → S|E, 0.14 / 0.07 暗，0.12 / 0.05 亮)
+ *       file-diff-*-marker       S|E 本身（行号槽的字色，要保住饱和度）
+ *       bg-document-preview      暗档 = BASE；亮档 tint(BASE → LBL, 0.82)
+ *                                —— PDF 预览面板官方两档都是暗画布，亮档也要压暗
+ *       label-document-preview   tint(canvas → #ffffff, 0.82) 暗画布上的浅灰状态字
+ *   - `--dsw-specific-menu` 半透明（亮 0.82 / 暗 0.8）：rc.1 起官方给它配了
+ *     `backdrop-filter: blur(40px) saturate(150%)`，填实色等于废掉官方毛玻璃。
  *
  * 原实现：dsh-custom-ui/lib/themes/shared.js（JS），本文件为等价 TS 重写，
  * 仅补类型（TokenMap / ThemeMetaMap），常量与函数逻辑逐行对齐。

@@ -94,6 +94,52 @@ for (const t of THEME_CATALOG) {
 }
 console.log(`侧栏选中行：${THEME_CATALOG.length} 套均跟随品牌色（${NAV_ALPHA} 叠色）`);
 
+// ── 1b-3. on-primary 墨色必须真的「看得见」 ─────────────────────────────
+// `--dsw-alias-label-primary-foreground` 是「画在品牌底上的墨」，DSH 里三处消费：
+// primary 按钮文字（._primary_cfgyt_38）、Switch 滑块底色（._thumb_1vyxu_38）、
+// Checkbox 勾（.Mbwy4a_checkboxChecked）。官方深色档把它相对 label-primary 反转
+// （#f9fafb ↔ #0f1115）；三套深色主题曾照抄浅色值，harness-office 于是
+// #ffffff 底 + #ffffff 字 = 1.00:1，设置页那个工具栏按钮就成了纯白无字块。
+// 两条判定都只在两侧都是不透明 #rrggbb 时进行 —— rgba() 的落地色取决于它叠在哪一层，算不准。
+const lum6 = (c) => {
+  const [r, g, b] = c.map((v) => {
+    const s = v / 255;
+    return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const ratio = (a, b) => {
+  const [x, y] = [lum6(a), lum6(b)].toSorted((p, q) => q - p);
+  return (x + 0.05) / (y + 0.05);
+};
+let contrastChecked = 0;
+for (const t of THEME_CATALOG) {
+  const raw = (k) => String(t.tokens?.[k] ?? '');
+  const fgName = '--dsw-alias-label-primary-foreground';
+  const fillName = '--dsw-alias-button-primary-fill';
+  const labelName = '--dsw-alias-label-primary';
+  const fg = rgb6(raw(fgName));
+  const fill = rgb6(raw(fillName));
+  const label = rgb6(raw(labelName));
+  if (fg && fill) {
+    contrastChecked++;
+    const r = ratio(fill, fg);
+    if (r < 3)
+      bad(
+        `${t.id} primary 按钮不可读：${raw(fillName)} 底 + ${raw(fgName)} 字 = ${r.toFixed(2)}:1（应 ≥3:1）`,
+      );
+  }
+  if (fg && label) {
+    contrastChecked++;
+    const r = ratio(label, fg);
+    if (r < 4.5)
+      bad(
+        `${t.id} ${fgName} 与 ${labelName} 同极性（${r.toFixed(2)}:1）—— 它是 on-primary 墨，深色档必须反转`,
+      );
+  }
+}
+console.log(`on-primary 墨色：${contrastChecked} 项对比度校验通过`);
+
 // ── 1c. 官方基线必须等于 DSH 当前值 ────────────────────────────────────
 // OFFICIAL_LIGHT/DARK 是对侧 scheme 的「无操作原值」；一旦漂移，选浅色主题再切
 // 深色就会把 DSH 的旧配色涂回去（历史上漂移过 65/88 项）。
@@ -127,7 +173,7 @@ if (!existsSync(baselinePath)) {
     for (const k of gKeys) if (!wKeys.includes(k)) bad(`${name} 多出 ${k}（DSH 未定义）`);
   }
   console.log(
-    `官方基线：light ${Object.keys(base.light).length} / dark ${Object.keys(base.dark).length}（与 DSH 快照一致）`,
+    `官方基线：${base._meta?.dshVersion ?? '未知版本'} / light ${Object.keys(base.light).length} / dark ${Object.keys(base.dark).length}（与 DSH 快照一致）`,
   );
 }
 

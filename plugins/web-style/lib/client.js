@@ -895,6 +895,14 @@ function withAlpha(hex, a) {
   const b = parseInt(hex.slice(5, 7), 16);
   return "rgba(" + r + ", " + g + ", " + b + ", " + a + ")";
 }
+function mixHex(a, b, t) {
+  const ch = (h, i) => parseInt(h.slice(i, i + 2), 16);
+  return rgbToHex(
+    ch(a, 1) + (ch(b, 1) - ch(a, 1)) * t,
+    ch(a, 3) + (ch(b, 3) - ch(a, 3)) * t,
+    ch(a, 5) + (ch(b, 5) - ch(a, 5)) * t
+  );
+}
 function extractDominant(data) {
   const buckets = Array.from({ length: 12 }, () => ({ count: 0, r: 0, g: 0, b: 0, sat: 0 }));
   for (let i = 0; i < data.length; i += 4) {
@@ -1215,6 +1223,8 @@ function buildPhotoTokens(input, scheme) {
   const hover = m.surfaceContainerHighest;
   const active = withAlpha(brand, 0.22);
   const err = m.error;
+  const ok = dark ? "#4ade80" : "#16a34a";
+  const docCanvas = dark ? m.surface : mixHex(m.surface, textPrimary, 0.82);
   return {
     // 背景
     "--dsw-alias-bg-base": m.surface,
@@ -1271,17 +1281,30 @@ function buildPhotoTokens(input, scheme) {
     "--dsw-alias-label-caption": textTertiary,
     "--dsw-alias-label-dimmed": textQuaternary,
     "--dsw-alias-label-error": err,
-    "--dsw-alias-label-primary-foreground": dark ? textPrimary : "#ffffff",
+    // on-primary 墨色（按钮文字/Switch 滑块/Checkbox 勾）：深色档必须是品牌底上的深墨，不能取 onSurface
+    "--dsw-alias-label-primary-foreground": dark ? m.onPrimary : "#ffffff",
     "--dsw-alias-label-primary-inverted": dark ? m.surface : "#ffffff",
     "--dsw-alias-label-primary-bluish": brand,
     // 语义
     "--dsw-alias-state-error-primary": err,
     "--dsw-alias-state-error-secondary": withAlpha(err, dark ? 0.15 : 0.1),
-    "--dsw-alias-state-success-primary": dark ? "#4ade80" : "#16a34a",
+    "--dsw-alias-state-success-primary": ok,
     "--dsw-alias-state-success-secondary": withAlpha("#22c55e", dark ? 0.15 : 0.1),
     "--dsw-alias-state-warn-primary": dark ? "#fbbf24" : "#d97706",
     "--dsw-alias-state-warn-secondary": withAlpha("#f59e0b", dark ? 0.15 : 0.1),
     "--dsw-alias-state-warn-label": dark ? "#fbbf24" : "#b45309",
+    /* 0.1.7-rc.1 新增：diff 视图 / 文档预览 / 空闲态（派生规则见 themes/shared.ts 头注释） */
+    "--dsw-alias-state-idle-primary": mixHex(textPrimary, m.surface, 0.75),
+    "--dsw-alias-code-diff-added": withAlpha(ok, dark ? 0.12 : 0.08),
+    "--dsw-alias-code-diff-deleted": withAlpha(err, dark ? 0.12 : 0.08),
+    "--dsw-alias-file-diff-added-bg": mixHex(m.surfaceContainerLow, ok, dark ? 0.14 : 0.12),
+    "--dsw-alias-file-diff-added-gutter": mixHex(m.surfaceContainerLow, ok, dark ? 0.07 : 0.05),
+    "--dsw-alias-file-diff-added-marker": ok,
+    "--dsw-alias-file-diff-deleted-bg": mixHex(m.surfaceContainerLow, err, dark ? 0.14 : 0.12),
+    "--dsw-alias-file-diff-deleted-gutter": mixHex(m.surfaceContainerLow, err, dark ? 0.07 : 0.05),
+    "--dsw-alias-file-diff-deleted-marker": err,
+    "--dsw-alias-bg-document-preview": docCanvas,
+    "--dsw-alias-label-document-preview": mixHex(docCanvas, "#ffffff", 0.82),
     // Markdown
     "--dsw-alias-markdown-citation": brand,
     "--dsw-alias-markdown-code-block": m.surfaceContainerLow,
@@ -1290,7 +1313,8 @@ function buildPhotoTokens(input, scheme) {
     "--dsw-alias-markdown-code-segment-selected": withAlpha(brand, dark ? 0.25 : 0.16),
     "--dsw-alias-markdown-code-segment-unselected": "transparent",
     "--dsw-alias-markdown-placeholder": textQuaternary,
-    "--dsw-alias-markdown-tag": textTertiary,
+    // --dsw-alias-markdown-tag 有意不覆盖：它是活动标签页底色（见 themes/shared.ts 头注释），
+    // 按前景语义填中灰会把标签页压成灰块，交给官方值。
     // 滚动条
     "--dsw-alias-scrollbar-bg-l1": border2,
     "--dsw-alias-scrollbar-bg-l2": m.surfaceContainer,
@@ -1309,7 +1333,7 @@ function buildPhotoTokens(input, scheme) {
     "--dsw-specific-bubble-highlight": m.surfaceContainer,
     "--dsw-specific-input-major": m.surfaceContainerLow,
     "--dsw-specific-login-input": m.surfaceContainerLow,
-    "--dsw-specific-menu": m.surfaceContainer,
+    "--dsw-specific-menu": withAlpha(m.surfaceContainer, dark ? 0.8 : 0.82),
     "--dsw-specific-selector": m.surfaceContainer,
     "--dsw-specific-tip": m.surfaceContainer,
     // 阴影
@@ -1363,6 +1387,7 @@ function paletteFromFile(file) {
 // src/client/official.ts
 var OFFICIAL_LIGHT = {
   "--dsw-alias-bg-base": "var(--dsw-static-neutral-bluish-00)",
+  "--dsw-alias-bg-document-preview": "var(--dsw-static-neutral-bluish-750)",
   "--dsw-alias-bg-layer-1": "var(--dsw-static-neutral-bluish-00)",
   "--dsw-alias-bg-layer-2": "var(--dsw-static-neutral-bluish-00)",
   "--dsw-alias-bg-layer-3": "var(--dsw-static-neutral-bluish-00)",
@@ -1401,6 +1426,14 @@ var OFFICIAL_LIGHT = {
   "--dsw-alias-button-tool-bar-fill": "#54555780",
   "--dsw-alias-button-tool-bar-fill-invisible": "#1f1f1f5c",
   "--dsw-alias-button-tool-bar-hover": "#54555799",
+  "--dsw-alias-code-diff-added": "var(--dsw-static-green-500-a08)",
+  "--dsw-alias-code-diff-deleted": "var(--dsw-static-red-600-a08)",
+  "--dsw-alias-file-diff-added-bg": "#e6f4e7",
+  "--dsw-alias-file-diff-added-gutter": "#edf7ed",
+  "--dsw-alias-file-diff-added-marker": "#01a241",
+  "--dsw-alias-file-diff-deleted-bg": "#fce6e2",
+  "--dsw-alias-file-diff-deleted-gutter": "#fdece9",
+  "--dsw-alias-file-diff-deleted-marker": "#ba2723",
   "--dsw-alias-interactive-bg-active": "#2631481a",
   "--dsw-alias-interactive-bg-hover": "#2631480f",
   "--dsw-alias-interactive-bg-hover-accent": "#26314824",
@@ -1408,6 +1441,7 @@ var OFFICIAL_LIGHT = {
   "--dsw-alias-interactive-bg-hover-solid": "var(--dsw-static-neutral-bluish-75)",
   "--dsw-alias-label-caption": "var(--dsw-static-neutral-bluish-400)",
   "--dsw-alias-label-dimmed": "var(--dsw-static-neutral-bluish-200)",
+  "--dsw-alias-label-document-preview": "var(--dsw-static-neutral-bluish-200)",
   "--dsw-alias-label-primary": "var(--dsw-static-neutral-bluish-1000)",
   "--dsw-alias-label-primary-bluish": "var(--dsw-static-blue-900)",
   "--dsw-alias-label-primary-dimmed": "var(--dsw-static-neutral-bluish-950)",
@@ -1432,6 +1466,7 @@ var OFFICIAL_LIGHT = {
   "--dsw-alias-state-business-tertiary": "var(--dsw-static-deepseek-100)",
   "--dsw-alias-state-error-primary": "var(--dsw-static-red-600)",
   "--dsw-alias-state-error-secondary": "var(--dsw-static-red-400)",
+  "--dsw-alias-state-idle-primary": "var(--dsw-static-neutral-300)",
   "--dsw-alias-state-success-primary": "var(--dsw-static-green-500)",
   "--dsw-alias-state-success-secondary": "var(--dsw-static-green-400)",
   "--dsw-alias-state-success-tertiary": "var(--dsw-static-green-100)",
@@ -1445,7 +1480,7 @@ var OFFICIAL_LIGHT = {
   "--dsw-specific-bubble-highlight": "var(--dsw-static-deepseek-200)",
   "--dsw-specific-input-major": "var(--dsw-static-neutral-bluish-00)",
   "--dsw-specific-login-input": "var(--dsw-static-neutral-bluish-50)",
-  "--dsw-specific-menu": "var(--dsw-alias-bg-layer-3)",
+  "--dsw-specific-menu": "#f8f9fa94",
   "--dsw-specific-selector": "var(--dsw-static-neutral-bluish-60)",
   "--dsw-specific-sidebar-fill": "var(--dsw-static-neutral-bluish-50)",
   "--dsw-specific-sidebar-nav-item-active": "var(--dsw-static-neutral-bluish-100)",
@@ -1455,6 +1490,7 @@ var OFFICIAL_LIGHT = {
 };
 var OFFICIAL_DARK = {
   "--dsw-alias-bg-base": "var(--dsw-static-neutral-bluish-950)",
+  "--dsw-alias-bg-document-preview": "var(--dsw-static-neutral-bluish-950)",
   "--dsw-alias-bg-layer-1": "var(--dsw-static-neutral-bluish-875)",
   "--dsw-alias-bg-layer-2": "var(--dsw-static-neutral-bluish-850)",
   "--dsw-alias-bg-layer-3": "var(--dsw-static-neutral-bluish-800)",
@@ -1493,6 +1529,14 @@ var OFFICIAL_DARK = {
   "--dsw-alias-button-tool-bar-fill": "#54555780",
   "--dsw-alias-button-tool-bar-fill-invisible": "#1f1f1f5c",
   "--dsw-alias-button-tool-bar-hover": "#54555799",
+  "--dsw-alias-code-diff-added": "var(--dsw-static-green-500-a12)",
+  "--dsw-alias-code-diff-deleted": "var(--dsw-static-red-400-a12)",
+  "--dsw-alias-file-diff-added-bg": "#1f3124",
+  "--dsw-alias-file-diff-added-gutter": "#132016",
+  "--dsw-alias-file-diff-added-marker": "#41c977",
+  "--dsw-alias-file-diff-deleted-bg": "#3c1f1b",
+  "--dsw-alias-file-diff-deleted-gutter": "#28130e",
+  "--dsw-alias-file-diff-deleted-marker": "#fa423e",
   "--dsw-alias-interactive-bg-active": "#ffffff24",
   "--dsw-alias-interactive-bg-hover": "#ffffff14",
   "--dsw-alias-interactive-bg-hover-accent": "#ffffff3d",
@@ -1500,6 +1544,7 @@ var OFFICIAL_DARK = {
   "--dsw-alias-interactive-bg-hover-solid": "var(--dsw-static-neutral-bluish-800)",
   "--dsw-alias-label-caption": "var(--dsw-static-neutral-bluish-600)",
   "--dsw-alias-label-dimmed": "var(--dsw-static-neutral-bluish-750)",
+  "--dsw-alias-label-document-preview": "var(--dsw-static-neutral-bluish-300)",
   "--dsw-alias-label-primary": "var(--dsw-static-neutral-bluish-50)",
   "--dsw-alias-label-primary-bluish": "var(--dsw-static-neutral-bluish-50)",
   "--dsw-alias-label-primary-dimmed": "var(--dsw-static-neutral-bluish-100)",
@@ -1524,6 +1569,7 @@ var OFFICIAL_DARK = {
   "--dsw-alias-state-business-tertiary": "var(--dsw-static-deepseek-800)",
   "--dsw-alias-state-error-primary": "var(--dsw-static-red-400)",
   "--dsw-alias-state-error-secondary": "var(--dsw-static-red-400)",
+  "--dsw-alias-state-idle-primary": "var(--dsw-static-neutral-600)",
   "--dsw-alias-state-success-primary": "var(--dsw-static-green-500)",
   "--dsw-alias-state-success-secondary": "var(--dsw-static-green-400)",
   "--dsw-alias-state-success-tertiary": "var(--dsw-static-green-900)",
@@ -1537,7 +1583,7 @@ var OFFICIAL_DARK = {
   "--dsw-specific-bubble-highlight": "var(--dsw-static-neutral-bluish-750)",
   "--dsw-specific-input-major": "var(--dsw-static-neutral-bluish-850)",
   "--dsw-specific-login-input": "var(--dsw-static-neutral-bluish-900)",
-  "--dsw-specific-menu": "var(--dsw-alias-bg-layer-3)",
+  "--dsw-specific-menu": "#30313680",
   "--dsw-specific-selector": "var(--dsw-static-neutral-bluish-800)",
   "--dsw-specific-sidebar-fill": "var(--dsw-static-neutral-bluish-900)",
   "--dsw-specific-sidebar-nav-item-active": "var(--dsw-static-neutral-bluish-750)",
@@ -1602,8 +1648,8 @@ var THEMES = [
     id: "arc-light",
     colorScheme: "light",
     label: "Arc \u871C\u6843\u73CA\u745A",
-    desc: "\u871C\u6843 #fdf3ec + \u73CA\u745A #ff5f5f",
-    swatch: ["#fdf3ec", "#ffffff", "#ff5f5f", "#1a1a1f"]
+    desc: "\u871C\u6843 #fdf3ec + \u73CA\u745A #ef4a4a",
+    swatch: ["#fdf3ec", "#ffffff", "#ef4a4a", "#1a1a1f"]
   },
   {
     id: "luxury-dark",

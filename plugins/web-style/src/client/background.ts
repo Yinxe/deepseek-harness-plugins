@@ -2,7 +2,7 @@
  * background.ts —— 背景效果舞台 + 效果登记表
  *
  * **为什么与主题正交**：官网那块背景是 canvas，不是一组 CSS 变量；而 token 契约要求每套主题
- * 覆盖**同一批** 122 个 `--dsw-*` 键（`scripts/check-themes.mjs` 拿 `THEME_CATALOG[0]` 的键集
+ * 覆盖**同一批** 133 个 `--dsw-*` 键（`scripts/check-themes.mjs` 拿 `THEME_CATALOG[0]` 的键集
  * 比对其它主题）。给单套主题加「动效开关」会直接破坏契约。所以分层：token 层（Host 下发，全主题
  * 同构）只管颜色/字体/圆角，动效层登记在本文件的 `BACKGROUNDS` 表里，两边各自完整、互不侵入。
  *

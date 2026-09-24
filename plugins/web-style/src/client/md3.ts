@@ -163,6 +163,16 @@ export function withAlpha(hex: string, a: number): string {
   return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + a + ')';
 }
 
+/** 两个 hex 的线性混合：a 朝 b 走 t（t=0 → a，t=1 → b）。 */
+export function mixHex(a: string, b: string, t: number): string {
+  const ch = (h: string, i: number): number => parseInt(h.slice(i, i + 2), 16);
+  return rgbToHex(
+    ch(a, 1) + (ch(b, 1) - ch(a, 1)) * t,
+    ch(a, 3) + (ch(b, 3) - ch(a, 3)) * t,
+    ch(a, 5) + (ch(b, 5) - ch(a, 5)) * t,
+  );
+}
+
 /** 色相分桶累加器。 */
 interface HueBucket {
   count: number;
@@ -525,6 +535,9 @@ export function buildPhotoTokens(input: PhotoSeedInput, scheme: 'light' | 'dark'
    */
   const active = withAlpha(brand, 0.22);
   const err = m.error;
+  const ok = dark ? '#4ade80' : '#16a34a';
+  /* PDF / 文档预览面板：官方两档都是暗画布（neutral-bluish-750 / 950），浅色档由表面压向墨色得到。 */
+  const docCanvas = dark ? m.surface : mixHex(m.surface, textPrimary, 0.82);
 
   return {
     // 背景
@@ -587,18 +600,32 @@ export function buildPhotoTokens(input: PhotoSeedInput, scheme: 'light' | 'dark'
     '--dsw-alias-label-caption': textTertiary,
     '--dsw-alias-label-dimmed': textQuaternary,
     '--dsw-alias-label-error': err,
-    '--dsw-alias-label-primary-foreground': dark ? textPrimary : '#ffffff',
+    // on-primary 墨色（按钮文字/Switch 滑块/Checkbox 勾）：深色档必须是品牌底上的深墨，不能取 onSurface
+    '--dsw-alias-label-primary-foreground': dark ? m.onPrimary : '#ffffff',
     '--dsw-alias-label-primary-inverted': dark ? m.surface : '#ffffff',
     '--dsw-alias-label-primary-bluish': brand,
 
     // 语义
     '--dsw-alias-state-error-primary': err,
     '--dsw-alias-state-error-secondary': withAlpha(err, dark ? 0.15 : 0.1),
-    '--dsw-alias-state-success-primary': dark ? '#4ade80' : '#16a34a',
+    '--dsw-alias-state-success-primary': ok,
     '--dsw-alias-state-success-secondary': withAlpha('#22c55e', dark ? 0.15 : 0.1),
     '--dsw-alias-state-warn-primary': dark ? '#fbbf24' : '#d97706',
     '--dsw-alias-state-warn-secondary': withAlpha('#f59e0b', dark ? 0.15 : 0.1),
     '--dsw-alias-state-warn-label': dark ? '#fbbf24' : '#b45309',
+
+    /* 0.1.7-rc.1 新增：diff 视图 / 文档预览 / 空闲态（派生规则见 themes/shared.ts 头注释） */
+    '--dsw-alias-state-idle-primary': mixHex(textPrimary, m.surface, 0.75),
+    '--dsw-alias-code-diff-added': withAlpha(ok, dark ? 0.12 : 0.08),
+    '--dsw-alias-code-diff-deleted': withAlpha(err, dark ? 0.12 : 0.08),
+    '--dsw-alias-file-diff-added-bg': mixHex(m.surfaceContainerLow, ok, dark ? 0.14 : 0.12),
+    '--dsw-alias-file-diff-added-gutter': mixHex(m.surfaceContainerLow, ok, dark ? 0.07 : 0.05),
+    '--dsw-alias-file-diff-added-marker': ok,
+    '--dsw-alias-file-diff-deleted-bg': mixHex(m.surfaceContainerLow, err, dark ? 0.14 : 0.12),
+    '--dsw-alias-file-diff-deleted-gutter': mixHex(m.surfaceContainerLow, err, dark ? 0.07 : 0.05),
+    '--dsw-alias-file-diff-deleted-marker': err,
+    '--dsw-alias-bg-document-preview': docCanvas,
+    '--dsw-alias-label-document-preview': mixHex(docCanvas, '#ffffff', 0.82),
 
     // Markdown
     '--dsw-alias-markdown-citation': brand,
@@ -608,7 +635,8 @@ export function buildPhotoTokens(input: PhotoSeedInput, scheme: 'light' | 'dark'
     '--dsw-alias-markdown-code-segment-selected': withAlpha(brand, dark ? 0.25 : 0.16),
     '--dsw-alias-markdown-code-segment-unselected': 'transparent',
     '--dsw-alias-markdown-placeholder': textQuaternary,
-    '--dsw-alias-markdown-tag': textTertiary,
+    // --dsw-alias-markdown-tag 有意不覆盖：它是活动标签页底色（见 themes/shared.ts 头注释），
+    // 按前景语义填中灰会把标签页压成灰块，交给官方值。
 
     // 滚动条
     '--dsw-alias-scrollbar-bg-l1': border2,
@@ -630,7 +658,7 @@ export function buildPhotoTokens(input: PhotoSeedInput, scheme: 'light' | 'dark'
     '--dsw-specific-bubble-highlight': m.surfaceContainer,
     '--dsw-specific-input-major': m.surfaceContainerLow,
     '--dsw-specific-login-input': m.surfaceContainerLow,
-    '--dsw-specific-menu': m.surfaceContainer,
+    '--dsw-specific-menu': withAlpha(m.surfaceContainer, dark ? 0.8 : 0.82),
     '--dsw-specific-selector': m.surfaceContainer,
     '--dsw-specific-tip': m.surfaceContainer,
 

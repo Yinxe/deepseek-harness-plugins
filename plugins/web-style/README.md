@@ -1,6 +1,6 @@
 # @dshp/web-style
 
-DeepSeek Harness（DSH）**Web 外观定制套件**：**8 套主题画廊**（每套 122 个 `--dsw-*` token 全量映射）+ **3 个可交互背景效果**（官网同款字符点阵字标 / 纯 CSS 极光辉光 / 程序化流场）+ **设置页一键切换并持久化**；另有 **壁纸取色（Material You / MD3）** 一键生成整套动态配色（可导出 MD3 令牌）与 **全局圆角** 三档。
+DeepSeek Harness（DSH）**Web 外观定制套件**：**8 套主题画廊**（每套 133 个 `--dsw-*` token 全量映射）+ **3 个可交互背景效果**（官网同款字符点阵字标 / 纯 CSS 极光辉光 / 程序化流场）+ **设置页一键切换并持久化**；另有 **壁纸取色（Material You / MD3）** 一键生成整套动态配色（可导出 MD3 令牌）与 **全局圆角** 三档。
 
 > 设计原则：**与官方外观系统同轨，不做对抗**。不注册自定义主题 id，而是把每套主题作为官方 `overrideTokens` **覆盖层**叠加在官方亮/暗之上——主题自身 scheme 分支填主题值，对侧分支填官方原样值，因此官方「外观」行（浅色/深色/跟随系统）永远合法可用，「回到官方」= 撤销覆盖层。主题 token 单源 `src/host/themes/`，由 Host 经同源路由下发，client 只存卡片 meta；运行时零依赖。
 
@@ -106,7 +106,7 @@ label / desc / swatch 以 `src/host/themes/*.ts` 的 `meta` 为准（token 同�
 | `claude-parchment-light` | 纯亮 | 羊皮纸 #f5f4ed + 赤陶 #c96442，ring 型深度   | claude      |
 | `xiaohongshu-light`      | 纯亮 | 米灰 #f5f5f5 + 种草红 #ff2442                | xiaohongshu |
 | `levels-light`           | 纯亮 | 米纸 #fbf7ef + 代谢绿 #2f8f46                | levels      |
-| `arc-light`              | 纯亮 | 蜜桃 #fdf3ec + 珊瑚 #ff5f5f                  | arc         |
+| `arc-light`              | 纯亮 | 蜜桃 #fdf3ec + 珊瑚 #ef4a4a                  | arc         |
 | `sakura-light`           | 纯亮 | 樱白 #fff9fa + 樱粉 #e75480                  | 原创        |
 | `luxury-dark`            | 纯暗 | 曜石 #080706 + 鎏金 #c6a15b                  | luxury      |
 | `supabase-dark`          | 纯暗 | 墨黑 #171717 + 翡翠绿 #3ecf8e                | supabase    |
@@ -117,7 +117,9 @@ label / desc / swatch 以 `src/host/themes/*.ts` 的 `meta` 为准（token 同�
 
 另有一套虚拟主题 `photo:custom`：壁纸取色（MD3 运行时生成，不在目录内，但属于合法持久化值，Host 白名单放行）。
 
-每套 122 个 `--dsw-*` token 全量映射：背景 / 边框 / 品牌 / 按钮 / 交互态 / 文字 / 语义色 / Markdown / 滚动条 / 侧栏 / 气泡 / 浮层 / 阴影 / 字体栈。
+每套 133 个 `--dsw-*` token 全量映射：背景 / 边框 / 品牌 / 按钮 / 交互态 / 文字 / 语义色 /
+diff 视图 / 文档预览 / Markdown / 滚动条 / 侧栏 / 气泡 / 浮层 / 阴影 / 字体栈。
+（diff 与文档预览三组 11 个键来自 0.1.7-rc.1，派生规则见 `src/host/themes/shared.ts` 头注释。）
 
 `scripts/check-themes.mjs` 强制**全部主题覆盖同一套 token 名**（多写少写都报错），
 并校验 `official.ts` 与 DSH 实际值一致 —— 后者是覆盖层的「对侧 scheme 无操作原值」，
@@ -162,7 +164,7 @@ rgba(<该主题 --dsw-alias-brand-primary 的 RGB>, 0.22)
 `kind` 就是能力位：`dom` 类效果**根本不创建 canvas、不绑 mousemove/resize、不起 rAF**，
 零帧成本是结构性的而不是优化出来的。
 
-**为什么动效不进 token 层**：token 契约要求每套主题覆盖**同一批** 122 个键（`check-themes.mjs` 拿
+**为什么动效不进 token 层**：token 契约要求每套主题覆盖**同一批** 133 个键（`check-themes.mjs` 拿
 `THEME_CATALOG[0]` 比对），给单套主题加「动效开关」会直接破坏契约——`src/client/themes.ts` 的画廊
 meta 也被同一脚本用严格正则咬着字段集合与顺序，加不了字段。所以配色层仍由 Host 全量下发，
 背景层完全活在客户端：`backgroundId` 是空串时按**主题 id 的默认映射** `THEME_DEFAULT_EFFECT`
@@ -261,7 +263,7 @@ meta 也被同一脚本用严格正则咬着字段集合与顺序，加不了字
 - 把壳面从 `background-color` 换成 `background-image` / `backdrop-filter` → 识别不到，症状是
   「极光和点阵整个不见了」。自查两条命令：`!!document.getElementById('dshp-ws-ambient')` 与
   那两级壳面的 `backgroundColor`；前者 true 后者实心，就是这里要补探针或 `SHELL_PROBES`。
-- 官方 token 键集变了 → 不会静默错位：`scripts/check-themes.mjs` 拿 DSH 快照比对 122 键契约，
+- 官方 token 键集变了 → 不会静默错位：`scripts/check-themes.mjs` 拿 DSH 快照比对 133 键契约，
   `scripts/sync-official.mjs` 负责把官方基线同步进来，红就是红。
 - **注意安装形态**：web profile 的 `node_modules/@dshp/web-style` 是指向仓库的 symlink（改完刷新即生效），
   桌面端 profile 里是**拷贝**安装的一份。仓库更新后桌面端不会自己跟上，得重装该 profile 的插件依赖。
@@ -392,12 +394,12 @@ dsh web
 
 > 注：移植期这份手抄的 `OFFICIAL_DARK` 后来被查出**漂移了 65/88 项**（值仍停留在 DSH 0.0.x 的旧暗色调色板），
 > 会导致「选浅色主题 → 切深色」时整片回退成旧配色。现已改为由 `scripts/sync-official.mjs`
-> 从真实安装重新生成（90 + 90 项，0 漂移），并由 `check-themes.mjs` 常驻校验。
+> 从真实安装重新生成（101 + 101 项，0 漂移），并由 `check-themes.mjs` 常驻校验。
 
 ### 主题集精简
 
 曾扩展到 33 套，但实测**大多数主题的视觉区分度不足** —— 基本是「同一套布局换个色相」，
-而维护成本随数量线性增长（每套 122 个 token，任何全局约定都要同步几十处）。
+而维护成本随数量线性增长（每套 133 个 token，任何全局约定都要同步几十处）。
 现精简为 7 套：`claude-parchment-light` / `xiaohongshu-light` / `levels-light` / `arc-light` /
 `sakura-light` / `luxury-dark` / `supabase-dark`。此后追加的第 8 套 `harness-office` 不属于这轮取舍——
 它换的是**信息维度**（官网同款的动效背景），不是又一个换个色相的布局。
@@ -409,7 +411,7 @@ dsh web
 
 1. **`OFFICIAL_LIGHT/DARK` 重新生成** —— 暗色分支此前漂移 **65/88** 项（值仍停留在 DSH 0.0.x 的旧暗色调色板），
    会让「选浅色主题 → 切深色」整片回退成旧配色。现由 `scripts/sync-official.mjs` 从真实 DSH 生成
-   （90 + 90，0 漂移），`check-themes.mjs` 常驻校验。
+   （101 + 101，0 漂移），`check-themes.mjs` 常驻校验。
 2. **补 `--dsw-alias-link`** —— 此前基线与主题都没有它，markdown 链接与文件提及永远是 DeepSeek 蓝。
 3. **补 `--dsw-alias-state-business-primary/tertiary`** —— 此前官方 DeepSeek 蓝会渗进每套主题。
 4. **删死 token `--dsw-alias-line-secondary`** —— 全 DSH 零引用。
