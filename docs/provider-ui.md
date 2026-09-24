@@ -88,7 +88,7 @@ ctx.prefs.set('balance', '1'); // 写 → 承载面的按钮立刻重画
   可以安全放进依赖数组。
 - **清理**：供应商被删后 `prune(ids)` 掉孤儿键（等配置就绪后才跑，避免启动瞬间误删）。
 
-**为什么不进 settings.yaml**：它只是「我这台机器上想看哪个数」的展示口味 —— 换机器、换人本就该不一样，
+**为什么不进持久化配置**：它只是「我这台机器上想看哪个数」的展示口味 —— 换机器、换人本就该不一样，
 写进配置会跟着同步漂走；而且为点一下按钮走一趟 `/ext/...` 毫无必要（路由没热更新时就会弹一行「连接 Host 失败」）。
 所以 **Host 侧没有对应字段、没有校验函数、没有写它的路由**。
 
@@ -151,12 +151,12 @@ Host 适配器可声明 `icon`（`describeProviders()` 下发 `ProviderMeta.icon
 - **双轨兼容**：`defaultView()` 从 legacy 字段兜底推导 view（老适配器零改动升级），`viewToExtra()` 把 view 反向补成 legacy extra（新适配器只写 view 也不让旧客户端空白）。
 - 适配器可声明 `defaultParams` 声明「新增该类型时的表单初始值」（如 commandcode 默认填 `$COMMAND_CODE_API_KEY`）；**表单字段一律来自 provider 元数据 `fields[]`，禁止在 client 里按 type 硬编码字段**（会与适配器悄悄漂移）。
 - 适配器还可声明 **`icon`**（图标名，随 `describeProviders()` 下发 `ProviderMeta.icon`）—— 只是名字，**不带任何图片 / SVG**；客户端解析见上文「供应商图标」。
-- **纯展示偏好留在客户端**：像「按钮上显示什么」这种口味不该进 `settings.yaml`（会跟着配置漂到别的机器），也不必为点一下按钮走 `/ext` 路由 —— token-meter 把它放在 `localStorage`（`tm-quota-prefs`）的**按供应商分作用域的键值袋**里，由客户端 store 广播（见上文「显示偏好 = 供应商自己的键值袋」），**Host 侧没有这个字段、没有校验函数、没有写它的路由**。
+- **纯展示偏好留在客户端**：像「按钮上显示什么」这种口味不该进持久化配置（条目 `config:` 会跟着漂到别的机器），也不必为点一下按钮走 `/ext` 路由 —— token-meter 把它放在 `localStorage`（`tm-quota-prefs`）的**按供应商分作用域的键值袋**里，由客户端 store 广播（见上文「显示偏好 = 供应商自己的键值袋」），**Host 侧没有这个字段、没有校验函数、没有写它的路由**。
 - 同类 provider 能合并就合并：token-meter 的 `deepseek-api`/`deepseek-web` 已并入 `deepseek`（按凭据形态自动选路），旧 type 只留**别名**（`registerAlias`，读路径归一并不落库、不改写用户文件），不给用户增加无谓选择。
 
 ## search-provider 的变体
 
-search-provider 是同一思想的搜索版：`host/providers/<id>.ts` 实现 `SearchProviderModule`（注册进 `ctx.web` 的 WebSearchProvider），样板（路由/消毒/错误抽取）由 `providers/base.ts` 提供。API Key 每次操作经 credentials 服务实时解析（如 `TAVILY_API_KEY`），不在提供方上滞留、不进 settings.yaml。
+search-provider 是同一思想的搜索版：`host/providers/<id>.ts` 实现 `SearchProviderModule`（注册进 `ctx.web` 的 WebSearchProvider），样板（路由/消毒/错误抽取）由 `providers/base.ts` 提供。API Key 每次操作经 credentials 服务实时解析（如 `TAVILY_API_KEY`），不在提供方上滞留、不进条目 config。
 
 ## 失败提示必须结构化、可操作
 

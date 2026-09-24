@@ -1,5 +1,16 @@
 {
   "repo": "Yinxe/deepseek-harness-plugins",
   "policy": "main 永远跟最新 DSH，直接用；历史 tag 只在 DSH 上游发新版 breaking 时回头打，给老 DSH 用户 checkout。空矩阵 = 暂无历史包袱。",
-  "compat": []
+  "compat": [
+    {
+      "dsh": "0.1.5 系（至 0.1.5-rc.2）",
+      "tag": "v0.1.5-rc.2",
+      "note": "旧 settings 契约（installSection / settings.yaml 命名空间）。0.1.6+ 用户请留在 main。"
+    },
+    {
+      "dsh": "0.1.7-rc.1 及更新",
+      "tag": "v0.1.7-rc.1",
+      "note": "0.1.7 settings 契约：条目导出 Config + volatile，配置落 profile 条目 config:，settings.configure({ auto: false })。"
+    }
+  ]
 }

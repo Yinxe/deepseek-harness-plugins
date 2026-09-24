@@ -12,7 +12,7 @@
 
 ## 为什么设置节不走客户端 `settingsScope`
 
-官方 `settingsScope.bind({ namespace })` 也能读写同一分节，但它要求 Host 已注册命名空间、浏览器侧服务已挂载、写操作按 revision 设栅；任一环时序不对（服务晚挂载、页面非 loopback）就会**静默退化成只读默认值**——症状正是「控件点了没反应、`settings.yaml` 里也没有分节」。本仓统一走「自有 `/ext` 路由 → Host `settings.update`」：写的是同一份文件，但少一层时序依赖。设置节与工具行共用同一个客户端 store（读走 `state`、写走 `config`）；写是乐观的，失败一定回滚并报错。
+官方 `settingsScope.bind({ namespace })` 也能读写同一份条目 config，但它要求浏览器侧服务已挂载、写操作按 revision 设栅；任一环时序不对（服务晚挂载、页面非 loopback）就会**静默退化成只读默认值**——症状正是「控件点了没反应、profile 条目 `config:` 里也没有键值」。本仓统一走「自有 `/ext` 路由 → Host `settings.update`」：写的是同一份条目 config，但少一层时序依赖。设置节与工具行共用同一个客户端 store（读走 `state`、写走 `config`）；写是乐观的，失败一定回滚并报错。
 
 ## 各插件现有路由一览
 

@@ -13,7 +13,7 @@
 3. **所有副作用可逆**：一切注册（on/register/样式/patch/section）都包在 `ctx.effect(..., 'dshp-<name>: label')` 里；`apply` 顶层不许抛，每个注册块独立 try/catch + 一行中文日志。→ [docs/cordis-host.md](docs/cordis-host.md)
 4. **外部输入全部消毒**：tool 参数、路由 body、settings patch、文件回读，逐字段校验 + 截断 + 范围夹，不信任任何 `any`。→ [docs/cordis-host.md](docs/cordis-host.md)、[docs/ext-routes.md](docs/ext-routes.md)
 5. **只认一个配置键**：NS = `dshp-<name>` 四处同名（settings 命名空间 / `/ext` 路由前缀 / patch id / settings.section id）；永不迁移历史配置、不读旧 key、不写自有配置文件（改名即 breaking，迁移步骤只写 README）。→ [docs/settings.md](docs/settings.md)
-6. **不写用户文件**：配置只进 settings.yaml 的 NS 分节；需要写用户文件的插件（skill-manager / mcp-manager）必须有写路径白名单 + 原子落盘 + 自校验，且故意不注册模型工具。→ [docs/security.md](docs/security.md)
+6. **不写用户文件**：配置只进 profile 条目 `config:` 的 NS；需要写用户文件的插件（skill-manager / mcp-manager）必须有写路径白名单 + 原子落盘 + 自校验，且故意不注册模型工具。→ [docs/security.md](docs/security.md)
 7. **安全最小暴露**：同源校验 + body 上限；缓存只存 leaf owned copy；日志不打密钥/prompt 全文/用户原文；代码与注释里不放任何密钥。→ [docs/security.md](docs/security.md)
 8. **不许自创配置**：tsconfig 只 extends `../../tsconfig.base.json` 不放宽任何 strict 项；不新加 oxlint rule-off（全仓仅有的两处是故意的）；不引入 typescript-eslint / eslint / webpack。→ [docs/typescript.md](docs/typescript.md)、[docs/build-and-deps.md](docs/build-and-deps.md)
 9. **Client 半的硬约束**：源码写 `.tsx` + JSX，SDK 类型从 devDependency import（不再手写 `AnyReact` 那套 shim）；`react` / `react/jsx-runtime` / `@deepseek-ai/dsh-client-ui-primitives` 绝不打包（factory 的 require 注入，故 client 构建必须是 cjs + banner/footer）；颜色字号只用 `--dsw-alias-*` token，不写死色值。→ [docs/client-basics.md](docs/client-basics.md)、[docs/build-and-deps.md](docs/build-and-deps.md)
@@ -46,7 +46,7 @@
 7. 路由无 `sameOrigin`、body 无上限、字符串入库不截断。
 8. 直接改 `node_modules`、改 `storeDir`/`pnpm-workspace.yaml`、用 npm/yarn 安装。
 9. 不跑门禁就 push；`pnpm-lock.yaml` 没提交。
-10. 在代码里放密钥；新增自有配置文件（配置只进 settings.yaml NS）。
+10. 在代码里放密钥；新增自有配置文件（配置只进条目 config 的 NS）。
 11. 子包自带 LICENSE / `files` 含 LICENSE（全仓 MIT 只在根保留一份）。
 12. 稳态读写旧配置键名、硬编码键名字符串、为历史旧键写兼容/迁移代码（读写一律 `NS` 常量）。
 13. 代码注释引用本规范时用旧 §编号（应链接 `docs/<主题>.md`，编号会漂移）。

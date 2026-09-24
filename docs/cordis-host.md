@@ -2,32 +2,36 @@
 
 > 本文承接旧 AGENT.md §6（Cordis Host 插件规范）的完整细节。规则版总纲见[仓库根 AGENT.md](../AGENT.md)。
 
-## 导出契约（5 件套）
+## 导出契约（0.1.7）
 
 ```ts
 export const name = '@dshp/<name>'; // = package.json name
 export const inject: string[] = ['tools', 'webServer', 'llm']; // 按需删减，只声明真需要的
 export { NS, ConfigSchema }; // 用 settings 才导出
-export function apply(ctx: AnyCtx, rawConfig: unknown): void {
-  /* 结构见下 */
+export const Config: unknown = ConfigSchema; // 0.1.7：cordis 装载期校验 + 设置表单派生
+export function apply(ctx: AnyCtx, config: VolatileConfig): void {
+  /* 结构见下；可写字段是 Volatile<T> 引用 */
 }
 ```
 
-- `name` 必须等于包名；`cordis.patch.yml` 的 `id` 用短横线小写（`dshp-<name>`），与 settings NS 同名（见 docs/settings.md）。
+- `name` 必须等于包名；`cordis.patch.yml` 的 `id` 用短横线小写（`dshp-<name>`），与 settings NS 同名（见 docs/settings.md）。0.1.7 起这个 id 还是 `settings.update(NS, …)` 的路由键。
 - `inject` 只声明**硬依赖**（缺了插件无法工作的 service）。可选 service 一律 `ctx.get()` + 判空，不进 `inject`（否则 service 未挂载时插件无限 waiting）。
+- **条目 config 非法 = 整个条目不装载**（0.1.7 行为）：schema 校验失败会拒发条目并给中文报错，不再有「逐字段回退默认」，所以 `apply` 里不做装载期消毒。
 
 ## apply 结构（顺序固定）
 
-照抄 vision-bridge `host/index.ts` 的分段顺序：① 合并 `rawConfig` patch（settings 的 base 层）→ ② `ctx.inject(['settings'], ... installSection ...)` → ③ 内部 helpers（getConfig/snapshot/ensureDefaults）→ ④ 缓存/监听 → ⑤ 门禁/补丁 → ⑥ systemPrompt → ⑦ tools.register → ⑧ webServer.register。每段一个 `// ── 中文标题 ──` 分隔注释。**不设「迁移旧状态」段**：插件只认自己的 NS，不读历史 key、不读旧文件（见 docs/settings.md 的「不做迁移」节）。
+照抄 vision-bridge `host/index.ts` 的分段顺序：① `export const Config`（schema 上交 cordis）→ ② `ctx.inject(['settings'], … settings.configure({ auto: false }, ctx.fiber) …)`（自带 settings.section 页面才需要 auto:false；纯表单页删掉整块）→ ③ 内部 helpers（`getConfig()` 逐字段 `config.x.get()`、snapshot/ensureDefaults）→ ④ 缓存/监听（热更逻辑监听 `loader/volatile-update`）→ ⑤ 门禁/补丁 → ⑥ systemPrompt → ⑦ tools.register → ⑧ webServer.register。每段一个 `// ── 中文标题 ──` 分隔注释。**不设「迁移旧状态」段**：插件只认自己的 NS，不读历史 key、不读旧文件（见 docs/settings.md 的「不做迁移」节）。
 
-file-change-viewer 的一个已知时序坑：`patchTool` 这类「按 settings 开关动态注册工具」的逻辑，判定开关时必须问 **settings 服务的权威值**（`settings.get(NS)`），不能只信 `setSource` 交付的 thunk——真实服务在 attach/detach 时会用「只有 base 层」的源回调一次，只看 thunk 会把工具误反注册。
+旧版时序技巧作废说明：`installSection` / `setSource` thunk / `settings.get(NS)` 权威读（file-change-viewer 曾用来躲 attach/detach 竞态）在 0.1.7 全部不存在——loader 在提交期把新值**原地写进 volatile 引用**再派发 `loader/volatile-update`，开关判定直接 `config.<field>.get()` 就是权威值。
 
 ## 服务访问：get 优先，ctx.xxx 只在 inject 后
 
 ```ts
-const settings = ctx.get('settings') as AnyCtx;   // 可选依赖：判空
+const settings = ctx.get('settings') as AnyCtx; // 可选依赖：判空
 if (!settings) throw new Error('中文可操作提示…'); // 或降级
-ctx.inject(['settings'], (sctx) => { sctx.settings.installSection(...); }); // 硬依赖才用
+ctx.inject(['settings'], (sctx) => {
+  sctx.effect(() => sctx.settings.configure({ auto: false }, ctx.fiber), 'dshp-<name>: settings-page');
+}); // 硬依赖才用 inject
 ```
 
 - 绝不 `JSON.stringify` 整个 ctx/service（live 对象，dump 即爆栈或泄漏）；只取 leaf 字段，构造成最小 owned 对象（标杆 vision-bridge `copyAttachment` 只取 6 个字段）。
@@ -46,10 +50,10 @@ ctx.effect(() => slotsOrServerRegister(...), 'dshp-<name>: state route');
 
 ## 数据消毒（sanitize* 是强制函数）
 
-每个插件的 `config.ts` 必须有（照抄标杆签名风格）：
+0.1.7 起条目 config 由 `Config` schema 在装载期强制校验（非法即条目不装载），**不再需要** `sanitizePatchConfig` / `sanitizePersisted` 这类装载期逐字段回退；消毒重心全部移到**路由入口与外部读回**（照抄标杆签名风格）：
 
-- `sanitizePersisted(raw)`：旧文件回读用——类型不对回默认值，字符串一律 `.slice(0, N)`（route provider 120 / model 200 / 模板 2000），数字 `Math.floor` + 范围夹。
-- `sanitizePatchConfig(raw)`：`rawConfig`/路由 body 用——`Object.hasOwn` 逐字段，只收合法值，非法字段静默丢弃（路由场景则抛中文 Error，见 docs/ext-routes.md）。
+- 路由 body 消毒：`Object.hasOwn` 逐字段、字符串 `.slice(0, N)`、数字 `Math.floor` + 范围夹，非法抛中文 Error（见 docs/ext-routes.md）。示例：`sanitizeWorkspaceRoot` / `sanitizePatchFilePath` / `sanitizeServerConfig`（含 `!!js` 标记与 LIMITS 截断）。
+- schema 证明不了的**读路径防御**保留：跨字段归一（如 token-meter 的 provider `type` 别名 `canonicalType`）、值域夹取（`normGapMin`），写在 `getConfig()` 消费处而非装载期。
 - tool `execute` 参数同样逐字段校验：必填缺失/类型不对抛中文 Error，写清「去哪里改」（标杆：`'视觉桥接已在设置页关闭，请先启用后再调用'`）。
 
 ## 日志与错误信息
