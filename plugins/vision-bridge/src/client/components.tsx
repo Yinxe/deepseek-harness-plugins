@@ -11,7 +11,7 @@
  * @module @dshp/vision-bridge/client/components
  */
 import { useState, type ReactNode } from 'react';
-import { IconChevronDownOutline14, Menu } from '@deepseek-ai/dsh-client-ui-primitives';
+import { IconChevronDownOutlineRegular, Menu } from '@deepseek-ai/dsh-client-ui-primitives';
 import styles from './styles.module.css';
 
 /**
@@ -115,7 +115,7 @@ export function Select({ disabled, value, selectedLabel, options, onSelect }: Se
       onClick={() => setOpen((current) => !current)}
     >
       <span className={styles.selectorLabel}>{selectedLabel}</span>
-      <IconChevronDownOutline14 className={styles.chevron} />
+      <IconChevronDownOutlineRegular className={styles.chevron} />
     </button>
   );
   return (

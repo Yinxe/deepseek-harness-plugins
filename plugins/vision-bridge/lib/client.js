@@ -101,7 +101,7 @@ function Select({ disabled, value, selectedLabel, options, onSelect }) {
       onClick: () => setOpen((current) => !current),
       children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: styles_module_css_default.selectorLabel, children: selectedLabel }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_dsh_client_ui_primitives.IconChevronDownOutline14, { className: styles_module_css_default.chevron })
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_dsh_client_ui_primitives.IconChevronDownOutlineRegular, { className: styles_module_css_default.chevron })
       ]
     }
   );
@@ -214,7 +214,7 @@ function VisionSection() {
   }
   if (loading) {
     return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: styles_module_css_default.page, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: styles_module_css_default.loading, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutline16, {}),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutlineRegular, {}),
       /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: styles_module_css_default.loadingText, children: "\u6B63\u5728\u8BFB\u53D6 setting.yml \u4E2D\u7684\u591A\u6A21\u6001\u6A21\u578B\u2026" })
     ] }) });
   }

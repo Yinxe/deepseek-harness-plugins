@@ -1,6 +1,6 @@
 # @dshp/vision-bridge
 
-DeepSeek Harness（DSH）**视觉桥接**插件：让**纯文本模型**也能“看图”——当用户消息中出现图片占位符 ` [image omitted because this model accepts text only…]` 时，模型调用 `vision_describe` 工具，插件把**本轮图片原图引用 + 你的提问**一起转交给**多模态视觉模型**去识别，主模型失败时自动用**备用模型重试**。配置在设置页完成并**通过官方 settings API 持久化到 `$DSH_HOME/settings.yaml`（`dshp-vision-bridge` 命名空间）**，支持注释保留与热重载，重启后不丢。配置**只认** `dshp-vision-bridge` 一个键：历史命名空间与旧 `storages/*.json` 不再读取、不再迁移（见“更新日志”的迁移提示）。
+DeepSeek Harness（DSH）**视觉桥接**插件：让**纯文本模型**也能“看图”——当用户消息中出现图片占位符 ` [image omitted because this model accepts text only…]` 时，模型调用 `vision_describe` 工具，插件把**本轮图片原图引用 + 你的提问**一起转交给**多模态视觉模型**去识别，主模型失败时自动用**备用模型重试**。配置在设置页完成并**通过官方 settings API 持久化到 profile 条目 `dshp-vision-bridge` 的 `config:`**，设置页改动即时热更新，重启后不丢。配置**只认** `dshp-vision-bridge` 一个键：历史命名空间与旧 `storages/*.json` 不再读取、不再迁移（见“更新日志”的迁移提示）。
 
 > 设计原则：**对模型零侵扰、对用户零残留**。图片只取 leaf 字段的 owned copy，会话级 LRU 缓存；无密钥、无外部依赖；卸载即干净。
 
@@ -75,12 +75,12 @@ dsh web   # 重启生效
 
 ## 功能
 
-| 部分                                          | 内容                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Host（`src/host/` → `lib/host.js`）**       | 注册 `vision_describe` 模型工具；监听 `agent/inbox/inserted` + `llm/stream` 缓存图片（最近 20 张/会话，至多 50 会话）；发现候选视觉模型（`setting.yml` 中 `input: [text, image]` 的模型 + `llm` 服务实时 provider 列表）；`vision_describe` 执行时完成 hint 过滤（sha 前缀或序号）、`maxImages` 截尾、`buildQuestion` 拼装 `detail` + `promptTemplate`、主→备 fallback；注入系统提示引导纯文本模型何时调用工具；暴露同源 JSON 路由供设置页（见下）。**通过官方 `ctx.settings` + `schemastery` 持久化到 `settings.yaml`（`dshp-vision-bridge`），使用 settings 服务的 `installSection` 方法，支持热重载与注释保留；**配置只认 `dshp-vision-bridge`，不读历史 key/旧文件**；接管发送门禁（启用且配好主模型时纯文本模型可直接发图，关闭即恢复）。 |
-| **Client（`src/client/` → `lib/client.js`）** | 「设置 → 视觉模型」配置页：启用开关、主/备模型下拉（候选来自 Host 发现）、详细度（`auto`/`low`/`high`）、单次最多图片（`1–8`）、追加提示词（失焦保存）、重新读取、检查连通性。UI 全部使用 DSH 官方设计 token（`dsw-alias-*`），与官方设置页风格一致。无额外依赖。                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| **同源路由**                                  | `GET /ext/dshp-vision-bridge/state`（模型列表 + 当前配置）、`POST /ext/dshp-vision-bridge/config`（保存补丁）、`GET /ext/dshp-vision-bridge/check`（探活主/备路由），均带同源校验（`Origin` 与 `Host` 一致或缺失才放行）。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| **工具**                                      | `vision_describe`（见参数表），输出 `{ description, model, fallback_used }`，模型侧渲染为纯文本（`description`）。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| 部分                                          | 内容                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Host（`src/host/` → `lib/host.js`）**       | 注册 `vision_describe` 模型工具；监听 `agent/inbox/inserted` + `llm/stream` 缓存图片（最近 20 张/会话，至多 50 会话）；发现候选视觉模型（`setting.yml` 中 `input: [text, image]` 的模型 + `llm` 服务实时 provider 列表）；`vision_describe` 执行时完成 hint 过滤（sha 前缀或序号）、`maxImages` 截尾、`buildQuestion` 拼装 `detail` + `promptTemplate`、主→备 fallback；注入系统提示引导纯文本模型何时调用工具；暴露同源 JSON 路由供设置页（见下）。**按 0.1.7 契约导出条目 `Config`（schemastery + volatile 字段），`settings.update` 持久化到 profile 条目 `dshp-vision-bridge` 的 `config:`，设置页一改即热更新；**配置只认 `dshp-vision-bridge`，不读历史 key/旧文件**；接管发送门禁（启用且配好主模型时纯文本模型可直接发图，关闭即恢复）。 |
+| **Client（`src/client/` → `lib/client.js`）** | 「设置 → 视觉模型」配置页：启用开关、主/备模型下拉（候选来自 Host 发现）、详细度（`auto`/`low`/`high`）、单次最多图片（`1–8`）、追加提示词（失焦保存）、重新读取、检查连通性。UI 全部使用 DSH 官方设计 token（`dsw-alias-*`），与官方设置页风格一致。无额外依赖。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **同源路由**                                  | `GET /ext/dshp-vision-bridge/state`（模型列表 + 当前配置）、`POST /ext/dshp-vision-bridge/config`（保存补丁）、`GET /ext/dshp-vision-bridge/check`（探活主/备路由），均带同源校验（`Origin` 与 `Host` 一致或缺失才放行）。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **工具**                                      | `vision_describe`（见参数表），输出 `{ description, model, fallback_used }`，模型侧渲染为纯文本（`description`）。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 
 ### 模型工具：`vision_describe`
 
@@ -115,7 +115,7 @@ dsh web   # 重启生效
 | `maxImages`      | `1–8`                       | `4`                                | 单次 `vision_describe` 最多喂给视觉模型的图片张数，超出取末尾若干张（最新）。                            |
 | `promptTemplate` | `string`                    | `''`                               | 可选追加提示词，每次识别都会拼在问题末尾（截断 500 字符，存储上限 2000）。例如“重点看报错弹窗里的红字”。 |
 
-> **与动态版的区别**：动态（`cordis_define`）版本的配置只在内存中，重启进程后恢复默认；**标准包版本通过官方 `settings` API 持久化到 `settings.yaml`（`dshp-vision-bridge`）**，重启后不丢，且外部手工编辑 `settings.yaml` 可热重载。
+> **与动态版的区别**：动态（`cordis_define`）版本的配置只在内存中，重启进程后恢复默认；**标准包版本通过官方 `settings` API 持久化到 profile 条目 `dshp-vision-bridge` 的 `config:`**，重启后不丢；设置页改动即时热更新，外部手工编辑条目 config 重启后生效。
 
 ## 发布到 npm（可选，当前未发布）
 
@@ -201,7 +201,7 @@ llm-pi-ai:
 - **系统提示**：`systemPrompt.section('dshp-vision-bridge', order: 80)` 注入视觉能力说明，模型无需用户提醒即可知道何时调用工具。
 - **图片引用**：`vision_describe` 内部把缓存的 `attachment` 原样作为 `content: [{type:'image', attachment}]` 发给视觉模型，复用 DSH 附件管线，无需 base64 重编码。
 - **流式归一**：兼容 `text-delta` 增量与 `block-end` 全量，并在 `finish` 中处理 `error`/`aborted`，空返回视为失败以触发 fallback。
-- **持久化（官方推荐）**：`POST /ext/dshp-vision-bridge/config` 每次保存后通过 `ctx.settings.update('dshp-vision-bridge', patch)` 写入 `settings.yaml`（`FileSettingsProvider` 以 `leaf-level diff` 保留注释与格式），启动时通过 settings 服务的 `installSection` + `schemastery` 注册 `dshp-vision-bridge` 命名空间并自动合并 `settings.yaml` 用户层、`cordis.patch.yml` 的 `config`（`base`）与 `schema` 默认值。旧版 `storages/dshp-vision-bridge.json` 与旧 key 自 v1.5.0 起**不再读取**（不自动改名、不迁移），需要旧值时手工把旧分节内容并到 `dshp-vision-bridge` 下。
+- **持久化（官方推荐）**：`POST /ext/dshp-vision-bridge/config` 每次保存后通过 `ctx.settings.update('dshp-vision-bridge', patch)` 写入 profile 条目 `dshp-vision-bridge` 的 `config:`（编辑器保留注释与格式），并以 `loader/volatile-update` 原地热更新。启动时按 schema 默认值 → composition 继承层 → 条目 `config:` 三级合并校验。旧版 `storages/dshp-vision-bridge.json` 与旧 key 自 v1.5.0 起**不再读取**（不自动改名、不迁移），需要旧值时手工把旧分节内容并到条目 `config:` 下。
 
 ## 配置（`cordis.patch.yml` 覆盖）
 
@@ -219,7 +219,7 @@ llm-pi-ai:
     promptTemplate: '重点看报错弹窗' # 可选，≤2000 字符
 ```
 
-> 设置页的保存会覆盖同名字段并落盘到 `settings.yaml` 的 `dshp-vision-bridge` 分节；旧 `storages/*.json` 与历史旧 key 不会被读取，也不会有任何自动备份/改名（需旧值请手工搬运）。
+> 设置页的保存会覆盖同名字段并落盘到 profile 条目 `dshp-vision-bridge` 的 `config:`；旧 `storages/*.json` 与历史旧 key 不会被读取，也不会有任何自动备份/改名（需旧值请手工搬运）。
 
 ## 代码结构
 
@@ -239,18 +239,19 @@ README.md           本文件
 - **报“视觉桥接已在设置页关闭”**：设置页把“启用视觉桥接”勾上并保存。
 - **报“没有可用的视觉模型”**：见“配置视觉模型”一节，给视觉模型加 `input: [text, image]`，然后点“重新读取”。
 - **“检查连通性”报“提供方未注册”**：`provider` 拼写错误或该 provider 未在 `setting.yml` 中配置。
-- **图片识别总是走 fallback**：主模型名/路由错误或余额不足，查看 `dsh web` 日志中 `[dshp-vision-bridge]` 相关错误；保存后主模型会在 `settings.yaml` 的 `dshp-vision-bridge` 下持久化，改对后重新检查。
+- **图片识别总是走 fallback**：主模型名/路由错误或余额不足，查看 `dsh web` 日志中 `[dshp-vision-bridge]` 相关错误；保存后主模型会持久化在 profile 条目 `dshp-vision-bridge` 的 `config:` 里，改对后重新检查。
 - **`WEB_DUPLICATE_PROVIDER` / 工具重复**：同一插件同时存在动态（`cordis_define` 的 `dshp-vision-bridge`）与静态（本包）两份，请 `cordis_undefine` 掉动态版本，再重启 `dsh web`。
-- **报 `MissingSessionID`（`x-opencode-session` 缺失）**：opencode 系（go/zen）自 2026-09-06 起强制要求会话头。v1.3.1+ 已把会话 ID 透传给 `llm.stream`；但 `openai-completions` 协议的提供方还需在 `settings.yaml` 里为 `opencode-go` / `opencode-zen` 打开会话亲和头，否则透传的 ID 不会被发到网关：
+- **报 `MissingSessionID`（`x-opencode-session` 缺失）**：opencode 系（go/zen）自 2026-09-06 起强制要求会话头。v1.3.1+ 已把会话 ID 透传给 `llm.stream`；但 `openai-completions` 协议的提供方还需在 profile 条目 `llm-pi-ai` 的 `config:` 里为 `opencode-go` / `opencode-zen` 打开会话亲和头（`cordis.patch.yml` 手写后重启生效），否则透传的 ID 不会被发到网关：
   ```yaml
-  llm-pi-ai:
-    providers:
-      opencode-go:
-        compat:
-          sendSessionAffinityHeaders: true
-      opencode-zen:
-        compat:
-          sendSessionAffinityHeaders: true
+  - id: llm-pi-ai
+    config:
+      providers:
+        opencode-go:
+          compat:
+            sendSessionAffinityHeaders: true
+        opencode-zen:
+          compat:
+            sendSessionAffinityHeaders: true
   ```
   保存后重试。等不及可先把主视觉模型切到 `bigmodel-vision / glm-4.6v-flash`（不走 opencode，不过审此限制）。
 - **想改识别风格**：设置页“追加提示词”写偏好（如“用中文分点、保留表格”），或调用时传 `detail: high` / `low`。
@@ -262,9 +263,11 @@ dsh plugin --profile web remove "@dshp/vision-bridge"
 dsh web
 ```
 
-`remove` 会自动从 `dsh.profile.bundles` 撤下挂载（monorepo 本体不用删）。设置页配置已落盘到 `settings.yaml` 的 `dshp-vision-bridge` 分节，按需手动清理；旧 `storages/*.json` 与历史旧 key 不会被读取，可自行删除。
+`remove` 会自动从 `dsh.profile.bundles` 撤下挂载（monorepo 本体不用删）。设置页配置已落盘到 profile 条目 `dshp-vision-bridge` 的 `config:`，按需手动清理；旧 `storages/*.json` 与历史旧 key 不会被读取，可自行删除。
 
 ## 更新日志
+
+- **v1.7.0**：适配 DSH 0.1.7（rc.1）——Host 按新契约导出条目 `Config`（schemastery 字段全部 `.volatile()`），废弃 `installSection`/`setSource`；设置页注册改走 `settings.configure({ auto: false }, ctx.fiber)`；设置改动经 `settings.update` 写入 profile 条目 `dshp-vision-bridge` 的 `config:` 并由 `loader/volatile-update` 即时热更新（手工编辑条目 config 重启生效）。peer 升 `^0.1.7-rc.1`（rc.1 起装载前会校验 peer 范围）。
 
 - **v1.5.0**：**移除全部历史配置迁移**——不再把 `vision-bridge` / `dshp-inx-vision-bridge` 顶层 key 重命名为 `dshp-vision-bridge`，也不再读取/备份旧 `storages/dshp-inx-vision-bridge.json`。配置只认 `dshp-vision-bridge`：老用户如需保留旧值，请手工把旧分节改名或把内容并到新分节（旧 key 里 `{}` 之外的字段不会被自动搬运）。
 

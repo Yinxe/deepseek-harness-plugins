@@ -12,7 +12,7 @@
  * @module @dshp/vision-bridge/client/VisionSection
  */
 import { useEffect, useState } from 'react';
-import { Button, IconLoadingOutline16 } from '@deepseek-ai/dsh-client-ui-primitives';
+import { Button, IconLoadingOutlineRegular } from '@deepseek-ai/dsh-client-ui-primitives';
 import type { ReactNode } from 'react';
 import { checkConnectivity, fetchState, saveConfig } from './api.js';
 import { Badge, Row, Select, Switch } from './components.js';
@@ -132,7 +132,7 @@ export function VisionSection(): ReactNode {
     return (
       <div className={styles.page}>
         <div className={styles.loading}>
-          <IconLoadingOutline16 />
+          <IconLoadingOutlineRegular />
           <span className={styles.loadingText}>正在读取 setting.yml 中的多模态模型…</span>
         </div>
       </div>

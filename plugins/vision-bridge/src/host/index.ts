@@ -5,7 +5,8 @@
  *
  * 职责：
  *  - 桥接纯文本模型与多模态视觉模型：占位符出现时 vision_describe 把本轮图片 + 提问转交视觉模型，主/备自动重试
- *  - settings.yaml（dshp-vision-bridge）持久化；配置只认该命名空间，不做历史 key/旧文件迁移
+ *  - 配置持久化在 profile `cordis.patch.yml` 条目 `config:`（NS = 条目 id，0.1.7 settings 契约）；
+ *    全字段 volatile，`settings.update` 写入后原地生效，配置只认该命名空间，不做历史 key/旧文件迁移
  *  - 同源 JSON 路由供 Client：GET state / POST config / GET check
  *
  * 原实现：~/.dsh/plugins/vision-bridge/lib/index.js（JS，816 行）
@@ -14,69 +15,64 @@
  * @module @dshp/vision-bridge
  */
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { ConfigSchema, DEFAULT_CONFIG, NS, sanitizePatchConfig } from './config.js';
+import { ConfigSchema, NS } from './config.js';
 import { createImageCache, sessionIdOf, walkBlocks } from './cache.js';
 import { json, readBody, sameOrigin } from './http.js';
 import { buildQuestion, describeWithFallback, listVisionModels } from './vision.js';
-import type { AnyCtx, CandidateModel, Detail, ImageRef, PluginConfig, VisionRoute } from './types.js';
+import type {
+  AnyCtx,
+  CandidateModel,
+  Detail,
+  ImageRef,
+  PluginConfig,
+  VolatileConfig,
+  VisionRoute,
+} from './types.js';
 
 export const name = '@dshp/vision-bridge';
 export const inject: string[] = ['tools', 'webServer', 'llm'];
 export { NS, ConfigSchema };
+/** Cordis 用它校验条目 config 并派生设置表单（0.1.7 起所有字段 volatile，可原地热更新）。 */
+export const Config = ConfigSchema;
 
-export function apply(ctx: AnyCtx, rawConfig: unknown): void {
-  const entry: PluginConfig = { ...DEFAULT_CONFIG };
-  const patch = sanitizePatchConfig(rawConfig);
-  if (patch) {
-    if (Object.hasOwn(patch, 'enabled') && patch.enabled !== undefined) entry.enabled = patch.enabled;
-    if (Object.hasOwn(patch, 'primary') && patch.primary !== undefined) entry.primary = patch.primary;
-    if (Object.hasOwn(patch, 'fallback') && patch.fallback !== undefined) entry.fallback = patch.fallback;
-    if (Object.hasOwn(patch, 'detail') && patch.detail !== undefined) entry.detail = patch.detail;
-    if (Object.hasOwn(patch, 'maxImages') && patch.maxImages !== undefined) entry.maxImages = patch.maxImages;
-    if (Object.hasOwn(patch, 'promptTemplate') && patch.promptTemplate !== undefined)
-      entry.promptTemplate = patch.promptTemplate;
-  }
-
-  let current: () => PluginConfig = () => entry;
-
+export function apply(ctx: AnyCtx, config: VolatileConfig): void {
   ctx.inject(['settings'], (sctx: AnyCtx) => {
-    sctx.settings.installSection(ctx, NS, ConfigSchema, entry, {
-      setSource: (src: () => PluginConfig) => {
-        current = src;
-      },
-      onChange: () => {},
-    });
+    try {
+      // 本插件自带设置页（settings.section），关掉 schema 自动生成的页面。
+      sctx.effect(
+        () => sctx.settings.configure({ auto: false }, ctx.fiber),
+        'dshp-vision-bridge: settings-page',
+      );
+    } catch (e) {
+      try {
+        console.warn('[dshp-vision-bridge] settings 页面策略注册失败：' + String((e as Error)?.message ?? e));
+      } catch {
+        /* ignore */
+      }
+    }
   });
 
+  /** 当前配置的可变快照：逐字段读 volatile 引用，route/工具消费的都是这一份。 */
   function getConfig(): PluginConfig {
-    try {
-      const v = current() as unknown;
-      if (v && typeof v === 'object') return v as PluginConfig;
-    } catch {
-      /* ignore */
-    }
-    return entry;
+    const primary = config.primary.get();
+    const fallback = config.fallback.get();
+    return {
+      enabled: config.enabled.get() === true,
+      primary: primary ? { provider: primary.provider, model: primary.model } : null,
+      fallback: fallback ? { provider: fallback.provider, model: fallback.model } : null,
+      detail: config.detail.get(),
+      maxImages: config.maxImages.get(),
+      promptTemplate: config.promptTemplate.get(),
+    };
   }
 
   async function updateConfig(patchObj: Record<string, unknown>): Promise<void> {
     const settings = ctx.get('settings') as AnyCtx;
     if (!settings)
       throw new Error(
-        'settings 服务不可用，无法持久化到 settings.yaml（请重启 DSH 或检查 FileSettingsProvider 是否挂载）',
+        'settings 服务不可用，无法持久化到 profile 条目 config（请重启 DSH 确认设置服务已挂载）',
       );
     await settings.update(NS, patchObj);
-  }
-
-  function snapshotConfig(): PluginConfig {
-    const c = getConfig();
-    return {
-      enabled: c.enabled === true,
-      primary: c.primary ? { provider: c.primary.provider, model: c.primary.model } : null,
-      fallback: c.fallback ? { provider: c.fallback.provider, model: c.fallback.model } : null,
-      detail: c.detail,
-      maxImages: c.maxImages,
-      promptTemplate: c.promptTemplate,
-    };
   }
 
   async function ensureDefaults(models: CandidateModel[]): Promise<void> {
@@ -103,7 +99,7 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
       } catch (e) {
         try {
           console.warn(
-            '[dshp-vision-bridge] ensureDefaults 写入 settings.yaml 失败：' +
+            '[dshp-vision-bridge] ensureDefaults 写入 profile 条目 config 失败：' +
               String((e as Error)?.message ?? e),
           );
         } catch {
@@ -363,7 +359,7 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
             return json(res, 200, {
               ok: true,
               models,
-              config: snapshotConfig(),
+              config: getConfig(),
               visionModelCount: models.length,
               admissionTakeover: bridgeTakeoverArmed(),
             });
@@ -502,7 +498,7 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
               hasPatch = true;
             }
             if (hasPatch) await updateConfig(patchObj);
-            return json(res, 200, { ok: true, config: snapshotConfig() });
+            return json(res, 200, { ok: true, config: getConfig() });
           } catch (e) {
             return json(res, 200, { ok: false, error: String((e as Error)?.message ?? e) });
           }

@@ -5,6 +5,7 @@
  * Host 侧统一用 `AnyCtx`（= any 的别名）透传，仅对本插件自有的数据结构做严格建模。
  * 这样既能过 `strict`，又不会与未来官方类型冲突。
  */
+import type { Volatile } from '@deepseek-ai/cosmokit';
 
 export type Detail = 'auto' | 'low' | 'high';
 
@@ -24,14 +25,14 @@ export interface PluginConfig {
   promptTemplate: string;
 }
 
-/** settings.patch / cordis.patch.yml 里允许的部分覆盖（全部可选） */
-export interface PluginConfigPatch {
-  enabled?: boolean;
-  primary?: VisionRoute | null;
-  fallback?: VisionRoute | null;
-  detail?: Detail;
-  maxImages?: number;
-  promptTemplate?: string;
+/** `apply(ctx, config)` 收到的实参：ConfigSchema 全字段 volatile，每个字段是稳定引用，`.get()` 读当前深只读快照 */
+export interface VolatileConfig {
+  enabled: Volatile<boolean>;
+  primary: Volatile<VisionRoute | null>;
+  fallback: Volatile<VisionRoute | null>;
+  detail: Volatile<Detail>;
+  maxImages: Volatile<number>;
+  promptTemplate: Volatile<string>;
 }
 
 /** 图片 leaf 的 owned copy（只取这几个字段，会话级缓存） */

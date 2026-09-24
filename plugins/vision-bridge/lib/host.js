@@ -1,4 +1,4 @@
-// ../../node_modules/.pnpm/@deepseek-ai+cosmokit@1.8.3/node_modules/@deepseek-ai/cosmokit/lib/index.js
+// ../../node_modules/.pnpm/@deepseek-ai+cosmokit@1.8.5/node_modules/@deepseek-ai/cosmokit/lib/index.js
 function isNullable(value) {
   return value === null || value === void 0;
 }
@@ -16,6 +16,32 @@ function pick(source, keys, forced) {
   const result = {};
   for (const key of keys) if (source[key] !== void 0) result[key] = source[key];
   return result;
+}
+var write = /* @__PURE__ */ Symbol.for("cosmokit.volatile.write");
+function snapshot(value, ancestors = /* @__PURE__ */ new Set()) {
+  if (typeof value === "function") throw new TypeError("volatile config cannot contain functions");
+  if (value === null || typeof value !== "object") return value;
+  if (ancestors.has(value)) throw new TypeError("volatile config cannot contain cycles");
+  ancestors.add(value);
+  try {
+    if (Array.isArray(value)) return Object.freeze(value.map((item) => snapshot(item, ancestors)));
+    if (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null) throw new TypeError("volatile config objects must be plain objects or arrays");
+    return Object.freeze(Object.fromEntries(Object.entries(value).map(([key, item]) => [key, snapshot(item, ancestors)])));
+  } finally {
+    ancestors.delete(value);
+  }
+}
+function createVolatile(value) {
+  let current = snapshot(value);
+  return Object.freeze({
+    get: () => current,
+    [write]: (value2) => {
+      current = value2;
+    }
+  });
+}
+function isVolatile(value) {
+  return typeof value === "object" && value !== null && write in value;
 }
 function is(type, value) {
   if (arguments.length === 1) return (value2) => is(type, value2);
@@ -95,24 +121,37 @@ function clone(source, refs = /* @__PURE__ */ new Map()) {
   return result;
 }
 function deepEqual(a, b, strict) {
-  if (a === b) return true;
-  if (!strict && isNullable(a) && isNullable(b)) return true;
-  if (typeof a !== typeof b) return false;
-  if (typeof a !== "object") return false;
-  if (!a || !b) return false;
-  function check(test, then) {
-    return test(a) ? test(b) ? then(a, b) : false : test(b) ? false : void 0;
+  const ancestors = /* @__PURE__ */ new Set();
+  function compare(a2, b2) {
+    if (a2 === b2) return true;
+    if (isVolatile(a2) || isVolatile(b2)) return isVolatile(a2) && isVolatile(b2);
+    if (!strict && isNullable(a2) && isNullable(b2)) return true;
+    if (typeof a2 !== typeof b2 || typeof a2 !== "object" || !a2 || !b2) return false;
+    if (ancestors.has(a2)) return false;
+    function check(test, then) {
+      return test(a2) ? test(b2) ? then(a2, b2) : false : test(b2) ? false : void 0;
+    }
+    ancestors.add(a2);
+    try {
+      return check(Array.isArray, (a3, b3) => {
+        if (a3.length !== b3.length) return false;
+        for (let index = 0; index < a3.length; index++) if (!compare(a3[index], b3[index])) return false;
+        return true;
+      }) ?? check(is("Date"), (a3, b3) => a3.valueOf() === b3.valueOf()) ?? check(is("URL"), (a3, b3) => a3.href === b3.href) ?? check(is("RegExp"), (a3, b3) => a3.source === b3.source && a3.flags === b3.flags) ?? check(isArrayBufferLike, (a3, b3) => {
+        if (a3.byteLength !== b3.byteLength) return false;
+        const viewA = new Uint8Array(a3);
+        const viewB = new Uint8Array(b3);
+        for (let i = 0; i < viewA.length; i++) if (viewA[i] !== viewB[i]) return false;
+        return true;
+      }) ?? ((!strict || [a2, b2].every((value) => Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null)) && Object.keys({
+        ...a2,
+        ...b2
+      }).every((key) => compare(a2[key], b2[key])));
+    } finally {
+      ancestors.delete(a2);
+    }
   }
-  return check(Array.isArray, (a2, b2) => a2.length === b2.length && a2.every((item, index) => deepEqual(item, b2[index]))) ?? check(is("Date"), (a2, b2) => a2.valueOf() === b2.valueOf()) ?? check(is("RegExp"), (a2, b2) => a2.source === b2.source && a2.flags === b2.flags) ?? check(isArrayBufferLike, (a2, b2) => {
-    if (a2.byteLength !== b2.byteLength) return false;
-    const viewA = new Uint8Array(a2);
-    const viewB = new Uint8Array(b2);
-    for (let i = 0; i < viewA.length; i++) if (viewA[i] !== viewB[i]) return false;
-    return true;
-  }) ?? Object.keys({
-    ...a,
-    ...b
-  }).every((key) => deepEqual(a[key], b[key], strict));
+  return compare(a, b);
 }
 var Time;
 (function(Time2) {
@@ -184,7 +223,7 @@ var Time;
   Time2.template = template;
 })(Time || (Time = {}));
 
-// ../../node_modules/.pnpm/@deepseek-ai+schemastery@3.18.2/node_modules/@deepseek-ai/schemastery/lib/index.mjs
+// ../../node_modules/.pnpm/@deepseek-ai+schemastery@3.18.4/node_modules/@deepseek-ai/schemastery/lib/index.mjs
 var kSchema = /* @__PURE__ */ Symbol.for("schemastery");
 var kValidationError = /* @__PURE__ */ Symbol.for("ValidationError");
 globalThis.__schemastery_index__ ??= 0;
@@ -361,6 +400,7 @@ Schema.prototype.pattern = function pattern(regexp) {
   return schema;
 };
 Schema.prototype.simplify = function simplify(value) {
+  if (isVolatile(value)) value = value.get();
   if (deepEqual(value, this.meta.default, this.type === "dict")) return null;
   if (isNullable(value)) return value;
   if (this.type === "object" || this.type === "dict") {
@@ -418,12 +458,49 @@ for (const key of [
   };
   return schema;
 } });
+Schema.prototype.volatile = function volatile() {
+  if (this.meta.volatile) throw new TypeError("volatile schema is already wrapped");
+  return this.extra("volatile", true);
+};
 var resolvers = {};
+var checkedVolatile = /* @__PURE__ */ Symbol("checked-volatile-schema");
+function validateVolatileSchema(schema, path = [], blocked = false, seen = /* @__PURE__ */ new Map()) {
+  const states = seen.get(schema) ?? /* @__PURE__ */ new Set();
+  if (states.has(blocked)) return;
+  states.add(blocked);
+  seen.set(schema, states);
+  if (schema.meta?.volatile && blocked) throw new ValidationError("volatile fields require a fixed object path without an enclosing volatile field", { path });
+  const nested = blocked || !!schema.meta?.volatile;
+  if (schema.dict) for (const [key, child] of Object.entries(schema.dict)) validateVolatileSchema(child, [...path, key], nested, seen);
+  if (schema.sKey) validateVolatileSchema(schema.sKey, [...path, "<key>"], true, seen);
+  if (schema.inner && (schema.type !== "lazy" || schema.inner[kSchema])) validateVolatileSchema(schema.inner, [...path, "*"], true, seen);
+  if (schema.list) for (let index = 0; index < schema.list.length; index++) validateVolatileSchema(schema.list[index], [...path, String(index)], true, seen);
+}
 Schema.extend = function extend(type, resolve2) {
   resolvers[type] = resolve2;
 };
 Schema.resolve = function resolve(data, schema, options = {}, strict = false) {
   if (!schema) return [data];
+  if (!options[checkedVolatile]) {
+    validateVolatileSchema(schema, options.path);
+    options = {
+      ...options,
+      [checkedVolatile]: true
+    };
+  }
+  if (schema.meta?.volatile) {
+    const inner = Schema(schema);
+    inner.meta = {
+      ...schema.meta,
+      volatile: false
+    };
+    const [value, adapted] = Schema.resolve(data, inner, options, strict);
+    try {
+      return [createVolatile(value), adapted];
+    } catch (error) {
+      throw new ValidationError(error instanceof Error ? error.message : String(error), options);
+    }
+  }
   if (options.ignore?.(data, schema)) return [data];
   if (isNullable(data) && schema.type !== "lazy") {
     if (schema.meta.required) throw new ValidationError(`missing required value`, options);
@@ -531,6 +608,7 @@ Schema.extend("lazy", (data, schema, options, strict) => {
       ...schema.meta,
       ...schema.inner.meta
     };
+    validateVolatileSchema(schema.inner, options.path, true);
   }
   return Schema.resolve(data, schema.inner, options, strict);
 });
@@ -630,7 +708,7 @@ function property(data, key, schema, options) {
   } catch (e) {
     if (!options?.autofix) throw e;
     delete data[key];
-    return schema.meta.default;
+    return schema.meta.volatile ? createVolatile(schema.meta.default) : schema.meta.default;
   }
 }
 Schema.extend("array", (data, { inner, meta }, options) => {
@@ -827,80 +905,27 @@ function readBody(req, limit = 1024 * 1024) {
 
 // src/host/config.ts
 var NS = settingsNamespace("dshp-vision-bridge");
-var DEFAULT_CONFIG = {
-  enabled: true,
-  primary: null,
-  fallback: null,
-  detail: "auto",
-  maxImages: 4,
-  promptTemplate: ""
-};
 var VisionRouteSchema = Schema.object({
   provider: Schema.string().required(),
   model: Schema.string().required()
 });
 var ConfigSchema = Schema.object({
-  enabled: Schema.boolean().default(true),
-  primary: Schema.union([VisionRouteSchema, Schema.const(null)]).default(null),
-  fallback: Schema.union([VisionRouteSchema, Schema.const(null)]).default(null),
-  detail: Schema.union([Schema.const("auto"), Schema.const("low"), Schema.const("high")]).default("auto"),
-  maxImages: Schema.number().step(1).min(1).max(8).default(4),
-  promptTemplate: Schema.string().default("")
+  enabled: Schema.boolean().default(true).volatile(),
+  primary: Schema.union([VisionRouteSchema, Schema.const(null)]).default(null).volatile(),
+  fallback: Schema.union([VisionRouteSchema, Schema.const(null)]).default(null).volatile(),
+  detail: Schema.union([Schema.const("auto"), Schema.const("low"), Schema.const("high")]).default("auto").volatile(),
+  maxImages: Schema.number().step(1).min(1).max(8).default(4).volatile(),
+  promptTemplate: Schema.string().default("").volatile()
 });
-function isRecord(v) {
-  return v !== null && typeof v === "object" && !Array.isArray(v);
-}
-function isDetail(v) {
-  return v === "auto" || v === "low" || v === "high";
-}
-function asRoute(v) {
-  if (v === null) return null;
-  if (!isRecord(v)) return null;
-  if (typeof v["provider"] !== "string" || typeof v["model"] !== "string") return null;
-  const provider = v["provider"].slice(0, 120);
-  const model = v["model"].slice(0, 200);
-  if (!provider || !model) return null;
-  return { provider, model };
-}
-function sanitizePatchConfig(raw) {
-  if (!isRecord(raw)) return null;
-  const out = {};
-  if (Object.hasOwn(raw, "enabled")) out.enabled = raw["enabled"] === true;
-  if (Object.hasOwn(raw, "primary")) {
-    const v = raw["primary"];
-    if (v === null) out.primary = null;
-    else {
-      const r = asRoute(v);
-      if (r) out.primary = r;
-    }
-  }
-  if (Object.hasOwn(raw, "fallback")) {
-    const v = raw["fallback"];
-    if (v === null) out.fallback = null;
-    else {
-      const r = asRoute(v);
-      if (r) out.fallback = r;
-    }
-  }
-  if (Object.hasOwn(raw, "detail") && isDetail(raw["detail"])) out.detail = raw["detail"];
-  if (Object.hasOwn(raw, "maxImages") && typeof raw["maxImages"] === "number" && Number.isFinite(raw["maxImages"])) {
-    const n = Math.floor(raw["maxImages"]);
-    if (n >= 1 && n <= 8) out.maxImages = n;
-  }
-  if (Object.hasOwn(raw, "promptTemplate") && typeof raw["promptTemplate"] === "string") {
-    out.promptTemplate = raw["promptTemplate"].slice(0, 2e3);
-  }
-  return out;
-}
 
 // src/host/cache.ts
 var MAX_PER_SESSION = 20;
 var MAX_SESSIONS = 50;
-function isRecord2(v) {
+function isRecord(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
 function copyAttachment(a) {
-  if (!isRecord2(a)) return null;
+  if (!isRecord(a)) return null;
   if (typeof a["attachmentId"] !== "string" || typeof a["mediaType"] !== "string") return null;
   if (typeof a["bytes"] !== "number") return null;
   const out = {
@@ -916,7 +941,7 @@ function copyAttachment(a) {
 function walkBlocks(blocks, out) {
   if (!Array.isArray(blocks)) return;
   for (const b of blocks) {
-    if (!isRecord2(b)) continue;
+    if (!isRecord(b)) continue;
     if (b["type"] === "image") {
       const c = copyAttachment(b["attachment"]);
       if (c) out.push(c);
@@ -927,9 +952,9 @@ function walkBlocks(blocks, out) {
 }
 function sessionIdOf(agent) {
   try {
-    if (isRecord2(agent)) {
+    if (isRecord(agent)) {
       const s = agent["session"];
-      if (isRecord2(s) && typeof s["id"] === "string") return s["id"];
+      if (isRecord(s) && typeof s["id"] === "string") return s["id"];
       if (typeof agent["id"] === "string") return agent["id"];
     }
   } catch {
@@ -961,7 +986,7 @@ function createImageCache() {
 }
 
 // src/host/vision.ts
-function isRecord3(v) {
+function isRecord2(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
 function sameRoute(a, b) {
@@ -970,16 +995,16 @@ function sameRoute(a, b) {
 }
 function candidatesFromSection(sec) {
   const out = [];
-  if (!isRecord3(sec)) return out;
+  if (!isRecord2(sec)) return out;
   const providers = sec["providers"];
-  if (!isRecord3(providers)) return out;
+  if (!isRecord2(providers)) return out;
   for (const prov of Object.keys(providers)) {
     const prof = providers[prov];
-    if (!isRecord3(prof)) continue;
+    if (!isRecord2(prof)) continue;
     const models = prof["models"];
     if (!Array.isArray(models)) continue;
     for (const m of models) {
-      if (!isRecord3(m) || typeof m["id"] !== "string" || m["id"].length === 0) continue;
+      if (!isRecord2(m) || typeof m["id"] !== "string" || m["id"].length === 0) continue;
       const input = m["input"];
       if (!Array.isArray(input) || input.indexOf("image") < 0) continue;
       out.push({
@@ -1031,14 +1056,14 @@ async function listVisionModels(ctx) {
     }
     if (Array.isArray(providers)) {
       for (const prov of providers) {
-        const pid = isRecord3(prov) && typeof prov["id"] === "string" ? prov["id"] : void 0;
+        const pid = isRecord2(prov) && typeof prov["id"] === "string" ? prov["id"] : void 0;
         if (!pid) continue;
         try {
           if (typeof llm.listModels !== "function") continue;
           const models = await llm.listModels(pid);
           if (!Array.isArray(models)) continue;
           for (const info of models) {
-            if (!isRecord3(info)) continue;
+            if (!isRecord2(info)) continue;
             if (typeof info["id"] !== "string" || typeof info["provider"] !== "string") continue;
             const mods = info["inputModalities"];
             if (!Array.isArray(mods) || mods.indexOf("image") < 0) continue;
@@ -1095,13 +1120,13 @@ async function runOneVision(llm, route, images, question, signal, sessionId, nex
     if (chunk["type"] === "text-delta" && typeof chunk["text"] === "string") {
       sawDelta = true;
       out += chunk["text"];
-    } else if (chunk["type"] === "block-end" && isRecord3(chunk["block"]) && chunk["block"]["type"] === "text") {
+    } else if (chunk["type"] === "block-end" && isRecord2(chunk["block"]) && chunk["block"]["type"] === "text") {
       if (!sawDelta && typeof chunk["block"]["text"] === "string") out += chunk["block"]["text"];
-    } else if (chunk["type"] === "finish" && isRecord3(chunk["reason"])) {
+    } else if (chunk["type"] === "finish" && isRecord2(chunk["reason"])) {
       const kind = chunk["reason"]["kind"];
       if (kind === "error") {
         const failure = chunk["reason"]["failure"];
-        const msg = (isRecord3(failure) && typeof failure["message"] === "string" ? failure["message"] : "\u89C6\u89C9\u6A21\u578B\u8C03\u7528\u5931\u8D25").slice(0, 500);
+        const msg = (isRecord2(failure) && typeof failure["message"] === "string" ? failure["message"] : "\u89C6\u89C9\u6A21\u578B\u8C03\u7528\u5931\u8D25").slice(0, 500);
         throw new Error(String(msg));
       }
       if (kind === "aborted") throw new Error("\u89C6\u89C9\u6A21\u578B\u8C03\u7528\u88AB\u4E2D\u6B62");
@@ -1156,54 +1181,40 @@ function buildQuestion(base, detail, promptTemplate) {
 // src/host/index.ts
 var name = "@dshp/vision-bridge";
 var inject = ["tools", "webServer", "llm"];
-function apply(ctx, rawConfig) {
-  const entry = { ...DEFAULT_CONFIG };
-  const patch = sanitizePatchConfig(rawConfig);
-  if (patch) {
-    if (Object.hasOwn(patch, "enabled") && patch.enabled !== void 0) entry.enabled = patch.enabled;
-    if (Object.hasOwn(patch, "primary") && patch.primary !== void 0) entry.primary = patch.primary;
-    if (Object.hasOwn(patch, "fallback") && patch.fallback !== void 0) entry.fallback = patch.fallback;
-    if (Object.hasOwn(patch, "detail") && patch.detail !== void 0) entry.detail = patch.detail;
-    if (Object.hasOwn(patch, "maxImages") && patch.maxImages !== void 0) entry.maxImages = patch.maxImages;
-    if (Object.hasOwn(patch, "promptTemplate") && patch.promptTemplate !== void 0)
-      entry.promptTemplate = patch.promptTemplate;
-  }
-  let current = () => entry;
+var Config = ConfigSchema;
+function apply(ctx, config) {
   ctx.inject(["settings"], (sctx) => {
-    sctx.settings.installSection(ctx, NS, ConfigSchema, entry, {
-      setSource: (src) => {
-        current = src;
-      },
-      onChange: () => {
+    try {
+      sctx.effect(
+        () => sctx.settings.configure({ auto: false }, ctx.fiber),
+        "dshp-vision-bridge: settings-page"
+      );
+    } catch (e) {
+      try {
+        console.warn("[dshp-vision-bridge] settings \u9875\u9762\u7B56\u7565\u6CE8\u518C\u5931\u8D25\uFF1A" + String(e?.message ?? e));
+      } catch {
       }
-    });
+    }
   });
   function getConfig() {
-    try {
-      const v = current();
-      if (v && typeof v === "object") return v;
-    } catch {
-    }
-    return entry;
+    const primary = config.primary.get();
+    const fallback = config.fallback.get();
+    return {
+      enabled: config.enabled.get() === true,
+      primary: primary ? { provider: primary.provider, model: primary.model } : null,
+      fallback: fallback ? { provider: fallback.provider, model: fallback.model } : null,
+      detail: config.detail.get(),
+      maxImages: config.maxImages.get(),
+      promptTemplate: config.promptTemplate.get()
+    };
   }
   async function updateConfig(patchObj) {
     const settings = ctx.get("settings");
     if (!settings)
       throw new Error(
-        "settings \u670D\u52A1\u4E0D\u53EF\u7528\uFF0C\u65E0\u6CD5\u6301\u4E45\u5316\u5230 settings.yaml\uFF08\u8BF7\u91CD\u542F DSH \u6216\u68C0\u67E5 FileSettingsProvider \u662F\u5426\u6302\u8F7D\uFF09"
+        "settings \u670D\u52A1\u4E0D\u53EF\u7528\uFF0C\u65E0\u6CD5\u6301\u4E45\u5316\u5230 profile \u6761\u76EE config\uFF08\u8BF7\u91CD\u542F DSH \u786E\u8BA4\u8BBE\u7F6E\u670D\u52A1\u5DF2\u6302\u8F7D\uFF09"
       );
     await settings.update(NS, patchObj);
-  }
-  function snapshotConfig() {
-    const c = getConfig();
-    return {
-      enabled: c.enabled === true,
-      primary: c.primary ? { provider: c.primary.provider, model: c.primary.model } : null,
-      fallback: c.fallback ? { provider: c.fallback.provider, model: c.fallback.model } : null,
-      detail: c.detail,
-      maxImages: c.maxImages,
-      promptTemplate: c.promptTemplate
-    };
   }
   async function ensureDefaults(models) {
     if (!Array.isArray(models) || models.length === 0) return;
@@ -1229,7 +1240,7 @@ function apply(ctx, rawConfig) {
       } catch (e) {
         try {
           console.warn(
-            "[dshp-vision-bridge] ensureDefaults \u5199\u5165 settings.yaml \u5931\u8D25\uFF1A" + String(e?.message ?? e)
+            "[dshp-vision-bridge] ensureDefaults \u5199\u5165 profile \u6761\u76EE config \u5931\u8D25\uFF1A" + String(e?.message ?? e)
           );
         } catch {
         }
@@ -1453,7 +1464,7 @@ function apply(ctx, rawConfig) {
           return json(res, 200, {
             ok: true,
             models,
-            config: snapshotConfig(),
+            config: getConfig(),
             visionModelCount: models.length,
             admissionTakeover: bridgeTakeoverArmed()
           });
@@ -1527,7 +1538,7 @@ function apply(ctx, rawConfig) {
           return json(res, 200, { ok: false, error: "\u8BF7\u6C42\u4F53\u4E0D\u662F\u5408\u6CD5 JSON" });
         }
         const a = body && typeof body === "object" && !Array.isArray(body) ? body : {};
-        function asRoute2(v) {
+        function asRoute(v) {
           if (!v || typeof v !== "object") return null;
           const r = v;
           if (typeof r["provider"] !== "string" || typeof r["model"] !== "string") return null;
@@ -1545,7 +1556,7 @@ function apply(ctx, rawConfig) {
               patchObj["primary"] = null;
               hasPatch = true;
             } else {
-              const p = asRoute2(a["primary"]);
+              const p = asRoute(a["primary"]);
               if (!p) throw new Error("primary \u975E\u6CD5\uFF0C\u5E94\u4E3A {provider, model} \u6216 null");
               patchObj["primary"] = p;
               hasPatch = true;
@@ -1556,7 +1567,7 @@ function apply(ctx, rawConfig) {
               patchObj["fallback"] = null;
               hasPatch = true;
             } else {
-              const f = asRoute2(a["fallback"]);
+              const f = asRoute(a["fallback"]);
               if (!f) throw new Error("fallback \u975E\u6CD5\uFF0C\u5E94\u4E3A {provider, model} \u6216 null");
               patchObj["fallback"] = f;
               hasPatch = true;
@@ -1585,7 +1596,7 @@ function apply(ctx, rawConfig) {
             hasPatch = true;
           }
           if (hasPatch) await updateConfig(patchObj);
-          return json(res, 200, { ok: true, config: snapshotConfig() });
+          return json(res, 200, { ok: true, config: getConfig() });
         } catch (e) {
           return json(res, 200, { ok: false, error: String(e?.message ?? e) });
         }
@@ -1595,4 +1606,4 @@ function apply(ctx, rawConfig) {
   );
 }
 
-export { ConfigSchema, NS, apply, inject, name };
+export { Config, ConfigSchema, NS, apply, inject, name };
