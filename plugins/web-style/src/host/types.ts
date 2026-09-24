@@ -6,6 +6,7 @@
  *
  * @module @dshp/web-style
  */
+import type { Volatile } from '@deepseek-ai/cosmokit';
 
 /** DSH 运行时透传对象（无官方 npm 类型包，统一 any；自有的数据结构见下方） */
 export type AnyCtx = any;
@@ -23,7 +24,7 @@ export interface PhotoPalette {
   companionB: string;
 }
 
-/** settings.yaml `dshp-web-style` 命名空间的完整快照 */
+/** profile 条目 `config:`（0.1.7 起替代 settings.yaml）的完整快照 */
 export interface StyleConfig {
   /** 选中的主题 id；空串 = 完全跟随官方亮/暗偏好 */
   themeId: string;
@@ -44,4 +45,14 @@ export interface StyleConfigPatch {
   radius?: Partial<RadiusConfig>;
   wallpaper?: Record<string, unknown>;
   glass?: Record<string, unknown>;
+}
+
+/** `apply(ctx, config)` 实参：可写字段是 volatile 引用（`.get()` 读快照），退役字段是普通值 */
+export interface VolatileConfig {
+  themeId: Volatile<string>;
+  backgroundId: Volatile<string>;
+  photoPalette: Volatile<PhotoPalette | null>;
+  radius: Volatile<RadiusConfig>;
+  wallpaper: Record<string, unknown>;
+  glass: Record<string, unknown>;
 }

@@ -33,7 +33,7 @@ dsh web
 > dsh web
 > ```
 >
-> 配置**不自动迁移**：本插件只读 `settings.yaml` 的 `dshp-web-style` 分节。要把旧包的选择带过来，手工把 `dshp-inx-custom-ui` 段改名即可（字段同名，缩进块原样搬运）：
+> 配置**不自动迁移**：本插件只读 profile 条目 `dshp-web-style` 的 `config:`。要把旧包的选择带过来，手工把 `dshp-inx-custom-ui` 段改名即可（字段同名，缩进块原样搬运）：
 >
 > ```yaml
 > # 改名前（旧包，不再被读取）        改之后（本插件读取）
@@ -92,7 +92,7 @@ dsh web   # 重启生效
 
 | 部分                                          | 内容                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Host（`src/host/` → `lib/host.js`）**       | 用官方 `ctx.settings` + `schemastery` 持久化到 `settings.yaml`（`dshp-web-style` 命名空间：`themeId` / `backgroundId` / `photoPalette` / `radius.global`）；主题目录全量 token 下发（单源 `src/host/themes/`，白名单从目录动态派生 + 虚拟 `photo:custom`）；配置只认 `dshp-web-style`（不读历史 key、不迁移）；退役字段 `wallpaper.*` / `glass.*` 仅不透明透传保留。                                                                                                                                                                                                                |
+| **Host（`src/host/` → `lib/host.js`）**       | 用官方 `ctx.settings` + `schemastery` 持久化到 profile 条目 `dshp-web-style` 的 `config:`（0.1.7 条目存储：`themeId` / `backgroundId` / `photoPalette` / `radius.global`）；主题目录全量 token 下发（单源 `src/host/themes/`，白名单从目录动态派生 + 虚拟 `photo:custom`）；配置只认 `dshp-web-style`（不读历史 key、不迁移）；退役字段 `wallpaper.*` / `glass.*` 仅不透明透传保留。                                                                                                                                                                                                |
 | **Client（`src/client/` → `lib/client.js`）** | 「设置 → 外观定制」一张页面：顶部背景效果四选一 + 圆角三档 + 回到官方；中部壁纸取色（上传 → seed → 5 组 ref 调色板 × 亮/暗角色预览 → 启用/复制 MD3/清除）；底部主题列表（当前态条 + 关键词搜索 + 亮/暗过滤 + 自适应 grid 色卡，点击即切）。启动时读 Host 快照恢复覆盖层、背景效果与圆角；`theme/change` 事件驱动「使用中」徽标与壁纸渐变实时跟随，canvas 类背景同时**重挂一次**（配色是 mount 时烘进 JS 的，不重挂官方亮/暗一切就陈旧）。背景效果登记在 `background.ts` 的 `BACKGROUNDS` 表里，**与主题正交**（见[背景效果层](#背景效果层)）。UI 全部使用官方 `dsw-alias-*` token。 |
 | **同源路由**                                  | `GET /ext/dshp-web-style/state`（偏好快照）、`GET /ext/dshp-web-style/themes`（目录全量 token）、`POST /ext/dshp-web-style/theme`（切主题）、`POST /ext/dshp-web-style/config`（背景效果 / 圆角 / 取色补丁），全部先过同源校验（`Origin` 与 `Host` 一致或缺失才放行），`no-store`，body 上限 1MB。                                                                                                                                                                                                                                                                                  |
 | **工具**                                      | 无（纯 UI 插件，不给模型注册任何工具）。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
@@ -271,7 +271,7 @@ meta 也被同一脚本用严格正则咬着字段集合与顺序，加不了字
 
 ## 配置项
 
-配置全部落在 `$DSH_HOME/settings.yaml` 的 `dshp-web-style` 命名空间（Host 用官方 settings 服务的 `installSection` 注册，支持热重载与注释保留）：
+配置全部落在 profile 条目 `dshp-web-style` 的 `config:`（0.1.7 契约：Host 导出条目 `Config` + volatile 字段，设置页经 `settings.update` 写入即热更新；手工编辑条目 config 重启生效）：
 
 ```yaml
 dshp-web-style:
@@ -301,7 +301,7 @@ web-style/
 ├── cordis.patch.yml           # bundle 挂载行（id: dshp-web-style）
 ├── src/
 │   ├── host/                  # Node 半：settings 持久化 + 同源路由 + 主题目录
-│   │   ├── index.ts           #   apply 装配：patch → installSection → 4 条路由
+│   │   ├── index.ts           #   apply 装配：Config 导出 → configure → 4 条路由
 │   │   ├── types.ts           #   StyleConfig / PhotoPalette / RadiusConfig / 补丁类型
 │   │   ├── config.ts          #   NS / DEFAULT_CONFIG / ConfigSchema / sanitize*（不做迁移）
 │   │   ├── http.ts            #   sameOrigin / json / readBody / settingsNamespace
@@ -347,13 +347,13 @@ web-style/
 ## 常见问题
 
 - **与其他主题类插件并存报 `WEB_DUPLICATE_PROVIDER`**：动态插件版（会话内 `cordis_define`）与静态挂载版、或旧包 `@dshp-inx/custom-ui` 与新包同时挂载都会撞。只保留一个：`cordis_undefine` 动态版，或 `dsh plugin --profile web remove` 旧包。
-- **切换后重启回退到官方配色**：说明 `POST /theme` 保存失败（Host 未起来 / settings 服务不可用）。页面顶部会给出红字提示；检查 `settings.yaml` 是否有 `dshp-web-style` 段落、以及 `dsh web` 日志里有无 `[dshp-web-style]` 报错。
+- **切换后重启回退到官方配色**：说明 `POST /theme` 保存失败（Host 未起来 / settings 服务不可用）。页面顶部会给出红字提示；检查 profile 条目 `dshp-web-style` 段落、以及 `dsh web` 日志里有无 `[dshp-web-style]` 报错。
 - **壁纸取色重启后丢失**：取色数据只存 seed（`photoPalette.accent`）。配色生效但保存失败时会提示「重启后会丢失取色」。
 - **点主题没换色**：静态主题 token 需从 Host `GET /themes` 拉取；Host 半没起来时控制台会打印「主题 token 下发失败」。
 - **圆角没生效**：圆角只改「语义面」选择器（`[class*="_card"]` / `_panel` / `_bubble` + 通用控件），圆/胶囊类元素刻意保留。
 - **背景看不到**：先在 Console 里确认两件事 —— `!!document.getElementById('dshp-ws-ambient')`（舞台在不在）和 `getComputedStyle(document.querySelector('#root > div div')).backgroundColor` 是不是带 alpha 的（壳面有没有被压薄）。选 `harness-office` 走「跟随主题」时它默认是点阵，其它主题默认是**无**——不是坏了，去设置页顶部显式选一个效果。另外 `harness-office` 是纯暗主题，官方「外观」行设成**浅色**时覆盖层走的是对侧官方原值，浅底上自然没有对比——设成深色即可。系统开了 `prefers-reduced-motion` 时 canvas 类效果是**一张静态成品图**（不动、不跟鼠标），这是刻意的。
 - **主区透了、左侧边栏还是一整条实心**：同一套压壳机制，侧栏走的是 `rail` 档（贴左缘 + 纵向铺满 + 窄列），收起成 56px 轨道也算。它只按几何认列，所以把侧栏拖到 380px 以上（且不到视口 40% 宽）就会被判成「不是侧栏」——那是刻意留的误伤护栏。
-- **换了主题背景就没了**：不会——`backgroundId` 与 `themeId` 各存各的（`settings.yaml` 里两个平级字段）。真丢了的话先确认选的是「跟随主题」还是某个具体效果：前者在切到无默认映射的主题时**本来就该消失**，后者会一路跟着。
+- **换了主题背景就没了**：不会——`backgroundId` 与 `themeId` 各存各的（条目 `config:` 里两个平级字段）。真丢了的话先确认选的是「跟随主题」还是某个具体效果：前者在切到无默认映射的主题时**本来就该消失**，后者会一路跟着。
 - **舞台在、极光是透的，但字标糊成一团麻点**：几乎一定是 `GRID` 与 `DOT_RATIO` 被改过——这两个常数要成对调（点宽 ÷ 格宽 ≈ 0.7 才连得成笔画），单独加密网格会把笔画打断。整行偏暗改 `STAGE_GAIN`。
 - **觉得背景碍事 / 想省电**：设置页顶部选「跟随主题」（非 harness-office 主题即无背景）或直接把效果换掉，整层会精确收回（舞台节点、自注入样式、监听、rAF 全部撤销，`#root` 与被压薄的壳面 inline 背景逐项还原）。插件停止同样走这条路径。想零帧成本就选 `aurora`（`kind: 'dom'`，结构上不建画布不起循环）。强弱有两个旋钮：`SHELL_KEEP`（整层通透度，同时决定正文对比度，别越过 `0.55`）与 `STAGE_GAIN`（只调点阵亮度）。
 
@@ -364,7 +364,7 @@ dsh plugin --profile web remove "@dshp/web-style"
 dsh web
 ```
 
-再删掉 `settings.yaml` 里的 `dshp-web-style` 段（可选），并把官方「外观」行设回你想要的状态。插件不写任何自有文件、不装运行时依赖，卸载即干净。
+再删掉 profile 条目`dshp-web-style` 段（可选），并把官方「外观」行设回你想要的状态。插件不写任何自有文件、不装运行时依赖，卸载即干净。
 
 ## 移植说明
 

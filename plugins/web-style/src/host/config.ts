@@ -1,17 +1,19 @@
 /**
- * 配置：默认值 / schemastery schema / 消毒
+ * 配置：默认值 / schemastery schema（可写字段 volatile）/ 读取与路由消毒
  *
  * - 官方 settings 命名空间 `dshp-web-style`（与包名/路由前缀/cordis id 一致）
+ * - 0.1.7 起持久化在 profile `cordis.patch.yml` 条目 `config:`（旧 settings.yaml 一次性自动导入）；
+ *   可被 UI/路由写入的字段全部 `.volatile()`，写入原地生效不重启插件
  * - 只认 NS：历史命名空间 `dshp-inx-custom-ui` 不再读写、不再重命名
  * - 主题白名单从目录（themes/index.ts）动态派生 + 虚拟 `photo:custom`
- * - 本插件不写任何自有文件：配置只进 settings.yaml NS
+ * - 本插件不写任何自有文件：配置只进条目 config NS
  *
  * @module @dshp/web-style
  */
 import z from '@deepseek-ai/schemastery';
 import { THEME_IDS } from './themes/index.js';
 import { settingsNamespace } from './http.js';
-import type { PhotoPalette, RadiusConfig, StyleConfig, StyleConfigPatch } from './types.js';
+import type { PhotoPalette, RadiusConfig, StyleConfig } from './types.js';
 
 export const NS: string = settingsNamespace('dshp-web-style');
 
@@ -46,8 +48,8 @@ export const DEFAULT_CONFIG: StyleConfig = {
 };
 
 export const ConfigSchema: any = z.object({
-  themeId: z.string().default(''),
-  backgroundId: z.string().default(''),
+  themeId: z.string().default('').volatile(),
+  backgroundId: z.string().default('').volatile(),
   photoPalette: z
     .union([
       z.object({
@@ -57,12 +59,14 @@ export const ConfigSchema: any = z.object({
       }),
       z.const(null),
     ])
-    .default(null),
+    .default(null)
+    .volatile(),
   radius: z
     .object({
       global: z.number().step(1).min(-1).max(24).default(-1),
     })
-    .default({ global: -1 }),
+    .default({ global: -1 })
+    .volatile(),
   wallpaper: z.dict(z.any()).default({}),
   glass: z.dict(z.any()).default({}),
 });
@@ -113,32 +117,4 @@ export function sanitizeRadius(value: unknown): Partial<RadiusConfig> | null {
 export function sanitizeOpaque(value: unknown): Record<string, unknown> {
   if (isRecord(value)) return value;
   return {};
-}
-
-/** cordis.patch.yml 的 config 层部分覆盖（只取合法字段；无补丁返回 null）。 */
-export function sanitizePatchConfig(raw: unknown): StyleConfigPatch | null {
-  if (!isRecord(raw)) return null;
-  const out: StyleConfigPatch = {};
-  let touched = false;
-  if (typeof raw['themeId'] === 'string') {
-    out.themeId = sanitizeThemeId(raw['themeId']);
-    touched = true;
-  }
-  if (typeof raw['backgroundId'] === 'string') {
-    out.backgroundId = sanitizeBackgroundId(raw['backgroundId']);
-    touched = true;
-  }
-  if (Object.hasOwn(raw, 'photoPalette')) {
-    const pal = sanitizePhotoPalette(raw['photoPalette']);
-    if (pal !== null || raw['photoPalette'] === null) {
-      out.photoPalette = pal;
-      touched = true;
-    }
-  }
-  const rd = sanitizeRadius(raw['radius']);
-  if (rd && typeof rd.global === 'number') {
-    out.radius = rd;
-    touched = true;
-  }
-  return touched ? out : null;
 }

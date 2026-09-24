@@ -4,7 +4,7 @@
  * 挂载：~/.dsh/profiles/<profile>/cordis.patch.yml（bundle patch 自动插入）
  *
  * 职责：
- *  - 主题选择 / 壁纸取色 / 全局圆角的持久化（settings.yaml `dshp-web-style` 命名空间，只认它）
+ *  - 主题选择 / 壁纸取色 / 全局圆角的持久化（profile 条目 `config:`，NS `dshp-web-style` 只认它）
  *  - 主题目录全量 token 下发（token 单源 src/host/themes，client 只存 meta）
  *  - 同源 JSON 路由供 Client：GET state / GET themes / POST theme / POST config
  *
@@ -22,79 +22,58 @@ import {
   sanitizePhotoPalette,
   sanitizeRadius,
   sanitizeOpaque,
-  sanitizePatchConfig,
   sanitizeThemeId,
 } from './config.js';
 import { json, readBody, sameOrigin } from './http.js';
 import { THEME_CATALOG } from './themes/index.js';
-import type { AnyCtx, AnySettings, PhotoPalette, StyleConfig, StyleConfigPatch } from './types.js';
+import type {
+  AnyCtx,
+  AnySettings,
+  PhotoPalette,
+  StyleConfig,
+  StyleConfigPatch,
+  VolatileConfig,
+} from './types.js';
 
 export const name = '@dshp/web-style';
 export const inject: string[] = ['webServer'];
 export { NS, ConfigSchema };
+/** Cordis 用它校验条目 config 并派生设置表单（可写字段 volatile，原地热更新）。 */
+export const Config = ConfigSchema;
 export { BACKGROUND_IDS } from './config.js';
 // 目录随插件导出：scripts/check-themes.mjs 以它为准校验 client 画廊 meta
 //（-id 唯一性、字段一致性、构建产物未内联 token）。
 export { THEME_CATALOG, THEME_IDS } from './themes/index.js';
 
-export function apply(ctx: AnyCtx, rawConfig: unknown): void {
-  // ── composition entry 默认值 ← patch 覆盖（settings 的 base 层）──
-  const entry: StyleConfig = {
-    ...DEFAULT_CONFIG,
-    radius: { ...DEFAULT_CONFIG.radius },
-    wallpaper: {},
-    glass: {},
-  };
-  const patch = sanitizePatchConfig(rawConfig);
-  if (patch) {
-    if (patch.themeId !== undefined) entry.themeId = patch.themeId;
-    if (patch.backgroundId !== undefined) entry.backgroundId = patch.backgroundId;
-    if (patch.photoPalette !== undefined) entry.photoPalette = patch.photoPalette;
-    if (patch.radius?.global !== undefined) entry.radius = { ...entry.radius, global: patch.radius.global };
-  }
-
-  // ── 官方 settings：当前生效配置源（DSH 0.1.2-rc.1+ 的官方接线方式）──
-  let current: () => StyleConfig = () => entry;
+export function apply(ctx: AnyCtx, config: VolatileConfig): void {
+  // ── 官方 settings：自定义设置页 + 条目 config 持久化（0.1.7 契约）──
   ctx.inject(['settings'], (sctx: AnyCtx) => {
-    sctx.settings.installSection(ctx, NS, ConfigSchema, entry, {
-      setSource: (src: () => StyleConfig) => {
-        current = src;
-      },
-      onChange: () => {},
-    });
+    try {
+      // 本插件自带设置页（settings.section），关掉 schema 自动生成的页面。
+      sctx.effect(() => sctx.settings.configure({ auto: false }, ctx.fiber), 'dshp-web-style: settings-page');
+    } catch (e) {
+      console.error('[dshp-web-style] settings 页面策略注册失败：' + String((e as Error)?.message ?? e));
+    }
   });
 
-  function readConfig(): StyleConfig {
+  function snapshot(): StyleConfig {
     try {
-      const v = current() as unknown;
-      if (v && typeof v === 'object') {
-        const rec = v as Record<string, unknown>;
-        return {
-          themeId: typeof rec['themeId'] === 'string' ? sanitizeThemeId(rec['themeId']) : '',
-          backgroundId:
-            typeof rec['backgroundId'] === 'string' ? sanitizeBackgroundId(rec['backgroundId']) : '',
-          photoPalette: sanitizePhotoPalette(rec['photoPalette']),
-          radius: rec['radius'] && typeof rec['radius'] === 'object' ? (rec['radius'] as any) : entry.radius,
-          wallpaper: sanitizeOpaque(rec['wallpaper']),
-          glass: sanitizeOpaque(rec['glass']),
-        };
-      }
+      const themeId = config.themeId.get();
+      const backgroundId = config.backgroundId.get();
+      const photoPalette = config.photoPalette.get();
+      const radius = config.radius.get();
+      return {
+        themeId: typeof themeId === 'string' ? sanitizeThemeId(themeId) : '',
+        backgroundId: typeof backgroundId === 'string' ? sanitizeBackgroundId(backgroundId) : '',
+        photoPalette: photoPalette as PhotoPalette | null,
+        radius: radius ? { global: radius.global } : { ...DEFAULT_CONFIG.radius },
+        wallpaper: sanitizeOpaque(config.wallpaper),
+        glass: sanitizeOpaque(config.glass),
+      };
     } catch {
       /* 读失败按默认 */
     }
-    return { ...entry, radius: { ...entry.radius } };
-  }
-
-  function snapshot(): StyleConfig {
-    const cfg = readConfig();
-    return {
-      themeId: cfg.themeId,
-      backgroundId: cfg.backgroundId,
-      photoPalette: cfg.photoPalette,
-      radius: cfg.radius,
-      wallpaper: cfg.wallpaper,
-      glass: cfg.glass,
-    };
+    return { ...DEFAULT_CONFIG, radius: { ...DEFAULT_CONFIG.radius }, wallpaper: {}, glass: {} };
   }
 
   async function writeConfig(patchObj: StyleConfigPatch): Promise<void> {
