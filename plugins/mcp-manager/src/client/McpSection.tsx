@@ -15,11 +15,11 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import {
   Button,
-  IconEditOutline16,
-  IconLoadingOutline16,
-  IconPlusOutline16,
-  IconRefreshOutline14,
-  IconTrashOutline16,
+  IconEditOutlineRegular,
+  IconLoadingOutlineRegular,
+  IconPlusOutlineRegular,
+  IconRefreshOutlineRegular,
+  IconTrashOutlineRegular,
   Input,
   Modal,
   Pill,
@@ -431,11 +431,11 @@ function ServerRow({
       <div className={styles.controls}>
         {v.transport === 'streamable-http' ? (
           <Button variant="toolbar" disabled={busy} title="探活（initialize 握手）" onClick={onProbe}>
-            {busy ? <IconLoadingOutline16 /> : <IconRefreshOutline14 />}
+            {busy ? <IconLoadingOutlineRegular /> : <IconRefreshOutlineRegular size={14} />}
           </Button>
         ) : null}
         <Button variant="toolbar" disabled={saving || v.dup || v.unmanageable} title="编辑" onClick={onEdit}>
-          <IconEditOutline16 />
+          <IconEditOutlineRegular />
         </Button>
         <Button
           variant="toolbar"
@@ -444,7 +444,7 @@ function ServerRow({
           title={'删除 ' + (v.serverName || v.id)}
           onClick={onDelete}
         >
-          <IconTrashOutline16 />
+          <IconTrashOutlineRegular />
         </Button>
         <Switch
           checked={!v.disabled}
@@ -611,7 +611,7 @@ export function McpSection(): ReactNode {
     return (
       <div className={styles.page}>
         <div className={styles.loading}>
-          <IconLoadingOutline16 />
+          <IconLoadingOutlineRegular />
           <span className={styles.loadingText}>正在读取 MCP 服务器…</span>
         </div>
       </div>
@@ -848,10 +848,10 @@ export function McpSection(): ReactNode {
           <Input placeholder="搜索 MCP 服务器…" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <Button variant="toolbar" title="刷新（重新读取 patch 文件）" onClick={() => void load()}>
-          <IconRefreshOutline14 />
+          <IconRefreshOutlineRegular size={14} />
         </Button>
         <Button variant="primary" disabled={st.patchFile.exists === false} onClick={openCreate}>
-          <IconPlusOutline16 />
+          <IconPlusOutlineRegular />
           新建
         </Button>
       </div>

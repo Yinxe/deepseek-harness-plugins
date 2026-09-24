@@ -11,7 +11,7 @@
 import { useState, type ReactNode } from 'react';
 import {
   Button,
-  IconChevronDownOutline14,
+  IconChevronDownOutlineRegular,
   Menu,
   Switch as SwitchPrimitive,
   Tag,
@@ -93,7 +93,7 @@ export function Selector({ disabled, value, selectedLabel, options, onSelect }: 
           与 c8e140f（file-change-viewer 去掉无样式的 `fcv-toolRow`）同一先例：CSS Module 化时去掉，
           不写成 `styles.selectorLabel`（那会被 check-css-modules 判「用了但没定义」而红）。 */}
       <span>{selectedLabel}</span>
-      <IconChevronDownOutline14 />
+      <IconChevronDownOutlineRegular />
     </Button>
   );
   return (

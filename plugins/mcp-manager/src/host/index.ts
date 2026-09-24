@@ -6,7 +6,9 @@
  * 职责：
  *  - 管理 profile 的 cordis.patch.yml 里的 @deepseek-ai/dsh-mcp-client 实例条目：
  *    列出 / 新建 / 编辑 / 启停 / 删除，回写保留文件其余内容（注释、!!js、排版）
- *  - settings.yaml（dshp-mcp-manager）持久化自身配置（enabled / patchFile 覆盖）
+ *  - 自身配置（enabled / patchFile 覆盖）持久化在 profile 条目 `config:`（0.1.7 契约：
+ *    导出的 `Config` schema 装载期校验，全字段 volatile，`settings.update` 写入原地生效；
+ *    旧 settings.yaml 分节一次性自动导入）
  *  - 同源 JSON 路由供 Client：
  *    GET state / POST config / POST create / POST update / POST toggle /
  *    POST remove / POST probe
@@ -20,15 +22,7 @@
  * @module @dshp/mcp-manager
  */
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import {
-  DEFAULT_CONFIG,
-  LIMITS,
-  NS,
-  ConfigSchema,
-  sanitizePatchConfig,
-  sanitizePatchFilePath,
-  sanitizeServerConfig,
-} from './config.js';
+import { LIMITS, NS, ConfigSchema, sanitizePatchFilePath, sanitizeServerConfig } from './config.js';
 import { json, readBody, sameOrigin } from './http.js';
 import { locatePatchFile, readPatchFile, writePatchFile } from './patchfile.js';
 import {
@@ -53,11 +47,14 @@ import type {
   RemovePayload,
   TogglePayload,
   UpdatePayload,
+  VolatileConfig,
 } from './types.js';
 
 export const name = '@dshp/mcp-manager';
 export const inject: string[] = ['settings', 'webServer'];
 export { NS, ConfigSchema };
+/** Cordis 用它校验条目 config 并派生设置表单（全字段 volatile，原地热更新）。 */
+export const Config = ConfigSchema;
 
 const BASE = '/ext/dshp-mcp-manager';
 
@@ -66,40 +63,39 @@ function instanceIdOf(serverName: string): string {
   return ('mcp-' + serverName.toLowerCase().replace(/[^a-z0-9_-]+/g, '-')).slice(0, 60);
 }
 
-export function apply(ctx: AnyCtx, rawConfig: unknown): void {
-  const entry: PluginConfig = { ...DEFAULT_CONFIG };
-  const patch = sanitizePatchConfig(rawConfig);
-  if (patch) {
-    if (Object.hasOwn(patch, 'enabled') && patch.enabled !== undefined) entry.enabled = patch.enabled;
-    if (Object.hasOwn(patch, 'patchFile') && patch.patchFile !== undefined) entry.patchFile = patch.patchFile;
-  }
-
-  let current: () => PluginConfig = () => entry;
-
-  ctx.inject(['settings'], (sctx: AnyCtx) => {
-    sctx.settings.installSection(ctx, NS, ConfigSchema, entry, {
-      setSource: (src: () => PluginConfig) => {
-        current = src;
-      },
-      onChange: () => {},
+/**
+ * 挂载 Host 半：settings 页面策略 → 配置读取（volatile 引用）→ 同源 JSON 路由。
+ *
+ * @param ctx - Cordis 插件上下文。
+ * @param config - 条目 `config:` 经 ConfigSchema 校验后的实时引用（全字段 volatile）。
+ */
+export function apply(ctx: AnyCtx, config: VolatileConfig): void {
+  // ── 官方 settings（0.1.7 契约）：本插件自带设置页，关掉 schema 自动生成的页面 ──
+  try {
+    ctx.inject(['settings'], (sctx: AnyCtx) => {
+      try {
+        sctx.effect(
+          () => sctx.settings.configure({ auto: false }, ctx.fiber),
+          'dshp-mcp-manager: settings-page',
+        );
+      } catch (error) {
+        console.error('[dshp-mcp-manager] 注册 settings 页面策略失败，配置将回默认值：', error);
+      }
     });
-  });
+  } catch (error) {
+    console.error('[dshp-mcp-manager] settings 服务注入失败，配置将回默认值：', error);
+  }
 
   function getConfig(): PluginConfig {
-    try {
-      const v = current() as unknown;
-      if (v && typeof v === 'object') return v as PluginConfig;
-    } catch {
-      /* ignore */
-    }
-    return entry;
+    return { enabled: config.enabled.get(), patchFile: config.patchFile.get() };
   }
 
+  /** 写回 profile 条目 config（路由层已消毒；这里只兜 settings 服务缺失）。 */
   async function updateConfig(patchObj: Record<string, unknown>): Promise<void> {
     const settings = ctx.get('settings') as AnyCtx;
     if (!settings)
       throw new Error(
-        'settings 服务不可用，无法持久化到 settings.yaml（请重启 DSH 或检查 settings-file 是否挂载）',
+        'settings 服务不可用，无法持久化到 profile 条目 config（请重启 DSH 确认设置服务已挂载）',
       );
     await settings.update(NS, patchObj);
   }
@@ -293,10 +289,10 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
       if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'method not allowed' });
       requireEnabled();
       const a = await readJsonObject(req);
-      const { config, jsMarks } = sanitizeServerConfig(a['config']);
+      const { config: serverConfig, jsMarks } = sanitizeServerConfig(a['config']);
       const { doc, path } = await loadPatchDoc();
       const before = findEntries(doc).length;
-      insertServer(doc, instanceIdOf(config.serverName), config, jsMarks);
+      insertServer(doc, instanceIdOf(serverConfig.serverName), serverConfig, jsMarks);
       return json(res, 200, { ok: true, state: await persistAndSnapshot(doc, before + 1, path) });
     });
 
@@ -306,7 +302,7 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
       const a = await readJsonObject(req);
       const p = a as unknown as Partial<UpdatePayload>;
       const id = asId(p.id);
-      const { config, jsMarks, providedKeys } = sanitizeServerConfig(a['config']);
+      const { config: serverConfig, jsMarks, providedKeys } = sanitizeServerConfig(a['config']);
       const { doc, text, path } = await loadPatchDoc();
       const target = findEntry(doc, id);
       const view = entryToView(target, text);
@@ -315,7 +311,7 @@ export function apply(ctx: AnyCtx, rawConfig: unknown): void {
           '该条目含无法在 UI 表示的复杂值（见列表中的问题提示），请直接编辑 patch 文件，或删除后重建',
         );
       }
-      applyServerConfig(doc, target, config, jsMarks, providedKeys);
+      applyServerConfig(doc, target, serverConfig, jsMarks, providedKeys);
       return json(res, 200, {
         ok: true,
         state: await persistAndSnapshot(doc, findEntries(doc).length, path),

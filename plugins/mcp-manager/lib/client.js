@@ -101,7 +101,7 @@ function Selector({ disabled, value, selectedLabel, options, onSelect }) {
       onClick: () => setOpen((v) => !v),
       children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: selectedLabel }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_dsh_client_ui_primitives.IconChevronDownOutline14, {})
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_dsh_client_ui_primitives.IconChevronDownOutlineRegular, {})
       ]
     }
   );
@@ -385,8 +385,8 @@ function ServerRow({
       probeLine ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: styles_module_css_default.probeLine, title: probe?.detail, children: probeLine }) : null
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: styles_module_css_default.controls, children: [
-      v.transport === "streamable-http" ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.Button, { variant: "toolbar", disabled: busy, title: "\u63A2\u6D3B\uFF08initialize \u63E1\u624B\uFF09", onClick: onProbe, children: busy ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutline16, {}) : /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconRefreshOutline14, {}) }) : null,
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.Button, { variant: "toolbar", disabled: saving || v.dup || v.unmanageable, title: "\u7F16\u8F91", onClick: onEdit, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconEditOutline16, {}) }),
+      v.transport === "streamable-http" ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.Button, { variant: "toolbar", disabled: busy, title: "\u63A2\u6D3B\uFF08initialize \u63E1\u624B\uFF09", onClick: onProbe, children: busy ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutlineRegular, {}) : /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconRefreshOutlineRegular, { size: 14 }) }) : null,
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.Button, { variant: "toolbar", disabled: saving || v.dup || v.unmanageable, title: "\u7F16\u8F91", onClick: onEdit, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconEditOutlineRegular, {}) }),
       /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
         import_dsh_client_ui_primitives2.Button,
         {
@@ -395,7 +395,7 @@ function ServerRow({
           disabled: saving || v.dup,
           title: "\u5220\u9664 " + (v.serverName || v.id),
           onClick: onDelete,
-          children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconTrashOutline16, {})
+          children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconTrashOutlineRegular, {})
         }
       ),
       /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
@@ -542,7 +542,7 @@ function McpSection() {
   }
   if (loading) {
     return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: styles_module_css_default.page, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: styles_module_css_default.loading, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutline16, {}),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutlineRegular, {}),
       /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: styles_module_css_default.loadingText, children: "\u6B63\u5728\u8BFB\u53D6 MCP \u670D\u52A1\u5668\u2026" })
     ] }) });
   }
@@ -764,9 +764,9 @@ function McpSection() {
       /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: styles_module_css_default.count, children: "MCP " + st.servers.length }),
       /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: styles_module_css_default.toolbarSpacer }),
       /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: styles_module_css_default.searchW, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.Input, { placeholder: "\u641C\u7D22 MCP \u670D\u52A1\u5668\u2026", value: search, onChange: (e) => setSearch(e.target.value) }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.Button, { variant: "toolbar", title: "\u5237\u65B0\uFF08\u91CD\u65B0\u8BFB\u53D6 patch \u6587\u4EF6\uFF09", onClick: () => void load(), children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconRefreshOutline14, {}) }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.Button, { variant: "toolbar", title: "\u5237\u65B0\uFF08\u91CD\u65B0\u8BFB\u53D6 patch \u6587\u4EF6\uFF09", onClick: () => void load(), children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconRefreshOutlineRegular, { size: 14 }) }),
       /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(import_dsh_client_ui_primitives2.Button, { variant: "primary", disabled: st.patchFile.exists === false, onClick: openCreate, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconPlusOutline16, {}),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconPlusOutlineRegular, {}),
         "\u65B0\u5EFA"
       ] })
     ] }),

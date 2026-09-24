@@ -111,7 +111,7 @@ dsh web   # 重启生效
 4. 扫 `~/.dsh/profiles/*/package.json` 的 `dsh.profile.bundles`，谁登记了 `@dshp/mcp-manager` 就用谁（`link:` 安装场景）
 5. 兜底 `~/.dsh/profiles/web/cordis.patch.yml`（可能不存在，UI 会提示并给修正入口）
 
-## 配置项（settings.yaml → `dshp-mcp-manager` 命名空间）
+## 配置项（profile 条目 `dshp-mcp-manager` 的 `config:`）
 
 ```yaml
 dshp-mcp-manager:
@@ -190,7 +190,7 @@ dsh plugin --profile web remove "@dshp/mcp-manager"
 dsh web   # 重启生效
 ```
 
-不删除任何用户数据：`settings.yaml` 的 `dshp-mcp-manager` 分节与 `cordis.patch.yml` 里的 MCP 条目都原样保留，
+不删除任何用户数据：profile 条目 `dshp-mcp-manager` 的 `config:`与 `cordis.patch.yml` 里的 MCP 条目都原样保留，
 手工删除即可。
 
 ## 移植说明

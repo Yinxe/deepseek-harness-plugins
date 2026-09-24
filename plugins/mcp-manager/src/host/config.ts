@@ -1,7 +1,9 @@
 /**
- * 配置：默认值 / schemastery schema / 补丁与服务器条目消毒
+ * 配置：schemastery schema（volatile 声明）+ 服务器条目消毒
  *
  * - 官方 settings 命名空间 `dshp-mcp-manager`（与包名/路由前缀/cordis id 一致）
+ * - 0.1.7 起持久化在 profile `cordis.patch.yml` 条目 `config:`（旧 settings.yaml 一次性自动导入）；
+ *   全字段 `.volatile()`：`settings.update` 写入原地生效，不必重启。
  * - 只认 NS：不做历史 key 兼容、不做迁移（docs/settings.md「不做迁移」）
  * - 服务器条目消毒是 create/update 路由的唯一入口：字段逐一校验 + 截断，
  *   `js: ` 前缀字符串表示 `!!js` 表达式（回写时转 tagged 节点）
@@ -12,13 +14,7 @@ import { homedir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
 import z from '@deepseek-ai/schemastery';
 import { settingsNamespace } from './http.js';
-import type {
-  EnvValueView,
-  JsMarkPaths,
-  NormalizedServerConfig,
-  PluginConfig,
-  PluginConfigPatch,
-} from './types.js';
+import type { EnvValueView, JsMarkPaths, NormalizedServerConfig } from './types.js';
 
 export const NS: string = settingsNamespace('dshp-mcp-manager');
 
@@ -34,14 +30,10 @@ export const PATCH_FILE_MAX = 1024;
 /** serverName 官方约束：[A-Za-z0-9_-]{1,32}（dsh-mcp-client README） */
 export const SERVER_NAME_PATTERN = /^[A-Za-z0-9_-]{1,32}$/;
 
-export const DEFAULT_CONFIG: PluginConfig = {
-  enabled: true,
-  patchFile: '',
-};
-
+/** dsh 自身配置的全字段 volatile schema（设置页与手工编辑条目 config 都走它）。 */
 export const ConfigSchema: any = z.object({
-  enabled: z.boolean().default(true),
-  patchFile: z.string().default(''),
+  enabled: z.boolean().default(true).volatile(),
+  patchFile: z.string().default('').volatile(),
 });
 
 /** 官方 dsh-mcp-client 包名（只管理这个包的实例条目） */
@@ -103,18 +95,6 @@ export function sanitizePatchFilePath(v: unknown): string {
   const raw = v.trim().slice(0, PATCH_FILE_MAX);
   if (!raw) return '';
   return isAbsolute(raw) ? raw : '';
-}
-
-/** cordis.patch.yml / settings base 层的部分覆盖（只取合法字段） */
-export function sanitizePatchConfig(raw: unknown): PluginConfigPatch | null {
-  if (!isRecord(raw)) return null;
-  const out: PluginConfigPatch = {};
-  if (Object.hasOwn(raw, 'enabled')) out.enabled = raw['enabled'] === true;
-  if (Object.hasOwn(raw, 'patchFile')) {
-    const v = sanitizePatchFilePath(raw['patchFile']);
-    if (v || raw['patchFile'] === '') out.patchFile = v;
-  }
-  return out;
 }
 
 // ── env / headers 映射 ──────────────────────────────────────────────────

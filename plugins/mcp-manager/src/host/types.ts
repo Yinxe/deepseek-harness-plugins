@@ -6,6 +6,7 @@
  *
  * @module @dshp/mcp-manager
  */
+import type { Volatile } from '@deepseek-ai/cosmokit';
 
 export type AnyCtx = any;
 export type AnySettings = any;
@@ -84,14 +85,18 @@ export interface McpState {
   fileIssue: string;
 }
 
-/** 插件自身配置（settings.yaml 的 dshp-mcp-manager 分节） */
+/** 插件自身配置（profile 条目 `config:` 的 dshp-mcp-manager 分节，0.1.7 起替代 settings.yaml） */
 export interface PluginConfig {
   enabled: boolean;
   /** patch 文件显式覆盖路径；空串 = 自动定位 */
   patchFile: string;
 }
 
-export type PluginConfigPatch = Partial<PluginConfig>;
+/** `apply(ctx, config)` 实参：ConfigSchema 全字段 volatile，`.get()` 读当前深只读快照。 */
+export interface VolatileConfig {
+  enabled: Volatile<boolean>;
+  patchFile: Volatile<string>;
+}
 
 /** POST /create、/update 的 config 载荷（消毒后的规整形态；env/headers 值可能带 `js: ` 前缀） */
 export interface NormalizedServerConfig {
