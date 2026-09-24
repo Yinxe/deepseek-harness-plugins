@@ -10,9 +10,11 @@
  *  - 统计（stats，原 dsh-token-stats）：sessionQuery 扫描本机全部会话日志聚合 TokenUsage，
  *    经 GET /ext/dshp-token-meter/stats（别名 /data）供设置页消费
  *
- * 持久化（标准 settings 存储，对齐 vision-bridge）：
- *  settings.yaml 顶层 `dshp-token-meter` 命名空间（version/activeVendor/refreshSec/
- *  enabled/vendors/showToday/defaultRange），经 ctx.settings 分层解析。
+ * 持久化（0.1.7 settings 契约，对齐 file-change-viewer）：
+ *  profile `cordis.patch.yml` 条目 `config:` 的 `dshp-token-meter` 分节（version/activeVendor/
+ *  refreshSec/enabled/vendors/showToday/defaultRange/onlineGapMin），导出的 `Config` schema
+ *  装载期校验（非法配置 = 条目不启用）；除 version 外全字段 volatile，`settings.update` 写入
+ *  原地生效（旧 settings.yaml 分节由各插件同名条目一次性自动导入）。
  * 派生缓存（会话指纹聚合）仍走 ctx.storageDomain 域 `token_stats`（域名保持原样——
  *  storageDomain 只允许小写字母/数字/下划线，且改名会废掉已有缓存触发全量重扫），
  *  丢了可后台重扫，不属于用户配置。
@@ -29,7 +31,7 @@
  */
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { ConfigSchema, DEFAULT_CONFIG, NS, sanitizePatchConfig } from './config.js';
+import { ConfigSchema, NS } from './config.js';
 import { createSecretResolver } from './secrets.js';
 import { canonicalType } from './providers/index.js';
 import { registerQuotaRoutes, refreshOne } from './quota.js';
@@ -38,99 +40,79 @@ import { createEngine } from './stats/engine.js';
 import { normGapMin } from './stats/online.js';
 import { registerStatsRoutes } from './stats/routes.js';
 import { registerIdentityRoute } from './identity.js';
-import type { AnyCtx, PluginConfig, Vendor } from './types.js';
+import type { AnyCtx, PluginConfig, Vendor, VolatileConfig } from './types.js';
 
 export const name = '@dshp/token-meter';
 export const inject: string[] = ['webServer'];
 export { NS, ConfigSchema };
+/** Cordis 用它校验条目 config 并派生设置表单（除 version 外全字段 volatile，原地热更新）。 */
+export const Config = ConfigSchema;
 
-export function apply(ctx: AnyCtx, rawConfig: unknown): void {
-  const entry: PluginConfig = {
-    ...DEFAULT_CONFIG,
-    vendors: [],
-  };
-  const patch = sanitizePatchConfig(rawConfig);
-  if (patch) {
-    if (Object.hasOwn(patch, 'activeVendor') && patch.activeVendor !== undefined)
-      entry.activeVendor = patch.activeVendor;
-    if (Object.hasOwn(patch, 'refreshSec') && patch.refreshSec !== undefined)
-      entry.refreshSec = patch.refreshSec;
-    if (Object.hasOwn(patch, 'enabled') && patch.enabled !== undefined) entry.enabled = patch.enabled;
-    if (Object.hasOwn(patch, 'vendors') && patch.vendors !== undefined) entry.vendors = patch.vendors;
-    if (Object.hasOwn(patch, 'showToday') && patch.showToday !== undefined) entry.showToday = patch.showToday;
-    if (Object.hasOwn(patch, 'defaultRange') && patch.defaultRange !== undefined)
-      entry.defaultRange = patch.defaultRange;
-    if (Object.hasOwn(patch, 'onlineGapMin') && patch.onlineGapMin !== undefined)
-      entry.onlineGapMin = patch.onlineGapMin;
-  }
-
-  let current: () => PluginConfig = () => entry;
-
+/**
+ * 挂载 Host 半：settings 页面策略 → 配置读取（volatile 引用）→ 额度路由 + 自动拉取 →
+ * 统计引擎 + 路由。
+ *
+ * @param ctx - Cordis 插件上下文。
+ * @param config - 条目 `config:` 经 ConfigSchema 校验后的实时引用（除 version 外全字段 volatile）。
+ */
+export function apply(ctx: AnyCtx, config: VolatileConfig): void {
+  // ── 官方 settings（0.1.7 契约）：本插件自带设置页，关掉 schema 自动生成的页面 ──
   try {
     ctx.inject(['settings'], (sctx: AnyCtx) => {
-      sctx.settings.installSection(ctx, NS, ConfigSchema, entry, {
-        setSource: (src: () => PluginConfig) => {
-          current = src;
-        },
-        onChange: () => {},
-      });
-    });
-  } catch {
-    /* ignore */
-  }
-
-  function getConfig(): PluginConfig {
-    try {
-      const v = current() as unknown;
-      if (v && typeof v === 'object') {
-        const r = v as Record<string, unknown>;
-        return {
-          version: 1,
-          activeVendor:
-            typeof r['activeVendor'] === 'string' ? (r['activeVendor'] as string) : entry.activeVendor,
-          refreshSec: typeof r['refreshSec'] === 'number' ? (r['refreshSec'] as number) : entry.refreshSec,
-          enabled: typeof r['enabled'] === 'boolean' ? (r['enabled'] as boolean) : entry.enabled,
-          vendors: Array.isArray(r['vendors'])
-            ? (r['vendors'] as unknown[]).map((item): Vendor => {
-                const it = (item ?? {}) as Record<string, unknown>;
-                const vendor: Vendor = {
-                  id: String(it['id'] !== undefined ? it['id'] : ''),
-                  name: String(it['name'] !== undefined ? it['name'] : ''),
-                  type: canonicalType(String(it['type'] !== undefined ? it['type'] : 'manual')),
-                  params:
-                    it['params'] && typeof it['params'] === 'object' && !Array.isArray(it['params'])
-                      ? (it['params'] as Record<string, unknown>)
-                      : {},
-                };
-                // 余额查询开关：只有显式 false 视为禁用，缺省一律启用
-                if (it['enabled'] === false) vendor.enabled = false;
-                return vendor;
-              })
-            : [],
-          showToday: (r['showToday'] as boolean) === true,
-          defaultRange:
-            r['defaultRange'] === '7' ||
-            r['defaultRange'] === '30' ||
-            r['defaultRange'] === '90' ||
-            r['defaultRange'] === 'all'
-              ? (r['defaultRange'] as PluginConfig['defaultRange'])
-              : entry.defaultRange,
-          onlineGapMin: normGapMin(
-            typeof r['onlineGapMin'] === 'number' ? (r['onlineGapMin'] as number) : entry.onlineGapMin,
-          ),
-        };
+      try {
+        sctx.effect(
+          () => sctx.settings.configure({ auto: false }, ctx.fiber),
+          'dshp-token-meter: settings-page',
+        );
+      } catch (error) {
+        console.error('[dshp-token-meter] 注册 settings 页面策略失败，偏好将回默认值：', error);
       }
-    } catch {
-      /* ignore */
-    }
-    return JSON.parse(JSON.stringify(entry)) as PluginConfig;
+    });
+  } catch (error) {
+    console.error('[dshp-token-meter] settings 服务注入失败，偏好将回默认值：', error);
   }
 
+  /**
+   * 当前生效配置（volatile 引用逐字段读快照）。
+   *
+   * 类型/区间防御已由 schema 在装载与提交期前置（非法值进不了引用），读路径只保留两件
+   * schema 管不了的事：供应商 type 别名归一（opencode-go/zen → opencode，历史条目 config
+   * 里的合法字符串写法）与 onlineGapMin 吸附到 1/5/15/30/60 标准档。
+   */
+  function getConfig(): PluginConfig {
+    const rawVendors = config.vendors.get();
+    return {
+      version: config.version ?? 1,
+      activeVendor: config.activeVendor.get(),
+      refreshSec: config.refreshSec.get(),
+      enabled: config.enabled.get(),
+      vendors: (Array.isArray(rawVendors) ? rawVendors : []).map((item): Vendor => {
+        const it = (item ?? {}) as Record<string, unknown>;
+        const vendor: Vendor = {
+          id: String(it['id'] !== undefined ? it['id'] : ''),
+          name: String(it['name'] !== undefined ? it['name'] : ''),
+          type: canonicalType(String(it['type'] !== undefined ? it['type'] : 'manual')),
+          params:
+            it['params'] && typeof it['params'] === 'object' && !Array.isArray(it['params'])
+              ? (it['params'] as Record<string, unknown>)
+              : {},
+        };
+        // 余额查询开关：只有显式 false 视为禁用，缺省一律启用
+        if (it['enabled'] === false) vendor.enabled = false;
+        return vendor;
+      }),
+      showToday: config.showToday.get(),
+      defaultRange: config.defaultRange.get(),
+      onlineGapMin: normGapMin(config.onlineGapMin.get()),
+    };
+  }
+
+  /** 写回 profile 条目 config（路由层已逐字段消毒；这里只兜 settings 服务缺失）。 */
   async function updateConfig(patchObj: Record<string, unknown>): Promise<void> {
     const settings = ctx.get('settings') as AnyCtx;
     if (!settings)
       throw new Error(
-        'settings 服务不可用，无法持久化到 settings.yaml（请重启 DSH 或检查 FileSettingsProvider 是否挂载）',
+        'settings 服务不可用，无法持久化到 profile 条目 config（请重启 DSH 确认设置服务已挂载）',
       );
     await settings.update(NS, JSON.parse(JSON.stringify(patchObj)) as Record<string, unknown>);
   }

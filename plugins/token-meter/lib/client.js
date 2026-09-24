@@ -37,7 +37,7 @@ __export(client_exports, {
 module.exports = __toCommonJS(client_exports);
 
 // <define:__DSHP_TOKEN_METER_PKG__>
-var define_DSHP_TOKEN_METER_PKG_default = { name: "@dshp/token-meter", version: "0.13.1", repo: "github.com/Yinxe/deepseek-harness-plugins/tree/main/plugins/token-meter" };
+var define_DSHP_TOKEN_METER_PKG_default = { name: "@dshp/token-meter", version: "0.14.0", repo: "github.com/Yinxe/deepseek-harness-plugins/tree/main/plugins/token-meter" };
 
 // src/client/CenterView.tsx
 var import_react = require("react");
@@ -1941,7 +1941,7 @@ function RangeSelect(props) {
       onClick: () => setOpen((v) => !v),
       children: [
         /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: styles_module_css_default.selectorLabel, children: hit ? hit.t : props.value }),
-        import_dsh_client_ui_primitives3.IconChevronDownOutline14 ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(import_dsh_client_ui_primitives3.IconChevronDownOutline14, { className: styles_module_css_default.chevron }) : /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: styles_module_css_default.chevron, children: "\u25BE" })
+        import_dsh_client_ui_primitives3.IconChevronDownOutlineRegular ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(import_dsh_client_ui_primitives3.IconChevronDownOutlineRegular, { className: styles_module_css_default.chevron }) : /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("span", { className: styles_module_css_default.chevron, children: "\u25BE" })
       ]
     }
   );
@@ -2903,7 +2903,7 @@ function StatsSettingsPage(props) {
           size: "sm",
           onClick: () => refresh(),
           disabled: loading,
-          icon: loading && import_dsh_client_ui_primitives3.IconLoadingOutline16 ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(import_dsh_client_ui_primitives3.IconLoadingOutline16, {}) : import_dsh_client_ui_primitives3.IconRefreshOutline14 ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(import_dsh_client_ui_primitives3.IconRefreshOutline14, {}) : void 0,
+          icon: loading && import_dsh_client_ui_primitives3.IconLoadingOutlineRegular ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(import_dsh_client_ui_primitives3.IconLoadingOutlineRegular, {}) : import_dsh_client_ui_primitives3.IconRefreshOutlineRegular ? /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(import_dsh_client_ui_primitives3.IconRefreshOutlineRegular, { size: 14 }) : void 0,
           children: loading ? "\u5237\u65B0\u4E2D\u2026" : "\u5237\u65B0"
         }
       )
@@ -6682,7 +6682,7 @@ function createQuotaSection() {
         onClick: () => setOpen((v) => !v),
         children: [
           /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { className: styles_module_css_default.selectorLabel, children: props.selectedLabel }),
-          import_dsh_client_ui_primitives5.IconChevronDownOutline14 ? /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(import_dsh_client_ui_primitives5.IconChevronDownOutline14, { className: styles_module_css_default.chevron }) : /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { className: styles_module_css_default.chevron, children: "\u25BE" })
+          import_dsh_client_ui_primitives5.IconChevronDownOutlineRegular ? /* @__PURE__ */ (0, import_jsx_runtime20.jsx)(import_dsh_client_ui_primitives5.IconChevronDownOutlineRegular, { className: styles_module_css_default.chevron }) : /* @__PURE__ */ (0, import_jsx_runtime20.jsx)("span", { className: styles_module_css_default.chevron, children: "\u25BE" })
         ]
       }
     );

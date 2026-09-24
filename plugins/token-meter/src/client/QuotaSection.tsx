@@ -17,7 +17,7 @@
  * 类名统一走 CSS Module（`styles.module.css`），动态拼接走本地 `cx()`。
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Button, IconChevronDownOutline14, Menu, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives';
+import { Button, IconChevronDownOutlineRegular, Menu, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives';
 import { createProviderKit, createProviderRenderers, fallbackErrorInfo } from './providers/index.js';
 import { ringSizeOf } from './providers/index.js';
 import type { ButtonVariant } from './providers/index.js';
@@ -601,8 +601,8 @@ export function createQuotaSection(): QuotaSectionParts {
         onClick={() => setOpen((v: boolean) => !v)}
       >
         <span className={styles.selectorLabel}>{props.selectedLabel}</span>
-        {IconChevronDownOutline14 ? (
-          <IconChevronDownOutline14 className={styles.chevron} />
+        {IconChevronDownOutlineRegular ? (
+          <IconChevronDownOutlineRegular className={styles.chevron} />
         ) : (
           <span className={styles.chevron}>{'▾'}</span>
         )}

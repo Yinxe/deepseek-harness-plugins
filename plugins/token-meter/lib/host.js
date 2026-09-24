@@ -5,7 +5,7 @@ import zlib from 'zlib';
 
 // src/host/index.ts
 
-// ../../node_modules/.pnpm/@deepseek-ai+cosmokit@1.8.3/node_modules/@deepseek-ai/cosmokit/lib/index.js
+// ../../node_modules/.pnpm/@deepseek-ai+cosmokit@1.8.5/node_modules/@deepseek-ai/cosmokit/lib/index.js
 function isNullable(value) {
   return value === null || value === void 0;
 }
@@ -23,6 +23,32 @@ function pick(source, keys, forced) {
   const result = {};
   for (const key of keys) if (source[key] !== void 0) result[key] = source[key];
   return result;
+}
+var write = /* @__PURE__ */ Symbol.for("cosmokit.volatile.write");
+function snapshot(value, ancestors = /* @__PURE__ */ new Set()) {
+  if (typeof value === "function") throw new TypeError("volatile config cannot contain functions");
+  if (value === null || typeof value !== "object") return value;
+  if (ancestors.has(value)) throw new TypeError("volatile config cannot contain cycles");
+  ancestors.add(value);
+  try {
+    if (Array.isArray(value)) return Object.freeze(value.map((item) => snapshot(item, ancestors)));
+    if (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null) throw new TypeError("volatile config objects must be plain objects or arrays");
+    return Object.freeze(Object.fromEntries(Object.entries(value).map(([key, item]) => [key, snapshot(item, ancestors)])));
+  } finally {
+    ancestors.delete(value);
+  }
+}
+function createVolatile(value) {
+  let current = snapshot(value);
+  return Object.freeze({
+    get: () => current,
+    [write]: (value2) => {
+      current = value2;
+    }
+  });
+}
+function isVolatile(value) {
+  return typeof value === "object" && value !== null && write in value;
 }
 function is(type, value) {
   if (arguments.length === 1) return (value2) => is(type, value2);
@@ -102,24 +128,37 @@ function clone(source, refs = /* @__PURE__ */ new Map()) {
   return result;
 }
 function deepEqual(a, b, strict) {
-  if (a === b) return true;
-  if (!strict && isNullable(a) && isNullable(b)) return true;
-  if (typeof a !== typeof b) return false;
-  if (typeof a !== "object") return false;
-  if (!a || !b) return false;
-  function check(test, then) {
-    return test(a) ? test(b) ? then(a, b) : false : test(b) ? false : void 0;
+  const ancestors = /* @__PURE__ */ new Set();
+  function compare(a2, b2) {
+    if (a2 === b2) return true;
+    if (isVolatile(a2) || isVolatile(b2)) return isVolatile(a2) && isVolatile(b2);
+    if (!strict && isNullable(a2) && isNullable(b2)) return true;
+    if (typeof a2 !== typeof b2 || typeof a2 !== "object" || !a2 || !b2) return false;
+    if (ancestors.has(a2)) return false;
+    function check(test, then) {
+      return test(a2) ? test(b2) ? then(a2, b2) : false : test(b2) ? false : void 0;
+    }
+    ancestors.add(a2);
+    try {
+      return check(Array.isArray, (a3, b3) => {
+        if (a3.length !== b3.length) return false;
+        for (let index = 0; index < a3.length; index++) if (!compare(a3[index], b3[index])) return false;
+        return true;
+      }) ?? check(is("Date"), (a3, b3) => a3.valueOf() === b3.valueOf()) ?? check(is("URL"), (a3, b3) => a3.href === b3.href) ?? check(is("RegExp"), (a3, b3) => a3.source === b3.source && a3.flags === b3.flags) ?? check(isArrayBufferLike, (a3, b3) => {
+        if (a3.byteLength !== b3.byteLength) return false;
+        const viewA = new Uint8Array(a3);
+        const viewB = new Uint8Array(b3);
+        for (let i = 0; i < viewA.length; i++) if (viewA[i] !== viewB[i]) return false;
+        return true;
+      }) ?? ((!strict || [a2, b2].every((value) => Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null)) && Object.keys({
+        ...a2,
+        ...b2
+      }).every((key) => compare(a2[key], b2[key])));
+    } finally {
+      ancestors.delete(a2);
+    }
   }
-  return check(Array.isArray, (a2, b2) => a2.length === b2.length && a2.every((item, index) => deepEqual(item, b2[index]))) ?? check(is("Date"), (a2, b2) => a2.valueOf() === b2.valueOf()) ?? check(is("RegExp"), (a2, b2) => a2.source === b2.source && a2.flags === b2.flags) ?? check(isArrayBufferLike, (a2, b2) => {
-    if (a2.byteLength !== b2.byteLength) return false;
-    const viewA = new Uint8Array(a2);
-    const viewB = new Uint8Array(b2);
-    for (let i = 0; i < viewA.length; i++) if (viewA[i] !== viewB[i]) return false;
-    return true;
-  }) ?? Object.keys({
-    ...a,
-    ...b
-  }).every((key) => deepEqual(a[key], b[key], strict));
+  return compare(a, b);
 }
 var Time;
 (function(Time2) {
@@ -191,7 +230,7 @@ var Time;
   Time2.template = template;
 })(Time || (Time = {}));
 
-// ../../node_modules/.pnpm/@deepseek-ai+schemastery@3.18.2/node_modules/@deepseek-ai/schemastery/lib/index.mjs
+// ../../node_modules/.pnpm/@deepseek-ai+schemastery@3.18.4/node_modules/@deepseek-ai/schemastery/lib/index.mjs
 var kSchema = /* @__PURE__ */ Symbol.for("schemastery");
 var kValidationError = /* @__PURE__ */ Symbol.for("ValidationError");
 globalThis.__schemastery_index__ ??= 0;
@@ -368,6 +407,7 @@ Schema.prototype.pattern = function pattern(regexp) {
   return schema;
 };
 Schema.prototype.simplify = function simplify(value) {
+  if (isVolatile(value)) value = value.get();
   if (deepEqual(value, this.meta.default, this.type === "dict")) return null;
   if (isNullable(value)) return value;
   if (this.type === "object" || this.type === "dict") {
@@ -425,12 +465,49 @@ for (const key of [
   };
   return schema;
 } });
+Schema.prototype.volatile = function volatile() {
+  if (this.meta.volatile) throw new TypeError("volatile schema is already wrapped");
+  return this.extra("volatile", true);
+};
 var resolvers = {};
+var checkedVolatile = /* @__PURE__ */ Symbol("checked-volatile-schema");
+function validateVolatileSchema(schema, path = [], blocked = false, seen = /* @__PURE__ */ new Map()) {
+  const states = seen.get(schema) ?? /* @__PURE__ */ new Set();
+  if (states.has(blocked)) return;
+  states.add(blocked);
+  seen.set(schema, states);
+  if (schema.meta?.volatile && blocked) throw new ValidationError("volatile fields require a fixed object path without an enclosing volatile field", { path });
+  const nested = blocked || !!schema.meta?.volatile;
+  if (schema.dict) for (const [key, child] of Object.entries(schema.dict)) validateVolatileSchema(child, [...path, key], nested, seen);
+  if (schema.sKey) validateVolatileSchema(schema.sKey, [...path, "<key>"], true, seen);
+  if (schema.inner && (schema.type !== "lazy" || schema.inner[kSchema])) validateVolatileSchema(schema.inner, [...path, "*"], true, seen);
+  if (schema.list) for (let index = 0; index < schema.list.length; index++) validateVolatileSchema(schema.list[index], [...path, String(index)], true, seen);
+}
 Schema.extend = function extend(type, resolve2) {
   resolvers[type] = resolve2;
 };
 Schema.resolve = function resolve(data, schema, options = {}, strict = false) {
   if (!schema) return [data];
+  if (!options[checkedVolatile]) {
+    validateVolatileSchema(schema, options.path);
+    options = {
+      ...options,
+      [checkedVolatile]: true
+    };
+  }
+  if (schema.meta?.volatile) {
+    const inner = Schema(schema);
+    inner.meta = {
+      ...schema.meta,
+      volatile: false
+    };
+    const [value, adapted] = Schema.resolve(data, inner, options, strict);
+    try {
+      return [createVolatile(value), adapted];
+    } catch (error) {
+      throw new ValidationError(error instanceof Error ? error.message : String(error), options);
+    }
+  }
   if (options.ignore?.(data, schema)) return [data];
   if (isNullable(data) && schema.type !== "lazy") {
     if (schema.meta.required) throw new ValidationError(`missing required value`, options);
@@ -538,6 +615,7 @@ Schema.extend("lazy", (data, schema, options, strict) => {
       ...schema.meta,
       ...schema.inner.meta
     };
+    validateVolatileSchema(schema.inner, options.path, true);
   }
   return Schema.resolve(data, schema.inner, options, strict);
 });
@@ -637,7 +715,7 @@ function property(data, key, schema, options) {
   } catch (e) {
     if (!options?.autofix) throw e;
     delete data[key];
-    return schema.meta.default;
+    return schema.meta.volatile ? createVolatile(schema.meta.default) : schema.meta.default;
   }
 }
 Schema.extend("array", (data, { inner, meta }, options) => {
@@ -832,26 +910,29 @@ function readBody(req, limit = 1024 * 1024) {
   });
 }
 
-// src/host/providers/base.ts
-var ID_RE = /^[a-z0-9][a-z0-9-]{1,30}$/;
-var WORKSPACE_RE = /^[A-Za-z0-9_]{4,64}$/;
-function numStr(v) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
-}
-function checkAdapterShape(a) {
-  if (!a || typeof a !== "object") return "\u9002\u914D\u5668\u4E3A\u7A7A";
-  const r = a;
-  if (typeof r["type"] !== "string" || !ID_RE.test(r["type"]))
-    return "\u9002\u914D\u5668 type \u975E\u6CD5(" + String(r["type"]) + ")";
-  if (typeof r["label"] !== "string" || !r["label"]) return "\u9002\u914D\u5668 " + String(r["type"]) + " \u7F3A\u5C11 label";
-  if (typeof r["title"] !== "string" || !r["title"]) return "\u9002\u914D\u5668 " + String(r["type"]) + " \u7F3A\u5C11 title";
-  if (typeof r["secretField"] !== "string")
-    return "\u9002\u914D\u5668 " + String(r["type"]) + " secretField \u987B\u4E3A\u5B57\u7B26\u4E32\uFF08\u65E0\u5BC6\u94A5\u586B\u7A7A\u4E32\uFF09";
-  if (!Array.isArray(r["fields"])) return "\u9002\u914D\u5668 " + String(r["type"]) + " \u7F3A\u5C11 fields \u6570\u7EC4";
-  if (typeof r["fetch"] !== "function") return "\u9002\u914D\u5668 " + String(r["type"]) + " \u7F3A\u5C11 fetch(vendor, deps)";
-  return "";
-}
+// src/host/config.ts
+var NS = settingsNamespace("dshp-token-meter");
+var VendorSchema = Schema.object({
+  id: Schema.string().required(),
+  name: Schema.string().required(),
+  type: Schema.string().default("manual"),
+  params: Schema.dict(Schema.any()).default({}),
+  // 余额查询开关：false = 不参与 Host 定时拉取（手动拉取不受影响），缺省 = 启用
+  enabled: Schema.boolean().default(true)
+});
+var ConfigSchema = Schema.object({
+  version: Schema.number().step(1).default(1),
+  activeVendor: Schema.string().default("").volatile(),
+  refreshSec: Schema.number().step(1).min(0).max(3600).default(60).volatile(),
+  enabled: Schema.boolean().default(true).volatile(),
+  vendors: Schema.array(VendorSchema).default([]).volatile(),
+  showToday: Schema.boolean().default(false).volatile(),
+  // token 统计默认「全部」；热力图另有自己的 6 个月默认（客户端）
+  defaultRange: Schema.union([Schema.const("7"), Schema.const("30"), Schema.const("90"), Schema.const("all")]).default("all").volatile(),
+  // 在线时长空闲阈值（分钟）：1/5/15/30/60。缺省 15：DSH 干活时日志里本就有事件，不需要
+  // 大阈值兜底；要兜的是「读长回答、想下一个需求」这类几分钟量级的静默期。
+  onlineGapMin: Schema.number().step(1).min(1).max(60).default(15).volatile()
+});
 
 // src/host/secrets.ts
 var DOLLAR_REF_RE = /^\$([A-Za-z_][A-Za-z0-9_]*)$/;
@@ -929,6 +1010,27 @@ function createSecretResolver(ctx) {
       throw new Error("\u5BC6\u94A5\u5F15\u7528\u8BED\u6CD5\u9519\u8BEF,\u5E94\u4E3A $NAME\uFF08\u5B57\u6BCD/\u6570\u5B57/\u4E0B\u5212\u7EBF\uFF0C\u5B57\u6BCD\u6216\u4E0B\u5212\u7EBF\u5F00\u5934\uFF09");
     return { value: pickAuthFragment(trimmed), kind: "plain" };
   };
+}
+
+// src/host/providers/base.ts
+var ID_RE = /^[a-z0-9][a-z0-9-]{1,30}$/;
+var WORKSPACE_RE = /^[A-Za-z0-9_]{4,64}$/;
+function numStr(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+function checkAdapterShape(a) {
+  if (!a || typeof a !== "object") return "\u9002\u914D\u5668\u4E3A\u7A7A";
+  const r = a;
+  if (typeof r["type"] !== "string" || !ID_RE.test(r["type"]))
+    return "\u9002\u914D\u5668 type \u975E\u6CD5(" + String(r["type"]) + ")";
+  if (typeof r["label"] !== "string" || !r["label"]) return "\u9002\u914D\u5668 " + String(r["type"]) + " \u7F3A\u5C11 label";
+  if (typeof r["title"] !== "string" || !r["title"]) return "\u9002\u914D\u5668 " + String(r["type"]) + " \u7F3A\u5C11 title";
+  if (typeof r["secretField"] !== "string")
+    return "\u9002\u914D\u5668 " + String(r["type"]) + " secretField \u987B\u4E3A\u5B57\u7B26\u4E32\uFF08\u65E0\u5BC6\u94A5\u586B\u7A7A\u4E32\uFF09";
+  if (!Array.isArray(r["fields"])) return "\u9002\u914D\u5668 " + String(r["type"]) + " \u7F3A\u5C11 fields \u6570\u7EC4";
+  if (typeof r["fetch"] !== "function") return "\u9002\u914D\u5668 " + String(r["type"]) + " \u7F3A\u5C11 fetch(vendor, deps)";
+  return "";
 }
 
 // src/name.ts
@@ -2821,12 +2923,6 @@ function maskParamsForType(type, raw) {
   }
   return out;
 }
-function sanitizeParamsForType(type, raw) {
-  const p = registry.get(canonicalType(type));
-  if (p && typeof p.sanitizeParams === "function") return p.sanitizeParams(raw);
-  const src = raw !== null && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
-  return { ...src };
-}
 function describeProviders() {
   return listProviders().map((p) => ({
     type: p.type,
@@ -3015,93 +3111,8 @@ function buildOnline(active, turns, dayMeta, defaultGapMin) {
   };
 }
 
-// src/host/config.ts
-var NS = settingsNamespace("dshp-token-meter");
-var DEFAULT_CONFIG = {
-  version: 1,
-  activeVendor: "",
-  refreshSec: 60,
-  enabled: true,
-  vendors: [],
-  showToday: false,
-  // token 统计默认「全部」；热力图另有自己的 6 个月默认（客户端）
-  defaultRange: "all",
-  // 在线时长空闲阈值（分钟）：1/5/15/30/60。
-  // 缺省 15：DSH 在干活时日志里本就有事件（模型 step、工具 call/result、子代理），
-  // 不需要靠大阈值兜底；要兜的是「读长回答、想下一个需求」这类几分钟量级的静默期。
-  // 5 分钟以下会把这类静默期切断（偏低），60 分钟会把开会/吃饭整段算成在线。
-  onlineGapMin: 15
-};
-var VendorSchema = Schema.object({
-  id: Schema.string().required(),
-  name: Schema.string().required(),
-  type: Schema.string().default("manual"),
-  params: Schema.dict(Schema.any()).default({}),
-  // 余额查询开关：false = 不参与 Host 定时拉取（手动拉取不受影响），缺省 = 启用
-  enabled: Schema.boolean().default(true)
-});
-var ConfigSchema = Schema.object({
-  version: Schema.number().step(1).default(1),
-  activeVendor: Schema.string().default(""),
-  refreshSec: Schema.number().step(1).min(0).max(3600).default(60),
-  enabled: Schema.boolean().default(true),
-  vendors: Schema.array(VendorSchema).default([]),
-  showToday: Schema.boolean().default(false),
-  defaultRange: Schema.union([Schema.const("7"), Schema.const("30"), Schema.const("90"), Schema.const("all")]).default("all"),
-  onlineGapMin: Schema.number().step(1).min(1).max(60).default(15)
-});
-function isRecord5(v) {
-  return v !== null && typeof v === "object" && !Array.isArray(v);
-}
-function isDefaultRange(v) {
-  return v === "7" || v === "30" || v === "90" || v === "all";
-}
-function normSec(v) {
-  if (v === 0 || v === "0") return 0;
-  const n = Math.floor(Number(v));
-  if (!Number.isFinite(n)) return 60;
-  return Math.min(3600, Math.max(10, n));
-}
-function sanitizeVendor(raw) {
-  if (!isRecord5(raw)) return null;
-  const id = raw["id"] !== void 0 && raw["id"] !== null ? String(raw["id"]).trim() : "";
-  const nm = raw["name"] !== void 0 && raw["name"] !== null ? String(raw["name"]).trim() : "";
-  const typeRaw = raw["type"] !== void 0 && raw["type"] !== null ? String(raw["type"]) : "manual";
-  const type = canonicalType(typeRaw);
-  if (!ID_RE.test(id)) return null;
-  if (!nm) return null;
-  if (!hasProvider(type)) return null;
-  const params = sanitizeParamsForType(type, raw["params"]);
-  for (const k of Object.keys(params)) {
-    const pv = params[k];
-    if (typeof pv === "string") params[k] = normalizeSecretRef(pv);
-  }
-  const out = { id, name: nm, type, params };
-  if (raw["enabled"] === false) out.enabled = false;
-  return out;
-}
-function sanitizePatchConfig(raw) {
-  if (!isRecord5(raw)) return null;
-  const out = {};
-  if (Object.hasOwn(raw, "activeVendor") && typeof raw["activeVendor"] === "string")
-    out.activeVendor = raw["activeVendor"];
-  if (Object.hasOwn(raw, "refreshSec") && raw["refreshSec"] !== void 0 && raw["refreshSec"] !== null && raw["refreshSec"] !== "") {
-    out.refreshSec = normSec(raw["refreshSec"]);
-  }
-  if (Object.hasOwn(raw, "enabled")) out.enabled = raw["enabled"] === true;
-  if (Object.hasOwn(raw, "vendors") && Array.isArray(raw["vendors"])) {
-    out.vendors = raw["vendors"].map(sanitizeVendor).filter((v) => v !== null);
-  }
-  if (Object.hasOwn(raw, "showToday")) out.showToday = raw["showToday"] === true;
-  if (Object.hasOwn(raw, "defaultRange") && isDefaultRange(raw["defaultRange"]))
-    out.defaultRange = raw["defaultRange"];
-  if (Object.hasOwn(raw, "onlineGapMin") && raw["onlineGapMin"] !== void 0 && raw["onlineGapMin"] !== null)
-    out.onlineGapMin = normGapMin(raw["onlineGapMin"]);
-  return out;
-}
-
 // src/host/quota.ts
-function isRecord6(v) {
+function isRecord5(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
 function sanitizeView(raw) {
@@ -3111,12 +3122,12 @@ function sanitizeView(raw) {
   } catch {
     return null;
   }
-  if (!isRecord6(parsed) || !Array.isArray(parsed["sections"])) return null;
+  if (!isRecord5(parsed) || !Array.isArray(parsed["sections"])) return null;
   const KINDS = /* @__PURE__ */ new Set(["windows", "balance", "metrics", "progress", "split", "note", "chart"]);
   const sections = [];
   for (const item of parsed["sections"]) {
     if (sections.length >= 12) break;
-    if (!isRecord6(item)) continue;
+    if (!isRecord5(item)) continue;
     const kind = item["kind"];
     if (typeof kind !== "string" || !KINDS.has(kind)) continue;
     const s = { kind };
@@ -3124,14 +3135,14 @@ function sanitizeView(raw) {
     if (typeof item["title"] === "string") s.title = item["title"].slice(0, 40);
     if (Array.isArray(item["windows"]))
       s.windows = item["windows"].slice(0, 8);
-    if (isRecord6(item["billing"])) s.billing = item["billing"];
+    if (isRecord5(item["billing"])) s.billing = item["billing"];
     if (Array.isArray(item["items"])) {
-      s.items = item["items"].filter(isRecord6).slice(0, 12).map((it) => ({
+      s.items = item["items"].filter(isRecord5).slice(0, 12).map((it) => ({
         label: String(it["label"] ?? "").slice(0, 40),
         value: String(it["value"] ?? "").slice(0, 60)
       }));
     }
-    if (isRecord6(item["progress"])) {
+    if (isRecord5(item["progress"])) {
       const p = item["progress"];
       const used = Number(p["used"]);
       const total = Number(p["total"]);
@@ -3142,9 +3153,9 @@ function sanitizeView(raw) {
         s.progress = out;
       }
     }
-    if (isRecord6(item["split"]) && Array.isArray(item["split"]["segments"])) {
+    if (isRecord5(item["split"]) && Array.isArray(item["split"]["segments"])) {
       s.split = {
-        segments: item["split"]["segments"].filter(isRecord6).slice(0, 8).map((sg) => {
+        segments: item["split"]["segments"].filter(isRecord5).slice(0, 8).map((sg) => {
           const seg = {
             label: String(sg["label"] ?? "").slice(0, 40),
             value: Number(sg["value"]) || 0
@@ -3154,7 +3165,7 @@ function sanitizeView(raw) {
         })
       };
     }
-    if (isRecord6(item["note"]) && typeof item["note"]["text"] === "string") {
+    if (isRecord5(item["note"]) && typeof item["note"]["text"] === "string") {
       const tone = item["note"]["tone"];
       const note = {
         text: item["note"]["text"].slice(0, 300)
@@ -3162,7 +3173,7 @@ function sanitizeView(raw) {
       if (tone === "info" || tone === "warn" || tone === "bad") note.tone = tone;
       s.note = note;
     }
-    if (isRecord6(item["chart"]) && Array.isArray(item["chart"]["values"])) {
+    if (isRecord5(item["chart"]) && Array.isArray(item["chart"]["values"])) {
       const chart = {
         labels: (Array.isArray(item["chart"]["labels"]) ? item["chart"]["labels"] : []).slice(-60).map((l) => String(l).slice(0, 16)),
         values: item["chart"]["values"].slice(-60).map((v) => Number(v) || 0)
@@ -3640,7 +3651,7 @@ function registerQuotaRoutes(ctx, deps) {
         } catch {
           return json(res, 200, { ok: false, error: "\u8BF7\u6C42\u4F53\u4E0D\u662F\u5408\u6CD5 JSON" });
         }
-        const a = isRecord6(body) ? body : {};
+        const a = isRecord5(body) ? body : {};
         try {
           const patchObj = {};
           let hasPatch = false;
@@ -3947,7 +3958,12 @@ var reviveAgg = (c) => {
     outcome: c.oc ?? "failed"
   };
 };
-var LOG_FILE_NAMES = ["session.v3.jsonl.zstd", "session.jsonl.zstd"];
+var LOG_FILE_NAMES = [
+  "session.v4.jsonl.zstd",
+  "session.v4.jsonl",
+  "session.v3.jsonl.zstd",
+  "session.jsonl.zstd"
+];
 function buildFileIndex(sessionsDir) {
   const idx = /* @__PURE__ */ new Map();
   try {
@@ -4515,7 +4531,7 @@ function createEngine(sessionQuery, dshHome, storageDomain, getGapMin) {
       pumping = false;
     }
   }
-  async function snapshot() {
+  async function snapshot2() {
     await maybeReopenStorage();
     const list = await sessionQuery.listSessions();
     listedIds = /* @__PURE__ */ new Set();
@@ -4684,7 +4700,7 @@ function createEngine(sessionQuery, dshHome, storageDomain, getGapMin) {
   }
   function start() {
     const t = setTimeout(() => {
-      void snapshot().catch(() => {
+      void snapshot2().catch(() => {
       });
     }, 100);
     if (typeof t.unref === "function")
@@ -4741,7 +4757,7 @@ function createEngine(sessionQuery, dshHome, storageDomain, getGapMin) {
     const prev = await tableReady;
     if (prev.degraded === true) tableReady = openDomain();
   }
-  return { invalidate, snapshot, start, drain, dispose, clearCache };
+  return { invalidate, snapshot: snapshot2, start, drain, dispose, clearCache };
 }
 
 // src/host/stats/routes.ts
@@ -4885,75 +4901,50 @@ function registerIdentityRoute(ctx) {
 // src/host/index.ts
 var name = "@dshp/token-meter";
 var inject = ["webServer"];
-function apply(ctx, rawConfig) {
-  const entry = {
-    ...DEFAULT_CONFIG,
-    vendors: []
-  };
-  const patch = sanitizePatchConfig(rawConfig);
-  if (patch) {
-    if (Object.hasOwn(patch, "activeVendor") && patch.activeVendor !== void 0)
-      entry.activeVendor = patch.activeVendor;
-    if (Object.hasOwn(patch, "refreshSec") && patch.refreshSec !== void 0)
-      entry.refreshSec = patch.refreshSec;
-    if (Object.hasOwn(patch, "enabled") && patch.enabled !== void 0) entry.enabled = patch.enabled;
-    if (Object.hasOwn(patch, "vendors") && patch.vendors !== void 0) entry.vendors = patch.vendors;
-    if (Object.hasOwn(patch, "showToday") && patch.showToday !== void 0) entry.showToday = patch.showToday;
-    if (Object.hasOwn(patch, "defaultRange") && patch.defaultRange !== void 0)
-      entry.defaultRange = patch.defaultRange;
-    if (Object.hasOwn(patch, "onlineGapMin") && patch.onlineGapMin !== void 0)
-      entry.onlineGapMin = patch.onlineGapMin;
-  }
-  let current = () => entry;
+var Config = ConfigSchema;
+function apply(ctx, config) {
   try {
     ctx.inject(["settings"], (sctx) => {
-      sctx.settings.installSection(ctx, NS, ConfigSchema, entry, {
-        setSource: (src) => {
-          current = src;
-        },
-        onChange: () => {
-        }
-      });
+      try {
+        sctx.effect(
+          () => sctx.settings.configure({ auto: false }, ctx.fiber),
+          "dshp-token-meter: settings-page"
+        );
+      } catch (error) {
+        console.error("[dshp-token-meter] \u6CE8\u518C settings \u9875\u9762\u7B56\u7565\u5931\u8D25\uFF0C\u504F\u597D\u5C06\u56DE\u9ED8\u8BA4\u503C\uFF1A", error);
+      }
     });
-  } catch {
+  } catch (error) {
+    console.error("[dshp-token-meter] settings \u670D\u52A1\u6CE8\u5165\u5931\u8D25\uFF0C\u504F\u597D\u5C06\u56DE\u9ED8\u8BA4\u503C\uFF1A", error);
   }
   function getConfig() {
-    try {
-      const v = current();
-      if (v && typeof v === "object") {
-        const r = v;
-        return {
-          version: 1,
-          activeVendor: typeof r["activeVendor"] === "string" ? r["activeVendor"] : entry.activeVendor,
-          refreshSec: typeof r["refreshSec"] === "number" ? r["refreshSec"] : entry.refreshSec,
-          enabled: typeof r["enabled"] === "boolean" ? r["enabled"] : entry.enabled,
-          vendors: Array.isArray(r["vendors"]) ? r["vendors"].map((item) => {
-            const it = item ?? {};
-            const vendor = {
-              id: String(it["id"] !== void 0 ? it["id"] : ""),
-              name: String(it["name"] !== void 0 ? it["name"] : ""),
-              type: canonicalType(String(it["type"] !== void 0 ? it["type"] : "manual")),
-              params: it["params"] && typeof it["params"] === "object" && !Array.isArray(it["params"]) ? it["params"] : {}
-            };
-            if (it["enabled"] === false) vendor.enabled = false;
-            return vendor;
-          }) : [],
-          showToday: r["showToday"] === true,
-          defaultRange: r["defaultRange"] === "7" || r["defaultRange"] === "30" || r["defaultRange"] === "90" || r["defaultRange"] === "all" ? r["defaultRange"] : entry.defaultRange,
-          onlineGapMin: normGapMin(
-            typeof r["onlineGapMin"] === "number" ? r["onlineGapMin"] : entry.onlineGapMin
-          )
+    const rawVendors = config.vendors.get();
+    return {
+      version: config.version ?? 1,
+      activeVendor: config.activeVendor.get(),
+      refreshSec: config.refreshSec.get(),
+      enabled: config.enabled.get(),
+      vendors: (Array.isArray(rawVendors) ? rawVendors : []).map((item) => {
+        const it = item ?? {};
+        const vendor = {
+          id: String(it["id"] !== void 0 ? it["id"] : ""),
+          name: String(it["name"] !== void 0 ? it["name"] : ""),
+          type: canonicalType(String(it["type"] !== void 0 ? it["type"] : "manual")),
+          params: it["params"] && typeof it["params"] === "object" && !Array.isArray(it["params"]) ? it["params"] : {}
         };
-      }
-    } catch {
-    }
-    return JSON.parse(JSON.stringify(entry));
+        if (it["enabled"] === false) vendor.enabled = false;
+        return vendor;
+      }),
+      showToday: config.showToday.get(),
+      defaultRange: config.defaultRange.get(),
+      onlineGapMin: normGapMin(config.onlineGapMin.get())
+    };
   }
   async function updateConfig(patchObj) {
     const settings = ctx.get("settings");
     if (!settings)
       throw new Error(
-        "settings \u670D\u52A1\u4E0D\u53EF\u7528\uFF0C\u65E0\u6CD5\u6301\u4E45\u5316\u5230 settings.yaml\uFF08\u8BF7\u91CD\u542F DSH \u6216\u68C0\u67E5 FileSettingsProvider \u662F\u5426\u6302\u8F7D\uFF09"
+        "settings \u670D\u52A1\u4E0D\u53EF\u7528\uFF0C\u65E0\u6CD5\u6301\u4E45\u5316\u5230 profile \u6761\u76EE config\uFF08\u8BF7\u91CD\u542F DSH \u786E\u8BA4\u8BBE\u7F6E\u670D\u52A1\u5DF2\u6302\u8F7D\uFF09"
       );
     await settings.update(NS, JSON.parse(JSON.stringify(patchObj)));
   }
@@ -5100,4 +5091,4 @@ function apply(ctx, rawConfig) {
   }
 }
 
-export { ConfigSchema, NS, apply, inject, name };
+export { Config, ConfigSchema, NS, apply, inject, name };

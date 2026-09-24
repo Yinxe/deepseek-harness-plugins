@@ -8,9 +8,11 @@
  *
  * 与旧实现的两处**必要**差异（DSH 会话日志改版后旧逻辑会漏掉新会话，
  * 表现为 $DSH_HOME/storages/token_stats.json 不再增长）：
- *  1. 日志文件名不再只有 `session.jsonl.zstd`：v3 格式写 `session.v3.jsonl.zstd`。
- *     两者都要认（同一会话可能同时存在两种编码，v3 是迁移后的规范形态）；
- *     指纹把**存在过的全部日志**一起纳入，任一文件变化都会触发重扫。
+ *  1. 日志文件名按格式代另名：v3 写 `session.v3.jsonl.zstd`、v4 写 `session.v4.jsonl.zstd`
+ *     （dsh-session-persistence-jsonl：无压缩世代为 `session.vN.jsonl`，早期无代名写
+ *     `session.jsonl.zstd`）。全部都要认（同一会话可能同时存在多代文件，v4 是升级后的
+ *     规范形态）；指纹把**存在过的全部日志**一起纳入，任一文件变化都会触发重扫。
+ *     只认旧代会把冻结的老文件当活的——新事件静默丢失。
  *  2. 目录名不再限定 `session-` 前缀：子代理会话用裸 uuid，QQ 渠道会话用
  *     `qqbot-*`。已验证目录名 == 会话头里的 id，因此按目录名建索引仍然安全。
  */
@@ -18,7 +20,12 @@ import { readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** 会话日志文件名（同一目录可同时存在多个）。 */
-export const LOG_FILE_NAMES: string[] = ['session.v3.jsonl.zstd', 'session.jsonl.zstd'];
+export const LOG_FILE_NAMES: string[] = [
+  'session.v4.jsonl.zstd',
+  'session.v4.jsonl',
+  'session.v3.jsonl.zstd',
+  'session.jsonl.zstd',
+];
 
 export interface FileIndexEntry {
   /** 最新一份日志文件的路径（供排查用；统计走 readSession，不直接读文件） */

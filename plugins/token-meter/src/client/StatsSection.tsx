@@ -24,9 +24,9 @@ import {
 import * as ReactDOM from 'react-dom';
 import {
   Button,
-  IconChevronDownOutline14,
-  IconLoadingOutline16,
-  IconRefreshOutline14,
+  IconChevronDownOutlineRegular,
+  IconLoadingOutlineRegular,
+  IconRefreshOutlineRegular,
   Menu,
   Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives';
@@ -1575,8 +1575,8 @@ function RangeSelect(props: {
       onClick={() => setOpen((v: boolean) => !v)}
     >
       <span className={styles.selectorLabel}>{hit ? hit.t : props.value}</span>
-      {IconChevronDownOutline14 ? (
-        <IconChevronDownOutline14 className={styles.chevron} />
+      {IconChevronDownOutlineRegular ? (
+        <IconChevronDownOutlineRegular className={styles.chevron} />
       ) : (
         <span className={styles.chevron}>{'▾'}</span>
       )}
@@ -2727,10 +2727,10 @@ export function StatsSettingsPage(props: StatsSettingsPageProps): ReactNode {
         onClick={() => refresh()}
         disabled={loading}
         icon={
-          loading && IconLoadingOutline16 ? (
-            <IconLoadingOutline16 />
-          ) : IconRefreshOutline14 ? (
-            <IconRefreshOutline14 />
+          loading && IconLoadingOutlineRegular ? (
+            <IconLoadingOutlineRegular />
+          ) : IconRefreshOutlineRegular ? (
+            <IconRefreshOutlineRegular size={14} />
           ) : undefined
         }
       >

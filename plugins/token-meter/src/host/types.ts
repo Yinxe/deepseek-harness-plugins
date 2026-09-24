@@ -11,6 +11,7 @@
  *    lib/fold.js + lib/engine.js + lib/index.js 的聚合快照结构
  * 本文件为 TS 重写新增：把两边散落的隐式结构显式化，行为不变。
  */
+import type { Volatile } from '@deepseek-ai/cosmokit';
 import type { ErrorInfo } from './errors.js';
 
 export interface Vendor {
@@ -315,7 +316,7 @@ export interface StatsSnapshot {
   error?: string;
 }
 
-// ── 插件配置（settings.yaml: dshp-token-meter）─────────────────────────────
+// ── 插件配置（profile 条目 config: dshp-token-meter，0.1.7 起替代 settings.yaml 分节）──
 
 export type DefaultRange = '7' | '30' | '90' | 'all';
 
@@ -327,20 +328,23 @@ export interface PluginConfig {
   vendors: Vendor[];
   showToday: boolean;
   defaultRange: DefaultRange;
-  /** 在线时长空闲阈值（分钟，1/5/15/30/60；缺省 5） */
+  /** 在线时长空闲阈值（分钟，1/5/15/30/60；缺省 15） */
   onlineGapMin: number;
 }
 
-/** settings.patch / cordis.patch.yml 里允许的部分覆盖（全部可选） */
-export interface PluginConfigPatch {
-  version?: number;
-  activeVendor?: string;
-  refreshSec?: number;
-  enabled?: boolean;
-  vendors?: Vendor[];
-  showToday?: boolean;
-  defaultRange?: DefaultRange;
-  onlineGapMin?: number;
+/**
+ * `apply(ctx, config)` 实参：除 `version` 外全字段 volatile（装载期由 schema 强制回默认值），
+ * 业务读路径经 `.get()` 拿当前深只读快照；路由写入走 `settings.update(NS, patch)` 整组提交。
+ */
+export interface VolatileConfig {
+  version: number;
+  activeVendor: Volatile<string>;
+  refreshSec: Volatile<number>;
+  enabled: Volatile<boolean>;
+  vendors: Volatile<Vendor[]>;
+  showToday: Volatile<boolean>;
+  defaultRange: Volatile<DefaultRange>;
+  onlineGapMin: Volatile<number>;
 }
 
 // ── 同源路由协议（host ↔ client/types.ts 对齐）─────────────────────────────
