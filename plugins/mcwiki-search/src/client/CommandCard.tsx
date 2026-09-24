@@ -18,7 +18,7 @@
 import { useState } from 'react';
 import {
   DisclosureRow,
-  IconApiOutline14,
+  IconApiOutlineRegular,
   MarkdownText,
   StateDot,
 } from '@deepseek-ai/dsh-client-ui-primitives';
@@ -76,7 +76,7 @@ export function McwikiCommandCard(props: CommandCardProps): ReactNode {
         // 旧实现还传过 chevronClassName="mw-cmdChevron"，但 style 表里从来没有 `.mw-cmdChevron`
         // 这条规则——纯摆设。与 c8e140f（file-change-viewer 去掉无样式的 `fcv-toolRow`）同一先例：
         // CSS Module 化时去掉这个类名，不写成 styles.cmdChevron（那会被 check-css-modules 判红）。
-        icon={state === 'error' ? <StateDot state="error" /> : <IconApiOutline14 />}
+        icon={state === 'error' ? <StateDot state="error" /> : <IconApiOutlineRegular />}
         title="mcwiki"
         open={open && body !== null}
         expandable={body !== null}

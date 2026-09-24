@@ -86,7 +86,7 @@ function McwikiCommandCard(props) {
     {
       rowClassName: styles_module_css_default.cmdRow,
       titleClassName: styles_module_css_default.cmdTitle,
-      icon: state === "error" ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives.StateDot, { state: "error" }) : /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives.IconApiOutline14, {}),
+      icon: state === "error" ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives.StateDot, { state: "error" }) : /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives.IconApiOutlineRegular, {}),
       title: "mcwiki",
       open: open && body !== null,
       expandable: body !== null,
@@ -239,7 +239,7 @@ function McWikiSection() {
     unit ? /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: styles_module_css_default.unit, children: unit }) : null
   ] });
   const searchInput = /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: styles_module_css_default.inputWrap, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(import_dsh_client_ui_primitives2.IconSearchOutline16, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(import_dsh_client_ui_primitives2.IconSearchOutlineRegular, {}),
     /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(
       "input",
       {
@@ -299,14 +299,14 @@ function McWikiSection() {
             size: "sm",
             disabled: busy !== null,
             onClick: runSearch,
-            icon: busy === "search" ? /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutline16, {}) : void 0,
+            icon: busy === "search" ? /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutlineRegular, {}) : void 0,
             children: busy === "search" ? "\u641C\u7D22\u4E2D\u2026" : "\u641C\u7D22\u6D4B\u8BD5"
           }
         )
       ] })
     ] }),
     busy === "search" ? /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: styles_module_css_default.loading, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutline16, {}),
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutlineRegular, {}),
       /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: styles_module_css_default.loadingText, children: "\u6B63\u5728\u8BF7\u6C42 MediaWiki API \u2026" })
     ] }) : null,
     result !== null ? result.ok ? /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: styles_module_css_default.section, children: [
@@ -325,14 +325,14 @@ function McWikiSection() {
             size: "sm",
             disabled: busy !== null,
             onClick: runPage,
-            icon: busy === "page" ? /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutline16, {}) : void 0,
+            icon: busy === "page" ? /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutlineRegular, {}) : void 0,
             children: busy === "page" ? "\u6293\u53D6\u4E2D\u2026" : "\u9875\u9762\u8F6C\u6362\u6D4B\u8BD5"
           }
         )
       ] })
     ] }),
     busy === "page" ? /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: styles_module_css_default.loading, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutline16, {}),
+      /* @__PURE__ */ (0, import_jsx_runtime3.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutlineRegular, {}),
       /* @__PURE__ */ (0, import_jsx_runtime3.jsx)("span", { className: styles_module_css_default.loadingText, children: "\u6B63\u5728\u6293\u53D6\u5E76\u8F6C\u6362\u9875\u9762 \u2026" })
     ] }) : null,
     pageResult !== null ? pageResult.ok && pageResult.page ? /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)("div", { className: styles_module_css_default.section, children: [

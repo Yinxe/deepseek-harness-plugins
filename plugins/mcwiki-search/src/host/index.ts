@@ -17,8 +17,9 @@
  *   POST /ext/dshp-mcwiki-search/test    { query, title?, section? }
  *
  * 持久化（标准 settings 存储，对齐 vision-bridge 与官方插件）：
- *  settings.yaml 顶层 `dshp-mcwiki-search` 命名空间，工具与路由每次调用都读
- *  当前生效配置，外部编辑热重载无需重启。配置只认该命名空间，不做历史 key 迁移。
+ *  profile `cordis.patch.yml` 条目 `config:`（NS `dshp-mcwiki-search` = 条目 id），
+ *  工具与路由每次调用都读当前生效配置（volatile 引用），外部编辑原地热更新无需重启。
+ *  配置只认该命名空间，不做历史 key 迁移。
  *
  * 原实现：~/.dsh/plugins/dsh-mcwiki-search（JS，@dshp-inx/mcwiki-search v1.0.1）
  * 本目录为等价 TS 重写：lib/{index,api,convert}.js → src/host/{index,tools,routes,api,convert,config,http,types}.ts，
@@ -26,59 +27,46 @@
  *
  * @module @dshp/mcwiki-search
  */
-import { ConfigSchema, DEFAULT_CONFIG, NS, sanitizePatchConfig } from './config.js';
+import { ConfigSchema, NS } from './config.js';
 import { registerCommand } from './command.js';
 import { registerRoutes } from './routes.js';
 import { registerTools } from './tools.js';
-import type { AnyCtx, PluginConfig } from './types.js';
+import type { AnyCtx, PluginConfig, VolatileConfig } from './types.js';
 
 export const name = '@dshp/mcwiki-search';
 export const inject: string[] = ['tools', 'webServer'];
 export { NS, ConfigSchema };
+/** Cordis 用它校验条目 config 并派生设置表单（全字段 volatile，原地热更新）。 */
+export const Config = ConfigSchema;
 
-export function apply(ctx: AnyCtx, rawConfig: unknown): void {
-  // composition entry：默认值 ← patch 覆盖（settings 的 base 层）
-  const entry: PluginConfig = { ...DEFAULT_CONFIG };
-  const patch = sanitizePatchConfig(rawConfig);
-  if (patch) {
-    if (Object.hasOwn(patch, 'timeoutMs') && patch.timeoutMs !== undefined) entry.timeoutMs = patch.timeoutMs;
-    if (Object.hasOwn(patch, 'maxChars') && patch.maxChars !== undefined) entry.maxChars = patch.maxChars;
-    if (Object.hasOwn(patch, 'introMaxChars') && patch.introMaxChars !== undefined)
-      entry.introMaxChars = patch.introMaxChars;
-    if (Object.hasOwn(patch, 'searchMaxResults') && patch.searchMaxResults !== undefined)
-      entry.searchMaxResults = patch.searchMaxResults;
-  }
-
-  // 官方 settings：当前生效配置源（有 settings 时指向 scope.get()，否则指向 entry）
-  let current: () => PluginConfig = () => entry;
+export function apply(ctx: AnyCtx, config: VolatileConfig): void {
+  // 官方 settings：自定义设置页 + 条目 config 持久化（0.1.7 契约）
   try {
     ctx.inject(['settings'], (sctx: AnyCtx) => {
-      sctx.settings.installSection(ctx, NS, ConfigSchema, entry, {
-        setSource: (src: () => PluginConfig) => {
-          current = src;
-        },
-        onChange: () => {},
-      });
+      // 本插件自带设置页（settings.section），关掉 schema 自动生成的页面。
+      sctx.effect(
+        () => sctx.settings.configure({ auto: false }, ctx.fiber),
+        'dshp-mcwiki-search: settings-page',
+      );
     });
   } catch {
     /* ignore */
   }
 
   function getConfig(): PluginConfig {
-    try {
-      const v = current() as unknown;
-      if (v && typeof v === 'object') return { ...entry, ...(v as Partial<PluginConfig>) };
-    } catch {
-      /* ignore */
-    }
-    return { ...entry };
+    return {
+      timeoutMs: config.timeoutMs.get(),
+      maxChars: config.maxChars.get(),
+      introMaxChars: config.introMaxChars.get(),
+      searchMaxResults: config.searchMaxResults.get(),
+    };
   }
 
   async function updateConfig(configPatch: Record<string, unknown>): Promise<void> {
     const settings = ctx.get('settings') as AnyCtx;
     if (!settings)
       throw new Error(
-        'settings 服务不可用，无法持久化到 settings.yaml（请重启 DSH 或检查 FileSettingsProvider 是否挂载）',
+        'settings 服务不可用，无法持久化到 profile 条目 config（请重启 DSH 确认设置服务已挂载）',
       );
     await settings.update(NS, configPatch);
   }

@@ -1,6 +1,6 @@
 {
   "name": "@dshp/mcwiki-search",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "DeepSeek Harness (DSH) tool plugin: query Minecraft Wiki (MediaWiki API) and convert raw wiki data into clean AI-readable text. 查询 Minecraft Wiki（中文/英文）并把搜索结果与页面全文转换成可直接投喂给 AI 的干净文本（搜索/引言/全文 Markdown/随机条目）。",
   "license": "MIT",
   "author": "Yinxe",
@@ -62,14 +62,14 @@
     }
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-client-ui-primitives": ">=0.1.5-rc.1"
+    "@deepseek-ai/dsh-client-ui-primitives": "^0.1.7-rc.1"
   },
   "devDependencies": {
-    "@deepseek-ai/dsh-client-ui-primitives": "0.1.5-rc.1",
-    "@deepseek-ai/schemastery": "^3.18.2",
+    "@deepseek-ai/cosmokit": "~1.8.5",
+    "@deepseek-ai/dsh-client-ui-primitives": "0.1.7-rc.1",
+    "@deepseek-ai/schemastery": "^3.18.4",
     "@types/react": "~18.3.1",
     "react": "^18.3.1",
     "tsup": "^8.5.1"
-  },
-  "dependencies": {}
+  }
 }

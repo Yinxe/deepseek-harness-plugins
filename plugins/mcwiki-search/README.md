@@ -76,13 +76,13 @@ dsh web   # 重启生效
 
 ## 功能
 
-| 部分                                          | 内容                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Host（`src/host/` → `lib/host.js`）**       | 注册 3 个模型工具（见下）；wikitext→Markdown 转换管线（`convert.ts`：模板整块展开/丢弃、标签块剥离、内外链归一、标题/引号/列表/表格扁平化）；MediaWiki API 客户端（`api.ts`：固定中文端点 `API_BASE`、UA/超时/取消、搜索/引言/全文/随机）；**通过官方 `ctx.settings` + `schemastery` 持久化到 `settings.yaml`（`dshp-mcwiki-search`），使用 settings 服务的 `installSection` 方法，支持热重载与注释保留，**配置只认 `dshp-mcwiki-search`，不读历史 key**；注入系统提示引导模型何时调用工具。运行时零依赖（schemastery 内联）。 |
-| **Client（`src/client/` → `lib/client.js`）** | 「设置 → Minecraft Wiki 搜索」配置页：数据源状态、**配置卡**（超时 / 搜索条数 / 全文与引言上限，直接保存到 `settings.yaml` 即时生效）、搜索测试、页面转换测试（直接看转换后的文本）。UI 全部使用 DSH 官方设计 token（`dsw-alias-*`），与官方设置页风格一致。无额外依赖。                                                                                                                                                                                                                                                       |
-| **同源路由**                                  | `GET /ext/dshp-mcwiki-search/state`（数据源状态 + 当前生效配置快照）、`POST /ext/dshp-mcwiki-search/config`（保存配置补丁）、`POST /ext/dshp-mcwiki-search/test`（连接测试：搜索 + 页面抓取），均带同源校验（`Origin` 与 `Host` 一致或缺失才放行）。                                                                                                                                                                                                                                                                           |
-| **工具**                                      | `mcwiki_search`（全文搜索）、`mcwiki_get_page`（抓取页面：引言/全文）、`mcwiki_random`（随机条目），见参数表。输出全部为清洗后的 AI 可读文本，默认**完整输出、不截断**。                                                                                                                                                                                                                                                                                                                                                       |
-| **斜杠命令**                                  | `/mcwiki`（人用，不经模型）：搜索 / 看引言 / 随机条目，结果直接回显到会话。commands 为可选服务，未挂载自动跳过。                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 部分                                          | 内容                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Host（`src/host/` → `lib/host.js`）**       | 注册 3 个模型工具（见下）；wikitext→Markdown 转换管线（`convert.ts`：模板整块展开/丢弃、标签块剥离、内外链归一、标题/引号/列表/表格扁平化）；MediaWiki API 客户端（`api.ts`：固定中文端点 `API_BASE`、UA/超时/取消、搜索/引言/全文/随机）；**按 0.1.7 契约导出条目 `Config`（schemastery + volatile 字段），`settings.update` 持久化到 profile 条目 `dshp-mcwiki-search` 的 `config:`，设置页一改即热更新；**配置只认 `dshp-mcwiki-search`，不读历史 key**；注入系统提示引导模型何时调用工具。运行时零依赖（schemastery 内联）。 |
+| **Client（`src/client/` → `lib/client.js`）** | 「设置 → Minecraft Wiki 搜索」配置页：数据源状态、**配置卡**（超时 / 搜索条数 / 全文与引言上限，经 `settings.update` 写入条目 `config:` 即时生效）、搜索测试、页面转换测试（直接看转换后的文本）。UI 全部使用 DSH 官方设计 token（`dsw-alias-*`），与官方设置页风格一致。无额外依赖。                                                                                                                                                                                                                                            |
+| **同源路由**                                  | `GET /ext/dshp-mcwiki-search/state`（数据源状态 + 当前生效配置快照）、`POST /ext/dshp-mcwiki-search/config`（保存配置补丁）、`POST /ext/dshp-mcwiki-search/test`（连接测试：搜索 + 页面抓取），均带同源校验（`Origin` 与 `Host` 一致或缺失才放行）。                                                                                                                                                                                                                                                                             |
+| **工具**                                      | `mcwiki_search`（全文搜索）、`mcwiki_get_page`（抓取页面：引言/全文）、`mcwiki_random`（随机条目），见参数表。输出全部为清洗后的 AI 可读文本，默认**完整输出、不截断**。                                                                                                                                                                                                                                                                                                                                                         |
+| **斜杠命令**                                  | `/mcwiki`（人用，不经模型）：搜索 / 看引言 / 随机条目，结果直接回显到会话。commands 为可选服务，未挂载自动跳过。                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 > **完整性承诺**：搜索摘要、引言、全文（含表格）默认**完整输出、绝不截断** —— 所有信息与细节都保留给 AI。只有显式传 `maxChars`（正整数）或部署配置设限时才会截断，且输出末尾会明确标注。设置页中的转换测试为 UI 预览（最多 6000 字符），与模型工具无关。
 
@@ -139,7 +139,7 @@ dsh web   # 重启生效
 | `introMaxChars`    | `number` | `0`     | 引言上限：0 = 不截断（默认）。               |
 | `searchMaxResults` | `number` | `8`     | 搜索默认条数，≥1。                           |
 
-> **与动态版的区别**：动态（`cordis_define`）版本的配置只在内存中，重启进程后恢复默认；**标准包版本通过官方 `settings` API 持久化到 `settings.yaml`（`dshp-mcwiki-search`）**，重启后不丢，且外部手工编辑 `settings.yaml` 可热重载。
+> **与动态版的区别**：动态（`cordis_define`）版本的配置只在内存中，重启进程后恢复默认；**标准包版本通过官方 `settings` API 持久化到 profile 条目 `dshp-mcwiki-search` 的 `config:`**，重启后不丢；设置页改动即时热更新，外部手工编辑条目 config 重启后生效。
 
 ## 数据转换管线
 
@@ -164,9 +164,9 @@ MediaWiki API JSON
 
 现在没发 npm，所以上面只能本地装。以后想 `pnpm add @dshp/mcwiki-search` 一键装，才需要发包：先建 npm 组织 `@dshp`（见根 README），再打 tag 走 CI 的 Trusted Publishing。发完这里的安装方式会同步更新。
 
-## 配置（`settings.yaml` 示例）
+## 配置（profile 条目 `config:` 示例）
 
-持久化到 `settings.yaml` 的 `dshp-mcwiki-search` 命名空间，设置页可直接改，外部编辑热重载。
+持久化到 profile 条目 `dshp-mcwiki-search` 的 `config:`，设置页可直接改（即时热更新）；手工编辑条目 config 重启后生效。
 `config:` patch 层仍可覆盖默认值（settings 的 base 层），即开即用：
 
 ```yaml
@@ -217,6 +217,8 @@ README.md           本文件
 - **端到端**：对模型说「用 mcwiki_search 查一下苦力怕」，应返回标题/摘要/URL/更新时间；再说「用 mcwiki_get_page 抓苦力怕全文」，应返回完整 Markdown。
 
 ## 更新日志
+
+- **v1.5.0**：适配 DSH 0.1.7（rc.1）——Host 按新契约导出条目 `Config`（schemastery 字段全部 `.volatile()`），废弃 `installSection`/`setSource`；设置页注册改走 `settings.configure({ auto: false }, ctx.fiber)`；设置改动经 `settings.update` 写入 profile 条目 `dshp-mcwiki-search` 的 `config:` 并由 `loader/volatile-update` 即时热更新（手工编辑条目 config 重启生效）。peer 升 `^0.1.7-rc.1`（rc.1 起装载前会校验 peer 范围）。
 
 - **v1.2.0**：**移除历史 key 迁移**——不再把 `dshp-inx-mcwiki-search` 重命名为 `dshp-mcwiki-search`。配置只认 `dshp-mcwiki-search`，老用户请手工改名旧分节。
 

@@ -14,8 +14,8 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   Button,
   CodeBlock,
-  IconLoadingOutline16,
-  IconSearchOutline16,
+  IconLoadingOutlineRegular,
+  IconSearchOutlineRegular,
   Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives';
 import type { ReactNode } from 'react';
@@ -173,7 +173,7 @@ export function McWikiSection(): ReactNode {
   /* ── 搜索测试 ── */
   const searchInput = (
     <div className={styles.inputWrap}>
-      <IconSearchOutline16 />
+      <IconSearchOutlineRegular />
       <input
         className={styles.input}
         placeholder="搜索，例如：钻石 / 苦力怕 / Ancient City"
@@ -266,7 +266,7 @@ export function McWikiSection(): ReactNode {
             size="sm"
             disabled={busy !== null}
             onClick={runSearch}
-            icon={busy === 'search' ? <IconLoadingOutline16 /> : undefined}
+            icon={busy === 'search' ? <IconLoadingOutlineRegular /> : undefined}
           >
             {busy === 'search' ? '搜索中…' : '搜索测试'}
           </Button>
@@ -275,7 +275,7 @@ export function McWikiSection(): ReactNode {
 
       {busy === 'search' ? (
         <div className={styles.loading}>
-          <IconLoadingOutline16 />
+          <IconLoadingOutlineRegular />
           <span className={styles.loadingText}>正在请求 MediaWiki API …</span>
         </div>
       ) : null}
@@ -306,7 +306,7 @@ export function McWikiSection(): ReactNode {
             size="sm"
             disabled={busy !== null}
             onClick={runPage}
-            icon={busy === 'page' ? <IconLoadingOutline16 /> : undefined}
+            icon={busy === 'page' ? <IconLoadingOutlineRegular /> : undefined}
           >
             {busy === 'page' ? '抓取中…' : '页面转换测试'}
           </Button>
@@ -315,7 +315,7 @@ export function McWikiSection(): ReactNode {
 
       {busy === 'page' ? (
         <div className={styles.loading}>
-          <IconLoadingOutline16 />
+          <IconLoadingOutlineRegular />
           <span className={styles.loadingText}>正在抓取并转换页面 …</span>
         </div>
       ) : null}

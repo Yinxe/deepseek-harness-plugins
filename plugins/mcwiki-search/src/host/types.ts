@@ -7,6 +7,7 @@
  * 原实现：~/.dsh/plugins/dsh-mcwiki-search（JS，@dshp-inx/mcwiki-search v1.0.1）
  * 本文件为 TS 重写新增：把原来散落在 lib/index.js / lib/api.js 里的隐式结构显式化。
  */
+import type { Volatile } from '@deepseek-ai/cosmokit';
 
 export interface PluginConfig {
   timeoutMs: number;
@@ -18,12 +19,12 @@ export interface PluginConfig {
   searchMaxResults: number;
 }
 
-/** settings.patch / cordis.patch.yml 里允许的部分覆盖（全部可选） */
-export interface PluginConfigPatch {
-  timeoutMs?: number;
-  maxChars?: number;
-  introMaxChars?: number;
-  searchMaxResults?: number;
+/** `apply(ctx, config)` 实参：ConfigSchema 全字段 volatile，`.get()` 读当前深只读快照 */
+export interface VolatileConfig {
+  timeoutMs: Volatile<number>;
+  maxChars: Volatile<number>;
+  introMaxChars: Volatile<number>;
+  searchMaxResults: Volatile<number>;
 }
 
 // ── MediaWiki API 层（api.ts）────────────────────────────────────────────
