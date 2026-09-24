@@ -5,6 +5,7 @@
  * Host 侧统一用 `AnyCtx`（= any 的别名）透传，仅对本插件自有的数据结构做严格建模。
  * 客户端协议类型见 src/client/types.ts（与这里的路由载荷保持对齐）。
  */
+import type { Volatile } from '@deepseek-ai/cosmokit';
 
 /** DSH 运行时 ctx —— 暂无官方类型，透传 any */
 export type AnyCtx = any;
@@ -63,16 +64,17 @@ export interface SkillState {
   workspaceRoot: string;
 }
 
+/** 插件自身配置（profile 条目 `config:` 的 dshp-skill-manager 分节，0.1.7 起替代 settings.yaml） */
 export interface PluginConfig {
   enabled: boolean;
   /** 额外/兜底工作区根目录；空串 = 只用 workspaceRegistry（再兜底进程 cwd） */
   workspaceRoot: string;
 }
 
-/** settings.patch / cordis.patch.yml 里允许的部分覆盖（全部可选） */
-export interface PluginConfigPatch {
-  enabled?: boolean;
-  workspaceRoot?: string;
+/** `apply(ctx, config)` 实参：ConfigSchema 全字段 volatile，`.get()` 读当前深只读快照。 */
+export interface VolatileConfig {
+  enabled: Volatile<boolean>;
+  workspaceRoot: Volatile<string>;
 }
 
 /** frontmatter 解析后的受控字段 */

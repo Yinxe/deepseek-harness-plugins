@@ -72,6 +72,7 @@ dsh web   # 重启生效
 - **0.1.1**（2026-09-12）：参考 ZCode 技能页重排 UI（范围切换 + 计数 + 搜索 + 紧凑单行列表）；控件全面改用官方 `dsh-client-ui-primitives` 原语（Button / Input / Switch / Tag / Menu / Modal / 原生图标）；行内开关合并为单一「启用/禁用」（模型/用户两个调用面挪进编辑弹窗细粒度控制）；「复制/移动」从多级菜单改为弹窗；编辑弹窗加宽，技能名 / description / whenToUse / 正文全部回显可改，保存时自动处理改名；`toggle` 路由新增 `field: all`；transfer 支持同根同名目录的原地 frontmatter-name 修正。
 - **0.1.2**（2026-09-12）：设置页条目更名「Skills」；窗口重新聚焦时静默刷新列表（外部 IDE / git 改动回来即见，不闪加载态）；工具栏计数显示「已启用 M」；新建弹窗的技能名做前端 kebab-case 校验；正文编辑区换等宽字体。
 - **0.1.3**（2026-09-12）：「新建」接入官方技能生成器——已装 skill-creator 时，在**当前工作区开一个新会话**并把 `/skill-creator` 自动写入输入框（`uiWorkspace.startSession` 导航 + `conversation.input.right` 探针经 `InputActions.setDraft` 写入，全部官方 seam），发送即开始对话；**未安装时不再自动执行安装**，改为弹窗展示安装命令 `npx skills install anthropics/skills@skill-creator --global --yes` 供复制手工执行（自动安装成功率不可控），装完点「刷新」即可。手动新建表单保留在「⋯ → 手动新建技能…」。
+- **0.3.0**（2026-09-24）：适配 DSH 0.1.7（rc.1）——Host 按新契约导出条目 `Config`（schemastery 字段全部 `.volatile()`），废弃 `installSection`/`setSource`；设置页注册改走 `settings.configure({ auto: false }, ctx.fiber)`；设置改动经 `settings.update` 写入 profile 条目 `dshp-skill-manager` 的 `config:` 并由 `loader/volatile-update` 即时热更新（手工编辑条目 config 重启生效）。peer 升 `^0.1.7-rc.1`（rc.1 起装载前会校验 peer 范围）。
 
 ## 界面与组件策略
 
@@ -99,11 +100,11 @@ dsh web   # 重启生效
 
 - **`.agents/skills` 是本插件的默认规范目录**：列表排序、新建弹窗与复制/移动弹窗的默认目标都以它为先（界面标注「推荐」）；`.dsh/skills` 仍完整支持，rank 决定的优先级不受展示排序影响。
 - 所有工作区相关条目都会**显示工作区名字**（目录 basename）：范围切换、根目录标签（如「工作区 deepseek-harness-plugins · .agents/skills」）与工作区路径行。
-- 工作区候选来自 DSH 的 `workspaceRegistry`（可选服务）；还可在设置页填一个「额外工作区根目录」（持久化到 settings.yaml）。
+- 工作区候选来自 DSH 的 `workspaceRegistry`（可选服务）；还可在设置页填一个「额外工作区根目录」（持久化到 profile 条目 config）。
 - **同名遮蔽**：低 rank 的同名技能会被高 rank 遮蔽，列表里会标出「被 ×× 遮蔽」。全局组内 400 vs 500，工作区组内 100 vs 200。
 - 目录包 `<name>/SKILL.md` 与平铺文件 `<name>.md` 都支持；点开头目录（含 `.system`）跳过；复制/移动技能目录时保留 `references/`、`scripts/` 等资源。
 
-## 配置项（settings.yaml → `dshp-skill-manager` 命名空间）
+## 配置项（profile 条目 `dshp-skill-manager` 的 `config:`）
 
 ```yaml
 dshp-skill-manager:
@@ -111,14 +112,14 @@ dshp-skill-manager:
   workspaceRoot: '' # 额外/兜底工作区根目录（绝对路径）；空 = 只用 workspaceRegistry
 ```
 
-也可在设置页「⋯ → 额外工作区根目录…」弹窗里改（保存即写入 settings.yaml）。
+也可在设置页「⋯ → 额外工作区根目录…」弹窗里改（保存即写入 profile 条目 config）。
 
 ## 安全边界
 
 - 所有路由同源校验（`Origin` vs `Host`），状态接口 `no-store`，请求体 1MB 上限。
 - 写路径三重防护：技能名 kebab-case 白名单（`^[a-z0-9]+(?:-[a-z0-9]+)*$`，与 dsh-skill 相同，天然排除 `..` / `/` / 前导点）→ 路径包含校验 → `realpath` 包含校验；只写技能根下一级条目。
 - 单技能文件读取上限 256KB；description / whenToUse 截断 500 字符；错误信息截断 500 字符。
-- 插件配置只进 settings.yaml 的 NS，不新增自有配置文件；重写 frontmatter 时未知键与注释原样保留。
+- 插件配置只进 profile 条目 config 的 NS，不新增自有配置文件；重写 frontmatter 时未知键与注释原样保留。
 
 ## 代码结构
 
@@ -148,7 +149,7 @@ plugins/skill-manager/
 - **为什么没有模型工具？** 技能 = 可复用提示词。若模型能写技能，任何能诱导模型的内容都能给自己种下持久注入。因此写入只开放给同源 Web UI（由人操作）。
 - **数据都存在哪？** 三处，没有自有数据库或 `storages/*.json`：
   1. **技能本体** —— 就是技能根下的真实文件（`<name>/SKILL.md` 或 `<name>.md`），所有编辑直接写文件；
-  2. **插件配置**（`enabled` / `workspaceRoot`）—— `~/.dsh/settings.yaml` 的 `dshp-skill-manager:` 分节，经 DSH settings 服务持久化、支持热重载与注释保留；
+  2. **插件配置**（`enabled` / `workspaceRoot`）—— profile 条目 `dshp-skill-manager` 的 `config:`，经 DSH settings 服务持久化、支持热重载与注释保留；
   3. **界面记忆**（范围选择）—— 浏览器 localStorage（`dshp-skill-manager.scope`），不落盘到 harness。
 - **「启用」开关到底控制什么？** 一个技能有两个调用面：模型通过 `skill` 工具加载（model-invocable）、用户以 `/名字` 直接调用（user-invocable）。行内「启用」= 两个面一起开/关；要只关其中一个（比如不让模型自动加载、但保留 `/名字` 手动调用），在编辑弹窗的「调用面」里单独切换。落盘形式是 frontmatter 的 `disable-model-invocation` / `user-invocable` 键。
 - **编辑器打开后 frontmatter 里的 `metadata:` 会被改坏吗？** 不会。解析不了的键（块标量、嵌套映射）原样保留，只有受控字段（name/description/whenToUse/两个调用开关）会被重写。
@@ -162,7 +163,7 @@ dsh plugin --profile web remove @dshp/skill-manager
 dsh web
 ```
 
-设置页条目与路由随插件卸载自动移除；settings.yaml 里的 `dshp-skill-manager` 分节与技能文件本身不会被删除，需要的话手工清理。
+设置页条目与路由随插件卸载自动移除；profile 条目 `dshp-skill-manager` 的 config 与技能文件本身不会被删除，需要的话手工清理。
 
 ## 免责声明
 

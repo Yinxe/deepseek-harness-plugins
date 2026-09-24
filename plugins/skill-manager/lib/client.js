@@ -115,7 +115,7 @@ function Selector({ disabled, value, selectedLabel, options, onSelect }) {
       onClick: () => setOpen((v) => !v),
       children: [
         /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: selectedLabel }),
-        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_dsh_client_ui_primitives.IconChevronDownOutline14, {})
+        /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_dsh_client_ui_primitives.IconChevronDownOutlineRegular, {})
       ]
     }
   );
@@ -340,7 +340,7 @@ function SkillSection() {
   }
   if (loading) {
     return /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: styles_module_css_default.page, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: styles_module_css_default.loading, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutline16, {}),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutlineRegular, {}),
       /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: styles_module_css_default.loadingText, children: "\u6B63\u5728\u8BFB\u53D6\u6280\u80FD\u76EE\u5F55\u2026" })
     ] }) });
   }
@@ -601,7 +601,7 @@ function SkillSection() {
     }
     const fullTip = entry.description + (entry.whenToUse ? "\n\u4F55\u65F6\u4F7F\u7528\uFF1A" + entry.whenToUse : "");
     return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: styles_module_css_default.row, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: styles_module_css_default.tile, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconSkillOutline16, {}) }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: styles_module_css_default.tile, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconSkillOutlineRegular, {}) }),
       /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: styles_module_css_default.rowText, children: [
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: styles_module_css_default.title, children: titleChildren }),
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: styles_module_css_default.line, title: fullTip, children: entry.valid ? entry.description || "\uFF08\u65E0 description\uFF09" : entry.problem || "\u89E3\u6790\u5931\u8D25" })
@@ -624,7 +624,7 @@ function SkillSection() {
             disabled: disabledCtl,
             title: "\u7F16\u8F91 " + entry.name,
             onClick: () => startEdit(entry),
-            children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconEditOutline16, {})
+            children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconEditOutlineRegular, {})
           }
         ),
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
@@ -634,7 +634,7 @@ function SkillSection() {
             disabled: disabledCtl || !entry.valid,
             title: "\u590D\u5236 / \u79FB\u52A8 " + entry.name,
             onClick: () => openMove(entry),
-            children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconCopyOutline16, {})
+            children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconCopyOutlineRegular, {})
           }
         ),
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
@@ -645,7 +645,7 @@ function SkillSection() {
             disabled: disabledCtl,
             title: "\u5220\u9664 " + entry.name,
             onClick: () => setConfirmTarget(entry),
-            children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconTrashOutline16, {})
+            children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconTrashOutlineRegular, {})
           }
         )
       ] })
@@ -678,7 +678,7 @@ function SkillSection() {
           !nameOk ? /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: cx(styles_module_css_default.notice, styles_module_css_default.noticeErr), children: "\u6280\u80FD\u540D\u9700\u4E3A\u5C0F\u5199 kebab-case\uFF08\u5B57\u6BCD / \u6570\u5B57 / \u8FDE\u5B57\u7B26\uFF09" }) : null
         ] }),
         children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: styles_module_css_default.form, children: !editDraft || !live ? /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: styles_module_css_default.loading, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutline16, {}),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconLoadingOutlineRegular, {}),
           /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("span", { className: styles_module_css_default.loadingText, children: "\u6B63\u5728\u8BFB\u53D6\u6280\u80FD\u5168\u6587\u2026" })
         ] }) : [
           /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: styles_module_css_default.fieldLabel, children: "\u6280\u80FD\u540D\uFF08\u5C0F\u5199 kebab-case\uFF1B\u6539\u52A8\u4F1A\u8FDE\u540C\u76EE\u5F55/\u6587\u4EF6\u4E00\u8D77\u6539\u540D\uFF09" }, "ln"),
@@ -1054,7 +1054,7 @@ function SkillSection() {
         import_dsh_client_ui_primitives2.Input,
         {
           className: cx(styles_module_css_default.searchW),
-          icon: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconSearchOutline16, {}),
+          icon: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconSearchOutlineRegular, {}),
           disabled: loading,
           placeholder: "\u641C\u7D22\u6280\u80FD\u2026",
           value: query,
@@ -1065,7 +1065,7 @@ function SkillSection() {
         ActionMenu,
         {
           disabled: saving,
-          icon: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconEllipsisOutline16, {}),
+          icon: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconEllipsisOutlineRegular, {}),
           title: "\u66F4\u591A\u64CD\u4F5C",
           options: [
             { id: "manual-create", label: "\u624B\u52A8\u65B0\u5EFA\u6280\u80FD\u2026" },
@@ -1084,12 +1084,12 @@ function SkillSection() {
           }
         }
       ),
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.Button, { variant: "toolbar", disabled: saving, title: "\u91CD\u65B0\u8BFB\u53D6", onClick: load, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconRefreshOutline14, {}) }),
+      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.Button, { variant: "toolbar", disabled: saving, title: "\u91CD\u65B0\u8BFB\u53D6", onClick: load, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconRefreshOutlineRegular, { size: 14 }) }),
       /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(
         import_dsh_client_ui_primitives2.Button,
         {
           variant: "primary",
-          icon: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconPlusOutline16, {}),
+          icon: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconPlusOutlineRegular, {}),
           disabled: disabledCtl,
           title: skillCreatorReady ? "\u5728\u5F53\u524D\u5DE5\u4F5C\u533A\u5F00\u4E00\u4E2A\u65B0\u4F1A\u8BDD\uFF0C\u5E76\u628A /skill-creator \u63D2\u5165\u8F93\u5165\u6846" : "\u5C1A\u672A\u5B89\u88C5 skill-creator\uFF1A\u70B9\u51FB\u67E5\u770B\u5B89\u88C5\u547D\u4EE4",
           onClick: handleNewClick,
@@ -1107,7 +1107,7 @@ function SkillSection() {
   if (scopeSkills.length === 0) {
     children.push(
       /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: styles_module_css_default.empty, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: styles_module_css_default.tile, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconSkillOutline16, {}) }),
+        /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: styles_module_css_default.tile, children: /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(import_dsh_client_ui_primitives2.IconSkillOutlineRegular, {}) }),
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: styles_module_css_default.emptyTitle, children: isGlobal ? "\u5168\u5C40\u8FD8\u6CA1\u6709\u6280\u80FD" : "\u8FD9\u4E2A\u5DE5\u4F5C\u533A\u8FD8\u6CA1\u6709\u6280\u80FD" }),
         /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("p", { className: styles_module_css_default.hint, children: isGlobal ? "\u7528\u300C\u65B0\u5EFA\u300D\u521B\u5EFA\uFF0C\u6216\u628A\u6280\u80FD\u653E\u5230 " + (state ? state.dshHome + "/skills \u6216 " + state.agentsHome + "/skills" : "~/.dsh/skills") + " \u4E0B\u3002" : "\u7528\u300C\u65B0\u5EFA\u300D\u521B\u5EFA\uFF08\u9ED8\u8BA4\u5199\u5165\u5F53\u524D\u8303\u56F4\uFF09\uFF0C\u6216\u624B\u5DE5\u521B\u5EFA .dsh/skills/<name>/SKILL.md\u3002" })
       ] })

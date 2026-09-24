@@ -7,7 +7,9 @@
  *  - 管理 DSH 技能根目录：全局（~/.dsh/skills、~/.agents/skills）+ 工作区
  *    （<workspace>/.dsh/skills、.agents/skills），扫描 / 新建 / 编辑 / 启停 /
  *    复制移动 / 删除；文件布局与 frontmatter 语义对齐 @deepseek-ai/dsh-skill-filesystem
- *  - settings.yaml（dshp-skill-manager）持久化；配置只认该命名空间，不做迁移
+ *  - 自身配置（enabled / workspaceRoot）持久化在 profile 条目 `config:`（0.1.7 契约：导出的
+ *    `Config` schema 装载期校验，全字段 volatile，`settings.update` 写入原地生效；
+ *    旧 settings.yaml 分节一次性自动导入）；配置只认该命名空间，不做迁移
  *  - 同源 JSON 路由供 Client：
  *    GET state / GET read / POST config / POST create / POST update /
  *    POST toggle / POST remove / POST transfer
@@ -21,15 +23,7 @@
  * @module @dshp/skill-manager
  */
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import {
-  ConfigSchema,
-  DEFAULT_CONFIG,
-  NS,
-  sanitizePatchConfig,
-  sanitizeWorkspaceRoot,
-  defaultAgentsHome,
-  defaultDshHome,
-} from './config.js';
+import { ConfigSchema, NS, sanitizeWorkspaceRoot, defaultAgentsHome, defaultDshHome } from './config.js';
 import { json, queryParams, readBody, sameOrigin } from './http.js';
 import { findRoot, listRoots, toPayloadEntry } from './roots.js';
 import {
@@ -42,49 +36,49 @@ import {
   transferSkill,
   updateSkill,
 } from './skills.js';
-import type { AnyCtx, PluginConfig, RootInfo, SkillEntry, SkillState } from './types.js';
+import type { AnyCtx, PluginConfig, RootInfo, SkillEntry, SkillState, VolatileConfig } from './types.js';
 
 export const name = '@dshp/skill-manager';
 export const inject: string[] = ['settings', 'webServer'];
 export { NS, ConfigSchema };
+/** Cordis 用它校验条目 config 并派生设置表单（全字段 volatile，原地热更新）。 */
+export const Config = ConfigSchema;
 
 const BASE = '/ext/dshp-skill-manager';
 
-export function apply(ctx: AnyCtx, rawConfig: unknown): void {
-  const entry: PluginConfig = { ...DEFAULT_CONFIG };
-  const patch = sanitizePatchConfig(rawConfig);
-  if (patch) {
-    if (Object.hasOwn(patch, 'enabled') && patch.enabled !== undefined) entry.enabled = patch.enabled;
-    if (Object.hasOwn(patch, 'workspaceRoot') && patch.workspaceRoot !== undefined)
-      entry.workspaceRoot = patch.workspaceRoot;
-  }
-
-  let current: () => PluginConfig = () => entry;
-
-  ctx.inject(['settings'], (sctx: AnyCtx) => {
-    sctx.settings.installSection(ctx, NS, ConfigSchema, entry, {
-      setSource: (src: () => PluginConfig) => {
-        current = src;
-      },
-      onChange: () => {},
+/**
+ * 挂载 Host 半：settings 页面策略 → 配置读取（volatile 引用）→ 同源 JSON 路由。
+ *
+ * @param ctx - Cordis 插件上下文。
+ * @param config - 条目 `config:` 经 ConfigSchema 校验后的实时引用（全字段 volatile）。
+ */
+export function apply(ctx: AnyCtx, config: VolatileConfig): void {
+  // ── 官方 settings（0.1.7 契约）：本插件自带设置页，关掉 schema 自动生成的页面 ──
+  try {
+    ctx.inject(['settings'], (sctx: AnyCtx) => {
+      try {
+        sctx.effect(
+          () => sctx.settings.configure({ auto: false }, ctx.fiber),
+          'dshp-skill-manager: settings-page',
+        );
+      } catch (error) {
+        console.error('[dshp-skill-manager] 注册 settings 页面策略失败，配置将回默认值：', error);
+      }
     });
-  });
+  } catch (error) {
+    console.error('[dshp-skill-manager] settings 服务注入失败，配置将回默认值：', error);
+  }
 
   function getConfig(): PluginConfig {
-    try {
-      const v = current() as unknown;
-      if (v && typeof v === 'object') return v as PluginConfig;
-    } catch {
-      /* ignore */
-    }
-    return entry;
+    return { enabled: config.enabled.get(), workspaceRoot: config.workspaceRoot.get() };
   }
 
+  /** 写回 profile 条目 config（路由层已消毒；这里只兜 settings 服务缺失）。 */
   async function updateConfig(patchObj: Record<string, unknown>): Promise<void> {
     const settings = ctx.get('settings') as AnyCtx;
     if (!settings)
       throw new Error(
-        'settings 服务不可用，无法持久化到 settings.yaml（请重启 DSH 或检查 settings-file 是否挂载）',
+        'settings 服务不可用，无法持久化到 profile 条目 config（请重启 DSH 确认设置服务已挂载）',
       );
     await settings.update(NS, patchObj);
   }

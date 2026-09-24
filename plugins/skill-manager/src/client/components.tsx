@@ -11,7 +11,7 @@
 import { useState } from 'react';
 import {
   Button,
-  IconChevronDownOutline14,
+  IconChevronDownOutlineRegular,
   Menu,
   Switch as PrimitiveSwitch,
   Tag,
@@ -125,7 +125,7 @@ export function Selector({ disabled, value, selectedLabel, options, onSelect }: 
           里没有对应规则）；CSS Module 化后不再保留它（file-change-viewer 的 `fcv-toolRow`
           是先例），DOM 与视觉都不变。 */}
       <span>{selectedLabel}</span>
-      <IconChevronDownOutline14 />
+      <IconChevronDownOutlineRegular />
     </Button>
   );
   return (

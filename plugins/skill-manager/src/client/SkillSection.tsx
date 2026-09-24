@@ -19,15 +19,15 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   Button,
-  IconCopyOutline16,
-  IconEditOutline16,
-  IconEllipsisOutline16,
-  IconLoadingOutline16,
-  IconPlusOutline16,
-  IconRefreshOutline14,
-  IconSearchOutline16,
-  IconSkillOutline16,
-  IconTrashOutline16,
+  IconCopyOutlineRegular,
+  IconEditOutlineRegular,
+  IconEllipsisOutlineRegular,
+  IconLoadingOutlineRegular,
+  IconPlusOutlineRegular,
+  IconRefreshOutlineRegular,
+  IconSearchOutlineRegular,
+  IconSkillOutlineRegular,
+  IconTrashOutlineRegular,
   Input,
   Modal,
   Pill,
@@ -298,7 +298,7 @@ export function SkillSection(): ReactNode {
     return (
       <div className={styles.page}>
         <div className={styles.loading}>
-          <IconLoadingOutline16 />
+          <IconLoadingOutlineRegular />
           <span className={styles.loadingText}>正在读取技能目录…</span>
         </div>
       </div>
@@ -613,7 +613,7 @@ export function SkillSection(): ReactNode {
     return (
       <div key={skillKey(entry)} className={styles.row}>
         <div className={styles.tile}>
-          <IconSkillOutline16 />
+          <IconSkillOutlineRegular />
         </div>
         <div className={styles.rowText}>
           <div className={styles.title}>{titleChildren}</div>
@@ -635,7 +635,7 @@ export function SkillSection(): ReactNode {
             title={'编辑 ' + entry.name}
             onClick={() => startEdit(entry)}
           >
-            <IconEditOutline16 />
+            <IconEditOutlineRegular />
           </Button>
           <Button
             variant="toolbar"
@@ -643,7 +643,7 @@ export function SkillSection(): ReactNode {
             title={'复制 / 移动 ' + entry.name}
             onClick={() => openMove(entry)}
           >
-            <IconCopyOutline16 />
+            <IconCopyOutlineRegular />
           </Button>
           <Button
             variant="toolbar"
@@ -652,7 +652,7 @@ export function SkillSection(): ReactNode {
             title={'删除 ' + entry.name}
             onClick={() => setConfirmTarget(entry)}
           >
-            <IconTrashOutline16 />
+            <IconTrashOutlineRegular />
           </Button>
         </div>
       </div>
@@ -703,7 +703,7 @@ export function SkillSection(): ReactNode {
         <div className={styles.form}>
           {!editDraft || !live ? (
             <div className={styles.loading}>
-              <IconLoadingOutline16 />
+              <IconLoadingOutlineRegular />
               <span className={styles.loadingText}>正在读取技能全文…</span>
             </div>
           ) : (
@@ -1094,7 +1094,7 @@ export function SkillSection(): ReactNode {
       <div className={styles.toolbarSpacer} />
       <Input
         className={cx(styles.searchW)}
-        icon={<IconSearchOutline16 />}
+        icon={<IconSearchOutlineRegular />}
         disabled={loading}
         placeholder="搜索技能…"
         value={query}
@@ -1102,7 +1102,7 @@ export function SkillSection(): ReactNode {
       />
       <ActionMenu
         disabled={saving}
-        icon={<IconEllipsisOutline16 />}
+        icon={<IconEllipsisOutlineRegular />}
         title="更多操作"
         options={[
           { id: 'manual-create', label: '手动新建技能…' },
@@ -1121,11 +1121,11 @@ export function SkillSection(): ReactNode {
         }}
       />
       <Button variant="toolbar" disabled={saving} title="重新读取" onClick={load}>
-        <IconRefreshOutline14 />
+        <IconRefreshOutlineRegular size={14} />
       </Button>
       <Button
         variant="primary"
-        icon={<IconPlusOutline16 />}
+        icon={<IconPlusOutlineRegular />}
         disabled={disabledCtl}
         title={
           skillCreatorReady
@@ -1156,7 +1156,7 @@ export function SkillSection(): ReactNode {
     children.push(
       <div className={styles.empty}>
         <div className={styles.tile}>
-          <IconSkillOutline16 />
+          <IconSkillOutlineRegular />
         </div>
         <div className={styles.emptyTitle}>{isGlobal ? '全局还没有技能' : '这个工作区还没有技能'}</div>
         <p className={styles.hint}>
